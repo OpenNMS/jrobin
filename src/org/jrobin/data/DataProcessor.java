@@ -60,6 +60,8 @@ public class DataProcessor implements ConsolFuns {
 	 * no other value is specified with {@link #setStep(long) setStep()} method.
 	 */
 	public static final int DEFAUL_PIXEL_COUNT = 400;
+	private static final double DEFAULT_PERCENTILE = 95.0; // %
+
 	private int pixelCount = DEFAUL_PIXEL_COUNT;
 
 	/**
@@ -277,6 +279,8 @@ public class DataProcessor implements ConsolFuns {
 	}
 
 	/**
+	 * This method is just an alias for {@link #getPercentile(String)} method.
+	 *
 	 * Used by ISPs which charge for bandwidth utilization on a "95th percentile" basis.<p>
 	 *
 	 * The 95th percentile is the highest source value left when the top 5% of a numerically sorted set
@@ -292,8 +296,43 @@ public class DataProcessor implements ConsolFuns {
 	 * @throws RrdException Thrown if invalid source name is supplied
 	 */
 	public double get95Percentile(String sourceName) throws RrdException {
+		return getPercentile(sourceName);
+	}
+
+	/**
+	 * Used by ISPs which charge for bandwidth utilization on a "95th percentile" basis.<p>
+	 *
+	 * The 95th percentile is the highest source value left when the top 5% of a numerically sorted set
+	 * of source data is discarded. It is used as a measure of the peak value used when one discounts
+	 * a fair amount for transitory spikes. This makes it markedly different from the average.<p>
+	 *
+	 * Read more about this topic at
+	 * <a href="http://www.red.net/support/resourcecentre/leasedline/percentile.php">Rednet</a> or
+	 * <a href="http://www.bytemark.co.uk/support/tech/95thpercentile.html">Bytemark</a>.
+	 *
+	 * @param sourceName Datasource name
+	 * @return 95th percentile of fetched source values
+	 * @throws RrdException Thrown if invalid source name is supplied
+	 */
+	public double getPercentile(String sourceName) throws RrdException {
+		return getPercentile(sourceName, DEFAULT_PERCENTILE);
+	}
+
+	/**
+	 * The same as {@link #getPercentile(String)} but with a possibility to define custom percentile boundary
+	 * (different from 95).
+	 * @param sourceName Datasource name.
+	 * @param percentile Boundary percentile. Value of 95 (%) is suitable in most cases, but you are free
+	 * to provide your own percentile boundary between zero and 100.
+	 * @return Requested percentile of fetched source values
+	 * @throws RrdException Thrown if invalid sourcename is supplied, or if the percentile value makes no sense.
+	 */
+	public double getPercentile(String sourceName, double percentile) throws RrdException {
+		if(percentile <= 0.0 || percentile > 100.0) {
+			throw new RrdException("Invalid percentile [" + percentile + "], sohuld be between 0 and 100");
+		}
 		Source source = getSource(sourceName);
-		return source.get95Percentile(tStart, tEnd);
+		return source.getPercentile(tStart, tEnd, percentile);
 	}
 
 	/**

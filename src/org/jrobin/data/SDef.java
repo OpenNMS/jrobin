@@ -63,7 +63,7 @@ class SDef extends Source {
 		return agg;
 	}
 
-	double get95Percentile(long tStart, long tEnd) throws RrdException {
+	double getPercentile(long tStart, long tEnd, double percentile) throws RrdException {
 		return value;
 	}
 }

@@ -106,11 +106,11 @@ class Def extends Source {
 		return agg.getAggregates(tStart, tEnd);
 	}
 
-	double get95Percentile(long tStart, long tEnd) throws RrdException {
+	double getPercentile(long tStart, long tEnd, double percentile) throws RrdException {
 		long[] t = getRrdTimestamps();
 		double[] v = getRrdValues();
 		Aggregator agg = new Aggregator(t, v);
-		return agg.get95Percentile(tStart, tEnd);
+		return agg.getPercentile(tStart, tEnd, percentile);
 	}
 
 	boolean isLoaded() {

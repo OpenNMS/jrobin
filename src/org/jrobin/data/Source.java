@@ -62,8 +62,8 @@ abstract class Source implements ConsolFuns {
 		return agg.getAggregates(tStart, tEnd);
 	}
 
-	double get95Percentile(long tStart, long tEnd) throws RrdException {
+	double getPercentile(long tStart, long tEnd, double percentile) throws RrdException {
 		Aggregator agg = new Aggregator(timestamps, values);
-		return agg.get95Percentile(tStart, tEnd);
+		return agg.getPercentile(tStart, tEnd, percentile);
 	}
 }

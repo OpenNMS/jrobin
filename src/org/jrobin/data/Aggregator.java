@@ -71,7 +71,7 @@ class Aggregator implements ConsolFuns {
 		return agg;
 	}
 
-	double get95Percentile(long tStart, long tEnd) {
+	double getPercentile(long tStart, long tEnd, double percentile) {
 		List valueList = new ArrayList();
 		// create a list of included datasource values (different from NaN)
 		for (int i = 0; i < timestamps.length; i++) {
@@ -90,8 +90,9 @@ class Aggregator implements ConsolFuns {
 			}
 			// sort array
 			Arrays.sort(valuesCopy);
-			// skip top 5% values
-			count -= (int) Math.ceil(count * 0.05);
+			// skip top (100% - percentile) values
+			double topPercentile = (100.0 - percentile) / 100.0;
+			count -= (int) Math.ceil(count * topPercentile);
 			// if we have anything left...
 			if (count > 0) {
 				return valuesCopy[count - 1];
