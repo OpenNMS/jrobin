@@ -37,6 +37,7 @@ import java.awt.image.RenderedImage;
 import java.awt.image.BufferedImage;
 
 import org.jrobin.core.RrdException;
+import org.jrobin.core.Util;
 
 /**
  * <p>Creates a BufferedImage of a graph, based on data from a GraphDef.</p>
@@ -442,8 +443,8 @@ class Grapher extends RrdExporter
 		double[] tmpSeries 	= new double[numPoints];
 
 		boolean rigid		= false;
-		double lowerValue	= Double.MAX_VALUE;
-		double upperValue	= Double.MIN_VALUE;
+		double lowerValue	= Util.MAX_DOUBLE;
+		double upperValue	= Util.MIN_DOUBLE;
 
 		GridRange range		= graphDef.getGridRange();
 		if ( range != null )
@@ -452,8 +453,8 @@ class Grapher extends RrdExporter
 			lowerValue	= range.getLowerValue();
 			upperValue	= range.getUpperValue();
 
-			if ( Double.isNaN(lowerValue) ) lowerValue = Double.MAX_VALUE;
-			if ( Double.isNaN(upperValue) ) upperValue = Double.MIN_VALUE;
+			if ( Double.isNaN(lowerValue) ) lowerValue = Util.MAX_DOUBLE;
+			if ( Double.isNaN(upperValue) ) upperValue = Util.MIN_DOUBLE;
 		}
 
 		// For autoscale, detect lower and upper limit of values

@@ -297,7 +297,7 @@ class FetchSource implements ConsolFuns
 		if ( rrd == null )
 			openRrd();
 
-		long minSampleTime = Long.MAX_VALUE, sampleTime = 0;
+		long minSampleTime = Util.MAX_LONG, sampleTime = 0;
 
 		for ( int i = 0; i < datasources.length; i++ )
 		{
@@ -328,7 +328,7 @@ class FetchSource implements ConsolFuns
 		if ( rrd == null )
 			openRrd();
 
-		long maxStep = Long.MIN_VALUE, minStep = Long.MAX_VALUE, step = 0;
+		long maxStep = Util.MIN_LONG, minStep = Util.MAX_LONG, step = 0;
 
 		for ( int i = 0; i < datasources.length; i++ )
 		{

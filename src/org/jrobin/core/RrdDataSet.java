@@ -43,9 +43,9 @@ public interface RrdDataSet
 	public int getRowCount();
 
     /**
-	 * Returns the number of columns in this dataset.
+	 * Returns the number of cells in this dataset.
 	 *
-	 * @return Number of columns (datasources).
+	 * @return Number of cells (datasources).
 	 */
 	public int getColumnCount();
 

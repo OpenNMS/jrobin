@@ -37,7 +37,7 @@ public class DataChunk {
 
 	/**
 	 * Returns a summary of the contents of this data chunk. The first column is
-	 * the time (RRD format) and the following columns are the data source
+	 * the time (RRD format) and the following cells are the data source
 	 * values.
 	 *
 	 * @return a summary of the contents of this data chunk.

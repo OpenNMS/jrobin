@@ -30,6 +30,7 @@ import java.util.HashMap;
 
 import org.jrobin.core.RrdException;
 import org.jrobin.core.XmlWriter;
+import org.jrobin.core.Util;
 
 /**
  * <p>Class used to represent a line defined by two points in a graph.  The line is drawn between those two points.</p>
@@ -120,31 +121,31 @@ class CustomLine extends Line
 		int ax, ay, nx, ny;
 
 		// Get X positions
-		if ( xVal1 == Long.MIN_VALUE )
+		if ( xVal1 == Util.MIN_LONG )
 			ax = g.getMinX();
-		else if ( xVal1 == Long.MAX_VALUE )
+		else if ( xVal1 == Util.MAX_LONG  )
 			ax = g.getMaxX();
 		else
 			ax = g.getX( xVal1 );
 		
-		if ( xVal2 == Long.MIN_VALUE )
+		if ( xVal2 == Util.MIN_LONG )
 			nx = g.getMinX();
-		else if ( xVal2 == Long.MAX_VALUE )
+		else if ( xVal2 == Util.MAX_LONG )
 			nx = g.getMaxX();
 		else
 			nx = g.getX( xVal2 );
 		
 		// Get Y positions
-		if ( yVal1 == Double.MIN_VALUE )
+		if ( yVal1 == Util.MIN_DOUBLE )
 			ay = g.getMinY();
-		else if ( yVal1 == Double.MAX_VALUE )
+		else if ( yVal1 == Util.MAX_DOUBLE )
 			ay = g.getMaxY();
 		else
 			ay = g.getY( yVal1 );
 		
-		if ( yVal2 == Double.MIN_VALUE )
+		if ( yVal2 == Util.MIN_DOUBLE )
 			ny = g.getMinY();
-		else if ( yVal2 == Double.MAX_VALUE )
+		else if ( yVal2 == Util.MAX_DOUBLE )
 			ny = g.getMaxY();
 		else
 			ny = g.getY( yVal2 );
@@ -191,7 +192,7 @@ class CustomLine extends Line
 			return yVal1;
 		
 		// Vrule
-		if ( yVal1 == Double.MIN_VALUE && yVal2 == Double.MAX_VALUE )
+		if ( yVal1 == Util.MIN_DOUBLE && yVal2 == Util.MAX_DOUBLE )
 			return Double.NaN;
 		
 		// No line, very rare, will usually be 'out of range' first

@@ -49,7 +49,7 @@ import java.io.ByteArrayOutputStream;
  * {@link #getTimestamps() getTimestamps()} method to get an array of
  * timestamps returned.<p>
  *
- * Remaining columns are filled with datasource values for the whole timestamp range,
+ * Remaining cells are filled with datasource values for the whole timestamp range,
  * on a column-per-datasource basis. Use {@link #getColumnCount() getColumnCount()} to find
  * the number of datasources and {@link #getValues(int) getValues(i)} method to obtain
  * all values for the i-th datasource. Returned datasource values correspond to
@@ -99,11 +99,11 @@ public class FetchData implements RrdDataSet, ConsolFuns {
 	}
 
 	/**
-	 * Returns the number of columns fetched from the corresponding RRD.
+	 * Returns the number of cells fetched from the corresponding RRD.
 	 * This number is always equal to the number of datasources defined
 	 * in the RRD. Each column represents values of a single datasource.
 	 *
-	 * @return Number of columns (datasources).
+	 * @return Number of cells (datasources).
 	 */
 	public int getColumnCount() {
 		return dsNames.length;

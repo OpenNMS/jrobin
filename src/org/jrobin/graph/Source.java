@@ -245,7 +245,7 @@ class Source
 		if ( time > endTime )
 			time = endTime;
 
-		if ( lastTime > 0 && !Double.isNaN(value) && value != Double.MIN_VALUE && value != Double.MAX_VALUE )
+		if ( lastTime > 0 && !Double.isNaN(value) && value != Util.MIN_DOUBLE && value != Util.MAX_DOUBLE )
 		{
 			min = Util.min( min, value );
 			max = Util.max( max, value );

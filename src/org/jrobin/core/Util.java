@@ -52,6 +52,9 @@ import java.io.*;
  */
 public class Util {
 
+	public static final long MAX_LONG		= Long.MAX_VALUE;
+	public static final long MIN_LONG		= -Long.MAX_VALUE;
+	
 	public static final double MAX_DOUBLE	= Double.MAX_VALUE;
 	public static final double MIN_DOUBLE	= -Double.MAX_VALUE;
 
@@ -65,6 +68,19 @@ public class Util {
 		df = (DecimalFormat) NumberFormat.getNumberInstance(Locale.ENGLISH);
 		df.applyPattern(PATTERN);
 		df.setPositivePrefix("+");
+	}
+
+	/**
+	 * Converts an array of long primitives to an array of doubles.
+	 *
+	 * @return Same array but with all values as double.
+	 */
+	public static double[] toDoubleArray( final long[] array )
+	{
+		double[] values = new double[ array.length ];
+		for ( int i = 0; i < array.length; i++ )
+			values[i] = array[i];
+		return values;
 	}
 
 	/**

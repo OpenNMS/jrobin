@@ -90,7 +90,7 @@ class RrdExporter
 		fetchSources			= def.getFetchSources();
 		fetchSources.setRrdOpener( rrdOpener );
 
-		long finalEndTime 		= Long.MAX_VALUE;
+		long finalEndTime 		= Util.MAX_LONG;
 		boolean changingEndTime = false;
 
 		long startTime 			= def.getStartTime();

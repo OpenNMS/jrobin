@@ -73,6 +73,7 @@ public class DataProcessor implements ConsolFuns {
 
 	private final long tStart;
 	private long tEnd, timestamps[];
+	private double dblTimestamps[];
 	// this will be adjusted later
 	private long step = 0;
 	// resolution to be used for RRD fetch operation
@@ -252,6 +253,23 @@ public class DataProcessor implements ConsolFuns {
 		}
 		else {
 			return timestamps;
+		}
+	}
+
+	/**
+	 * Returns the same as getTimestamps(), only as an array of double primitives.
+	 *
+	 * @return array of timestamps in seconds
+	 */
+	public double[] getTimestampsDouble() throws RrdException {
+		if ( timestamps == null ) {
+			throw new RrdException("Timestamps not calculated yet");
+		}
+		else {
+			if ( dblTimestamps == null )
+				dblTimestamps = Util.toDoubleArray( timestamps );
+			
+			return dblTimestamps;
 		}
 	}
 

@@ -34,6 +34,7 @@ import java.text.DateFormat;
 
 import org.jrobin.core.RrdException;
 import org.jrobin.core.XmlWriter;
+import org.jrobin.core.Util;
 
 /**
  * <p>Class used to collect information for a JRobin graph. JRobin graphs have many
@@ -707,7 +708,7 @@ public class RrdGraphDef extends RrdExportDef implements Serializable
 	 * @throws RrdException Thrown in case of JRobin specific error.
 	 */
 	public void hrule(double value, Color color, String legend) throws RrdException {
-		plotDefs.add( new CustomLine( Long.MIN_VALUE, value, Long.MAX_VALUE, value, color ) );
+		plotDefs.add( new CustomLine( Util.MIN_LONG, value, Util.MAX_LONG, value, color ) );
 		addLegend( legend, color );
 	}
 
@@ -721,7 +722,7 @@ public class RrdGraphDef extends RrdExportDef implements Serializable
 	 * @throws RrdException Thrown in case of JRobin specific error.
 	 */
 	public void hrule(double value, Color color, String legend, int lineWidth) throws RrdException {
-		plotDefs.add( new CustomLine( Long.MIN_VALUE, value, Long.MAX_VALUE, value, color, lineWidth ) );
+		plotDefs.add( new CustomLine( Util.MIN_LONG, value, Util.MAX_LONG, value, color, lineWidth ) );
 		addLegend( legend, color );
 	}
 	
@@ -734,7 +735,7 @@ public class RrdGraphDef extends RrdExportDef implements Serializable
 	 */
 	public void vrule( GregorianCalendar timestamp, Color color, String legend ) throws RrdException {
 		long timeSecs = timestamp.getTimeInMillis() / 1000;
-		plotDefs.add( new CustomLine( timeSecs, Double.MIN_VALUE, timeSecs, Double.MAX_VALUE, color ) );
+		plotDefs.add( new CustomLine( timeSecs, Util.MIN_DOUBLE, timeSecs, Util.MAX_DOUBLE, color ) );
 		addLegend( legend, color );
 	}
 
@@ -749,7 +750,7 @@ public class RrdGraphDef extends RrdExportDef implements Serializable
 	 */
 	public void vrule( GregorianCalendar timestamp, Color color, String legend, int lineWidth ) throws RrdException {
 		long timeSecs = timestamp.getTimeInMillis() / 1000;
-		plotDefs.add( new CustomLine( timeSecs, Double.MIN_VALUE, timeSecs, Double.MAX_VALUE, color, lineWidth ) );
+		plotDefs.add( new CustomLine( timeSecs, Util.MIN_DOUBLE, timeSecs, Util.MAX_DOUBLE, color, lineWidth ) );
 		addLegend( legend, color );
 	}
 	

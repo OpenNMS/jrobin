@@ -39,7 +39,7 @@ import org.jrobin.graph.*;
  *
  * @author Arne Vandamme (cobralord@jrobin.org)
  */
-class ComplexDemo {
+public class ComplexDemo {
 	private static final String filename = "complexdemo";
 
 	private static String getPath(String ext) {
@@ -170,8 +170,8 @@ class ComplexDemo {
 		def.area(new GregorianCalendar(2003, 7, 19, 17, 00), -Double.MAX_VALUE,
 			new GregorianCalendar(2003, 7, 19, 23, 00), Double.MAX_VALUE,
 			Color.RED, "peak period");
-		def.area(new GregorianCalendar(2003, 7, 20, 5, 00), -Double.MAX_VALUE,
-			new GregorianCalendar(2003, 7, 20, 8, 30), Double.MAX_VALUE,
+		def.area(new GregorianCalendar(2003, 7, 20, 5, 00), Util.MIN_DOUBLE,
+			new GregorianCalendar(2003, 7, 20, 8, 30), Util.MAX_DOUBLE,
 			Color.LIGHT_GRAY, "quiet period\n");
 		def.comment("  Rise/descend:");
 		def.area("ftp", new Color(0x00, 0x00, 0x33), null);
@@ -189,7 +189,7 @@ class ComplexDemo {
 		pngFile = getPath(3, "png");
 		graph.saveAsPNG(pngFile, 500, 300);
 		gifFile = getPath(3, "gif");
-		graph.saveAsGIF(gifFile, 500, 300);
+		graph.saveAsGIF(gifFile, 0, 0);
 		jpgFile = getPath(3, "jpg");
 		graph.saveAsJPEG(jpgFile, 500, 300, 0.6F);
 		println("-- Finished");

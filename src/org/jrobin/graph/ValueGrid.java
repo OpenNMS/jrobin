@@ -25,6 +25,7 @@
 package org.jrobin.graph;
 
 import org.jrobin.core.RrdException;
+import org.jrobin.core.Util;
 
 /**
  * <p>Holds specific information about the Value axis grid of the chart.</p>
@@ -63,8 +64,8 @@ class ValueGrid
 	 */
 	ValueGrid( GridRange gr, double low, double up, ValueAxisUnit vAxis, double base ) throws RrdException
 	{
-		double grLower = Double.MAX_VALUE;
-		double grUpper = Double.MIN_VALUE;
+		double grLower = Util.MAX_DOUBLE;
+		double grUpper = Util.MIN_DOUBLE;
 
 		if ( gr != null )
 		{
@@ -132,9 +133,9 @@ class ValueGrid
 		if ( vAxis != null )
 			return;
 
-		if ( Double.isNaN(upper) || upper == Double.MIN_VALUE || upper == Double.MAX_VALUE )
+		if ( Double.isNaN(upper) || upper == Util.MIN_DOUBLE || upper == Util.MAX_DOUBLE )
 			upper = 0.9;
-		if ( Double.isNaN(lower) || lower == Double.MAX_VALUE || lower == Double.MIN_VALUE )
+		if ( Double.isNaN(lower) || lower == Util.MAX_DOUBLE || lower == Util.MIN_DOUBLE )
 			lower = 0;
 
 		if ( !rigid && upper == 0 && upper == lower )

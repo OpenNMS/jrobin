@@ -95,16 +95,16 @@ class CustomArea extends PlotDef
 		int ax, ay, nx, ny;
 	
 		// Get X positions
-		if ( xVal1 == Long.MIN_VALUE )
+		if ( xVal1 == Util.MIN_LONG )
 			ax = g.getMinX();
-		else if ( xVal1 == Long.MAX_VALUE )
+		else if ( xVal1 == Util.MAX_LONG )
 			ax = g.getMaxX();
 		else
 			ax = g.getX( xVal1 );
 	
-		if ( xVal2 == Long.MIN_VALUE )
+		if ( xVal2 == Util.MIN_LONG )
 			nx = g.getMinX();
-		else if ( xVal2 == Long.MAX_VALUE )
+		else if ( xVal2 == Util.MAX_LONG )
 			nx = g.getMaxX();
 		else
 			nx = g.getX( xVal2 );
@@ -136,17 +136,19 @@ class CustomArea extends PlotDef
 		// Set the stackvalues
 		// Always use the y value of the second specified point to stack on
 		if ( yVal2 != Util.MAX_DOUBLE )
+		{
 			for (int i = 0; i < stackValues.length; i++)
 				if ( xValues[i] < ax || xValues[i] > nx ) 
 					stackValues[i] = g.getInverseY(0);
 				else
 					stackValues[i] = g.getInverseY(ny);
+		}
 	}
 
 	/**
 	 * Retrieves the value for a specific point of the CustomArea.  The CustomArea is always a rectangle,
 	 * this means the returned double value will always be equal to the (Y) value of the second datapoint.
-	 * In case of an unlimited CustomArea (second datapoint Y value is <code>Double.MAX_VALUE</code>)
+	 * In case of an unlimited CustomArea (second datapoint Y value is <code>Util.MAX_DOUBLE</code>)
 	 * the returned value is <code>Double.NaN</code>.
 	 * @param tblPos Table index of the datapoint to be retrieved.
 	 * @param timestamps Table containing the timestamps corresponding to all datapoints.
@@ -167,12 +169,10 @@ class CustomArea extends PlotDef
 	}
 
 	// Stubbed method, irrelevant for this PlotDef
-	void setSource( Source[] sources, HashMap sourceIndex ) throws RrdException {
-	}
+	void setSource( Source[] sources, HashMap sourceIndex ) throws RrdException {}
 
 	// Stubbed, we don't need to set value for a Custom plotdef
-	void setValue( int tableRow, long preciseTime, long[] reducedTimestamps ) {
-	}
+	void setValue( int tableRow, long preciseTime, long[] reducedTimestamps ) {}
 
 	void exportXmlTemplate( XmlWriter xml, String legend ) {
 		xml.startTag("area");

@@ -175,9 +175,9 @@ public class ExportData implements RrdDataSet, ConsolFuns
 	}
 
     /**
-	 * Returns the number of columns in this dataset.
+	 * Returns the number of cells in this dataset.
 	 *
-	 * @return Number of columns (datasources).
+	 * @return Number of cells (datasources).
 	 */
 	public int getColumnCount() {
 		return arraySize;
@@ -521,7 +521,7 @@ public class ExportData implements RrdDataSet, ConsolFuns
 		xml.append( "\t\t<step>" + (timestamps[1] - timestamps[0]) + "</step>\n" );
 		xml.append( "\t\t<end>" + timestamps[arraySize - 1] + "</end>\n" );
 		xml.append( "\t\t<rows>" + arraySize + "</rows>\n" );
-		xml.append( "\t\t<columns>" + sources.length + "</columns>\n" );
+		xml.append( "\t\t<cells>" + sources.length + "</cells>\n" );
 		xml.append( "\t\t<legend>\n" );
 		for ( int i = 0; i < sources.length; i++ )
 			xml.append( "\t\t\t<entry>" + getExportLegend( sources[i].getName() ) + "</entry>\n" );
@@ -581,7 +581,7 @@ public class ExportData implements RrdDataSet, ConsolFuns
 		legends.clear();
 
 		// -- Parse the metadata
-		int columns			= Util.Xml.getChildValueAsInt( meta, "columns" );
+		int columns			= Util.Xml.getChildValueAsInt( meta, "cells" );
 		long step			= Util.Xml.getChildValueAsLong( meta, "step" );
 		String[] dsNames	= new String[ columns ];
 		Node[] legendNodes	= Util.Xml.getChildNodes( Util.Xml.getFirstChildNode( meta, "legend"), "entry" );
