@@ -119,14 +119,20 @@ public class RrdCommander {
 	}
 
 	public static void main(String[] args) {
+		System.out.println("== JRobin's RRDTool commander ==");
+		System.out.println("Type a RRDTool command after the dollar sign and press Enter.");
+		System.out.println("Start your RRDTool command with 'create', 'update', 'fetch' etc.");
+		System.out.println("Use any word starting with a dot '.' to bail out");
+		System.out.println("================================");
 		BufferedReader r = new BufferedReader(new InputStreamReader(System.in));
 		while (true) {
 			try {
+				System.out.print("$ ");
 				String s = r.readLine();
-				if(s.equals(".")) {
+				if(s.startsWith(".")) {
 					System.exit(0);
 				}
-				System.out.println(execute(s));
+				execute(s);
 			} catch (IOException e) {
 				System.err.println(e);
 			} catch (RrdException e) {
