@@ -58,11 +58,16 @@ class RrdInspector extends JFrame {
 
 	private String lastDirectory = null;
 
-	RrdInspector() {
+	private RrdInspector(String path) {
 		super(TITLE);
 		constructUI();
 		showCentered();
-		//selectFile();
+		if(path == null) {
+			selectFile();
+		}
+		else {
+			loadFile(new File(path));
+		}
 	}
 
 	private void showCentered() {
@@ -442,24 +447,16 @@ class RrdInspector extends JFrame {
 		}
 	}
 
-	private static void printUsage() {
+	private static void printUsageAndExit() {
 		System.err.println("usage: " + RrdInspector.class.getName() + " [<filename>]");
 		System.exit(1);
 	}
 
 	public static void main(String[] args) {
-		new RrdInspector();
-		File file = null;
 		if (args.length > 1) {
-			printUsage();
-		} else if (args.length == 1) {
-			file = new File(args[0]);
+			printUsageAndExit();
 		}
-		RrdInspector inspector = new RrdInspector();
-		if (file == null) {
-			inspector.selectFile();
-		} else {
-			inspector.loadFile(file);
-		}
+		String path = (args.length == 1)? args[0]: null;
+		new RrdInspector(path);
 	}
 }
