@@ -71,8 +71,9 @@ public class RrdDb implements RrdUpdater {
 	/** See {@link #getLockMode() getLockMode()} for explanation */
 	public static final int EXCEPTION_IF_LOCKED = 2;
 
-    static String RRDTOOL = "rrdtool";
+    static final String RRDTOOL = "rrdtool";
 	static boolean DEBUG = false;
+	static final int XML_INITIAL_BUFFER_CAPACITY = 100000; // bytes
 
 	private RrdFile file;
 	private Header header;
@@ -463,14 +464,14 @@ public class RrdDb implements RrdUpdater {
 	}
 
 	/**
-	 * <p>Returns string representing internal state of RRD file in XML format. This format
+	 * <p>Writes the content of RRD file to OutputStream using XML format. This format
 	 * is fully compatible with RRDTool's XML dump format and can be used for conversion
-	 * purposes.</p>
-	 * @return Internal state of RRD file in XML format.
+	 * purposes or debugging.</p>
+	 * @param destination Output stream to receive XML data
 	 * @throws IOException Thrown in case of I/O related error
 	 * @throws RrdException Thrown in case of JRobin specific error
 	 */
-	public synchronized String getXml() throws IOException, RrdException {
+	public synchronized void dumpXml(OutputStream destination) throws IOException, RrdException {
 		// create XML document
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		factory.setValidating(false);
@@ -491,7 +492,7 @@ public class RrdDb implements RrdUpdater {
 			for(int i = 0; i < archives.length; i++) {
 				archives[i].appendXml(root);
 			}
-			// transfrom DOM to String
+			// serialize DOM object
 			TransformerFactory tFactory = TransformerFactory.newInstance();
 			Transformer transformer = tFactory.newTransformer();
 			transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
@@ -501,10 +502,8 @@ public class RrdDb implements RrdUpdater {
 			transformer.setOutputProperty(OutputKeys.STANDALONE, "yes");
 
 			DOMSource source = new DOMSource(root);
-			ByteArrayOutputStream destination = new ByteArrayOutputStream();
 			StreamResult result = new StreamResult(destination);
 			transformer.transform(source, result);
-			return destination.toString();
 		} catch (ParserConfigurationException e) {
 			throw new RrdException("XML Error: " + e);
 		} catch (DOMException e) {
@@ -516,6 +515,20 @@ public class RrdDb implements RrdUpdater {
 		} catch (IllegalArgumentException e) {
 			throw new RrdException("XML Error: " + e);
 		}
+	}
+
+	/**
+	 * <p>Returns string representing internal state of RRD file in XML format. This format
+	 * is fully compatible with RRDTool's XML dump format and can be used for conversion
+	 * purposes or debugging.</p>
+	 * @return Internal state of RRD file in XML format.
+	 * @throws IOException Thrown in case of I/O related error
+	 * @throws RrdException Thrown in case of JRobin specific error
+	 */
+	public synchronized String getXml() throws IOException, RrdException {
+		ByteArrayOutputStream destination = new ByteArrayOutputStream(XML_INITIAL_BUFFER_CAPACITY);
+		dumpXml(destination);
+		return destination.toString();
 	}
 
 	/**
@@ -539,9 +552,9 @@ public class RrdDb implements RrdUpdater {
 	 */
 
 	public synchronized void dumpXml(String filename) throws IOException, RrdException {
-		PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter(filename)));
-		out.print(getXml());
-		out.close();
+        OutputStream destination = new BufferedOutputStream(new FileOutputStream(filename, false));
+		dumpXml(destination);
+		destination.close();
 	}
 
 	/**
@@ -632,4 +645,5 @@ public class RrdDb implements RrdUpdater {
 	protected void finalize() throws Throwable {
 		close();
 	}
+
 }
