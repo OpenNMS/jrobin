@@ -118,6 +118,7 @@ class Line extends PlotDef
 			if ( visible && ny != Double.NaN && nx != 0 && ay != Integer.MIN_VALUE && ny != Integer.MIN_VALUE )
 				g.drawLine( ax, ay, nx, ny );
 		
+			
 			stackValues[i] 	= ny;
 			ax 				= nx;
 			ay 				= ny;

@@ -88,26 +88,33 @@ class Area extends PlotDef
 			nx = xValues[i];
 			ny = g.getY( values[i] );
 		
-			if ( stacked ) {
-				py 	= stackValues[i];
-				ny += stackValues[i];
-			}
-		
-			if ( visible )
+			if ( !Double.isNaN(values[i]) )
 			{
-				if (nx > ax + 1)	// More than one pixel hop, draw intermediate pixels too
-				{
-					// For each pixel between nx and ax, calculate the y, plot the line
-					int co 	= (ny - ay) / (nx - ax);
-					int j 	= (ax > 0 ? ax : 1 );		// Skip 0 
-			
-					for (j = ax; j <= nx; j++)
-						if ( ay != Integer.MIN_VALUE && ny != Integer.MIN_VALUE )
-							g.drawLine( j, py, j, ( co * (j - ax) + ay) );
+				if ( stacked ) {
+					py 	= stackValues[i];
+					ny += ( stackValues[i] == Integer.MIN_VALUE ? Integer.MIN_VALUE : stackValues[i] );
 				}
-				else if ( nx != 0 && py != Integer.MIN_VALUE && ny != Integer.MIN_VALUE )
-					g.drawLine( nx, py, nx, ny );
+			
+				if ( visible )
+				{
+					if (nx > ax + 1)	// More than one pixel hop, draw intermediate pixels too
+					{
+						// For each pixel between nx and ax, calculate the y, plot the line
+						int co 	= (ny - ay) / (nx - ax);
+						int j 	= (ax > 0 ? ax : 1 );		// Skip 0 
+				
+						for (j = ax; j <= nx; j++)
+							if ( ay != Integer.MIN_VALUE && ny != Integer.MIN_VALUE )
+								g.drawLine( j, py, j, ( co * (j - ax) + ay) );
+					}
+					else if ( nx != 0 && py != Integer.MIN_VALUE && ny != Integer.MIN_VALUE )
+						g.drawLine( nx, py, nx, ny );
+				}
+			
+				
 			}
+			
+			// Special case with NaN doubles
 			
 			stackValues[i] 	= ny;
 			ax 				= nx;

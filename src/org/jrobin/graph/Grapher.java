@@ -618,7 +618,7 @@ class Grapher
 		LinkedList markerList = new LinkedList();
 		
 		// Position the cursor just below the chart area
-		int posy			= y_offset + chartHeight + CHART_UPADDING + CHART_BPADDING + nfont_height;
+		int posy			= y_offset + chartHeight + CHART_UPADDING + CHART_BPADDING + ( graphDef.showMajorGridX() ? nfont_height : 0 );
 		int posx			= LBORDER_SPACE;
 
 		g.setColor( normalFontColor );

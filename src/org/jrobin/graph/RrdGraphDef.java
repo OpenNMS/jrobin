@@ -223,6 +223,33 @@ public class RrdGraphDef implements Serializable
 	}
 	
 	/**
+	 * Sets horizontal (time) axis label.
+	 * <p>
+	 * A horizontal axis label is always center aligned by default, with an extra linefeed to add
+	 * some space before the regular comment lines start.  If you wish to remove the extra line of whitespace
+	 * you should specify the alignment in the label using @c, @l or @r.  Using the @C, @L or @R markers will
+	 * align the text appropriately, and leave the extra line of whitespace intact.
+	 * </p>
+	 * <p>
+	 * It is possible to use multiple lines and multiple alignment markers for the axis label, in that case
+	 * you should specify alignment for every part of the label to get it to display correctly.  When using multiple
+	 * lines, no markers will be added to the end of the last line by default.
+	 * </p>
+	 * @param label Horizontal axis label.
+	 */
+	public void setTimeAxisLabel( String label ) throws RrdException
+	{
+		if ( label != null )
+		{	
+			TimeAxisLabel cmt	= new TimeAxisLabel( label );
+			commentLines 		+= cmt.getLineCount();
+			commentLineShift	= (cmt.isCompleteLine() ? 0 : 1); 
+			
+			comments.add( 0, cmt );
+		}
+	}
+	
+	/**
 	 * Sets image background color. If not set, back color defaults to a very light gray.
 	 * @param backColor Graph background color.
 	 */
