@@ -134,6 +134,11 @@ public class RrdDb implements RrdUpdater {
 	 */
 
 	public RrdDb(String path) throws IOException, RrdException {
+		// opens existing RRD file - throw exception if the file does not exist...
+		File rrdFile = new File(path);
+		if(!rrdFile.exists()) {
+			throw new IOException("Could not open file " + path + " [non existent]");
+		}
 		try {
 			initializeSetup(path);
 			// restore header

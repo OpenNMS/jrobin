@@ -168,6 +168,19 @@ class RpnCalculator {
 			else if(token.equals("E")) {
 				push(Math.E);
 			}
+			// logical operators
+			else if(token.equals("AND")) {
+				double x2 = pop(), x1 = pop();
+				push((x1 != 0 && x2 != 0)? 1: 0);
+			}
+			else if(token.equals("OR")) {
+				double x2 = pop(), x1 = pop();
+				push((x1 != 0 || x2 != 0)? 1: 0);
+			}
+			else if(token.equals("XOR")) {
+				double x2 = pop(), x1 = pop();
+				push(((x1 != 0 && x2 == 0) || (x1 == 0 && x2 != 0))? 1: 0);
+			}
 			else {
 				throw new RrdException("Unknown token enocuntered: " + token);
 			}
