@@ -1,7 +1,7 @@
 
 
-import jrobin.graph2.RrdGraphDef;
-import jrobin.graph2.RrdGraph;
+import jrobin.graph.RrdGraphDef;
+import jrobin.graph.RrdGraph;
 import jrobin.core.Util;
 import jrobin.core.RrdException;
 

@@ -79,11 +79,12 @@ public class RrdGraph implements Serializable
 
 	/**
 	 * Constructs a new JRobin graph object.
-	 * @param poolSize Maximum number of concurrent open rrd files in the RrdGraph object.
+	 * @param usePool True if this should object should use RrdDbPool
 	 */
-	public RrdGraph( RrdDbPool pool )
+	public RrdGraph( boolean usePool )
 	{
-		this.pool = pool;
+		if ( usePool )
+			this.pool = RrdDbPool.getInstance();
 	}
 
 	/**
@@ -94,19 +95,20 @@ public class RrdGraph implements Serializable
 	 */
 	public RrdGraph( RrdGraphDef graphDef ) throws IOException, RrdException
 	{
-		this( graphDef, null );
+		this( graphDef, false );
 	}
 
 	/**
 	 * Constructs a new JRobin graph from the supplied definition.
 	 * @param graphDef Graph definition.
-	 * @param poolSize Maximum number of concurrent open rrd files in the RrdGraph object.
+	 * @param usePool True if this should object should use RrdDbPool
 	 * @throws IOException Thrown in case of I/O error.
 	 * @throws RrdException Thrown in case of JRobin specific error.
 	 */
-	public RrdGraph( RrdGraphDef graphDef, RrdDbPool pool ) throws IOException, RrdException
+	public RrdGraph( RrdGraphDef graphDef, boolean usePool ) throws IOException, RrdException
 	{
-		this.pool	= pool;
+		if ( usePool )
+			this.pool = RrdDbPool.getInstance();
 		grapher		= new Grapher( graphDef, this );
 	}
 	

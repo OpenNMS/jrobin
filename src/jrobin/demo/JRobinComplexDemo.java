@@ -68,7 +68,7 @@ public class JRobinComplexDemo
 		GregorianCalendar start, stop;
 		
 		RrdDbPool pool 	= RrdDbPool.getInstance();
-		RrdGraph graph	= new RrdGraph( pool );
+		RrdGraph graph	= new RrdGraph( true );
 		
 		try
 		{
@@ -140,7 +140,7 @@ public class JRobinComplexDemo
 			def.line("load", new Color(0x00,0x00,0x00), "Load average (5 min)@L" );
 			def.gprint("load", "MIN", "Minimum:@5.2@s%");
 			def.gprint("load", "MAX", "Maximum:@5.2@s% @r ");
-			def.hrule( 0.7, new Color( 0xFF, 0xCC, 0x00), "Average load@L" );
+			//def.hrule( 0.7, new Color( 0xFF, 0xCC, 0x00), "Average load@L" );
 			def.gprint("load", "AVG", "Average:@5.2@s%");
 			def.gprint("load", "LAST", "Current:@5.2@s% @r");
 			def.comment( "\n\n[ courtesy of www.cherrymon.org ]@L" );
@@ -155,7 +155,6 @@ public class JRobinComplexDemo
 			println( "- Creating graph 2: complexdemo2.gif" );
 			graph.saveAsGIF( "/complexdemo2.gif" );
 			// ---------------------------------------------------------------
-			
 			
 			// Create ftp graph for a month
 			println( "- Creating graph 3: complexdemo3.png");

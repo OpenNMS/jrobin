@@ -54,7 +54,7 @@ class ValueGrid
 	 * @param vAxis ValueAxisUnit specified to determine the grid lines, if the given
 	 * ValueAxisUnit is null, one will be automatically determined.
 	 */
-	ValueGrid( GridRange gr, double lower, double upper, ValueAxisUnit vAxis )
+	ValueGrid( GridRange gr, double low, double up, ValueAxisUnit vAxis )
 	{
 		double grLower = Double.MAX_VALUE;
 		double grUpper = Double.MIN_VALUE;
@@ -66,8 +66,8 @@ class ValueGrid
 			grUpper			= gr.getUpperValue(); 	
 		}
 		
-		this.lower	= lower;
-		this.upper	= upper;
+		this.lower	= low;
+		this.upper	= up;
 		this.vAxis	= vAxis;
 		
 		// Set an appropriate value axis it not given yet
@@ -76,7 +76,7 @@ class ValueGrid
 		if ( !rigid ) {
 			this.lower		= ( lower == grLower ? grLower : this.vAxis.getNiceLower( lower ) );
 			this.upper		= ( upper == grUpper ? grUpper : this.vAxis.getNiceHigher( upper ) );
-		}
+		}	
 	}
 	
 	
@@ -107,6 +107,11 @@ class ValueGrid
 	{
 		if ( vAxis != null )
 			return;
+		
+		if ( upper == Double.NaN  || upper == Double.MIN_VALUE || upper == Double.MAX_VALUE )
+			upper = 0.9;
+		if ( lower == Double.NaN || lower == Double.MAX_VALUE || lower == Double.MIN_VALUE )
+			lower = 0;
 		
 		if ( !rigid && upper == 0 && upper == lower )
 			upper = 0.9;

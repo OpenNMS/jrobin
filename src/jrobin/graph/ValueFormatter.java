@@ -127,13 +127,15 @@ class ValueFormatter
 	String getFormattedValue()
 	{
 		String valueStr = "" + value;
-
-		if ( scale ) {
-			scaleValue( scaleIndex );
-			valueStr = decFormat.format(scaledValue);
+		
+		if ( !Double.isNaN(value) ) {
+			if ( scale ) {
+				scaleValue( scaleIndex );
+				valueStr = decFormat.format(scaledValue);
+			}
+			else
+				valueStr = decFormat.format(value);
 		}
-		else
-			valueStr = decFormat.format(value);
 		
 		// Fix the formatted string to the correct length
 		int diff = formattedStrLen - valueStr.length();

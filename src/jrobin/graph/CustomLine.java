@@ -149,7 +149,7 @@ class CustomLine extends Line
 			ny = g.getY( yVal2 );
 
 		// Draw the line
-		if ( visible )		
+		if ( visible )
 			g.drawLine( ax, ay, nx, ny );
 		 
 		// Set the stackvalues

@@ -465,7 +465,7 @@ class Grapher
 			plotDefs[i].draw( g, xValues, parentSeries, lastPlotType );
 			lastPlotType = plotDefs[i].plotType;
 		}
-
+		
 		// Reset clipping area, origin and AA settings
 		graphics.translate( -graphOriginX, -graphOriginY );
 		graphics.setClip( 0, 0, imgWidth, imgHeight);

@@ -105,10 +105,10 @@ class Source
 		switch ( aggType )
 		{
 			case AGG_MINIMUM:
-				return min;
+				return ( min != Double.MIN_VALUE && min != Double.MAX_VALUE ? min : Double.NaN );
 				
 			case AGG_MAXIMUM:
-				return max;
+				return ( max != Double.MIN_VALUE && max != Double.MAX_VALUE ? max : Double.NaN );
 				
 			case AGG_AVERAGE:
 				if ( totalTime > 0 )
