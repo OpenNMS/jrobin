@@ -30,7 +30,7 @@ import java.io.*;
 import java.text.DecimalFormat;
 
 class Convertor {
-	private static final String SUFFIX = ".jrobin";
+	private static final String SUFFIX = ".jrb";
 	private static final DecimalFormat secondsFormatter = new DecimalFormat("##0.000");
 	private static final DecimalFormat countFormatter = new DecimalFormat("00000");
 
