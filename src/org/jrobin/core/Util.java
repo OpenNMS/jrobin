@@ -25,13 +25,23 @@
 
 package org.jrobin.core;
 
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.w3c.dom.Element;
+import org.w3c.dom.Document;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.DocumentBuilder;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Date;
 import java.util.Locale;
 import java.util.GregorianCalendar;
-import java.io.File;
-import java.io.IOException;
+import java.util.ArrayList;
+import java.io.*;
 
 /**
  * Class defines various utility functions used in JRobin. 
@@ -243,6 +253,86 @@ public class Util {
 
 	static String getTmpFilename() throws IOException {
 		return File.createTempFile("JROBIN_", ".tmp").getCanonicalPath();
+	}
+
+	static class Xml {
+		static Node[] getChildNodes(Node parentNode, String childName) {
+			ArrayList nodes = new ArrayList();
+			NodeList nodeList = parentNode.getChildNodes();
+			for (int i = 0; i < nodeList.getLength(); i++) {
+				Node node = nodeList.item(i);
+				if (node.getNodeName().equals(childName)) {
+					nodes.add(node);
+				}
+			}
+			return (Node[]) nodes.toArray(new Node[0]);
+		}
+
+		static Node getFirstChildNode(Node parentNode, String childName) throws RrdException {
+			Node[] childs = getChildNodes(parentNode, childName);
+			if (childs.length > 0) {
+				return childs[0];
+			}
+			throw new RrdException("XML Error, no such child: " + childName);
+		}
+
+		static String getChildValue(Node parentNode, String childName) throws RrdException {
+			NodeList children = parentNode.getChildNodes();
+			for (int i = 0; i < children.getLength(); i++) {
+				Node child = children.item(i);
+				if (child.getNodeName().equals(childName)) {
+					return child.getFirstChild().getNodeValue().trim();
+				}
+			}
+			throw new RrdException("XML Error, no such child: " + childName);
+		}
+
+		static int getChildValueAsInt(Node parentNode, String childName) throws RrdException {
+			String valueStr = getChildValue(parentNode, childName);
+			return Integer.parseInt(valueStr);
+		}
+
+		static long getChildValueAsLong(Node parentNode, String childName) throws RrdException {
+			String valueStr = getChildValue(parentNode, childName);
+			return Long.parseLong(valueStr);
+		}
+
+		static double getChildValueAsDouble(Node parentNode, String childName) throws RrdException {
+			String valueStr = getChildValue(parentNode, childName);
+			return Util.parseDouble(valueStr);
+		}
+
+		static Element getRootElement(InputSource inputSource) throws RrdException, IOException	{
+			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+			factory.setValidating(false);
+			factory.setNamespaceAware(false);
+			try {
+				DocumentBuilder builder = factory.newDocumentBuilder();
+				Document doc = builder.parse(inputSource);
+				return doc.getDocumentElement();
+			} catch (ParserConfigurationException e) {
+				throw new RrdException(e);
+			} catch (SAXException e) {
+				throw new RrdException(e);
+			}
+		}
+
+		static Element getRootElement(String xmlString)	throws RrdException, IOException {
+			return getRootElement(new InputSource(new StringReader(xmlString)));
+		}
+
+		static Element getRootElement(File xmlFile)	throws RrdException, IOException {
+			Reader reader = null;
+			try {
+				reader = new FileReader(xmlFile);
+				return getRootElement(new InputSource(reader));
+			}
+			finally {
+				if(reader != null) {
+					reader.close();
+				}
+			}
+		}
 	}
 }
 

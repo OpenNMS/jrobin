@@ -24,13 +24,8 @@
  */
 package org.jrobin.core;
 
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import javax.xml.parsers.FactoryConfigurationError;
-import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
+
 /**
  * <p>Class used to perform various complex operations on RRD files. Use an instance of the
  * RrdToolkit class to:</p>
@@ -72,10 +67,10 @@ public class RrdToolkit {
 	 */
 	public void addDatasource(String sourcePath, String destPath, DsDef newDatasource)
 		throws IOException, RrdException {
-		if(Util.sameFilePath(sourcePath, destPath)) {
+		if (Util.sameFilePath(sourcePath, destPath)) {
 			throw new RrdException("Source and destination paths are the same");
 		}
-        RrdDb rrdSource = new RrdDb(sourcePath);
+		RrdDb rrdSource = new RrdDb(sourcePath);
 		RrdDef rrdDef = rrdSource.getRrdDef();
 		rrdDef.setPath(destPath);
 		rrdDef.addDatasource(newDatasource);
@@ -120,10 +115,10 @@ public class RrdToolkit {
 	 */
 	public void removeDatasource(String sourcePath, String destPath, String dsName)
 		throws IOException, RrdException {
-		if(Util.sameFilePath(sourcePath, destPath)) {
+		if (Util.sameFilePath(sourcePath, destPath)) {
 			throw new RrdException("Source and destination paths are the same");
 		}
-        RrdDb rrdSource = new RrdDb(sourcePath);
+		RrdDb rrdSource = new RrdDb(sourcePath);
 		RrdDef rrdDef = rrdSource.getRrdDef();
 		rrdDef.setPath(destPath);
 		rrdDef.removeDatasource(dsName);
@@ -168,10 +163,10 @@ public class RrdToolkit {
 	 */
 	public void addArchive(String sourcePath, String destPath, ArcDef newArchive)
 		throws IOException, RrdException {
-		if(Util.sameFilePath(sourcePath, destPath)) {
+		if (Util.sameFilePath(sourcePath, destPath)) {
 			throw new RrdException("Source and destination paths are the same");
 		}
-        RrdDb rrdSource = new RrdDb(sourcePath);
+		RrdDb rrdSource = new RrdDb(sourcePath);
 		RrdDef rrdDef = rrdSource.getRrdDef();
 		rrdDef.setPath(destPath);
 		rrdDef.addArchive(newArchive);
@@ -217,10 +212,10 @@ public class RrdToolkit {
 	 */
 	public void removeArchive(String sourcePath, String destPath, String consolFun, int steps)
 		throws IOException, RrdException {
-		if(Util.sameFilePath(sourcePath, destPath)) {
+		if (Util.sameFilePath(sourcePath, destPath)) {
 			throw new RrdException("Source and destination paths are the same");
 		}
-        RrdDb rrdSource = new RrdDb(sourcePath);
+		RrdDb rrdSource = new RrdDb(sourcePath);
 		RrdDef rrdDef = rrdSource.getRrdDef();
 		rrdDef.setPath(destPath);
 		rrdDef.removeArchive(consolFun, steps);
@@ -258,16 +253,16 @@ public class RrdToolkit {
 		throws IOException {
 		File source = new File(sourcePath);
 		File dest = new File(destPath);
-		if(saveBackup) {
+		if (saveBackup) {
 			String backupPath = destPath + ".bak";
 			File backup = new File(backupPath);
 			deleteFile(backup);
-			if(!dest.renameTo(backup)) {
+			if (!dest.renameTo(backup)) {
 				throw new IOException("Could not create backup file " + backupPath);
 			}
 		}
 		deleteFile(dest);
-		if(!source.renameTo(dest)) {
+		if (!source.renameTo(dest)) {
 			throw new IOException("Could not create file " + destPath + " from " + sourcePath);
 		}
 	}
@@ -281,7 +276,7 @@ public class RrdToolkit {
 	 * @throws IOException Thrown in case of I/O error
 	 */
 	public void setDsHeartbeat(String sourcePath, String datasourceName,
-		long newHeartbeat) throws RrdException, IOException {
+							   long newHeartbeat) throws RrdException, IOException {
 		RrdDb rrd = new RrdDb(sourcePath);
 		Datasource ds = rrd.getDatasource(datasourceName);
 		ds.setHeartbeat(newHeartbeat);
@@ -299,7 +294,7 @@ public class RrdToolkit {
 	 * @throws IOException Thrown in case of I/O error
 	 */
 	public void setDsMinValue(String sourcePath, String datasourceName,
-		double newMinValue, boolean filterArchivedValues) throws RrdException, IOException {
+							  double newMinValue, boolean filterArchivedValues) throws RrdException, IOException {
 		RrdDb rrd = new RrdDb(sourcePath);
 		Datasource ds = rrd.getDatasource(datasourceName);
 		ds.setMinValue(newMinValue, filterArchivedValues);
@@ -317,7 +312,7 @@ public class RrdToolkit {
 	 * @throws IOException Thrown in case of I/O error
 	 */
 	public void setDsMaxValue(String sourcePath, String datasourceName,
-		double newMaxValue, boolean filterArchivedValues) throws RrdException, IOException {
+							  double newMaxValue, boolean filterArchivedValues) throws RrdException, IOException {
 		RrdDb rrd = new RrdDb(sourcePath);
 		Datasource ds = rrd.getDatasource(datasourceName);
 		ds.setMaxValue(newMaxValue, filterArchivedValues);
@@ -336,7 +331,7 @@ public class RrdToolkit {
 	 * @throws IOException Thrown in case of I/O error
 	 */
 	public void setDsMinMaxValue(String sourcePath, String datasourceName,
-		double newMinValue, double newMaxValue, boolean filterArchivedValues)
+								 double newMinValue, double newMaxValue, boolean filterArchivedValues)
 		throws RrdException, IOException {
 		RrdDb rrd = new RrdDb(sourcePath);
 		Datasource ds = rrd.getDatasource(datasourceName);
@@ -354,8 +349,8 @@ public class RrdToolkit {
 	 * @throws IOException Thrown in case of I/O error
 	 */
 	public void setArcXff(String sourcePath, String consolFun, int steps,
-		double newXff) throws RrdException, IOException {
-        RrdDb rrd = new RrdDb(sourcePath);
+						  double newXff) throws RrdException, IOException {
+		RrdDb rrd = new RrdDb(sourcePath);
 		Archive arc = rrd.getArchive(consolFun, steps);
 		arc.setXff(newXff);
 		rrd.close();
@@ -376,16 +371,16 @@ public class RrdToolkit {
 	public void resizeArchive(String sourcePath, String destPath, String consolFun,
 							  int numSteps, int newRows)
 		throws IOException, RrdException {
-		if(Util.sameFilePath(sourcePath, destPath)) {
+		if (Util.sameFilePath(sourcePath, destPath)) {
 			throw new RrdException("Source and destination paths are the same");
 		}
-		if(newRows < 2) {
+		if (newRows < 2) {
 			throw new RrdException("New arcihve size must be at least 2");
 		}
-        RrdDb rrdSource = new RrdDb(sourcePath);
+		RrdDb rrdSource = new RrdDb(sourcePath);
 		RrdDef rrdDef = rrdSource.getRrdDef();
 		ArcDef arcDef = rrdDef.findArchive(consolFun, numSteps);
-		if(arcDef.getRows() != newRows) {
+		if (arcDef.getRows() != newRows) {
 			arcDef.setRows(newRows);
 			rrdDef.setPath(destPath);
 			RrdDb rrdDest = new RrdDb(rrdDef);
@@ -416,185 +411,9 @@ public class RrdToolkit {
 	}
 
 	private static void deleteFile(File file) throws IOException {
-		if(file.exists() && !file.delete()) {
+		if (file.exists() && !file.delete()) {
 			throw new IOException("Could not delete file: " + file.getCanonicalPath());
 		}
 	}
-
-    /**
-	 * Creates RrdDef object from its XML string equivalent. The format of the input string is
-	 * the same as the format described in
-	 * {@link #createRrdDefFromXmlFile createRrdDefFromXmlFile} method.
-	 * @param xmlString XML formatted string containing complete RRD definition
-	 * @return RrdDef object which can be used to create new RrdDb object
-	 * @throws RrdException thrown in case of bad XML format or bad RRD definition parameters
-	 * @throws IOException thrown in case of I/O error
-	 */
-	public RrdDef createRrdDefFromXmlString(String xmlString) throws RrdException, IOException {
-        return createRrdDefFromXmlSource(new InputSource(new StringReader(xmlString)));
-	}
-
-	/**
-	 * Creates RrdDef object from the file containing its XML equivalent. Here is an example
-	 * of a properly formatted XML file:</p>
-	 * <pre><code>
-	 * &lt;rrd_def&gt;
-	 *     &lt;path&gt;test.rrd&lt;/path&gt;
-	 *     &lt;!-- not mandatory --&gt;
-	 *     &lt;start&gt;1000123123&lt;/start&gt;
-	 *     &lt;!-- not mandatory --&gt;
-	 *     &lt;step&gt;150&lt;/step&gt;
-	 *     &lt;!-- at least one datasource must be supplied --&gt;
-	 *     &lt;datasource&gt;
-	 *         &lt;name&gt;input&lt;/name&gt;
-	 *         &lt;type&gt;COUNTER&lt;/type&gt;
-	 *         &lt;heartbeat&gt;300&lt;/heartbeat&gt;
-	 *         &lt;min&gt;0&lt;/min&gt;
-	 *         &lt;max&gt;U&lt;/max&gt;
-	 *     &lt;/datasource&gt;
-	 *     &lt;datasource&gt;
-	 *         &lt;name&gt;temperature&lt;/name&gt;
-	 *         &lt;type&gt;GAUGE&lt;/type&gt;
-	 *         &lt;heartbeat&gt;400&lt;/heartbeat&gt;
-	 *         &lt;min&gt;U&lt;/min&gt;
-	 *         &lt;max&gt;1000&lt;/max&gt;
-	 *     &lt;/datasource&gt;
-	 *     &lt;!-- at least one archive must be supplied --&gt;
-	 *     &lt;archive&gt;
-	 *         &lt;cf&gt;AVERAGE&lt;/cf&gt;
-	 *         &lt;xff&gt;0.5&lt;/xff&gt;
-	 *         &lt;steps&gt;1&lt;/steps&gt;
-	 *         &lt;rows&gt;700&lt;/rows&gt;
-	 *     &lt;/archive&gt;
-	 *     &lt;archive&gt;
-	 *         &lt;cf&gt;MAX&lt;/cf&gt;
-	 *         &lt;xff&gt;0.6&lt;/xff&gt;
-	 *         &lt;steps&gt;6&lt;/steps&gt;
-	 *         &lt;rows&gt;7000&lt;/rows&gt;
-	 *     &lt;/archive&gt;
-     * &lt;/rrd_def&gt;
-	 * </code></pre>
-	 *
-	 * @param filepath path containing XML formatted RRD definition (like the one given above)
-	 * @return RrdDef object which can be used to create new RrdDb object
-	 * @throws RrdException thrown in case of bad XML format or bad RRD definition parameters
-	 * @throws IOException thrown in case of I/O error
-	 */
-	public RrdDef createRrdDefFromXmlFile(String filepath) throws RrdException, IOException {
-		FileReader fileReader = null;
-		try {
-			fileReader = new FileReader(filepath);
-        	return createRrdDefFromXmlSource(new InputSource(fileReader));
-		}
-		finally {
-			if(fileReader != null) {
-				fileReader.close();
-			}
-		}
-	}
-
-	/**
-	 * Creates RrdDef object from any parsable XML source. The format of the underlying input
-	 * source data must conform to the format described for the
-	 * {@link #createRrdDefFromXmlFile createRrdDefFromXmlFile} method.
-	 * @param inputSource parsable XML source containing complete RRD definition
-	 * @return RrdDef object which can be used to create new RrdDb object
-	 * @throws RrdException thrown in case of bad XML format or bad RRD definition parameters
-	 * @throws IOException thrown in case of I/O error
-	 */
-	public RrdDef createRrdDefFromXmlSource(InputSource inputSource) throws RrdException, IOException {
-		try {
-			Element	root = XmlReader.getRootElement(inputSource);
-			// must start with <rrd_def>
-			if(!root.getTagName().equals("rrd_def")) {
-				throw new RrdException("XML definition must start with <rrd_def>");
-			}
-			// PATH must be supplied or exception is thrown
-			String path = XmlReader.getChildValue(root, "path");
-			RrdDef rrdDef = new RrdDef(path);
-			try {
-				// START is not mandatory
-				long start = XmlReader.getChildValueAsLong(root, "start");
-				rrdDef.setStartTime(start);
-			}
-			catch(RrdException e) {	}
-			try {
-				// STEP is not mandatory
-				long step = XmlReader.getChildValueAsLong(root, "step");
-				rrdDef.setStep(step);
-			}
-			catch(RrdException e) {
-				// NOP
-			}
-			// datsources
-			Node[] dsNodes = XmlReader.getChildNodes(root, "datasource");
-			for(int i = 0; i < dsNodes.length; i++) {
-				String name = XmlReader.getChildValue(dsNodes[i], "name");
-				String type = XmlReader.getChildValue(dsNodes[i], "type");
-				long heartbeat = XmlReader.getChildValueAsLong(dsNodes[i], "heartbeat");
-				double min = XmlReader.getChildValueAsDouble(dsNodes[i], "min");
-				double max = XmlReader.getChildValueAsDouble(dsNodes[i], "max");
-				rrdDef.addDatasource(name, type, heartbeat, min, max);
-			}
-			// archives
-			Node[] arcNodes = XmlReader.getChildNodes(root, "archive");
-            for(int i = 0; i < arcNodes.length; i++) {
-				String consolFun = XmlReader.getChildValue(arcNodes[i], "cf");
-				double xff = XmlReader.getChildValueAsDouble(arcNodes[i], "xff");
-				int steps = XmlReader.getChildValueAsInt(arcNodes[i], "steps");
-				int rows = XmlReader.getChildValueAsInt(arcNodes[i], "rows");
-				rrdDef.addArchive(consolFun, xff, steps, rows);
-			}
-			return rrdDef;
-		} catch (FactoryConfigurationError e) {
-			throw new RrdException("XML error: " + e);
-		} catch (ParserConfigurationException e) {
-			throw new RrdException("XML error: " + e);
-		} catch (SAXException e) {
-			throw new RrdException("XML error: " + e);
-		} catch(NumberFormatException e) {
-			throw new RrdException("XML error: " + e);
-		}
-	}
-
-	/*
-	public static void main(String[] args) throws RrdException, IOException {
-		String s =
-			"<rrd_def>                            " +
-			"	<path>test.rrd</path>             " +
-			"	<start>1000000000</start>         " +
-			"	<step>151</step>                  " +
-			"	<datasource>                      " +
-			"		<name>input</name>            " +
-			"		<type>COUNTER</type>          " +
-			"		<heartbeat>300</heartbeat>    " +
-			"		<min>10</min>                 " +
-			"		<max>U</max>                  " +
-			"	</datasource>                     " +
-			"	<datasource>                      " +
-			"		<name>temperature</name>      " +
-			"		<type>GAUGE</type>            " +
-			"		<heartbeat>400</heartbeat>    " +
-			"		<min>U</min>                  " +
-			"		<max>1000</max>               " +
-			"	</datasource>                     " +
-			"	<archive>                         " +
-			"		<cf>AVERAGE</cf>              " +
-			"		<xff>0.5</xff>                " +
-			"		<steps>1</steps>              " +
-			"		<rows>700</rows>              " +
-			"	</archive>                        " +
-			"	<archive>                         " +
-			"		<cf>MAX</cf>                  " +
-			"		<xff>0.6</xff>                " +
-			"		<steps>6</steps>              " +
-			"		<rows>7000</rows>             " +
-			"	</archive>                        " +
-			"</rrd_def>                           ";
-		RrdDef def = RrdToolkit.getInstance().createRrdDefFromXmlString(s);
-		RrdDb db = new RrdDb(def);
-		db.close();
-	}
-	*/
 }
 
