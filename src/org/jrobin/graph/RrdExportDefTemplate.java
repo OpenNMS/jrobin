@@ -133,7 +133,7 @@ public class RrdExportDefTemplate extends XmlTemplate
 
 	private void resolveDatasources(Node datasourceNode) throws RrdException
 	{
-		validateTagsOnlyOnce(datasourceNode, new String[] { "def*" });
+		validateTagsOnlyOnce(datasourceNode, new String[] { "def*", "export_data*" });
 		Node[] nodes = getChildNodes(datasourceNode, "def");
 		for(int i = 0; i < nodes.length; i++) {
 			if(hasChildNode(nodes[i], "rrd"))
@@ -170,6 +170,32 @@ public class RrdExportDefTemplate extends XmlTemplate
 			}
 			else {
 				throw new RrdException("Unrecognized <def> format");
+			}
+		}
+
+		nodes = getChildNodes(datasourceNode, "export_data");
+		for ( int i = 0; i < nodes.length; i++ )
+		{
+			validateTagsOnlyOnce( nodes[i], new String[] {"file", "ds_name_prefix", "use_legend_names"} );
+			String file 			= getChildValue( nodes[i], "file" );
+            String prefix			= "d";
+			boolean use_legends		= false;
+
+			if ( Util.Xml.hasChildNode( nodes[i], "ds_name_prefix" ) )
+				prefix 			= getChildValue(nodes[i], "ds_name_prefix");
+
+			if ( Util.Xml.hasChildNode( nodes[i], "use_legend_names" ) )
+				use_legends 	= getChildValueAsBoolean(nodes[i], "use_legend_names");
+
+			try
+			{
+				if ( !prefix.equals("d") )
+					def.addExportData( new ExportData( new File(file), prefix ) );
+				else
+					def.addExportData( new ExportData( new File(file), use_legends ) );
+			}
+			catch ( IOException ioe ) {
+				throw new RrdException( ioe );
 			}
 		}
 	}

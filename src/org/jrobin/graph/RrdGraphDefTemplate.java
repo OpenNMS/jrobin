@@ -486,7 +486,7 @@ public class RrdGraphDefTemplate extends XmlTemplate {
 	}
 
 	private void resolveDatasources(Node datasourceNode) throws RrdException {
-		validateTagsOnlyOnce(datasourceNode, new String[] { "def*" });
+		validateTagsOnlyOnce(datasourceNode, new String[] { "def*", "export_data*" });
 		Node[] nodes = getChildNodes(datasourceNode, "def");
 		for(int i = 0; i < nodes.length; i++) {
 			if(hasChildNode(nodes[i], "rrd"))
@@ -525,6 +525,32 @@ public class RrdGraphDefTemplate extends XmlTemplate {
 				throw new RrdException("Unrecognized <def> format");
 			}
 		}
+
+		nodes = getChildNodes(datasourceNode, "export_data");
+		for ( int i = 0; i < nodes.length; i++ )
+		{
+			validateTagsOnlyOnce( nodes[i], new String[] {"file", "ds_name_prefix", "use_legend_names"} );
+			String file 			= getChildValue( nodes[i], "file" );
+            String prefix			= "d";
+			boolean use_legends		= false;
+
+			if ( Util.Xml.hasChildNode( nodes[i], "ds_name_prefix" ) )
+				prefix 			= getChildValue(nodes[i], "ds_name_prefix");
+
+			if ( Util.Xml.hasChildNode( nodes[i], "use_legend_names" ) )
+				use_legends 	= getChildValueAsBoolean(nodes[i], "use_legend_names");
+
+			try
+			{
+				if ( !prefix.equals("d") )
+					rrdGraphDef.addExportData( new ExportData( new File(file), prefix ) );
+				else
+					rrdGraphDef.addExportData( new ExportData( new File(file), use_legends ) );
+			}
+			catch ( IOException ioe ) {
+				throw new RrdException( ioe );
+			}
+		}
 	}
 
 	private void resolveOptions(Node rootOptionNode) throws RrdException {
@@ -536,7 +562,7 @@ public class RrdGraphDefTemplate extends XmlTemplate {
 			"minor_grid_color", "minor_grid_x", "minor_grid_y",
 			"overlay", "show_legend", "show_signature", "time_axis", "time_axis_label",
 			"title", "title_font", "title_font_color", "units_exponent", "value_axis",
-			"vertical_label"
+			"vertical_label", "strict_export", "resolution"
 		});
 		Node[] optionNodes = getChildNodes(rootOptionNode);
 		for(int i = 0; i < optionNodes.length; i++) {
@@ -678,9 +704,9 @@ public class RrdGraphDefTemplate extends XmlTemplate {
 					"min_grid_time_unit", "min_grid_unit_steps", "maj_grid_time_unit",
 					"maj_grid_unit_steps", "date_format", "center_labels", "first_day_of_week"
 				});
-				
+
 				if ( hasChildNode( optionNode, "min_grid_time_unit" ) )
-				{	
+				{
 					int unit1 = resolveUnit(getChildValue(optionNode, "min_grid_time_unit"));
 					int step1 = getChildValueAsInt(optionNode, "min_grid_unit_steps");
 					int unit2 = resolveUnit(getChildValue(optionNode, "maj_grid_time_unit"));
@@ -689,10 +715,10 @@ public class RrdGraphDefTemplate extends XmlTemplate {
 					boolean center = getChildValueAsBoolean(optionNode, "center_labels");
 					rrdGraphDef.setTimeAxis(unit1, step1, unit2, step2, format, center);
 				}
-				
+
 				// Determine first day of the week
 				if ( hasChildNode( optionNode, "first_day_of_week" ) )
-				{	
+				{
 					int dow	  = resolveDayUnit( getChildValue(optionNode, "first_day_of_week") );
 					rrdGraphDef.setFirstDayOfWeek( dow );
 				}
@@ -734,6 +760,14 @@ public class RrdGraphDefTemplate extends XmlTemplate {
 				String label = getValue(optionNode);
 				rrdGraphDef.setVerticalLabel(label);
 			}
+			// STRICT EXPORT
+			else if(option.equals("strict_export")) {
+				rrdGraphDef.setStrictExport( getValueAsBoolean(optionNode) );
+			}
+			// RESOLUTION
+			else if(option.equals("resolution")) {
+				rrdGraphDef.setResolution( getValueAsInt(optionNode) );
+			}
 		}
 	}
 
@@ -763,7 +797,7 @@ public class RrdGraphDefTemplate extends XmlTemplate {
 			throw new IllegalArgumentException("Invalid unit specified: " + unit);
 		}
 	}
-	
+
 	private int resolveDayUnit( String unit ) {
 		if ( unit.equalsIgnoreCase("monday") ) {
 			return TimeAxisUnit.MONDAY;
@@ -789,7 +823,7 @@ public class RrdGraphDefTemplate extends XmlTemplate {
 		else {
 			throw new IllegalArgumentException( "Invalid day unit specified: " + unit );
 		}
-		
+
 	}
 
 	private void resolveSpan(Node spanNode) throws RrdException {

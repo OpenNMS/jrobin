@@ -102,6 +102,21 @@ public class ExportData implements RrdDataSet
 	}
 
 	/**
+	 * Create an ExportData object based on export XML string..
+	 *
+	 * @param xportXml File containing export xml.
+	 * @param dsNamePrefix Prefix of the datasource names.
+	 * @throws RrdException Thrown in case of JRobin specific exception.
+	 * @throws IOException Thrown in case of I/O related exception.
+	 */
+	public ExportData( String xportXml, String dsNamePrefix ) throws RrdException, IOException
+	{
+		this();
+
+		importXml( xportXml, dsNamePrefix );
+	}
+
+	/**
 	 * Create an ExportData object based on export XML file.
 	 *
 	 * @param xmlFile File containing export xml.
@@ -130,6 +145,20 @@ public class ExportData implements RrdDataSet
 		importXml( xmlFile, useLegendNames );
 	}
 
+	/**
+	 * Create an ExportData object based on export XML file.
+	 *
+	 * @param xmlFile File containing export xml.
+	 * @param dsNamePrefix Prefix of the datasource names.
+	 * @throws RrdException Thrown in case of JRobin specific exception.
+	 * @throws IOException Thrown in case of I/O related exception.
+	 */
+	public ExportData( File xmlFile, String dsNamePrefix ) throws RrdException, IOException
+	{
+		this();
+
+		importXml( xmlFile, dsNamePrefix );
+	}
 
 
 	// ================================================================
@@ -389,7 +418,39 @@ public class ExportData implements RrdDataSet
 	public void importXml( File xmlFile , boolean useLegendNames ) throws RrdException, IOException
 	{
 		Element root 		= Util.Xml.getRootElement( xmlFile );
-		importXml( root, useLegendNames );
+		importXml( root, useLegendNames, "d" );
+	}
+
+	/**
+	 * Imports a export XML string and maps it back to this ExportData object.
+	 * The XML can be from either a JRobin or RRDtool export.
+	 *
+	 * The name of the datasources found will be the prefix passed as parameter,
+	 * followed by a number, making the name unique.
+	 *
+	 * @param xportXml String containing the XML result of an export.
+	 * @param dsNamePrefix Prefix of the datasource names.
+	 */
+	public void importXml( String xportXml, String dsNamePrefix ) throws RrdException, IOException
+	{
+		Element root 		= Util.Xml.getRootElement( xportXml );
+		importXml( root, false, dsNamePrefix );
+	}
+
+	/**
+	 * Imports a export XML string and maps it back to this ExportData object.
+	 * The XML can be from either a JRobin or RRDtool export.
+	 *
+	 * The name of the datasources found will be the prefix passed as parameter,
+	 * followed by a number, making the name unique.
+	 *
+	 * @param xmlFile File containing export XML dump.
+	 * @param dsNamePrefix Prefix of the datasource names.
+	 */
+	public void importXml( File xmlFile, String dsNamePrefix ) throws RrdException, IOException
+	{
+		Element root 		= Util.Xml.getRootElement( xmlFile );
+		importXml( root, false, dsNamePrefix );
 	}
 
 	/**
@@ -405,56 +466,7 @@ public class ExportData implements RrdDataSet
 	public void importXml( String xportXml, boolean useLegendNames ) throws RrdException, IOException
 	{
 		Element root 		= Util.Xml.getRootElement( xportXml );
-		importXml( root, useLegendNames );
-	}
-
-	private void importXml( Element root, boolean useLegendNames ) throws RrdException, IOException
-	{
-		Node meta			= Util.Xml.getFirstChildNode( root, "meta" );
-		Node[] dataRows 	= Util.Xml.getChildNodes( Util.Xml.getFirstChildNode( root, "data" ), "row" );
-
-		sourceByName.clear();
-		legends.clear();
-
-		// -- Parse the metadata
-		int columns			= Util.Xml.getChildValueAsInt( meta, "columns" );
-		long step			= Util.Xml.getChildValueAsLong( meta, "step" );
-		String[] dsNames	= new String[ columns ];
-		Node[] legendNodes	= Util.Xml.getChildNodes( Util.Xml.getFirstChildNode( meta, "legend"), "entry" );
-		for ( int i = 0; i < legendNodes.length; i++ )
-		{
-			String legend = Util.Xml.getValue( legendNodes[i] );
-			if ( useLegendNames )
-				dsNames[i] = legend;
-			else
-				dsNames[i] = "d" + (i + 1);
-
-			legends.put( dsNames[i], legend );
-		}
-
-		// -- Parse the data
-		timestamps			= new long[ dataRows.length ];
-		sources				= new Source[ columns ];
-		arraySize 			= timestamps.length;
-
-		for ( int i = 0; i < sources.length; i++ )
-		{
-			sources[i] 			= new Def( dsNames[i], arraySize, arraySize );
-			sources[i].setFetchedStep( step );
-		}
-
-		for ( int i = 0; i < dataRows.length; i++ )
-		{
-			timestamps[i] 	= Util.Xml.getChildValueAsLong( dataRows[i], "t" );
-			Node[] data		= Util.Xml.getChildNodes( dataRows[i], "v" );
-
-			for ( int j = 0; j < data.length; j++ )
-				sources[j].set( i, timestamps[i], Util.Xml.getValueAsDouble(data[j]) );
-		}
-
-		// -- Set the datasource - name
-		for ( int i = 0; i < sources.length; i++ )
-			sourceByName.put( sources[i].getName(), sources[i] );
+		importXml( root, useLegendNames, "d" );
 	}
 
 	/**
@@ -551,5 +563,54 @@ public class ExportData implements RrdDataSet
 			throw new RrdException( "No such datasource: " + name );
 
 		return (Source) sourceByName.get(name);
+	}
+
+	private void importXml( Element root, boolean useLegendNames, String dsNamePrefix ) throws RrdException
+	{
+		Node meta			= Util.Xml.getFirstChildNode( root, "meta" );
+		Node[] dataRows 	= Util.Xml.getChildNodes( Util.Xml.getFirstChildNode( root, "data" ), "row" );
+
+		sourceByName.clear();
+		legends.clear();
+
+		// -- Parse the metadata
+		int columns			= Util.Xml.getChildValueAsInt( meta, "columns" );
+		long step			= Util.Xml.getChildValueAsLong( meta, "step" );
+		String[] dsNames	= new String[ columns ];
+		Node[] legendNodes	= Util.Xml.getChildNodes( Util.Xml.getFirstChildNode( meta, "legend"), "entry" );
+		for ( int i = 0; i < legendNodes.length; i++ )
+		{
+			String legend = Util.Xml.getValue( legendNodes[i] );
+			if ( useLegendNames )
+				dsNames[i] = legend;
+			else
+				dsNames[i] = dsNamePrefix + (i + 1);
+
+			legends.put( dsNames[i], legend );
+		}
+
+		// -- Parse the data
+		timestamps			= new long[ dataRows.length ];
+		sources				= new Source[ columns ];
+		arraySize 			= timestamps.length;
+
+		for ( int i = 0; i < sources.length; i++ )
+		{
+			sources[i] 			= new Def( dsNames[i], arraySize, arraySize );
+			sources[i].setFetchedStep( step );
+		}
+
+		for ( int i = 0; i < dataRows.length; i++ )
+		{
+			timestamps[i] 	= Util.Xml.getChildValueAsLong( dataRows[i], "t" );
+			Node[] data		= Util.Xml.getChildNodes( dataRows[i], "v" );
+
+			for ( int j = 0; j < data.length; j++ )
+				sources[j].set( i, timestamps[i], Util.Xml.getValueAsDouble(data[j]) );
+		}
+
+		// -- Set the datasource - name
+		for ( int i = 0; i < sources.length; i++ )
+			sourceByName.put( sources[i].getName(), sources[i] );
 	}
 }

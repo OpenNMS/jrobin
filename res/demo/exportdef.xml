@@ -1,0 +1,39 @@
+<!-- This is a sample RrdExportDef in XML format. -->
+<rrd_export_def>
+	<span>
+		<start>${start}</start>
+		<end>${end}</end>
+	</span>
+	<datasources>
+		<def>
+			<name>bytesIn</name>
+			<rrd>${rrd}</rrd>
+			<source>ifInOctets</source>
+			<cf>AVERAGE</cf>
+		</def>		
+		<def>
+			<name>bytesOut</name>
+			<rrd>${rrd}</rrd>
+			<source>ifOutOctets</source>
+			<cf>AVERAGE</cf>
+		</def>
+		<def>
+			<name>bitsIn</name>
+			<rpn>bytesIn,8,*</rpn>
+		</def>
+		<def>
+			<name>bitsOut</name>
+			<rpn>bytesOut,8,*</rpn>
+		</def>
+	</datasources>
+	<exports>
+		<export>
+			<datasource>bitsIn</datasource>
+			<legend>Incoming traffic</legend>
+		</export>
+		<export>
+			<datasource>bitsOut</datasource>
+			<legend>Outgoing traffic</legend>
+		</export>
+	</exports>
+</rrd_export_def>
