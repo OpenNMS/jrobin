@@ -178,6 +178,11 @@ class Cdef extends Source
 				tokens[i]		= RpnCalculator.TKN_OR;
 			else if ( tkn.equals("XOR") )
 				tokens[i]		= RpnCalculator.TKN_XOR;
+			// Extra tokens for JRobin
+			else if ( tkn.equals("SAMPLES") )
+				tokens[i]		= RpnCalculator.TKN_SAMPLES;
+			else if ( tkn.equals("STEP") )
+				tokens[i]		= RpnCalculator.TKN_STEP;
 			else
 				throw new RrdException("Unknown token enocuntered: " + tkn);	
 			

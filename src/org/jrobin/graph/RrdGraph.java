@@ -75,7 +75,7 @@ public class RrdGraph implements Serializable
 
 	/**
 	 * Constructs a new JRobin graph object.
-	 * @param usePool True if this should object should use RrdDbPool
+	 * @param usePool True if this object should use RrdDbPool
 	 */
 	public RrdGraph( boolean usePool )
 	{

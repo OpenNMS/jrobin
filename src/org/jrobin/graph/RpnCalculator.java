@@ -80,7 +80,10 @@ class RpnCalculator
 	public static final byte TKN_AND		= 36;
 	public static final byte TKN_OR			= 37;
 	public static final byte TKN_XOR		= 38;
+	public static final byte TKN_SAMPLES	= 39;
+	public static final byte TKN_STEP		= 40;
 	
+	private double step;
 	private Source[] sources;
 	private ArrayList stack = new ArrayList();
 	
@@ -91,10 +94,12 @@ class RpnCalculator
 	/**
 	 * Constructs a RPN calculator object by providing the source array to use for value lookups.
 	 * @param sources Table containing all retrieved datasources of the graph definition.
+	 * @param step Time in seconds that one sample represents.
 	 */
-	RpnCalculator( Source[] sources )
+	RpnCalculator( Source[] sources, double step )
 	{
-		this.sources = sources;
+		this.sources 	= sources;
+		this.step		= step;
 	}
 	
 	
@@ -310,6 +315,14 @@ class RpnCalculator
 					x2 = pop();
 					x1 = pop();
 					push(((x1 != 0 && x2 == 0) || (x1 == 0 && x2 != 0))? 1: 0);
+					break;
+					
+				case TKN_SAMPLES:
+					push( cdef.getSampleCount() );
+					break;
+				
+				case TKN_STEP:
+					push( step );
 					break;
 			}
 		}

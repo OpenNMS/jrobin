@@ -138,6 +138,10 @@ class Source
 		return values;
 	}
 	
+	long getSampleCount() {
+		return ( values != null ? values.length : 0 );
+	}
+	
 	
 	// ================================================================
 	// -- Private methods

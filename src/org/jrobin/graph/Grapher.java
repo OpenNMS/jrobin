@@ -351,10 +351,7 @@ class Grapher
 			sources[tblPos]	= cdefList[i];
 			sourceIndex.put( cdefList[i].getName(), new Integer(tblPos++) );	
 		}
-	
-		// RPN calculator for the Cdefs
-		RpnCalculator rpnCalc 	= new RpnCalculator( sources );
-	
+
 		// Fill the array for all datasources
 		timestamps 				= new long[numPoints];
 		
@@ -363,9 +360,12 @@ class Grapher
 			calculatedEndTime 	= endTime;
 		}
 		
+		// RPN calculator for the Cdefs
+		RpnCalculator rpnCalc 	= new RpnCalculator( sources, (endTime - startTime) / (double) numPoints );
+		
 		for (int i = 0; i < numPoints; i++) 
 		{
-			long t 	= (long) (startTime + i * ((endTime - startTime) / (double)(numPoints - 1)));
+			long t 	= (long) (startTime + i * ((endTime - startTime) / (double) (numPoints - 1)));
 			int pos = 0;
 		
 			// Get all fetched datasources
@@ -520,7 +520,7 @@ class Grapher
 		
 		}
 		
-		vGrid 			= new ValueGrid( range, lowerValue, upperValue, graphDef.getValueAxis() );
+		vGrid 			= new ValueGrid( range, lowerValue, upperValue, graphDef.getValueAxis(), graphDef.getBaseValue() );
 		tGrid			= new TimeGrid( graphDef.getStartTime(), ( graphDef.getEndTime() != 0 ? graphDef.getEndTime() : calculatedEndTime ), graphDef.getTimeAxis() );
 		
 		lowerValue		= vGrid.getLowerValue();

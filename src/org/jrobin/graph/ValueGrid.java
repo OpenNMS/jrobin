@@ -38,6 +38,11 @@ class ValueGrid
 	private double lower;
 	private double upper;
 	
+	private double baseValue		= ValueFormatter.DEFAULT_BASE;
+	private double[] scaleValues	= new double[] {
+											1e18, 1e15, 1e12, 1e9, 1e6, 1e3, 1e0, 1e-3, 1e-6, 1e-9, 1e-12, 1e-15
+										};
+	
 	private ValueAxisUnit vAxis;
 	
 	
@@ -54,7 +59,7 @@ class ValueGrid
 	 * @param vAxis ValueAxisUnit specified to determine the grid lines, if the given
 	 * ValueAxisUnit is null, one will be automatically determined.
 	 */
-	ValueGrid( GridRange gr, double low, double up, ValueAxisUnit vAxis )
+	ValueGrid( GridRange gr, double low, double up, ValueAxisUnit vAxis, double base )
 	{
 		double grLower = Double.MAX_VALUE;
 		double grUpper = Double.MIN_VALUE;
@@ -69,6 +74,19 @@ class ValueGrid
 		this.lower	= low;
 		this.upper	= up;
 		this.vAxis	= vAxis;
+		baseValue	= base;
+		
+		// Fill in the scale values
+		double tmp 			= 1;
+		for (int i = 1; i < 7; i++) {
+			tmp 				*= baseValue;
+			scaleValues[6 - i] 	= tmp;
+		}
+		tmp = 1;
+		for (int i = 7; i < scaleValues.length; i++) {
+			tmp					*= baseValue;
+			scaleValues[i]	 	= ( 1 / tmp );
+		}
 		
 		// Set an appropriate value axis it not given yet
 		setValueAxis();
@@ -121,26 +139,43 @@ class ValueGrid
 		if ( shifted == 0 )			// Special case, no 'range' available
 			shifted = upper;
 		
+		// Find the scaled unit for this range
 		double mod		= 1.0;
-		while ( shifted > 10 ) {
+		int scaleIndex 	=  scaleValues.length - 1;
+		while ( scaleIndex >= 0 && scaleValues[scaleIndex] < shifted ) 
+			scaleIndex--;
+		
+		// Keep the rest of division
+		double left 	= shifted % scaleValues[scaleIndex + 1];
+		shifted 		= shifted / scaleValues[++scaleIndex];
+		
+		// While rest > 10, divide by 10
+		while ( shifted > 10.0 ) {
 			shifted /= 10;
-			mod		*= 10;
+			mod	*= 10;
 		}
-		while ( shifted < 1 ) {
+		
+		while ( shifted < 1.0 ) {
 			shifted *= 10;
-			mod		/= 10;
+			mod /= 10;
 		}
-	
+		
+		left			= left / scaleValues[scaleIndex];
+		if ( left > 0.9 || left == 0.00 ) {
+			scaleIndex--;
+			mod = 1.0;
+		}
+		
 		// Create nice grid based on 'fixed' ranges
 		if ( shifted <= 1.5 )
-			vAxis = new ValueAxisUnit( 0.1*mod, 0.5*mod );
+			vAxis = new ValueAxisUnit( 0.1 * mod * scaleValues[scaleIndex], 0.5 * mod * scaleValues[scaleIndex] );
 		else if ( shifted <= 3 )
-			vAxis = new ValueAxisUnit( 0.2*mod, 1.0*mod );
+			vAxis = new ValueAxisUnit( 0.2 * mod * scaleValues[scaleIndex], 1.0 * mod * scaleValues[scaleIndex] );
 		else if ( shifted <= 5 )
-			vAxis = new ValueAxisUnit( 0.5*mod, 1.0*mod );
+			vAxis = new ValueAxisUnit( 0.5 * mod * scaleValues[scaleIndex], 1.0 * mod * scaleValues[scaleIndex] );
 		else if ( shifted <= 9 )
-			vAxis = new ValueAxisUnit( 0.5*mod, 2.0*mod );
+			vAxis = new ValueAxisUnit( 0.5 * mod * scaleValues[scaleIndex], 2.0 * mod * scaleValues[scaleIndex] );
 		else
-			vAxis = new ValueAxisUnit( 1.0*mod, 5.0*mod );
+			vAxis = new ValueAxisUnit( 0.1 * mod * scaleValues[scaleIndex], 0.5 * mod * scaleValues[scaleIndex] );
 	}
 }

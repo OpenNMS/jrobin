@@ -41,14 +41,13 @@ class ValueAxisUnit
 	// ================================================================
 	// -- Members
 	// ================================================================	
-
-	private double gridStep		= 2;
-	private double labelStep	= 10;
 	
+	private double gridStep			= 2;
+	private double labelStep		= 10;
 	
 	// ================================================================
 	// -- Constructors
-	// ================================================================	
+	// ================================================================
 	/**
 	 * Creates a ValueAxisUnit based on a minor and major grid step.
 	 * Minor grid lines appear at <code>gridStep</code>, major grid lines accompanied by a label
@@ -59,9 +58,9 @@ class ValueAxisUnit
 	ValueAxisUnit( double gridStep, double labelStep )
 	{
 		this.gridStep	= gridStep;
-		this.labelStep	= labelStep;
+		this.labelStep	= labelStep;		
 	}
-
+	
 	double getGridStep() {
 		return gridStep;
 	}
@@ -83,8 +82,8 @@ class ValueAxisUnit
 	 */
 	ValueMarker[] getValueMarkers( double lower, double upper )
 	{
-		double minPoint	= 0.0d;
-		double majPoint	= 0.0d;
+		double minPoint		= 0.0d;
+		double majPoint		= 0.0d;
 		
 		// Find the first visible gridpoint
 		if ( lower > 0 ) {
