@@ -31,10 +31,7 @@ import org.xml.sax.InputSource;
 
 import java.io.IOException;
 import java.io.File;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Date;
-import java.util.GregorianCalendar;
+import java.util.*;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 import java.awt.*;
@@ -160,6 +157,36 @@ public abstract class XmlTemplate {
 	 */
 	public void setVariable(String name, boolean value) {
 		valueMap.put(name, "" + value);
+	}
+
+	/**
+	 * Searches the XML template to see if there are variables in there that
+	 * will need to be set.
+	 *
+	 * @return True if variables were detected, false if not.
+	 */
+	public boolean hasVariables() {
+		return PATTERN.matcher( root.toString() ).find();
+	}
+
+	/**
+	 * Returns the list of variables that should be set in this template.
+	 *
+	 * @return List of variable names as an array of strings.
+	 */
+	public String[] getVariables()
+	{
+		ArrayList list 	= new ArrayList();
+		Matcher m 		= PATTERN.matcher( root.toString() );
+
+		while ( m.find() )
+		{
+			String var = m.group(1);
+			if ( !list.contains( var ) )
+				list.add( var );
+		}
+
+		return (String[]) list.toArray( new String[list.size()] );
 	}
 
 	protected static Node[] getChildNodes(Node parentNode, String childName) {
