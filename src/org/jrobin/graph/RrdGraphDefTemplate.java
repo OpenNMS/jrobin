@@ -382,9 +382,14 @@ public class RrdGraphDefTemplate extends XmlTemplate {
 				validateTagsOnlyOnce(childs[i], new String[] { "format", "pattern", "value" });
 				String format 		= getChildValue(childs[i], "format", false );
 				String pattern	 	= getChildValue(childs[i], "pattern");
-				String timestamp 	= getChildValue(childs[i], "value");
 
-				rrdGraphDef.time( format, pattern, Util.getGregorianCalendar(timestamp) );
+				if ( Util.Xml.hasChildNode( childs[i], "value" ) )
+				{
+					String timestamp 	= getChildValue(childs[i], "value");
+					rrdGraphDef.time( format, pattern, Util.getGregorianCalendar(timestamp) );
+				}
+				else
+					rrdGraphDef.time( format, pattern );
 			}
 			else if(nodeName.equals("hrule")) {
 				validateTagsOnlyOnce(childs[i], new String[] { "value", "color", "legend", "width" });
@@ -562,7 +567,7 @@ public class RrdGraphDefTemplate extends XmlTemplate {
 			"minor_grid_color", "minor_grid_x", "minor_grid_y",
 			"overlay", "show_legend", "show_signature", "time_axis", "time_axis_label",
 			"title", "title_font", "title_font_color", "units_exponent", "value_axis",
-			"vertical_label", "strict_export", "resolution"
+			"vertical_label", "strict_export", "resolution", "lower_limit"
 		});
 		Node[] optionNodes = getChildNodes(rootOptionNode);
 		for(int i = 0; i < optionNodes.length; i++) {
@@ -635,6 +640,11 @@ public class RrdGraphDefTemplate extends XmlTemplate {
 				double upper = getChildValueAsDouble(optionNode, "upper");
 				boolean rigid = getChildValueAsBoolean(optionNode, "rigid");
 				rrdGraphDef.setGridRange(lower, upper, rigid);
+			}
+			// LOWER LIMIT
+			else if(option.equals("lower_limit")) {
+				double lower = getValueAsDouble(optionNode);
+				rrdGraphDef.setLowerLimit( lower );
 			}
 			// GRID X?
 			else if(option.equals("grid_x")) {

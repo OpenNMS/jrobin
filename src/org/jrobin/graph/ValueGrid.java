@@ -24,6 +24,8 @@
  */
 package org.jrobin.graph;
 
+import org.jrobin.core.RrdException;
+
 /**
  * <p>Holds specific information about the Value axis grid of the chart.</p>
  * 
@@ -59,7 +61,7 @@ class ValueGrid
 	 * @param vAxis ValueAxisUnit specified to determine the grid lines, if the given
 	 * ValueAxisUnit is null, one will be automatically determined.
 	 */
-	ValueGrid( GridRange gr, double low, double up, ValueAxisUnit vAxis, double base )
+	ValueGrid( GridRange gr, double low, double up, ValueAxisUnit vAxis, double base ) throws RrdException
 	{
 		double grLower = Double.MAX_VALUE;
 		double grUpper = Double.MIN_VALUE;
@@ -77,17 +79,20 @@ class ValueGrid
 		baseValue	= base;
 		
 		// Fill in the scale values
-		double tmp 			= 1;
-		for (int i = 1; i < 7; i++) {
-			tmp 				*= baseValue;
-			scaleValues[6 - i] 	= tmp;
+		if ( base != baseValue )
+		{
+			double tmp 			= 1;
+			for (int i = 1; i < 7; i++) {
+				tmp 				*= baseValue;
+				scaleValues[6 - i] 	= tmp;
+			}
+			tmp = 1;
+			for (int i = 7; i < scaleValues.length; i++) {
+				tmp					*= baseValue;
+				scaleValues[i]	 	= ( 1 / tmp );
+			}
 		}
-		tmp = 1;
-		for (int i = 7; i < scaleValues.length; i++) {
-			tmp					*= baseValue;
-			scaleValues[i]	 	= ( 1 / tmp );
-		}
-		
+
 		// Set an appropriate value axis it not given yet
 		setValueAxis();
 
@@ -121,7 +126,7 @@ class ValueGrid
 	 * Determines a good ValueAxisUnit to use for grid calculation.
 	 * A decent grid is selected based on the value range being used in the chart.
 	 */
-	private void setValueAxis()
+	private void setValueAxis() throws RrdException
 	{
 		if ( vAxis != null )
 			return;
@@ -130,7 +135,7 @@ class ValueGrid
 			upper = 0.9;
 		if ( Double.isNaN(lower) || lower == Double.MAX_VALUE || lower == Double.MIN_VALUE )
 			lower = 0;
-		
+
 		if ( !rigid && upper == 0 && upper == lower )
 			upper = 0.9;
 
@@ -142,18 +147,23 @@ class ValueGrid
 		// Find the scaled unit for this range
 		double mod		= 1.0;
 		int scaleIndex 	=  scaleValues.length - 1;
-		while ( scaleIndex >= 0 && scaleValues[scaleIndex] < shifted ) 
+		while ( scaleIndex >= 0 && scaleValues[scaleIndex] < shifted )
 			scaleIndex--;
 
 		// Keep the rest of division
-		shifted 		= shifted / scaleValues[++scaleIndex];
+		if ( scaleValues[++scaleIndex] != 0 )				// Don't divide by zero, it is silly
+			shifted = shifted / scaleValues[scaleIndex];
+
+		// Safety check to avoid infinite loop
+		if ( Double.isInfinite(shifted) )
+			throw new RrdException( "ValueGrid failure: u=" + upper + " l=" + lower + " sv=" + scaleValues[scaleIndex] );
 
 		// While rest > 10, divide by 10
 		while ( shifted > 10.0 ) {
 			shifted /= 10;
 			mod	*= 10;
 		}
-		
+
 		while ( shifted < 1.0 ) {
 			shifted *= 10;
 			mod /= 10;
