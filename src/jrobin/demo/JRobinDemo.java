@@ -5,7 +5,7 @@
  * Project Info:  http://www.sourceforge.net/projects/jrobin
  * Project Lead:  Sasa Markovic (saxon@eunet.yu);
  *
- * (C) Copyright 2003, by Sasa Markovic. 
+ * (C) Copyright 2003, by Sasa Markovic.
  *
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation;
@@ -91,26 +91,24 @@ public class JRobinDemo {
 	public static void main(String[] args) throws RrdException, IOException {
 		// setup
 		println("==Starting demo");
-		RrdDb.setLockMode(RrdDb.WAIT_IF_LOCKED);
+		RrdDb.setLockMode(RrdDb.NO_LOCKS);
 
 		long startMillis = System.currentTimeMillis();
 		long start = START.getTime().getTime() / 1000L;
 		long end = END.getTime().getTime() / 1000L;
-		String rrdFile = getFullPath(FILE + ".rrd");
-		String xmlFile = getFullPath(FILE + ".xml");
-		String rrdFile2 = getFullPath(FILE + "_restored.rrd");
-		//String pngFile = getFullPath(FILE + ".png");
-		String pngFile = "/zzzzzz.png";
-		String jpegFile = getFullPath(FILE + ".jpeg");
-		String logFile = getFullPath(FILE + ".log");
+		String rrdPath = getFullPath(FILE + ".rrd");
+		String xmlPath = getFullPath(FILE + ".xml");
+		String rrdRestoredPath = getFullPath(FILE + "_restored.rrd");
+		String pngPath = getFullPath(FILE + ".png");
+		String jpegPath = getFullPath(FILE + ".jpeg");
+		String logPath = getFullPath(FILE + ".log");
 		PrintWriter pw = new PrintWriter(
-			new BufferedOutputStream(
-			new FileOutputStream(logFile, false))
+			new BufferedOutputStream(new FileOutputStream(logPath, false))
 		);
 
 		// creation
-		println("==Creating RRD file " + rrdFile);
-		RrdDef rrdDef = new RrdDef(rrdFile, start - 1, 300);
+		println("==Creating RRD file " + rrdPath);
+		RrdDef rrdDef = new RrdDef(rrdPath, start - 1, 300);
 		rrdDef.addDatasource("sun", "GAUGE", 600, 0, Double.NaN);
 		rrdDef.addDatasource("shade", "GAUGE", 600, 0, Double.NaN);
 		rrdDef.addArchive("AVERAGE", 0.5, 1, 600);
@@ -132,8 +130,9 @@ public class JRobinDemo {
 		println("==Simulating one month of RRD file updates with step not larger than " +
 			MAX_STEP + " seconds (* denotes 1000 updates)");
 		long t = start; int n = 0;
+		Sample sample = rrdDb.createSample();
 		while(t <= end) {
-			Sample sample = rrdDb.createSample(t);
+			sample.setTime(t);
 			sample.setValue("sun", sunSource.getValue());
 			sample.setValue("shade", shadeSource.getValue());
 			pw.println(sample.dump());
@@ -158,14 +157,14 @@ public class JRobinDemo {
 			println(points[i].dump());
 		}
 		println("==Fetch completed");
-		println("==Dumping RRD file to XML file " + xmlFile + " (can be restored with RRDTool)");
-		//rrdDb.dumpXml(xmlFile);
-		println("==Creating RRD file " + rrdFile2 + " from " + xmlFile);
-		//RrdDb rrdDb2 = new RrdDb(rrdFile2, xmlFile);
+		println("==Dumping RRD file to XML file " + xmlPath + " (can be restored with RRDTool)");
+		rrdDb.dumpXml(xmlPath);
+		println("==Creating RRD file " + rrdRestoredPath + " from XML file " + xmlPath);
+		RrdDb rrdRestoredDb = new RrdDb(rrdRestoredPath, xmlPath);
 		// close files
 		println("==Closing both RRD files");
 		rrdDb.close();
-		//rrdDb2.close();
+		rrdRestoredDb.close();
 
 		// creating graph
 		println("==Creating graph from the second file");
@@ -174,8 +173,8 @@ public class JRobinDemo {
 		gDef.setTimeAxisLabel("day in month");
         gDef.setTitle("Temperatures in May 2003");
 		gDef.setValueAxisLabel("temperature");
-		gDef.datasource("sun", rrdFile, "sun", "AVERAGE");
-		gDef.datasource("shade", rrdFile, "shade", "AVERAGE");
+		gDef.datasource("sun", rrdRestoredPath, "sun", "AVERAGE");
+		gDef.datasource("shade", rrdRestoredPath, "shade", "AVERAGE");
 		gDef.datasource("median", "sun,shade,+,2,/");
 		gDef.datasource("diff", "sun,shade,-,ABS,-1,*");
 		gDef.datasource("sine", "TIME," + start + ",-," + (end - start) +
@@ -191,10 +190,10 @@ public class JRobinDemo {
 		gDef.gprint("shade", "AVERAGE", "avgShade = @3@S@r");
 		RrdGraph graph = new RrdGraph(gDef);
 		println("==Graph created");
-		println("==Saving graph as PNG file " + pngFile);
-		graph.saveAsPNG(pngFile, 600, 400);
-		println("==Saving graph as JPEG file " + jpegFile);
-		graph.saveAsJPEG(jpegFile, 600, 400, 0.8F);
+		println("==Saving graph as PNG file " + pngPath);
+		graph.saveAsPNG(pngPath, 600, 400);
+		println("==Saving graph as JPEG file " + jpegPath);
+		graph.saveAsJPEG(jpegPath, 600, 400, 0.5F);
 
 		// demo ends
 		pw.close();
