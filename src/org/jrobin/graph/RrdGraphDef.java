@@ -64,7 +64,7 @@ public class RrdGraphDef implements Serializable
 	// ================================================================
 	// -- Members
 	// ================================================================
-	private long endTime				= Util.getTime();					// default time spam of the last 24 hours
+	private long endTime				= Util.getTime();					// default time span of the last 24 hours
 	private long startTime				= Util.getTime() - 86400L;
 	
 	private Title title					= null;								// no title

@@ -42,6 +42,7 @@ import java.util.Locale;
 import java.util.GregorianCalendar;
 import java.util.ArrayList;
 import java.io.*;
+import java.awt.*;
 
 /**
  * Class defines various utility functions used in JRobin. 
@@ -135,13 +136,36 @@ public class Util {
 		return new Date(timestamp * 1000L);
 	}
 
+    /**
+	 * Returns <code>GregorianCalendar</code> object for the given timestamp
+	 * (in seconds, without milliseconds)
+	 * @param timestamp Timestamp in seconds.
+	 * @return Corresponding GregorianCalendar object.
+	 */
+	public static GregorianCalendar getGregorianCalendar(long timestamp) {
+		GregorianCalendar gc = new GregorianCalendar();
+		gc.setTimeInMillis(timestamp * 1000L);
+		return gc;
+	}
+
+    /**
+	 * Returns <code>GregorianCalendar</code> object for the given Date object
+	 * @param date Date object
+	 * @return Corresponding GregorianCalendar object.
+	 */
+	public static GregorianCalendar getGregorianCalendar(Date date) {
+		GregorianCalendar gc = new GregorianCalendar();
+		gc.setTime(date);
+		return gc;
+	}
+
 	/**
 	 * Returns timestamp (unix epoch) for the given Date object
 	 * @param date Date object
 	 * @return Corresponding timestamp (without milliseconds)
 	 */
 	public static long getTimestamp(Date date) {
-		return (date.getTime() + 500L) / 1000L;
+		return (date.getTime() + 499L) / 1000L;
 	}
 
 	/**
@@ -187,6 +211,14 @@ public class Util {
 			value = Double.NaN;
 		}
 		return value;
+	}
+
+	static boolean parseBoolean(String valueStr) {
+		return valueStr.equalsIgnoreCase("true") ||
+			valueStr.equalsIgnoreCase("on") ||
+			valueStr.equalsIgnoreCase("yes") ||
+			valueStr.equalsIgnoreCase("y") ||
+			valueStr.equalsIgnoreCase("1");
 	}
 
 	private static final File homeDirFile;
@@ -255,13 +287,20 @@ public class Util {
 		return File.createTempFile("JROBIN_", ".tmp").getCanonicalPath();
 	}
 
+	/**
+	 * Various DOM utility functions
+	 */
 	static class Xml {
+		static Node[] getChildNodes(Node parentNode) {
+			return getChildNodes(parentNode, null);
+		}
+
 		static Node[] getChildNodes(Node parentNode, String childName) {
 			ArrayList nodes = new ArrayList();
 			NodeList nodeList = parentNode.getChildNodes();
 			for (int i = 0; i < nodeList.getLength(); i++) {
 				Node node = nodeList.item(i);
-				if (node.getNodeName().equals(childName)) {
+				if (childName == null || node.getNodeName().equals(childName)) {
 					nodes.add(node);
 				}
 			}
@@ -276,19 +315,33 @@ public class Util {
 			throw new RrdException("XML Error, no such child: " + childName);
 		}
 
+		static boolean hasChildNode(Node parentNode, String childName) {
+			Node[] childs = getChildNodes(parentNode, childName);
+			return childs.length > 0;
+		}
+
 		static String getChildValue(Node parentNode, String childName) throws RrdException {
 			NodeList children = parentNode.getChildNodes();
 			for (int i = 0; i < children.getLength(); i++) {
 				Node child = children.item(i);
 				if (child.getNodeName().equals(childName)) {
-					return child.getFirstChild().getNodeValue().trim();
+					return getValue(child);
 				}
 			}
 			throw new RrdException("XML Error, no such child: " + childName);
 		}
 
+		static String getValue(Node node) {
+			return node.getFirstChild().getNodeValue().trim();
+		}
+
 		static int getChildValueAsInt(Node parentNode, String childName) throws RrdException {
 			String valueStr = getChildValue(parentNode, childName);
+			return Integer.parseInt(valueStr);
+		}
+
+		static int getValueAsInt(Node node) {
+			String valueStr = getValue(node);
 			return Integer.parseInt(valueStr);
 		}
 
@@ -297,9 +350,29 @@ public class Util {
 			return Long.parseLong(valueStr);
 		}
 
+		static long getValueAsLong(Node node) {
+			String valueStr = getValue(node);
+			return Long.parseLong(valueStr);
+		}
+
 		static double getChildValueAsDouble(Node parentNode, String childName) throws RrdException {
 			String valueStr = getChildValue(parentNode, childName);
 			return Util.parseDouble(valueStr);
+		}
+
+		static double getValueAsDouble(Node node) {
+			String valueStr = getValue(node);
+			return Util.parseDouble(valueStr);
+		}
+
+		static boolean getChildValueAsBoolean(Node parentNode, String childName) throws RrdException {
+			String valueStr = getChildValue(parentNode, childName);
+			return Util.parseBoolean(valueStr);
+		}
+
+		static boolean getValueAsBoolean(Node node) {
+			String valueStr = getValue(node);
+			return Util.parseBoolean(valueStr);
 		}
 
 		static Element getRootElement(InputSource inputSource) throws RrdException, IOException	{

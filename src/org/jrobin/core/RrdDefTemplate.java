@@ -210,60 +210,17 @@ public class RrdDefTemplate extends XmlTemplate {
 		return rrdDef;
 	}
 
-/*
+
 	public static void main(String[] args) throws RrdException, IOException {
-		String s =
-			"<rrd_def>                            " +
-			"	<path>${path}</path>              " +
-			"	<start>1000000000</start>         " +
-			"	<step>${step}</step>              " +
-			"	<datasource>                      " +
-			"		<name>input</name>            " +
-			"		<type>COUNTER</type>          " +
-			"		<heartbeat>300</heartbeat>    " +
-			"		<min>10</min>                 " +
-			"		<max>U</max>                  " +
-			"	</datasource>                     " +
-			"	<datasource>                      " +
-			"		<name>temperature</name>      " +
-			"		<type>GAUGE</type>            " +
-			"		<heartbeat>400</heartbeat>    " +
-			"		<min>U</min>                  " +
-			"		<max>1000</max>               " +
-			"	</datasource>                     " +
-			"	<archive>                         " +
-			"		<cf>AVERAGE</cf>              " +
-			"		<xff>0.5</xff>                " +
-			"		<steps>1</steps>              " +
-			"		<rows>${rows}</rows>          " +
-			"	</archive>                        " +
-			"	<archive>                         " +
-			"		<cf>MAX</cf>                  " +
-			"		<xff>0.6</xff>                " +
-			"		<steps>6</steps>              " +
-			"		<rows>7000</rows>             " +
-			"	</archive>                        " +
-			"</rrd_def>                           ";
-		RrdDefTemplate t = new RrdDefTemplate(s);
-		// works as well:
-		// File f = new File("test.xml");
-		// RrdDefTemplate t = new RrdDefTemplate(f);
+		File f = new File("work/test.xml");
+		RrdDefTemplate t = new RrdDefTemplate(f);
 
 		t.setMapping("path", "test1.rrd");
 		t.setMapping("step", 310);
-		t.setMapping("rows", 888);
+		t.setMapping("hb", 123);
 
 		RrdDef def = t.getRrdDef();
 		System.out.println(def.dump());
-		new RrdDb(def).close();
-
-		t.setMapping("path", "test2.rrd");
-		t.setMapping("step", 320);
-		t.setMapping("rows", 999);
-		def = t.getRrdDef();
-		System.out.println(def.dump());
-		new RrdDb(def).close();
 	}
-*/
 
 }
