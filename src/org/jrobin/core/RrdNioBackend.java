@@ -51,11 +51,12 @@ public class RrdNioBackend extends RrdFileBackend {
 	 * It should not affect the speed of your application significantly.<p>
 	 */
 	public static final boolean SHOULD_GC = true;
+	private static final String NIO_CLOSING_THREAD_NAME = "RrdNioBackend closing thread";
 
 	static {
 		if(SHOULD_GC) {
 			final Runtime runtime = Runtime.getRuntime();
-			runtime.addShutdownHook(new Thread() {
+			runtime.addShutdownHook(new Thread(NIO_CLOSING_THREAD_NAME) {
 				public void run() {
 					runtime.runFinalization();
 					runtime.gc();
