@@ -32,7 +32,6 @@ import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Arrays;
 
 /**
  * Class to represent RRD file on the disk. All disk I/O operations are performed
@@ -179,11 +178,7 @@ public class RrdFile extends RandomAccessFile {
 	}
 
 	void writeDouble(double value, int count) throws IOException {
-//		THIS IS SLOW! RandomAccessFile is crap
-//		for(int i = 0; i < count; i++) {
-//			super.writeDouble(value);
-//		}
-		// HACK to speed things up!
+		// HACK: Speed things up!
 		long valueAsLong = Double.doubleToLongBits(value);
 		byte[] valueAsBytes = new byte[8];
 		// high byte comes first
@@ -211,4 +206,27 @@ public class RrdFile extends RandomAccessFile {
 		image = null;
 	}
 
+	double[] readDouble(int count) throws IOException {
+		// HACK: Speed this up
+		double[] values = new double[count];
+		int byteCount = 8 * count;
+		byte[] image = new byte[byteCount];
+		if(super.read(image) == -1) {
+			throw new IOException("End of file reached");
+		}
+		for(int i = 0, k = -1; i < count; i++) {
+			long valueAsLong =
+				((image[++k] & 0xFFL) << 56) |
+				((image[++k] & 0xFFL) << 48) |
+				((image[++k] & 0xFFL) << 40) |
+				((image[++k] & 0xFFL) << 32) |
+				((image[++k] & 0xFFL) << 24) |
+				((image[++k] & 0xFFL) << 16) |
+				((image[++k] & 0xFFL) <<  8) |
+				((image[++k] & 0xFFL)      );
+			values[i] = Double.longBitsToDouble(valueAsLong);
+		}
+		image = null;
+		return values;
+	}
 }

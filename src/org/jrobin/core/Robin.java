@@ -65,12 +65,7 @@ public class Robin implements RrdUpdater {
 	 * @throws IOException Thrown in case of IO specific error.
 	 */
 	public double[] getValues() throws IOException {
-		double[] result = new double[rows];
-		int start = pointer.get();
-		for(int i = start, j = 0; i < start + rows; i++, j++) {
-			result[j] = values.get(i % rows);
-		}
-		return result;
+		return getValues(0, rows);
 	}
 
 	// stores single value
@@ -80,20 +75,20 @@ public class Robin implements RrdUpdater {
 		pointer.set((position + 1) % rows);
 	}
 
-	// TODO: NOT TESTED ENOUGH
 	// stores the same value several times
 	void bulkStore(double newValue, int bulkCount) throws IOException {
-		assert bulkCount <= rows: "Invalid number of bulk updates";
+		assert bulkCount <= rows: "Invalid number of bulk updates: " + bulkCount +
+			" rows=" + rows;
 		int position = pointer.get();
 		// update tail
 		int tailUpdateCount = Math.min(rows - position, bulkCount);
 		values.set(position, newValue, tailUpdateCount);
 		pointer.set((position + tailUpdateCount) % rows);
 		// do we need to update from the start?
-		int startUpdateCount = bulkCount - tailUpdateCount;
-		if(startUpdateCount > 0) {
-			values.set(0, newValue, startUpdateCount);
-			pointer.set(startUpdateCount);
+		int headUpdateCount = bulkCount - tailUpdateCount;
+		if(headUpdateCount > 0) {
+			values.set(0, newValue, headUpdateCount);
+			pointer.set(headUpdateCount);
 		}
 	}
 
@@ -121,7 +116,31 @@ public class Robin implements RrdUpdater {
 	 * @return Value stored in the i-th position (the oldest value has zero index)
 	 */
 	public double getValue(int index) throws IOException {
-		return values.get((pointer.get() + index) % rows);
+		int arrayIndex = (pointer.get() + index) % rows;
+		return values.get(arrayIndex);
+	}
+
+	double[] getValues(int index, int count) throws IOException {
+		assert count <= rows: "Too many values requested: " + count + " rows=" + rows;
+		int startIndex = (pointer.get() + index) % rows;
+		int tailReadCount = Math.min(rows - startIndex, count);
+		double[] tailValues = values.get(startIndex, tailReadCount);
+		if(tailReadCount < count) {
+            int headReadCount = count - tailReadCount;
+			double[] headValues = values.get(0, headReadCount);
+			double[] values = new double[count];
+			int k = 0;
+			for(int i = 0; i < tailValues.length; i++) {
+				values[k++] = tailValues[i];
+			}
+			for(int i = 0; i < headValues.length; i++) {
+				values[k++] = headValues[i];
+			}
+			return values;
+		}
+		else {
+			return tailValues;
+		}
 	}
 
 	/**

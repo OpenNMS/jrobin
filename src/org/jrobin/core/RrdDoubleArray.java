@@ -61,4 +61,12 @@ class RrdDoubleArray extends RrdPrimitive {
 		return rrdFile.readDouble();
 	}
 
+	double[] get(int index, int count) throws IOException {
+		assert index + count <= length: "Invalid index/count supplied: " + index +
+			"/" + count + " (length=" + length + ")";
+		RrdFile rrdFile = getRrdFile();
+		rrdFile.seek(getPointer() + index * RrdDouble.SIZE);
+		return rrdFile.readDouble(count);
+	}
+
 }

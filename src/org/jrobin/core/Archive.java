@@ -158,14 +158,8 @@ public class Archive implements RrdUpdater {
 				updateTime += step;
 			}
 		}
-
 		// update robin in bulk
 		int bulkUpdateCount = (int) Math.min(numUpdates / steps.get(), (long) rows.get());
-		//TODO: Check this
-		//for(long i = 0; i < bulkUpdates; i++) {
-		//	robin.store(value);
-		//}
-		// OLD CODE ENDS
 		robin.bulkStore(value, bulkUpdateCount);
 		// update remaining steps
 		long remainingUpdates = numUpdates % steps.get();
@@ -334,22 +328,30 @@ public class Archive implements RrdUpdater {
 		int ptsCount = (int) ((fetchEnd - fetchStart) / arcStep + 1);
 		long[] timestamps = new long[ptsCount];
 		double[][] values = new double[dsCount][ptsCount];
+		long matchStartTime = Math.max(fetchStart, startTime);
+		long matchEndTime = Math.min(fetchEnd, endTime);
+		double[][] robinValues = null;
+		if(matchStartTime <= matchEndTime) {
+			// preload robin values
+			int matchCount = (int)((matchEndTime - matchStartTime) / arcStep + 1);
+			int matchStartIndex = (int)((matchStartTime - startTime) / arcStep);
+			robinValues = new double[dsCount][];
+			for(int i = 0; i < dsCount; i++) {
+				int dsIndex = parentDb.getDsIndex(dsToFetch[i]);
+				robinValues[i] = robins[dsIndex].getValues(matchStartIndex, matchCount);
+			}
+		}
 		for(int ptIndex = 0; ptIndex < ptsCount; ptIndex++) {
 			long time = fetchStart + ptIndex * arcStep;
 			timestamps[ptIndex] = time;
-			if(time >= startTime && time <= endTime) {
-				// inbound time
-				int robinIndex = (int)((time - startTime) / arcStep);
-				for(int i = 0; i < dsCount; i++) {
-					int dsIndex = parentDb.getDsIndex(dsToFetch[i]);
-					values[i][ptIndex] = robins[dsIndex].getValue(robinIndex);
+			for(int i = 0; i < dsCount; i++) {
+				double value = Double.NaN;
+				if(time >= matchStartTime && time <= matchEndTime) {
+					// inbound time
+					int robinValueIndex = (int)((time - matchStartTime) / arcStep);
+					value = robinValues[i][robinValueIndex];
 				}
-			}
-			else {
-				// time out of bounds
-				for(int i = 0; i < dsCount; i++) {
-					values[i][ptIndex] = Double.NaN;
-				}
+				values[i][ptIndex] = value;
 			}
 		}
 		FetchData fetchData = new FetchData(this, request);
