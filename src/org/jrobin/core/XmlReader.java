@@ -30,10 +30,11 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+import org.xml.sax.InputSource;
 
 import javax.xml.parsers.*;
 import java.io.IOException;
-import java.io.File;
+import java.io.FileReader;
 import java.util.ArrayList;
 
 class XmlReader {
@@ -42,13 +43,11 @@ class XmlReader {
 	private Node[] dsNodes, arcNodes;
 
     XmlReader(String xmlFilePath) throws IOException, RrdException {
+		FileReader fileReader = null;
 		try {
-			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-			factory.setValidating(false);
-			factory.setNamespaceAware(false);
-			DocumentBuilder builder = factory.newDocumentBuilder();
-			Document doc = builder.parse(new File(xmlFilePath));
-			root = doc.getDocumentElement();
+			fileReader = new FileReader(xmlFilePath);
+			InputSource source = new InputSource(fileReader);
+			root = getRootElement(source);
 			dsNodes = getChildNodes(root, "ds");
 			arcNodes = getChildNodes(root, "rra");
 		} catch (FactoryConfigurationError e) {
@@ -57,6 +56,11 @@ class XmlReader {
 			throw new RrdException("XML error: " + e);
 		} catch (SAXException e) {
 			throw new RrdException("XML error: " + e);
+		}
+		finally {
+			if(fileReader != null) {
+				fileReader.close();
+			}
 		}
 	}
 
@@ -200,5 +204,15 @@ class XmlReader {
 	static double getChildValueAsDouble(Node parentNode, String childName) throws RrdException {
 		String valueStr = getChildValue(parentNode, childName);
 		return Util.parseDouble(valueStr);
+	}
+
+	static Element getRootElement(InputSource inputSource)
+		throws ParserConfigurationException, IOException, SAXException {
+		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+		factory.setValidating(false);
+		factory.setNamespaceAware(false);
+		DocumentBuilder builder = factory.newDocumentBuilder();
+		Document doc = builder.parse(inputSource);
+		return doc.getDocumentElement();
 	}
 }

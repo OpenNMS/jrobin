@@ -109,7 +109,7 @@ public class ArcDef {
 		if(!isValidConsolFun(consolFun)) {
 			throw new RrdException("Invalid consolidation function specified: " + consolFun);
 		}
-		if(xff < 0.0 || xff >= 1.0) {
+		if(Double.isNaN(xff) || xff < 0.0 || xff >= 1.0) {
 			throw new RrdException("Invalid xff, must be >= 0 and < 1: " + xff);
 		}
 		if(steps <= 0 || rows <= 0) {
