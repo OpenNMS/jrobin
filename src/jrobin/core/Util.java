@@ -26,6 +26,7 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.util.GregorianCalendar;
 
 /**
  * Class defines various utility functions used in JRobin. 
@@ -111,6 +112,49 @@ public class Util {
 		return new Date(timestamp * 1000L);
 	}
 
+	/**
+	 * Returns timestamp (unix epoch) for the given Date object
+	 * @param date Date object
+	 * @return Corresponding timestamp (without milliseconds)
+	 */
+	public static long getTimestamp(Date date) {
+		return (date.getTime() + 500L) / 1000L;
+	}
+
+	/**
+	 * Returns timestamp (unix epoch) for the given GregorianCalendar object
+	 * @param gc GregorianCalendar object
+	 * @return Corresponding timestamp (without milliseconds)
+	 */
+	public static long getTimestamp(GregorianCalendar gc) {
+		return getTimestamp(gc.getTime());
+	}
+
+	/**
+	 * Returns timestamp (unix epoch) for the given year, month, day, hour and minute.
+	 * @param year Year
+	 * @param month Month (zero-based)
+	 * @param day Day in month
+	 * @param hour Hour
+	 * @param min Minute
+	 * @return Corresponding timestamp
+	 */
+	public static long getTimestamp(int year, int month, int day, int hour, int min) {
+		GregorianCalendar gc = new GregorianCalendar(year, month, day, hour, min);
+		return Util.getTimestamp(gc);
+	}
+
+	/**
+	 * Returns timestamp (unix epoch) for the given year, month and day.
+	 * @param year Year
+	 * @param month Month (zero-based)
+	 * @param day Day in month
+	 * @return Corresponding timestamp
+	 */
+	public static long getTimestamp(int year, int month, int day) {
+		return Util.getTimestamp(year, month, day, 0, 0);
+	}
+
 	static double parseDouble(String valueStr) {
 		double value;
 		try {
@@ -121,5 +165,5 @@ public class Util {
 		}
 		return value;
 	}
-
 }
+
