@@ -45,8 +45,8 @@ class Source
 	private String name;
 	protected double[] values;
 	
-	private double min						= Double.POSITIVE_INFINITY;
-	private double max						= Double.NEGATIVE_INFINITY;
+	private double min						= Double.NaN;
+	private double max						= Double.NaN;
 	private double lastValue 				= Double.NaN;
 	private double totalValue				= 0;
 	
@@ -105,10 +105,10 @@ class Source
 		switch ( aggType )
 		{
 			case AGG_MINIMUM:
-				return ( min != Double.NEGATIVE_INFINITY && min != Double.POSITIVE_INFINITY ? min : Double.NaN );
+				return min;
 				
 			case AGG_MAXIMUM:
-				return ( max != Double.NEGATIVE_INFINITY && max != Double.POSITIVE_INFINITY ? max : Double.NaN );
+				return max;
 				
 			case AGG_AVERAGE:
 				if ( totalTime > 0 )
