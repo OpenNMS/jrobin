@@ -40,7 +40,9 @@ import java.io.IOException;
  *
  * <li>{@link RrdNioBackend}: objects of this class are created from the
  * {@link RrdNioBackendFactory} class. The backend uses java.io.* and java.nio.*
- * classes (mapped ByteBuffer) to store RRD data in files on the disk.
+ * classes (mapped ByteBuffer) to store RRD data in files on the disk. This backend is fast, very fast,
+ * but consumes a lot of memory (borrowed not from the JVM but from the underlying operating system
+ * directly).
  *
  * <li>{@link RrdMemoryBackend}: objects of this class are created from the
  * {@link RrdMemoryBackendFactory} class. This backend stores all data in memory. Once
@@ -138,6 +140,41 @@ public abstract class RrdBackend {
 	 * @throws IOException Thrown in case of I/O error
 	 */
 	public abstract void close() throws IOException;
+
+	/**
+	 * Method called by the framework immediatelly before RRD update operation starts. This method
+	 * does nothing, but can be overriden in subclasses.
+	 */
+	protected void beforeUpdate() throws IOException {
+	}
+
+	/**
+	 * Method called by the framework immediatelly after RRD update operation is completed. This method
+	 * does nothing, but can be overriden in subclasses.
+	 */
+	protected void afterUpdate() throws IOException {
+	}
+
+	/**
+	 * Method called by the framework immediatelly before RRD fetch operation starts. This method
+	 * does nothing, but can be overriden in subclasses.
+	 */
+	protected void beforeFetch() throws IOException {
+	}
+
+	/**
+	 * Method called by the framework immediatelly after RRD fetch operation is completed. This method
+	 * does nothing, but can be overriden in subclasses.
+	 */
+	protected void afterFetch() throws IOException {
+	}
+
+	/**
+	 * Method called by the framework immediatelly after RrdDb obejct is created. This method
+	 * does nothing, but can be overriden in subclasses.
+	 */
+	protected void afterCreate() throws IOException {
+	}
 
 	/**
 	 * This method forces all data cached in memory but not yet stored in the persistant

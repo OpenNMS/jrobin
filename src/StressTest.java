@@ -34,23 +34,23 @@ import java.util.Date;
 import java.awt.*;
 
 class StressTest {
-	public static final String RRD_BACKEND_FACTORY = "NIO";
+	static final String FACTORY_NAME = "NIO";
 
-	public static final String RRD_PATH = Util.getJRobinDemoPath("stress.rrd");
-	public static final long RRD_START = 946710000L;
-	public static final long RRD_STEP = 30;
+	static final String RRD_PATH = Util.getJRobinDemoPath("stress.rrd");
+	static final long RRD_START = 946710000L;
+	static final long RRD_STEP = 30;
 
-	public static final String RRD_DATASOURCE_NAME = "T";
-	public static final int RRD_DATASOURCE_COUNT = 6;
+	static final String RRD_DATASOURCE_NAME = "T";
+	static final int RRD_DATASOURCE_COUNT = 6;
 
-	public static final long TIME_START = 1060142010L;
-	public static final long TIME_END = 1080013472L;
+	static final long TIME_START = 1060142010L;
+	static final long TIME_END = 1080013472L;
 
-	public static final String PNG_PATH = Util.getJRobinDemoPath("stress.png");
-	public static final int PNG_WIDTH = 400;
-	public static final int PNG_HEIGHT = 250;
+	static final String PNG_PATH = Util.getJRobinDemoPath("stress.png");
+	static final int PNG_WIDTH = 400;
+	static final int PNG_HEIGHT = 250;
 
-	public static void printLapTime(String message) {
+	static void printLapTime(String message) {
 		System.out.println(message + " " + Util.getLapTime());
 	}
 
@@ -74,8 +74,8 @@ class StressTest {
 		System.out.println("* computer with 256MB of RAM.                                      *");
 		System.out.println("********************************************************************");
 		printLapTime("Starting demo at " + new Date());
-		RrdBackendFactory.setDefaultFactory(RRD_BACKEND_FACTORY);
-		printLapTime("Backend factory set to " + RRD_BACKEND_FACTORY);
+		RrdDb.setDefaultFactory(FACTORY_NAME);
+		printLapTime("Backend factory set to " + FACTORY_NAME);
 		// create RRD database
 		printLapTime("Creating RRD definition");
 		RrdDef def = new RrdDef(RRD_PATH);
@@ -97,7 +97,7 @@ class StressTest {
         def.addArchive("MIN", 0.5, 1440, 50000);
         def.addArchive("MAX", 0.5, 1440, 50000);
 		printLapTime("Definition created, creating RRD file");
-		RrdDb rrd = new RrdDb(def);
+		RrdDb rrd = RrdDbPool.getInstance().requestRrdDb(def);
 		printLapTime("RRD file created: " + RRD_PATH);
 		BufferedReader r = new BufferedReader(new FileReader(args[0]));
 		printLapTime("Buffered reader created, processing data");
@@ -139,7 +139,7 @@ class StressTest {
 		gdef.comment("@c");
 		gdef.comment("\nOriginal data provided by diy-zoning.sf.net@c");
 		printLapTime("Graph definition created");
-		RrdGraph g = new RrdGraph(gdef);
+		RrdGraph g = new RrdGraph(gdef, true);
 		g.saveAsPNG(PNG_PATH, PNG_WIDTH, PNG_HEIGHT);
 		printLapTime("Graph saved: " + PNG_PATH);
 		printLapTime("Finished at " + new Date());

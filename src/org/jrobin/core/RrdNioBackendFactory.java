@@ -34,6 +34,80 @@ public class RrdNioBackendFactory extends RrdFileBackendFactory{
 	/** factory name, "NIO" */
 	public static final String NAME = "NIO";
 
+	/** See {@link #setSyncMode(int) for explanation }  */
+	public static final int SYNC_DEFAULT = 0; // will sync() only on close()
+	/** See {@link #setSyncMode(int) for explanation }  */
+	public static final int SYNC_BEFOREUPDATE = 1;
+	/** See {@link #setSyncMode(int) for explanation }  */
+	public static final int SYNC_AFTERUPDATE = 2;
+	/** See {@link #setSyncMode(int) for explanation }  */
+	public static final int SYNC_BEFOREFETCH = 3;
+	/** See {@link #setSyncMode(int) for explanation }  */
+	public static final int SYNC_AFTERFETCH = 4;
+	/** See {@link #setSyncMode(int) for explanation }  */
+	public static final int SYNC_BACKGROUND = 5;
+	/** See {@link #setSyncPeriod(int)} for explanation */
+	public static final int DEFAULT_SYNC_PERIOD = 60; // seconds
+
+	private static int syncMode = SYNC_BACKGROUND;
+	private static int syncPeriod = DEFAULT_SYNC_PERIOD;
+
+	/**
+	 * Returns the current synchronization mode between backend data in memory and data
+	 * in the persistent storage (disk file).
+	 *
+	 * @return Integer representing current synchronization mode (SYNC_DEFAULT,
+	 * SYNC_BEFOREUPDATE, SYNC_AFTERUPDATE, SYNC_BEFOREFETCH, SYNC_AFTERFETCH or
+	 * SYNC_BACKGROUND). See {@link #setSyncMode(int)} for full explanation of these return values.
+	 */
+	public static int getSyncMode() {
+		return syncMode;
+	}
+
+	/**
+	 * Sets the current synchronization mode between backend data in memory (backend cache) and
+	 * RRD data in the persistant storage (disk file).<p>
+	 * @param syncMode Desired synchronization mode. Possible values are:<p>
+	 * <ul>
+	 * <li>SYNC_DEFAULT: synchronization will be performed only when {@link RrdDb#close()}
+	 * is called (RRD file is closed) or when {@link RrdDb#sync()} method is called.
+	 * <li>SYNC_BEFOREUPDATE: synchronization will be performed before each {@link Sample#update()}
+	 * call (right before RRD file is about to be updated).
+	 * <li>SYNC_AFTERUPDATE: synchronization will be performed after each {@link Sample#update()}
+	 * call (right after RRD file is updated).
+	 * <li>SYNC_BEFOREFETCH: synchronization will be performed before each
+	 * {@link FetchRequest#fetchData()} call (right before data is about to be fetched from a RRD file,
+	 * for example for graph creation)
+	 * <li>SYNC_AFTERFETCH: synchronization will be performed after each
+	 * {@link FetchRequest#fetchData()} call (right after data is fetched from a RRD file)
+	 * <li>SYNC_BACKGROUND (<b>default</b>): synchronization will be performed automatically
+	 * from a separate thread on a regular basis. Period of time between the two consecutive
+	 * synchronizations can be controlled with {@link #setSyncPeriod(int)}.
+	 * </ul>
+	 */
+	public static void setSyncMode(int syncMode) {
+		RrdNioBackendFactory.syncMode = syncMode;
+	}
+
+	/**
+	 * Returns time between two consecutive background synchronizations. If not changed via
+	 * {@link #setSyncPeriod(int)} method call, defaults to DEFAULT_SYNC_PERIOD (60 seconds).
+	 * See {@link #setSyncPeriod(int)} for more information.
+	 * @return Time in seconds between consecutive background synchronizations.
+	 */
+	public static int getSyncPeriod() {
+		return syncPeriod;
+	}
+
+	/**
+	 * Sets time between consecutive background synchronizations. Method is effective only if
+	 * synchronization mode is set to SYNC_BACKGROUND.
+	 * @param syncPeriod Time in seconds between consecutive background synchronizations.
+	 */
+	public static void setSyncPeriod(int syncPeriod) {
+		RrdNioBackendFactory.syncPeriod = syncPeriod;
+	}
+
 	/**
 	 * Creates RrdNioBackend object for the given file path.
 	 * @param path File path
@@ -45,7 +119,7 @@ public class RrdNioBackendFactory extends RrdFileBackendFactory{
 	 * @throws IOException Thrown in case of I/O error.
 	 */
 	protected RrdBackend open(String path, boolean readOnly, int lockMode) throws IOException {
-		return new RrdNioBackend(path, readOnly, lockMode);
+		return new RrdNioBackend(path, readOnly, lockMode, syncMode, syncPeriod);
 	}
 
 	/**

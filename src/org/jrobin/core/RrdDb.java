@@ -177,6 +177,7 @@ public class RrdDb implements RrdUpdater {
 		for(int i = 0; i < arcDefs.length; i++) {
 			archives[i] = new Archive(this, arcDefs[i]);
 		}
+		backend.afterCreate();
 	}
 
 	/**
@@ -320,6 +321,7 @@ public class RrdDb implements RrdUpdater {
 		}
 		// XMLReader is a rather huge DOM tree, release memory ASAP
 		reader = null;
+		backend.afterCreate();
 	}
 
 	/**
@@ -462,6 +464,7 @@ public class RrdDb implements RrdUpdater {
 		if(closed) {
 			throw new RrdException("RRD already closed, cannot store this  sample");
 		}
+		backend.beforeUpdate();
 		long newTime = sample.getTime();
 		long lastTime = header.getLastUpdateTime();
 		if(lastTime >= newTime) {
@@ -474,14 +477,17 @@ public class RrdDb implements RrdUpdater {
 			datasources[i].process(newTime, newValue);
 		}
 		header.setLastUpdateTime(newTime);
+		backend.afterUpdate();
 	}
 
 	synchronized FetchPoint[] fetch(FetchRequest request) throws IOException, RrdException {
 		if(closed) {
 			throw new RrdException("RRD already closed, cannot fetch data");
 		}
+		backend.beforeFetch();
 		Archive archive = findMatchingArchive(request);
 		FetchPoint[] points = archive.fetch(request);
+		backend.afterFetch();
 		return points;
 	}
 
@@ -489,8 +495,10 @@ public class RrdDb implements RrdUpdater {
 		if(closed) {
 			throw new RrdException("RRD already closed, cannot fetch data");
 		}
+		backend.beforeFetch();
 		Archive archive = findMatchingArchive(request);
 		FetchData fetchData = archive.fetchData(request);
+		backend.afterFetch();
 		return fetchData;
 	}
 
@@ -908,10 +916,24 @@ public class RrdDb implements RrdUpdater {
 	 * need not be called before the {@link #close()} method call since the close() method always
 	 * synchronizes all data in memory with the data in the persisant storage.<p>
 	 *
+	 * When this method returns it is guaranteed that RRD data in the persistent storage is
+	 * synchronized with the RrdDb data in memory.<p>  
+	 *
 	 * @throws IOException Thrown in case of I/O error
 	 */
 	public synchronized void sync() throws IOException {
 		backend.sync();
+	}
+
+	/**
+	 * Sets default backend factory to be used. This method is just an alias for
+	 * {@link RrdBackendFactory#setDefaultFactory(java.lang.String)}.<p>
+	 * @param factoryName Name of the backend factory to be set as default.
+	 * @throws RrdException Thrown if invalid factory name is supplied, or not called
+	 * before the first backend object (before the first RrdDb object) is created.
+	 */
+	public static void setDefaultFactory(String factoryName) throws RrdException {
+		RrdBackendFactory.setDefaultFactory(factoryName);
 	}
 
 }
