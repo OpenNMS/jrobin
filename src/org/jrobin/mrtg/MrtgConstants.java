@@ -25,6 +25,8 @@
 
 package org.jrobin.mrtg;
 
+import org.jrobin.core.RrdDbPool;
+
 public interface MrtgConstants {
 	// backend factory to be used
 	// WARNING: Change this to "FILE" if you run the Server app
@@ -45,7 +47,8 @@ public interface MrtgConstants {
 	int SCHEDULER_DELAY = 20;
 
 	// number of open RRD files held in the pool
-	int POOL_CAPACITY = 100;
+	int POOL_CAPACITY = RrdDbPool.INITIAL_CAPACITY;
+	// int POOL_CAPACITY = 10;
 
 	// graph dimensions
 	int GRAPH_WIDTH = 502, GRAPH_HEIGHT = 234;
