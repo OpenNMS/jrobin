@@ -31,7 +31,7 @@ package org.jrobin.core;
  */
 public class FetchDataStats implements ConsolFuns {
 	private long seconds;
-	private double total, min, max, last;
+	private double total, min, max, last, first;
 
 	FetchDataStats() {
 		// just to prohibit explicit creation
@@ -55,6 +55,10 @@ public class FetchDataStats implements ConsolFuns {
 
 	void setLast(double last) {
 		this.last = last;
+	}
+
+	void setFirst(double first) {
+		this.first = first;
 	}
 
 	/**
@@ -87,6 +91,14 @@ public class FetchDataStats implements ConsolFuns {
 	 */
 	public double getLast() {
 		return last;
+	}
+
+	/**
+	 * Returns FIRST of the fetched data
+	 * @return FIRST of the fetched data
+	 */
+	public double getFirst() {
+		return first;
 	}
 
 	/**
@@ -134,6 +146,7 @@ public class FetchDataStats implements ConsolFuns {
 			   "MIN:     " + Util.formatDouble(getMin(), true) + "\n" +
 			   "MAX:     " + Util.formatDouble(getMax(), true) + "\n" +
 			   "LAST:    " + Util.formatDouble(getLast(), true) + "\n" +
+			   "FIRST:   " + Util.formatDouble(getFirst(), true) + "\n" +
 			   "TOTAL:   " + Util.formatDouble(getTotal(), true);
 	}
 }

@@ -317,9 +317,9 @@ public class FetchData implements RrdDataSet, ConsolFuns {
 	 *
 	 * @param dsName    Datasource name
 	 * @param consolFun Consolidation function to be applied to fetched datasource values.
-	 *                  Valid consolidation functions are "MIN", "MAX", "LAST", "AVERAGE" and "TOTAL"
+	 *                  Valid consolidation functions are "MIN", "MAX", "LAST", "FIRST", "AVERAGE" and "TOTAL"
 	 *                  (these string constants are conveniently defined in the {@link ConsolFuns} class)
-	 * @return MIN, MAX, LAST, AVERAGE or TOTAL value calculated from the fetched data
+	 * @return MIN, MAX, LAST, FIRST, AVERAGE or TOTAL value calculated from the fetched data
 	 *         for the given datasource name
 	 * @throws RrdException Thrown if the given datasource name cannot be found in fetched data.
 	 * @deprecated Use {@link #getStats(String, String) getStats(dsName, rpnExpression)} method instead.
@@ -336,6 +336,9 @@ public class FetchData implements RrdDataSet, ConsolFuns {
 		else if (consolFun.equals(CF_LAST)) {
 			return stats.getLast();
 		}
+		else if (consolFun.equals(CF_FIRST)) {
+			return stats.getFirst();
+		}
 		else if (consolFun.equals(CF_AVERAGE)) {
 			return stats.getAverage();
 		}
@@ -351,7 +354,7 @@ public class FetchData implements RrdDataSet, ConsolFuns {
 	 * Returns all aggregated values from the fetched data for a single datasource.
 	 *
 	 * @param dsName    Datasource name
-	 * @return Object containing MIN, MAX, LAST, AVERAGE and TOTAL values calculated from the fetched data
+	 * @return Object containing MIN, MAX, LAST, FIRST, AVERAGE and TOTAL values calculated from the fetched data
 	 *         for the given datasource name
 	 * @throws RrdException Thrown if the given datasource name cannot be found in fetched data.
 	 */
@@ -371,14 +374,14 @@ public class FetchData implements RrdDataSet, ConsolFuns {
 	 * original value (value fetched from the RRD)
 	 *
 	 * @param dsName    Datasource name
-	 * @return Object containing MIN, MAX, LAST, AVERAGE and TOTAL values calculated from the fetched data
+	 * @return Object containing MIN, MAX, LAST, FIRST, AVERAGE and TOTAL values calculated from the fetched data
 	 *         for the given datasource name and a given RPN expression
 	 * @throws RrdException Thrown if the given datasource name cannot be found in fetched data
 	 */
 	public FetchDataStats getStats(String dsName, String rpnExpression) throws RrdException {
 		double[] values = getValues(dsName);
 		long totalSecs = 0;
-		double totalValue = 0.0, min = Double.NaN, max = Double.NaN, last = Double.NaN;
+		double totalValue = 0.0, min = Double.NaN, max = Double.NaN;
 		RpnCalculator rpnCalculator = null;
 		if (rpnExpression != null) {
 			rpnCalculator = new RpnCalculator(rpnExpression);
@@ -398,10 +401,10 @@ public class FetchData implements RrdDataSet, ConsolFuns {
 			}
 			min = Util.min(min, value);
 			max = Util.max(max, value);
-			last = value;
 		}
 		FetchDataStats stats = new FetchDataStats();
-		stats.setLast(last);
+		stats.setFirst(values[1]);
+		stats.setLast(values[values.length - 1]);
 		stats.setMax(max);
 		stats.setMin(min);
 		stats.setSeconds(totalSecs);
