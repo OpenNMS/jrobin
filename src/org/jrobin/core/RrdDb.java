@@ -516,6 +516,14 @@ public class RrdDb implements RrdUpdater {
 	}
 
 	/**
+	 * This method is just an alias for {@link #dumpXml(OutputStream) dumpXml} method.
+	 * @throws IOException Thrown in case of I/O related error
+	 */
+	public synchronized void exportXml(OutputStream destination) throws IOException {
+		dumpXml(destination);
+	}
+
+	/**
 	 * <p>Returns string representing internal state of RRD file in XML format. This format
 	 * is fully compatible with RRDTool's XML dump format and can be used for conversion
 	 * purposes or debugging.</p>
@@ -527,6 +535,16 @@ public class RrdDb implements RrdUpdater {
 		ByteArrayOutputStream destination = new ByteArrayOutputStream(XML_INITIAL_BUFFER_CAPACITY);
 		dumpXml(destination);
 		return destination.toString();
+	}
+
+	/**
+	 * This method is just an alias for {@link #getXml() getXml} method.
+	 * @return Internal state of RRD file in XML format.
+	 * @throws IOException Thrown in case of I/O related error
+	 * @throws RrdException Thrown in case of JRobin specific error
+	 */
+	public synchronized String exportXml() throws IOException, RrdException {
+		return getXml();
 	}
 
 	/**
@@ -548,11 +566,26 @@ public class RrdDb implements RrdUpdater {
 	 * @throws IOException Thrown in case of I/O related error.
 	 * @throws RrdException Thrown in case of JRobin related error.
 	 */
-
 	public synchronized void dumpXml(String filename) throws IOException, RrdException {
-		OutputStream destination = new FileOutputStream(filename, false);
-		dumpXml(destination);
-		destination.close();
+		OutputStream outputStream = null;
+		try {
+			outputStream = new FileOutputStream(filename, false);
+			dumpXml(outputStream);
+		}
+		finally {
+			if(outputStream != null) {
+				outputStream.close();
+			}
+		}
+	}
+
+	/**
+	 * This method is just an alias for {@link #dumpXml(String) dumpXml(String)} method.
+	 * @throws IOException Thrown in case of I/O related error
+	 * @throws RrdException Thrown in case of JRobin specific error
+	 */
+	public synchronized void exportXml(String filename) throws IOException, RrdException {
+		dumpXml(filename);
 	}
 
 	/**

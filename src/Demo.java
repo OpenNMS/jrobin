@@ -61,7 +61,7 @@ class Demo {
 		String jpegPath = getFullPath(FILE + ".jpeg");
 		String gifPath = getFullPath(FILE + ".gif");
 		String logPath = getFullPath(FILE + ".log");
-		PrintWriter pw = new PrintWriter(
+		PrintWriter log = new PrintWriter(
 			new BufferedOutputStream(new FileOutputStream(logPath, false))
 		);
 
@@ -79,7 +79,7 @@ class Demo {
 		rrdDef.addArchive("MAX", 0.5, 24, 775);
 		rrdDef.addArchive("MAX", 0.5, 288, 797);
 		println(rrdDef.dump());
-		pw.println(rrdDef.dump());
+		log.println(rrdDef.dump());
 		RrdDb rrdDb = new RrdDb(rrdDef);
 		rrdDb.close();
 		println("== RRD file created and closed.");
@@ -96,7 +96,7 @@ class Demo {
 			sample.setTime(t);
 			sample.setValue("sun", sunSource.getValue());
 			sample.setValue("shade", shadeSource.getValue());
-			pw.println(sample.dump());
+			log.println(sample.dump());
 			sample.update();
 			
 			t += RANDOM.nextDouble() * MAX_STEP + 1;
@@ -112,15 +112,19 @@ class Demo {
 		println("== Fetching data for the whole month");
 		FetchRequest request = rrdDb.createFetchRequest("AVERAGE", start, end);
 		println(request.dump());
-		pw.println(request.dump());
+		log.println(request.dump());
 		FetchData fetchData = request.fetchData();
 		println("== Data fetched. " + fetchData.getRowCount() + " points obtained");
 		for(int i = 0; i < fetchData.getRowCount(); i++) {
 			println(fetchData.getRow(i).dump());
 		}
+		println("== Dumping fetch data to XML format");
+		println(fetchData.exportXml());
 		println("== Fetch completed");
+
+		// dump to XML file
 		println("== Dumping RRD file to XML file " + xmlPath + " (can be restored with RRDTool)");
-		rrdDb.dumpXml(xmlPath);
+		rrdDb.exportXml(xmlPath);
 		println("== Creating RRD file " + rrdRestoredPath + " from XML file " + xmlPath);
 		RrdDb rrdRestoredDb = new RrdDb(rrdRestoredPath, xmlPath);
 
@@ -162,7 +166,7 @@ class Demo {
 		graph.saveAsGIF(gifPath, 400, 250);
 
 		// demo ends
-		pw.close();
+		log.close();
 		println("== Demo completed in " +
 			((System.currentTimeMillis() - startMillis) / 1000.0) +	" sec");
 	}

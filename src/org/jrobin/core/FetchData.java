@@ -26,6 +26,9 @@
 package org.jrobin.core;
 
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.FileOutputStream;
+import java.io.ByteArrayOutputStream;
 
 /**
  * Class used to represent data fetched from the RRD file.
@@ -341,4 +344,71 @@ public class FetchData {
 		return totalSecs > 0? totalVal / totalSecs: Double.NaN;
 	}
 
+	/**
+	 * Dumps fetch data to output stream in XML format.
+	 * @param outputStream Output stream to dump fetch data to
+	 * @throws IOException Thrown in case of I/O error
+	 */
+	public void exportXml(OutputStream outputStream) throws IOException {
+		XmlWriter writer = new XmlWriter(outputStream);
+		writer.startTag("fetch_data");
+		writer.startTag("request");
+		writer.writeTag("file", request.getParentDb().getRrdFile().getCanonicalFilePath());
+		writer.writeComment(Util.getDate(request.getFetchStart()));
+		writer.writeTag("start", request.getFetchStart());
+		writer.writeComment(Util.getDate(request.getFetchEnd()));
+		writer.writeTag("end", request.getFetchEnd());
+		writer.writeTag("resolution", request.getResolution());
+		writer.writeTag("cf", request.getConsolFun());
+		writer.closeTag(); // request
+		writer.startTag("datasources");
+		for(int i = 0; i < dsNames.length; i++) {
+			writer.writeTag("name", dsNames[i]);
+		}
+		writer.closeTag(); // datasources
+		writer.startTag("data");
+		for(int i = 0; i < timestamps.length; i++) {
+			writer.startTag("row");
+			writer.writeComment(Util.getDate(timestamps[i]));
+            writer.writeTag("timestamp", timestamps[i]);
+			writer.startTag("values");
+			for(int j = 0; j < dsNames.length; j++) {
+				writer.writeTag("v", values[j][i]);
+			}
+			writer.closeTag(); // values
+			writer.closeTag(); // row
+		}
+		writer.closeTag(); // data
+		writer.closeTag(); // fetch_data
+		writer.finish();
+	}
+
+	/**
+	 * Dumps fetch data to file in XML format.
+	 * @param filepath Path to destination file
+	 * @throws IOException Thrown in case of I/O error
+	 */
+	public void exportXml(String filepath) throws IOException {
+		OutputStream outputStream = null;
+		try {
+			outputStream = new FileOutputStream(filepath);
+			exportXml(outputStream);
+		}
+		finally {
+			if(outputStream != null) {
+				outputStream.close();
+			}
+		}
+	}
+
+	/**
+	 * Dumps fetch data in XML format.
+	 * @return String containing XML formatted fetch data
+	 * @throws IOException Thrown in case of I/O error
+	 */
+	public String exportXml() throws IOException {
+		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+		exportXml(outputStream);
+		return outputStream.toString();
+	}
 }

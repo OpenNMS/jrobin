@@ -141,7 +141,7 @@ public class RrdFile extends RandomAccessFile {
 	public String getFilePath() {
 		return filePath;
 	}
-	
+
 	/**
 	 * Returns canonical path to RRD file on disk.
 	 * @return RRD file path.
