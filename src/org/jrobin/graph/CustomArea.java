@@ -29,6 +29,7 @@ import java.util.HashMap;
 
 import org.jrobin.core.RrdException;
 import org.jrobin.core.XmlWriter;
+import org.jrobin.core.Util;
 
 /**
  * <p>Class used to represent an area defined by two points in a graph.  The area is drawn as a rectangle 
@@ -109,16 +110,16 @@ class CustomArea extends PlotDef
 			nx = g.getX( xVal2 );
 	
 		// Get Y positions
-		if ( yVal1 == Double.MIN_VALUE )
+		if ( yVal1 == Util.MIN_DOUBLE )
 			ay = g.getMinY();
-		else if ( yVal1 == Double.MAX_VALUE )
+		else if ( yVal1 == Util.MAX_DOUBLE )
 			ay = g.getMaxY();
 		else
 			ay = g.getY( yVal1 );
 	
-		if ( yVal2 == Double.MIN_VALUE )
+		if ( yVal2 == Util.MIN_DOUBLE )
 			ny = g.getMinY();
-		else if ( yVal2 == Double.MAX_VALUE )
+		else if ( yVal2 == Util.MAX_DOUBLE )
 			ny = g.getMaxY();
 		else
 			ny = g.getY( yVal2 );
@@ -134,7 +135,7 @@ class CustomArea extends PlotDef
 		
 		// Set the stackvalues
 		// Always use the y value of the second specified point to stack on
-		if ( yVal2 != Double.MAX_VALUE )
+		if ( yVal2 != Util.MAX_DOUBLE )
 			for (int i = 0; i < stackValues.length; i++)
 				if ( xValues[i] < ax || xValues[i] > nx ) 
 					stackValues[i] = g.getInverseY(0);
@@ -154,14 +155,14 @@ class CustomArea extends PlotDef
 	double getValue( int tblPos, long[] timestamps )
 	{
 		long time = timestamps[tblPos];
-	
+
 		// Out of range
 		if ( time > xVal2 || time < xVal1 )
 			return Double.NaN;
-	
-		if ( yVal2 == Double.MAX_VALUE )
+
+		if ( yVal2 == Util.MAX_DOUBLE )
 			return Double.NaN;
-		
+
 		return yVal2;
 	}
 

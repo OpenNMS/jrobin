@@ -60,6 +60,8 @@ class Source
 	private long lastTime					= 0;
 	private long totalTime					= 0;
 
+	private long startTime, endTime;
+
 	private int stPos						= 0;
 	private int lastStPos					= 0;		// Last value position requested
 
@@ -74,8 +76,7 @@ class Source
 	{
 		this.name = name;
 	}
-	
-	
+
 	// ================================================================
 	// -- Protected methods
 	// ================================================================
@@ -90,8 +91,14 @@ class Source
 	{
 		// The first sample is before the time range we want, and as such
 		// should not be counted for data aggregation
-		if ( pos > 0 && pos < aggregatePoints )
+		if ( pos < aggregatePoints )
 			aggregate( time, val );
+	}
+
+	void setTimespan( long startTime, long endTime )
+	{
+		this.startTime	= startTime;
+		this.endTime	= endTime;
 	}
 
 	void setFetchedStep( long step ) {
@@ -154,7 +161,7 @@ class Source
 		long t 			= Util.normalize( preciseTime, step );
 		t				= ( t < preciseTime ? t + step : t );
 
-		if ( preciseTime < lastPreciseTime )	// Backward fetching is weird, start over, we prolly in a new iteration
+		if ( preciseTime < lastPreciseTime )	// Backward fetching is weird, start over, we're prolly in a new iteration
 			stPos 		= 0;
 
 		lastPreciseTime	= preciseTime;
@@ -198,7 +205,7 @@ class Source
 				
 			case AGG_FIRST:
 				if ( values != null && values.length > 0)
-					return values[0];
+					return values[ values.length > 1 ? 1 : 0 ];
 				break;
 				
 			case AGG_LAST:
@@ -234,23 +241,26 @@ class Source
 	 * @param time Timestamp in seconds of the datapoint.
 	 * @param value Double value of the datapoint.
 	 */
-	private void aggregate( long time, double value ) 
+	private void aggregate( long time, double value )
 	{
 		if ( Double.isInfinite(value) )
 			return;
 
-		min = Util.min( min, value );
-		max = Util.max( max, value );
-		
-		if ( !Double.isNaN(lastValue) && !Double.isNaN(value) )
+		if ( time > endTime )
+			time = endTime;
+
+		if ( lastTime > 0 && !Double.isNaN(value) && value != Double.MIN_VALUE && value != Double.MAX_VALUE )
 		{
+			min = Util.min( min, value );
+			max = Util.max( max, value );
+
 			long timeDelta 	= time - lastTime;
 
-			totalValue		+= timeDelta * ( value + lastValue ) / 2.0;
+			totalValue		+= timeDelta * value;
 			totalTime		+= timeDelta;
 		}
 
-		lastTime	= time;
+		lastTime	= ( time < startTime ? startTime : time );
 		lastValue	= value;
 	}
 }

@@ -58,7 +58,7 @@ class PlottableDemo {
 
 	private PlottableDemo() throws RrdException, IOException {
 		createGraph1();
-		createGraph2();
+		/*createGraph2();
 		createGraph3();
 		createGraph4();
 		createGraph5();
@@ -72,7 +72,7 @@ class PlottableDemo {
 		createGraph13();
 		createGraph14();
 		createGraph15();
-		createGraph16();
+		createGraph16();*/
 		createGraph17();
 	}
 
@@ -474,7 +474,7 @@ class PlottableDemo {
 	private static void createGraph(RrdGraphDef gDef) throws IOException, RrdException {
 		RrdGraph graph = new RrdGraph(gDef);
 		String filename = Util.getJRobinDemoPath("plottable" + (++count) + ".png");
-		graph.saveAsPNG(filename, 400, 200);
+		graph.saveAsPNG(filename, 800, 400);
 		System.out.println("Saved to: " + filename);
 	}
 

@@ -86,7 +86,7 @@ class ValueExtractor
 	// ================================================================
 	// -- Protected methods
 	// ================================================================
-	int prepareSources( Source[] sources, int offset )
+	int prepareSources( Source[] sources, int offset, long startTime, long endTime )
 	{
 		int tblPos 	= offset;
 
@@ -96,6 +96,7 @@ class ValueExtractor
 			{
 				for (int x = 0; x < dsValues[i].length; x++)
 				{
+					sources[tblPos].setTimespan( startTime, endTime );
 					sources[tblPos++].setFetchedStep( steps[i] );
 				}
 			}

@@ -39,7 +39,8 @@ class RrdXportCmd extends RrdToolCmd {
 		return "xport";
 	}
 
-	Object execute() throws RrdException, IOException {
+	Object execute() throws RrdException, IOException
+	{
 		// --start
 		String startStr = getOptionValue("s", "start", DEFAULT_START);
 		TimeSpec spec1 = new TimeParser(startStr).parse();

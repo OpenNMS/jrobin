@@ -52,6 +52,9 @@ import java.io.*;
  */
 public class Util {
 
+	public static final double MAX_DOUBLE	= Double.MAX_VALUE;
+	public static final double MIN_DOUBLE	= -Double.MAX_VALUE;
+
 	// pattern RRDTool uses to format doubles in XML files
 	static final String PATTERN = "0.0000000000E00";
 	// directory under $USER_HOME used for demo graphs storing

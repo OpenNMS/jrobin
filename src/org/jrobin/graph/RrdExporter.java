@@ -326,7 +326,7 @@ class RrdExporter
 
 		int pos = 0;
 		for (int j = 0; j < veList.length; j++)
-			pos = veList[j].prepareSources( sources, pos );
+			pos = veList[j].prepareSources( sources, pos, startTime, endTime );
 
 		// **************************************************************************************** //
 		// If there are Sdefs, we should determine a tree-descend order for calculation.			//

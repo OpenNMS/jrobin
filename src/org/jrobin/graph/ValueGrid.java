@@ -140,6 +140,13 @@ class ValueGrid
 		if ( !rigid && upper == 0 && upper == lower )
 			upper = 0.9;
 
+		if ( upper == lower )
+		{
+			double origUpper	= upper;
+			upper				= origUpper + origUpper/100;
+			lower				= origUpper - origUpper/100;
+		}
+
 		// Determine nice axis grid
 		double shifted = Math.abs(upper - lower);
 		if ( shifted == 0 )			// Special case, no 'range' available

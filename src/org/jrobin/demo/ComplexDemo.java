@@ -167,10 +167,10 @@ class ComplexDemo {
 		def.gprint("ftp", "AVG", "( average: @0,");
 		def.gprint("ftp", "MIN", "never below: @0 )\n\n");
 		def.comment("  Usage spread:");
-		def.area(new GregorianCalendar(2003, 7, 19, 17, 00), Double.MIN_VALUE,
+		def.area(new GregorianCalendar(2003, 7, 19, 17, 00), -Double.MAX_VALUE,
 			new GregorianCalendar(2003, 7, 19, 23, 00), Double.MAX_VALUE,
 			Color.RED, "peak period");
-		def.area(new GregorianCalendar(2003, 7, 20, 5, 00), Double.MIN_VALUE,
+		def.area(new GregorianCalendar(2003, 7, 20, 5, 00), -Double.MAX_VALUE,
 			new GregorianCalendar(2003, 7, 20, 8, 30), Double.MAX_VALUE,
 			Color.LIGHT_GRAY, "quiet period\n");
 		def.comment("  Rise/descend:");
