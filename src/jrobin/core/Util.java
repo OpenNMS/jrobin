@@ -182,9 +182,10 @@ public class Util {
 	public static void time( int str )
 	{
 		s2 = System.currentTimeMillis();
-		if ( str >= 0 )
+		if ( str >= 0 ) {
 			timeList.addLast( str + "_" + (s2 - s1));
 			//System.err.println( "[" + str + "] --- " + (s2 - s1) + " ms");
+		}
 		s1 = s2;
 	}
 

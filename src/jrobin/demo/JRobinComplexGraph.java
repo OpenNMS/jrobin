@@ -78,7 +78,7 @@ public class JRobinComplexGraph {
 			//gl.setAntiAliasing(false);
 			gl.setGridRange( 0, 1, false );
 			//gl.setBackground( "/demo6.png" );
-			//gl.setOverlay( "/demo6.png" );
+			//gl.setOverlay( "/overview.gif" );
 			gl.datasource("load", "c:/test.rrd", "serverLoad", "AVERAGE");
 			gl.datasource("user", "c:/test.rrd", "serverCPUUser", "AVERAGE");
 			gl.datasource("nice", "c:/test.rrd", "serverCPUNice", "AVERAGE");

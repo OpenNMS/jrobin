@@ -39,19 +39,21 @@ import jrobin.core.Util;
 import jrobin.core.RrdException;
 
 /**
- * <p>Class used to collect information for the new JRobin graph. JRobin graphs have many
+ * <p>Class used to collect information for a JRobin graph. JRobin graphs have many
  * options and this class has methods and properties to set them.</p>
  *
- * <p>At this moment, JRobin graphs are quite good looking, but RRDTool is still better.
- * However, JRobin graphs have almost the same potential as RRDTool's graph command. To learn
- * more about RRDTool's graphs see RRDTool's
- * <a href="../../../man/rrdgraph.html" target="man">rrdgraph man page</a>.</p> This man page
+ * <p>The JRobin graph package was designed to create graphs that have the same look as the 
+ * RRDTool counter parts.  Almost all the same graphing options are available, with some extra's
+ * like more advanced text alignment and custom point-to-point lines and area's.</p>
+ * 
+ * <p>To learn more about RDTool's graphs see RRDTool's
+ * <a href="http://people.ee.ethz.ch/~oetiker/webtools/rrdtool/manual/rrdgraph.html" target="man">rrdgraph man page</a>.  This man page
  * is important: JRobin uses the same concept of graph sources definition (DEF directives)
  * and supports RPN extensions in complex datasource definitions (RRDTool's CDEF directives).</p>
  * 
  * <p><code>RrdGraphDef</code> class does not actually create any graph. It just collects necessary information.
- * Graph will be created when you pass <code>RrdGraphDef</code> object to the constructor
- * of {@link jrobin.graph.RrdGraph RrdGraph} object.</p>
+ * Graph will be created when you pass <code>RrdGraphDef</code> object to a {@link jrobin.graph.RrdGraph RrdGraph}, either
+ * by passing it to the constructor or using the <code>setGraphDef()</code> method.</p>
  * 
  * @author Arne Vandamme (arne.vandamme@jrobin.org)
  * @author Sasa Markovic (saxon@jrobin.org)
@@ -73,7 +75,6 @@ public class RrdGraphDef implements Serializable
 	boolean minorGridY			= true;								// hide minor Y axis grid (default: no)
 	boolean majorGridX			= true;								// hide major X axis grid with labels (default: no)
 	boolean majorGridY			= true;								// hide major Y axis grid with labels (default: no)
-	boolean rigidGrid			= false;							// disable auto scaling of grid range (default: no)
 	boolean frontGrid			= true;								// show grid in front of the chart (default: yes)
 	boolean antiAliasing		= true;								// use anti-aliasing for the chart (default: yes)
 	boolean showLegend			= true;								// show legend and comments (default: yes)
@@ -96,45 +97,49 @@ public class RrdGraphDef implements Serializable
 	File background				= null;								// no background image by default
 	File overlay				= null;								// no overlay image by default
 	
-	int chart_lpadding			= Grapher.CHART_LPADDING;
+	int chart_lpadding			= Grapher.CHART_LPADDING;			// padding space on the left of the chart area
+	
+	double baseValue			= ValueFormatter.DEFAULT_BASE;		// unit base value to use (default: 1000)
+	int scaleIndex				= ValueFormatter.NO_SCALE;			// fixed units exponent value to use
 	
 	BasicStroke borderStroke	= null;								// defaults to standard beveled border
+	TimeAxisUnit tAxis			= null;								// custom time axis grid, defaults to no custom
+	ValueAxisUnit vAxis			= null;								// custom value axis grid, defaults to no custom
+	GridRange gridRange			= null;								// custom value range definition, defaults to auto-scale
 	
-	TimeAxisUnit tAxis			= null;
+	// -- Non-settable members
+	int numDefs					= 0;								// number of Def datasources added
+	int commentLines			= 0;								// number of complete lines in the list of comment items
+	int commentLineShift		= 0;								// modifier to add to get minimum one complete line of comments
+	
+	HashMap fetchSources		= new HashMap();					// holds the list of FetchSources
+	Vector cdefList				= new Vector();						// holds the list of Cdef datasources
+	Vector plotDefs				= new Vector();						// holds the list of PlotDefs
+	Vector comments				= new Vector();						// holds the list of comment items
+	
+	
+	
+	// REMOVE THESE
 	boolean tAxisCentered		= false;
-	double valueGridStep		= Double.NaN;
+	double valueGridStep		= Double.NaN;						
 	double valueLabelStep		= Double.NaN;
 	double valueStep 			= 0;
-	
-	double baseValue			= 1000;
-	int scaleIndex				= -1;								// NO_SCALE
-	GridRange gridRange			= null;
-	
-	int numDefs					= 0;
-	int commentLines			= 0;
-	int commentLineShift		= 0;
-	
-	HashMap fetchSources		= new HashMap();
-	Vector cdefList				= new Vector();
-	Vector plotDefs				= new Vector();
-	Vector comments				= new Vector();
-	
+
+		
 	// ================================================================
 	// -- Constructors
 	// ================================================================
 	/**
-	 * Constructs a new JRobin graph object. 
+	 * Constructs a new default JRobin graph object. 
 	 */
-	public RrdGraphDef() 
-	{
-		// Default constructor
+	public RrdGraphDef() {
 	}
 
 	/**
 	 * Constructs a new JRobin graph object, with a specified time span to be presented on the graph.  
 	 * Using timestamps defined as number of seconds since the epoch.
 	 * @param startTime Starting timestamp in seconds.
-	 * @param endTime Ending timestamp in secons.
+	 * @param endTime Ending timestamp in seconds.
 	 * @throws RrdException Thrown if invalid parameters are supplied.
 	 */
 	public RrdGraphDef( long startTime, long endTime ) throws RrdException 
@@ -166,11 +171,12 @@ public class RrdGraphDef implements Serializable
 		setTimePeriod( start, end );
 	}
 
+
 	// ================================================================
 	// -- Public methods
 	// ================================================================
 	/**
-	 * Sets time span to be presented on the graph using timestamps.
+	 * Sets time span to be presented on the graph using timestamps in number of seconds.
 	 * @param startTime Starting timestamp in seconds.
 	 * @param endTime Ending timestamp in secons.
 	 * @throws RrdException Thrown if invalid parameters are supplied.
@@ -217,11 +223,11 @@ public class RrdGraphDef implements Serializable
 
 	/**
 	 * Sets vertical (value) axis label.
-	 * @param valueAxisLabel Axis label.
+	 * @param label Vertical axis label.
 	 */
-	public void setVerticalLabel( String valueAxisLabel) 
+	public void setVerticalLabel( String label) 
 	{
-		this.valueAxisLabel = valueAxisLabel;
+		this.valueAxisLabel = label;
 	}
 	
 	/**
@@ -234,8 +240,8 @@ public class RrdGraphDef implements Serializable
 	}
 
 	/**
-	 * Sets chart area background color. If not set, back color defaults to white.
-	 * @param backColor Chart area background color.
+	 * Sets chart area background color. If not set, canvas color defaults to white.
+	 * @param canvasColor Chart area background color.
 	 */
 	public void setCanvasColor( Color canvasColor ) 
 	{
@@ -256,7 +262,8 @@ public class RrdGraphDef implements Serializable
 	}
 	
 	/**
-	 * Sets the color of the title font used in the graph.
+	 * Sets the color of the title font used in the graph as a <code>java.awt.Color</code> object.
+	 * Default title font color is black.
 	 * @param c The color to be used.
 	 */
 	public void setTitleFontColor( Color c ) 
@@ -265,7 +272,8 @@ public class RrdGraphDef implements Serializable
 	}
 	
 	/**
-	 * Sets the color of the default font used in the graph.
+	 * Sets the color of the default font used in the graph as a <code>java.awt.Color</code> object.
+	 * Default font color is black.
 	 * @param c The color to be used.
 	 */
 	public void setDefaultFontColor( Color c ) 
@@ -274,7 +282,8 @@ public class RrdGraphDef implements Serializable
 	}
 	
 	/**
-	 * Sets the font to be used for the graph title.
+	 * Sets the font to be used for the graph title as a <code>java.awt.Font</code> object.
+	 * Default title font is "Lucida Sans Typewriter", with BOLD attributes and a size of 12 points.
 	 * @param f The Font to be used.
 	 */
 	public void setTitleFont( Font f )
@@ -283,7 +292,8 @@ public class RrdGraphDef implements Serializable
 	}
 	
 	/**
-	 * Sets the default font to be used in the graph.
+	 * Sets the default font to be used in the graph as a <code>java.awt.Font</code> object.
+	 * Default font is "Lucida Sans Typewriter", with PLAIN attributes and a size of 10 points.
 	 * @param f The Font to be used.
 	 */
 	public void setDefaultFont( Font f )
@@ -292,7 +302,8 @@ public class RrdGraphDef implements Serializable
 	}
 	
 	/**
-	 * Determines the color of the major grid.
+	 * Sets the color of the chart's major grid.
+	 * Grid labels have the same color as the default font.
 	 * @param c Color to use.
 	 */
 	public void setMajorGridColor( Color c ) 
@@ -301,7 +312,7 @@ public class RrdGraphDef implements Serializable
 	}
 
 	/**
-	 * Determines the color of the minor grid.
+	 * Determines the color of chart's the minor grid.
 	 * @param c Color to use.
 	 */
 	public void setMinorGridColor( Color c ) 
@@ -319,7 +330,7 @@ public class RrdGraphDef implements Serializable
 	}
 
 	/**
-	 * Determines the color of X axis.
+	 * Determines the color of chart X axis.
 	 * @param c Color to use.
 	 */
 	public void setAxisColor( Color c ) 
@@ -328,7 +339,7 @@ public class RrdGraphDef implements Serializable
 	}
 
 	/**
-	 * Determines the color of the small axis arrow on the X axis.
+	 * Determines the color of the small axis arrow on the chart X axis.
 	 * @param c Color to use.
 	 */
 	public void setArrowColor( Color c ) 
@@ -364,7 +375,7 @@ public class RrdGraphDef implements Serializable
 	}
 
 	/**
-	 * Determines if the major grid width labels for the Y axis needs to be drawn.
+	 * Determines if the major grid with labels for the Y axis needs to be drawn.
 	 * @param visible True if major grid needs to be drawn, false if not.
 	 */
 	public void setMajorGridY( boolean visible ) 
@@ -374,7 +385,6 @@ public class RrdGraphDef implements Serializable
 
 	/**
 	 * Determines if the X axis grid should be drawn.
-	 * This will not change the left padding of the drawing area.
 	 * @param visible True if grid needs to be drawn, false if not.
 	 */
 	public void setGridX( boolean visible ) 
@@ -384,29 +394,17 @@ public class RrdGraphDef implements Serializable
 
 	/**
 	 * Determines if the Y axis grid should be drawn.
-	 * This will not change the bottom padding of the drawing area.
 	 * @param visible True if grid needs to be drawn, false if not.
 	 */
 	public void setGridY( boolean visible ) 
 	{
 		this.gridY		= visible;
 	}
-	
-	/**
-	 * Determines if the grid should have rigid upper and lower limits.
-	 * If so the upper and lower limit will not autoscale depending on the
-	 * graph values.  Default uses grid autoscaling.
-	 * @param rigid True if the grid should have rigid limits.
-	 */
-	public void setRigidGrid( boolean rigid ) 
-	{
-		this.rigidGrid = rigid;
-	}
 
 	/**
-	 * Determine if the graph grid is in front of the graphs itself, or behind it.
-	 * Default is in front of the graph itself.
-	 * @param frontGrid True if the grid is in front of the graphs.
+	 * Determine if the graph grid is in front of the chart itself, or behind it.
+	 * Default is in front of the chart.
+	 * @param frontGrid True if the grid is in front of the chart.
 	 */
 	public void setFrontGrid( boolean frontGrid ) 
 	{
@@ -415,6 +413,8 @@ public class RrdGraphDef implements Serializable
 
 	/**
 	 * Determine if the legend should be visible or not, default: visible.
+	 * Invisible legend area means no comments will be plotted, and the graph will be smaller
+	 * in height.
 	 * @param showLegend True if the legend is visible.
 	 */
 	public void setShowLegend( boolean showLegend ) 
@@ -422,6 +422,13 @@ public class RrdGraphDef implements Serializable
 		this.showLegend	= showLegend;
 	}
 	
+	/**
+	 * Determine if the default JRobin signature should be visible, default: yes.
+	 * The signature text is "www.jrobin.org" and the signature is centered at the bottom of the graph.
+	 * Unless you have a good reason not to draw the signature, please be so kind as to leave the 
+	 * signature visible.  Disabling the signature can give a minor performance boost.
+	 * @param showSignature True if the signature is visible.
+	 */
 	public void setShowSignature( boolean showSignature )
 	{
 		this.drawSignature = showSignature;
@@ -438,12 +445,134 @@ public class RrdGraphDef implements Serializable
 	}
 	
 	/**
-	 * Set the number of pixels on the left of the canvas area ( value marker space ).
+	 * Set the number of pixels on the left of the chart area ( value marker space ).
 	 * @param lp Number of pixels used, defaults to 50.
 	 */
 	public void setChartLeftPadding( int lp ) 
 	{
 		this.chart_lpadding = lp;
+	}
+	
+	/**
+	 * Sets a background image to use for the graph.
+	 * The image can be any of the supported imageio formats,
+	 * default <i>.gif, .jpg or .png</i>.
+	 * 
+	 * Please note: if the provided file does not exit at graph creation time, the
+	 * corresponding graph will be created without the background image, and without
+	 * any exception being thrown.
+	 * 
+	 * @param fileName Filename of the image to use
+	 */
+	public void setBackground( String fileName )
+	{
+		File bgFile	= new File( fileName );
+		if ( bgFile.exists() )
+			this.background = bgFile;
+	}
+
+	/**
+	 * Sets a overlay image to use for the graph.
+	 * The image can be any of the supported imageio formats,
+	 * default <i>.gif, .jpg or .png</i>.  All pixels with the color white
+	 * RGB (255, 255, 255) will be treated as transparent.
+	 *
+	 * Please note: if the provided file does not exit at graph creation time, the
+	 * corresponding graph will be created without the overlay image, and without
+	 * any exception being thrown.
+	 * 
+	 * @param fileName Filename of the image to use
+	 */
+	public void setOverlay( String fileName ) 
+	{
+		File ovFile	= new File( fileName );
+		if ( ovFile.exists() )
+			this.overlay = ovFile;
+	}
+
+	/** 
+	 * Sets the base for value scaling. 
+	 * If you are graphing memory this should be set to 1024 so that one Kb is 1024 bytes.
+	 * As a default the base value is set to 1000, under the assumption you will be measuring
+	 * network traffic, in wich case 1 kb/s equals 1000 b/s. 
+	 * @param base Value to set as base for scaling.
+	 */
+	public void setBaseValue( double base ) 
+	{
+		this.baseValue = base;
+	}
+
+	/**
+	 * This sets the 10** exponent scaling of the Y-axis values. 
+	 * Normally values will be scaled to the appropriate units (k, M, etc.). 
+	 * However you may wish to display units always in k (Kilo, 10e3) even if the data is in the 
+	 * M (Mega, 10e6) range for instance. Value should be an integer which is a multiple of 3 
+	 * between -18 and 18 inclusive. It is the exponent on the units you which to use. 
+	 * For example, use 3 to display the y-axis values in k (Kilo, 10e3, thousands), 
+	 * use -6 to display the y-axis values in u (Micro, 10e-6, millionths). Use a value of 0 to 
+	 * prevent any scaling of the y-axis values.
+	 * @param e Exponent value to use
+	 */
+	public void setUnitsExponent( int e ) 
+	{
+		this.scaleIndex = (6 - e / 3);	// Index in the scale table
+	}
+
+	/**
+	 * Sets value range that will be presented in the graph. If not set, graph limits will be autoscaled.
+	 * @param lower Lower limit.
+	 * @param upper Upper limit.
+	 * @param rigid Rigid grid, won't autoscale limits.
+	 */
+
+	public void setGridRange(double lower, double upper, boolean rigid) 
+	{
+		gridRange = new GridRange( lower, upper, rigid );
+	}
+
+	/**
+	 * This sets the grid and labels on the Y axis.
+	 * Minor grid lines appear at <code>gridStep</code>, major grid lines accompanied by a label
+	 * will appear every <code>labelStep</code> value.   
+	 * @param gridStep Value step on which a minor grid line will appear.
+	 * @param labelStep Value step on which a major grid line with value label will appear.
+	 */
+	public void setValueAxis( double gridStep, double labelStep ) 
+	{
+		this.valueGridStep 	= gridStep;
+		this.valueLabelStep = labelStep;
+	}
+
+	/**
+	 * This sets the grid and labels on the X axis.
+	 * There are both minor and major grid lines, the major lines are accompanied by a time label.
+	 * 
+	 * To define a grid line you must define a specific time unit, and a number of time steps.
+	 * A grid line will appear everey steps*unit.  Possible units are defined in the 
+	 * {@link jrobin.graph.TimeAxisUnit TimeAxisUnit} class, and are <i>SECOND, MINUTE, HOUR, DAY,
+	 * WEEK, MONTH</i> and <i>YEAR</i>.
+	 * 
+	 * @param minGridTimeUnit Time unit for the minor grid lines.
+	 * @param minGridUnitSteps Time unit steps for the minor grid lines.
+	 * @param majGridTimeUnit Time unit for the major grid lines.
+	 * @param majGridUnitSteps Time unit steps for the major grid lines.
+	 * @param dateFormat Format string of the time labels, according to <code>java.text.SimpleDateFormat</code> specifications.
+	 * @param centeredLabels True if the time label should be centered in the area between two major grid lines.
+	 */
+	public void setTimeAxis( int minGridTimeUnit, 
+								int minGridUnitSteps, 
+								int majGridTimeUnit, 
+								int majGridUnitSteps, 
+								String dateFormat,
+								boolean centeredLabels ) 
+	{
+		this.tAxis 			= new TimeAxisUnit( minGridTimeUnit, 
+												minGridUnitSteps, 
+												majGridTimeUnit, 
+												majGridUnitSteps, 
+												new SimpleDateFormat( dateFormat ) 
+											);
+		this.tAxisCentered	= centeredLabels;		
 	}
 
 	/**
@@ -459,7 +588,7 @@ public class RrdGraphDef implements Serializable
 	 * @param name Graph source name.
 	 * @param file Path to RRD file.
 	 * @param dsName Data source name defined in the RRD file.
-	 * @param consolFun Consolidation function that will be used to extract data from the RRD
+	 * @param consolFunc Consolidation function that will be used to extract data from the RRD
 	 * file ("AVERAGE", "MIN", "MAX" or "LAST").
 	 */
 	public void datasource( String name, String file, String dsName, String consolFunc ) throws RrdException
@@ -491,7 +620,7 @@ public class RrdGraphDef implements Serializable
 	 * force you to specify at least one simple graph source name as RRDTool.</p>
 	 *
 	 * <p>For more details on RPN see RRDTool's
-	 * <a href="../../../man/rrdgraph.html" target="man">rrdgraph man page</a>.</p>
+	 * <a href="http://people.ee.ethz.ch/~oetiker/webtools/rrdtool/manual/rrdgraph.html" target="man">rrdgraph man page</a>.</p>
 	 * @param name Graph source name.
 	 * @param rpn RPN expression containig comma delmited simple and complex graph
 	 * source names, RPN constants, functions and operators.
@@ -504,9 +633,7 @@ public class RrdGraphDef implements Serializable
 	/**
 	 * Adds line plot to the graph definition, using the specified color and legend. This method
 	 * takes exactly the same parameters as RRDTool's LINE1 directive (line width
-	 * is set to 1). There is only
-	 * one limitation: so far, legends in JRobin graphs are always centered (don't
-	 * try to specify alignment in the legend string).
+	 * is set to 1). 
 	 *
 	 * @param sourceName Graph source name.
 	 * @param color Line collor to be used.
@@ -674,123 +801,178 @@ public class RrdGraphDef implements Serializable
 		addComment( new Gprint(sourceName, consolFun, format) );
 	}
 	
-	/**
-	 * Sets a background image to use for the graph.
-	 * The image can be any of the supported imageio formats,
-	 * default <i>.gif, .jpg or .png</i>.
-	 * @param fileName Filename of the image to use
-	 */
-	public void setBackground( String fileName ) 
-	{
-		File bgFile	= new File( fileName );
-		if ( bgFile.exists() )
-			this.background = bgFile;
-	}
-
-	/**
-	 * Sets a overlay image to use for the graph.
-	 * The image can be any of the supported imageio formats,
-	 * default <i>.gif, .jpg or .png</i>.  All pixels with the color white
-	 * RGB (255, 255, 255) will be treated as transparent.
-	 * @param fileName Filename of the image to use
-	 */
-	public void setOverlay( String fileName ) 
-	{
-		File ovFile	= new File( fileName );
-		if ( ovFile.exists() )
-			this.overlay = ovFile;
-	}
-	
-	/**
-	 * 
-	 * @param base
-	 */
-	public void setBaseValue( double base ) {
-		this.baseValue = base;
-	}
-
-	/**
-	 * 
-	 * @param e
-	 */
-	public void setUnitsExponent( int e ) {
-		this.scaleIndex = (6 - e / 3);	// Index in the scale table
-	}
-	
-	/**
-	 * Sets value range that will be presented in the graph. If not set, graph will be
-	 * autoscaled.
-	 * @param lower Lower limit.
-	 * @param upper Upper limit.
-	 * @param rigid Rigid grid, won't autoscale limits.
-	 */
-
-	public void setGridRange(double lower, double upper, boolean rigid) 
-	{
-		gridRange = new GridRange( lower, upper, rigid );
-	}
-	
-	/**
-	 * Should write explanation of custom grid specs here
-	 * @param gridStep
-	 * @param labelStep
-	 */
-	public void setValueAxis( double gridStep, double labelStep ) 
-	{
-		this.valueGridStep 	= gridStep;
-		this.valueLabelStep = labelStep;
-	}
-	
-	/**
-	 * Should write explanation of custom grid specs here.
-	 * @param minGridTime
-	 * @param minGridUnits
-	 * @param majGridTime
-	 * @param majGridUnits
-	 * @param df
-	 * @param centered
-	 */
-	public void setTimeAxis( int minGridTime, 
-								int minGridUnits, 
-								int majGridTime, 
-								int majGridUnits, 
-								String df,
-								boolean centered ) 
-	{
-		this.tAxis 			= new TimeAxisUnit( minGridTime, 
-												minGridUnits, 
-												majGridTime, 
-												majGridUnits, 
-												new SimpleDateFormat( df ) 
-											);
-		this.tAxisCentered	= centered;		
-	}
-	
-	/**
-	 * Sets vertical space between value ticks. If not specified, JRobin will try to guess it.
-	 * @param valueStep Value step between value ticks.
-	 */
-	public void setValueStep(double valueStep) {
-		this.valueStep = valueStep;
-	}
 		
 	// ================================================================
 	// -- Protected (package) methods
 	// ================================================================
-	PlotDef[] getPlotDefs()
+	protected long getStartTime() {
+		return startTime;
+	}
+	
+	protected long getEndTime() {
+		return endTime;
+	}
+	
+	protected Title getTitle() {
+		return title;
+	}
+	
+	protected String getVerticalLabel() {
+		return valueAxisLabel;
+	}
+	
+	protected Color getBackColor() {
+		return backColor;
+	}
+	
+	protected Color getCanvasColor() {
+		return canvasColor;
+	}
+	
+	protected Color getImageBorderColor() {
+		return borderColor;
+	}
+	
+	protected BasicStroke getImageBorderStroke() {
+		return borderStroke;
+	}
+	
+	protected Color getTitleFontColor() {
+		return titleFontColor;
+	}
+
+	protected Color getDefaultFontColor() {
+		return normalFontColor;
+	}
+	
+	protected Font getTitleFont() {
+		return titleFont;
+	}
+	
+	protected Font getDefaultFont() {
+		return normalFont;
+	}
+	
+	protected Color getMajorGridColor() {
+		return majorGridColor;
+	}
+	
+	protected Color getMinorGridColor() {
+		return minorGridColor;
+	}
+	
+	protected Color getFrameColor() {
+		return frameColor;
+	}
+	
+	protected Color getAxisColor() {
+		return axisColor;
+	}
+
+	protected Color getArrowColor() {
+		return arrowColor;
+	}
+	
+	protected boolean showMinorGridX() {
+		return minorGridX;
+	}
+	
+	protected boolean showMinorGridY() {
+		return minorGridY;
+	}
+	
+	protected boolean showMajorGridX() {
+		return majorGridX;
+	} 
+	
+	protected boolean showMajorGridY() {
+		return majorGridY;
+	}
+
+	protected boolean showGridX() {
+		return gridX;
+	}
+	
+	protected boolean showGridY() {
+		return gridY;
+	}
+	
+	protected boolean drawFrontGrid() {
+		return frontGrid;
+	}
+	
+	protected boolean showLegend() {
+		return showLegend;
+	}
+	
+	protected boolean showSignature() {
+		return drawSignature;
+	}
+	
+	protected boolean useAntiAliasing() {
+		return antiAliasing;
+	}
+	
+	protected int getChartLeftPadding() {
+		return chart_lpadding;
+	}
+	
+	protected File getBackground() {
+		return background;
+	}
+	
+	protected File getOverlay() {
+		return overlay;
+	}
+	
+	protected double getBaseValue() {
+		return baseValue;
+	}
+
+	protected int getScaleIndex() {
+		return scaleIndex;
+	}
+
+	protected GridRange getGridRange() {
+		return gridRange;
+	}
+	
+	//protected getValueAxis()
+	
+	//protected getTimeAxis()
+	
+	
+	
+	protected PlotDef[] getPlotDefs()
 	{
 		return (PlotDef[]) plotDefs.toArray( new PlotDef[] {} );
 	}
 	
-	Comment[] getComments()
+	protected Comment[] getComments()
 	{
 		return (Comment[]) comments.toArray( new Comment[] {} );
 	}
 	
-	int getCommentLineCount()
+	protected int getCommentLineCount()
 	{
 		return ( comments.size() > 0 ? commentLines + commentLineShift : 0 ); 
 	}
+	
+	protected int getNumDefs()
+	{
+		return numDefs;
+	}
+	
+	protected Cdef[] getCdefs()
+	{
+		return (Cdef[]) cdefList.toArray( new Cdef[] {} );		
+	}
+	
+	protected HashMap getFetchSources()
+	{
+		return fetchSources;
+	}
+	
 	
 	// ================================================================
 	// -- Private methods

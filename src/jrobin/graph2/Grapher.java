@@ -48,43 +48,46 @@ import jrobin.core.RrdException;
 /**
  * <p>Creates a BufferedImage of a graph, based on data from a GraphDef.</p>
  * 
- * @author Arne Vandamme (arne.vandamme@jrobin.org)
+ * @author Arne Vandamme (cobralord@jrobin.org)
  */
 class Grapher 
 {
-	private static final String SPACER			= "  ";
-	private static final int GRAPH_RESOLUTION	= 1000;
-	private static final int DEFAULT_WIDTH		= 400;
-	private static final int DEFAULT_HEIGHT		= 100;
+	// ================================================================
+	// -- Members
+	// ================================================================
+	protected static final String SPACER			= "  ";					// default comment spacer (two blank spaces)
+	protected static final int GRAPH_RESOLUTION		= 1000;					// default graph resolution
+	protected static final int DEFAULT_WIDTH		= 400;					// default width in pixels of the chart area
+	protected static final int DEFAULT_HEIGHT		= 100;					// default height in pixels of the chart area
 	
 	// Border space definitions
-	private static final int UBORDER_SPACE		= 10;
-	private static final int BBORDER_SPACE		= 16;
-	private static final int LBORDER_SPACE		= 10;
-	private static final int RBORDER_SPACE		= 10;
+	protected static final int UBORDER_SPACE		= 10;					// padding from graph upper border
+	protected static final int BBORDER_SPACE		= 16;					// padding from graph lower border
+	protected static final int LBORDER_SPACE		= 10;					// padding from graph left border
+	protected static final int RBORDER_SPACE		= 10;					// padding from graph right border
 	
-	public static final int CHART_UPADDING		= 5;
-	public static final int CHART_BPADDING		= 25;
-	public static final int CHART_RPADDING		= 10;
-	public static final int CHART_LPADDING		= 50;		// Default lpadding
-	public static final int CHART_BPADDING_NM	= 10;		// No legend makers on the axis
-	public static final int CHART_LPADDING_NM	= 10;
+	protected static final int CHART_UPADDING		= 5;					// padding space above the chart area
+	protected static final int CHART_BPADDING		= 25;					// default padding space below the chart area			
+	protected static final int CHART_RPADDING		= 10;					// padding space on the right of the chart area
+	protected static final int CHART_LPADDING		= 50;					// default padding space on the left of the chart area
+	protected static final int CHART_BPADDING_NM	= 10;					// default padding below chart if no legend markers
+	protected static final int CHART_LPADDING_NM	= 10;					// default padding left of chart if no legend markers
 	
-	public static final int LINE_PADDING		= 4;
+	protected static final int LINE_PADDING			= 4;					// default padding between two consecutive text lines
 	
-	//public static final int DEFAULT_ALIGN 		= Comment.ALIGN_LEFT;
+	// Default fonts
+	protected static final Font TITLE_FONT			= new Font("Lucida Sans Typewriter", Font.BOLD, 12);
+	protected static final Font NORMAL_FONT			= new Font("Lucida Sans Typewriter", Font.PLAIN, 10);
 	
-	private Font title_font 					= new Font("Lucida Sans Typewriter", Font.BOLD, 12);
-	private Font normal_font	 				= new Font("Lucida Sans Typewriter", Font.PLAIN, 10);
+	private Font title_font 						= TITLE_FONT;			// font used for the title 
+	private Font normal_font	 					= NORMAL_FONT;			// font used for all default text
+	private int numPoints 							= GRAPH_RESOLUTION;		// number of points used to calculate the graph
 	
-	private int numPoints 						= GRAPH_RESOLUTION;
-	
-	private int chart_lpadding, chart_bpadding;							// Padding on the left and below the chart area
-	private int imgWidth, imgHeight;									// Dimensions of the entire image
-	private int chartWidth, chartHeight;								// Dimensions of the chart area within the image	
-	private int nfont_width, nfont_height, tfont_width, tfont_height;	// Font specs
-	private int commentBlock;											// Size in pixels of the block below the chart itself
-		
+	private int chart_lpadding, chart_bpadding;								// calculated padding on the left and below the chart area
+	private int imgWidth, imgHeight;										// dimensions of the entire image
+	private int chartWidth, chartHeight;									// dimensions of the chart area within the image	
+	private int nfont_width, nfont_height, tfont_width, tfont_height;		// font dimennsion specs (approximated)
+	private int commentBlock;												// size in pixels of the block below the chart itself
 	private int graphOriginX, graphOriginY, x_offset, y_offset;
 	
 	private double lowerValue = Double.MAX_VALUE;
@@ -106,60 +109,78 @@ class Grapher
 	static long s1, s2;
 	Calendar c = Calendar.getInstance();
 	
+	
+	// ================================================================
+	// -- Constructors
+	// ================================================================
+	/**
+	 * Constructs a grapher object, used for creating a graph image based on a <code>RrdGraphDef</code> object.
+	 * A reference to a <code>RrdGraph</code> object is kept for <code>RrdDb</code> pooling.
+	 * @param graphDef Graph definition for the graph to be created.
+	 * @param rrdGraph RrdGraph object that takes care of saving the images.
+	 */
 	Grapher( RrdGraphDef graphDef, RrdGraph rrdGraph )
 	{
 		this.graphDef = graphDef;
 		this.rrdGraph = rrdGraph;
 		
-		// Set font specifics
+		// Set font dimension specifics
 		if ( graphDef.normalFont != null )
-			normal_font = graphDef.normalFont;
+			normal_font = graphDef.getDefaultFont();
 		if ( graphDef.titleFont != null )
-			title_font	= graphDef.titleFont;
+			title_font	= graphDef.getTitleFont();
 		
 		nfont_height 	= normal_font.getSize();		// Determine font dimensions for regular comment font
 		nfont_width		= nfont_height / 2 + 1;
+		
 		// Bold font is higher
 		tfont_height	= ( title_font.isBold() ? title_font.getSize() + 2 : title_font.getSize() );
 		tfont_width		= ( title_font.isBold() ? tfont_height / 2 : tfont_height / 2 + 1 );
 		
 		// Create the shared valueformatter
-		valueFormat = new ValueFormatter( graphDef.baseValue );
+		valueFormat = new ValueFormatter( graphDef.getBaseValue() );
 	}
 	
+	
+	// ================================================================
+	// -- Protected (package) methods
+	// ================================================================
 	/**
 	 * Creates the actual graph based on the GraphDef definition.
+	 * The graph is created as a <code>java.awt.image.BufferedImage</code>.
 	 * @param cWidth Width of the chart area in pixels.
 	 * @param cHeight Height of the chart area in pixels.
 	 * @return The created graph as a BufferedImage.
-	 * @throws RrdException Thrown in case of a JRobin specific error, or a I/O error.
+	 * @throws RrdException Thrown in case of a JRobin specific error.
+	 * @throws IOException Thrown in case of a I/O related error.
 	 */
-	BufferedImage createImage( int cWidth, int cHeight ) throws RrdException
+	protected BufferedImage createImage( int cWidth, int cHeight ) throws RrdException, IOException
 	{
 		// Calculate chart dimensions
-		chartWidth		= ( cWidth == 0 ? DEFAULT_WIDTH : cWidth );
-		chartHeight		= ( cHeight == 0 ? DEFAULT_HEIGHT : cHeight );
+		chartWidth			= ( cWidth == 0 ? DEFAULT_WIDTH : cWidth );
+		chartHeight			= ( cHeight == 0 ? DEFAULT_HEIGHT : cHeight );
 
 		if ( cWidth > GRAPH_RESOLUTION ) numPoints = cWidth;
 
 		// Padding depends on grid visibility
-		chart_lpadding 	= ( graphDef.majorGridX ? graphDef.chart_lpadding : CHART_LPADDING_NM );
-		chart_bpadding 	= ( graphDef.majorGridX ? CHART_BPADDING : CHART_BPADDING_NM );
+		chart_lpadding 		= ( graphDef.showMajorGridY() ? graphDef.getChartLeftPadding() : CHART_LPADDING_NM );
+		chart_bpadding 		= ( graphDef.showMajorGridX() ? CHART_BPADDING : CHART_BPADDING_NM );
 		
 		// Size of all lines below chart
-		commentBlock	= 0;
-		if ( graphDef.showLegend )
-			commentBlock = graphDef.getCommentLineCount() * (nfont_height + LINE_PADDING) - LINE_PADDING;		
+		commentBlock		= 0;
+		if ( graphDef.showLegend() )
+			commentBlock 	= graphDef.getCommentLineCount() * (nfont_height + LINE_PADDING) - LINE_PADDING;		
 	
-		x_offset		= LBORDER_SPACE;
-		if ( graphDef.valueAxisLabel != null ) x_offset += nfont_height + LINE_PADDING;
-		imgWidth		= chartWidth + x_offset + RBORDER_SPACE + chart_lpadding + CHART_RPADDING;
+		// x_offset and y_offset define the starting corner of the actual graph 
+		x_offset			= LBORDER_SPACE;
+		if ( graphDef.valueAxisLabel != null ) 
+			x_offset 		+= nfont_height + LINE_PADDING;
+		imgWidth			= chartWidth + x_offset + RBORDER_SPACE + chart_lpadding + CHART_RPADDING;
 		
-		y_offset		= UBORDER_SPACE;
-
-		// Title *always* gets a extra LF automatically
-		if ( graphDef.title != null ) y_offset	+= ((tfont_height + LINE_PADDING) * graphDef.title.getLineCount() + tfont_height) + LINE_PADDING;
-		imgHeight 		= chartHeight + commentBlock + y_offset + BBORDER_SPACE + CHART_UPADDING + CHART_BPADDING;
+		y_offset			= UBORDER_SPACE;
+		if ( graphDef.title != null )			// Title *always* gets a extra LF automatically 
+			y_offset		+= ((tfont_height + LINE_PADDING) * graphDef.getTitle().getLineCount() + tfont_height) + LINE_PADDING;
+		imgHeight 			= chartHeight + commentBlock + y_offset + BBORDER_SPACE + CHART_UPADDING + CHART_BPADDING;
 		
 		// Create graphics object
 		BufferedImage bImg 	= new BufferedImage( imgWidth, imgHeight, BufferedImage.TYPE_INT_RGB );
@@ -169,31 +190,18 @@ class Grapher
 		Util.time(0);
 		
 		// Do the actual graphing
-		try 
-		{
-			calculateSeries();
+		calculateSeries();							// calculate all datasources
 						
-			plotImageBackground( graphics );
+		plotImageBackground( graphics );			// draw the image background
 			
-			plotChart( graphics );
+		plotChart( graphics );						// draw the actual chart
 			
-			if ( graphDef.showLegend )
-				plotComments( graphics );
+		plotComments( graphics );					// draw all comment lines
 			
-			plotOverlay( graphics );
+		plotOverlay( graphics );					// draw a possible image overlay
 			
-			if ( graphDef.drawSignature )
-				plotSignature( graphics );
-		}
-		catch (IOException e)
-		{
-			throw new RrdException( "Error retrieving data from RRD." );
-		}
-		catch (RrdException e)
-		{
-			//throw new RrdException( e.getMessage() );
-			e.printStackTrace();
-		}
+		plotSignature( graphics );					// draw the JRobin signature
+
 		
 		// Dispose graphics context
 		graphics.dispose();
@@ -201,14 +209,96 @@ class Grapher
 		return bImg;
 	}
 	
-	private void plotSignature( Graphics2D g )
+	
+	// ================================================================
+	// -- Private methods
+	// ================================================================
+	/**
+	 * Fetches and calculates all datasources used in the graph.
+	 * @throws RrdException Thrown in case of a JRobin specific error.
+	 * @throws IOException Thrown in case of a I/O related error.
+	 */
+	private void calculateSeries() throws RrdException, IOException
 	{
-		Font sigFont 	= new Font("Courier", Font.PLAIN, 10);
-		String sig		= "www.jrobin.org"; 
-		g.setColor( Color.GRAY );
-		g.setFont( sigFont );
+		Util.time();
+	
+		ValueExtractor ve;
+		FetchSource src;
+		RrdDb rrd;
+		String[] varList;
 		
-		g.drawString( sig, imgWidth / 2 - (sig.length() * 5) / 2, imgHeight - 5 );	
+		long startTime 			= graphDef.getStartTime();
+		long endTime			= graphDef.getEndTime();
+	
+		int numDefs				= graphDef.getNumDefs();
+		
+		Cdef[] cdefList			= graphDef.getCdefs();
+		int numCdefs			= cdefList.length;
+	
+		// Set up the array with all datasources (both Def and Cdef)
+		sources 				= new Source[ numDefs + numCdefs ];
+		sourceIndex 			= new HashMap( numDefs + numCdefs );
+		int tblPos				= 0;
+		int vePos				= 0;
+	
+		ValueExtractor[] veList	= new ValueExtractor[ graphDef.getFetchSources().size() ];
+		Iterator fetchSources 	= graphDef.getFetchSources().values().iterator();
+		
+		while ( fetchSources.hasNext() )
+		{
+			// Get the rrdDb
+			src 	= (FetchSource) fetchSources.next();
+			rrd		= rrdGraph.getRrd( src.getRrdFile() ); 
+		
+			// Fetch all required datasources
+			ve 		= src.fetch( rrd, startTime,  endTime );
+			varList = ve.getNames();
+		
+			for (int i= 0; i < varList.length; i++) {
+				sources[tblPos]	= new Def(varList[i], numPoints);
+				sourceIndex.put( varList[i], new Integer(tblPos++) );
+			}
+		
+			veList[ vePos++ ] = ve;
+		}
+	
+		// Add all Cdefs to the source table		
+		// Reparse all RPN datasources to use indices of the correct variables
+		for ( int i = 0; i < cdefList.length; i++ )
+		{
+			cdefList[i].prepare( sourceIndex, numPoints );
+		
+			sources[tblPos]	= cdefList[i];
+			sourceIndex.put( cdefList[i].getName(), new Integer(tblPos++) );	
+		}
+	
+		// RPN calculator for the Cdefs
+		RpnCalculator rpnCalc 	= new RpnCalculator( sources );
+	
+		// Fill the array for all datasources
+		timestamps 				= new long[numPoints];
+	
+		for (int i = 0; i < numPoints; i++) 
+		{
+			long t 	= (long) (startTime + i * ((endTime - startTime) / (double)(numPoints - 1)));
+			int pos = 0;
+		
+			// Get all fetched datasources
+			for (int j = 0; j < veList.length; j++)
+				pos = veList[j].extract( t, sources, i, pos );
+		
+			// Get all combined datasources
+			for (int j = pos; j < sources.length; j++)
+				sources[j].set(i, t, rpnCalc.evaluate( (Cdef) sources[j], i, t ) );
+
+			timestamps[i] = t;
+		}
+	
+		// Clean up the fetched datasources forcibly
+		veList = null;
+
+		// DEBUG - calculate checkpoint
+		Util.time(1);
 	}
 	
 	private void plotOverlay( Graphics2D g )
@@ -248,6 +338,8 @@ class Grapher
 	
 	private void plotComments( Graphics2D g ) throws RrdException
 	{
+		if ( !graphDef.showLegend() ) return;
+		
 		Util.time();
 		
 		LinkedList markerList = new LinkedList();
@@ -350,90 +442,6 @@ class Grapher
 		}
 		
 		Util.time(4);
-	}
-	
-	/**
-	 * Fetches and calculates all datasources used in the graph. 
-	 */
-	private void calculateSeries() throws RrdException, IOException
-	{
-		Util.time();
-		
-		long startTime 	= graphDef.startTime;
-		long endTime	= graphDef.endTime;
-		
-		int numDefs		= graphDef.numDefs;
-		int numCdefs	= graphDef.cdefList.size();
-		
-		ValueExtractor ve;
-		FetchSource src;
-		RrdDb rrd;
-		String[] varList;
-		
-		// Set up the array for all datasources
-		sources 				= new Source[ numDefs + numCdefs ];
-		sourceIndex 			= new HashMap( numDefs + numCdefs );
-		int tblPos				= 0;
-		
-		Vector veList			= new Vector();
-		Iterator fetchSources 	= graphDef.fetchSources.values().iterator();
-		
-		while ( fetchSources.hasNext() )
-		{
-			// Get the rrdDb
-			src 	= (FetchSource) fetchSources.next();
-			rrd		= rrdGraph.getRrd( src.getRrdFile() ); 
-			
-			// Fetch all required datasources
-			ve 		= src.fetch( rrd, startTime,  endTime );
-			varList = ve.getNames();
-			
-			for (int i= 0; i < varList.length; i++) {
-				sources[tblPos]	= new Def(varList[i], numPoints);
-				sourceIndex.put( varList[i], new Integer(tblPos++) );
-			}
-			
-			veList.add( ve );
-		}
-		
-		// Add all Cdefs to the source table		
-		// Reparse all RPN datasources to use indices of the correct variables
-		for ( int i = 0; i < graphDef.cdefList.size(); i++ )
-		{
-			Cdef cdefSource = (Cdef) graphDef.cdefList.elementAt(i);
-			cdefSource.prepare( sourceIndex, numPoints );
-			
-			sources[tblPos]	= cdefSource;
-			sourceIndex.put( cdefSource.getName(), new Integer(tblPos++) );	
-		}
-		
-		RpnCalculator rpnCalc = new RpnCalculator( sources );
-		
-		// Fill the array for all datasources, delete the fetched values
-		timestamps 	= new long[numPoints];
-		
-		for (int i = 0; i < numPoints; i++) 
-		{
-			long t 	= (long) (startTime + i * ((endTime - startTime) / (double)(numPoints - 1)));
-			int pos = 0;
-			
-			// Get all fetched datasources
-			for (int j = 0; j < veList.size(); j++) {
-				ve 	= (ValueExtractor) veList.elementAt(j);
-				pos	= ve.extract( t, sources, i, pos );
-			}
-			
-			// Get all combined datasources
-			for (int j = pos; j < sources.length; j++)
-				sources[j].set(i, t, rpnCalc.evaluate( (Cdef) sources[j], i, t ) );
-			
-			timestamps[i] = t;
-		}
-		
-		veList.clear();		// Clean up the fetched datasources
-
-		// DEBUG - calculate checkpoint
-		Util.time(1);
 	}
 	
 	/**
@@ -983,6 +991,20 @@ class Grapher
 		return t.getTimeMarkers( graphDef.startTime, graphDef.endTime );
 	}
 	
+	/**
+	 * Draws the standard JRobin signature on the image.
+	 * @param g Handle of a Graphics2D context to draw on.
+	 */
+	private void plotSignature( Graphics2D g )
+	{
+		if ( !graphDef.showSignature() )
+			return;
+		
+		String sig = "www.jrobin.org"; 
+		g.setColor( Color.GRAY );
+		g.setFont( new Font("Courier", Font.PLAIN, 10) );
 	
+		g.drawString( sig, imgWidth / 2 - (sig.length() * 5) / 2, imgHeight - 5 );	
+	}	
 	
 }

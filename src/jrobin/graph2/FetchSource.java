@@ -28,7 +28,7 @@ import java.util.Vector;
 import java.io.IOException;
 
 import jrobin.core.RrdDb;
-import jrobin.core.FetchPoint;
+import jrobin.core.FetchData;
 import jrobin.core.FetchRequest;
 import jrobin.core.RrdException;
 
@@ -52,7 +52,7 @@ class FetchSource
 	private int numSources			= 0;
 	private Vector[] datasources	= new Vector[MAX_CF];
 	
-	FetchSource( String rrdFile )
+	protected FetchSource( String rrdFile )
 	{
 		this.rrdFile = rrdFile;
 		
@@ -61,13 +61,13 @@ class FetchSource
 			datasources[i] = new Vector();	
 	}
 	
-	FetchSource( String rrdFile, String consolFunc, String dsName, String name ) throws RrdException
+	protected FetchSource( String rrdFile, String consolFunc, String dsName, String name ) throws RrdException
 	{
 		this( rrdFile );
 		addSource( consolFunc, dsName, name );	
 	}
 	
-	void addSource( String consolFunc, String dsName, String name ) throws RrdException
+	protected void addSource( String consolFunc, String dsName, String name ) throws RrdException
 	{
 		if ( consolFunc.equalsIgnoreCase("AVERAGE") || consolFunc.equalsIgnoreCase("AVG") )
 			datasources[AVG].add( new String[] { dsName, name } );
@@ -83,43 +83,46 @@ class FetchSource
 		numSources++;				
 	}
 	
-	String getRrdFile() {
+	protected String getRrdFile() {
 		return rrdFile;
 	}
 	
-	ValueExtractor fetch( RrdDb rrd, long startTime, long endTime ) throws IOException, RrdException
+	protected ValueExtractor fetch ( RrdDb rrd, long startTime, long endTime ) throws IOException, RrdException
 	{
-		long rrdStep 			= rrd.getRrdDef().getStep();
-		FetchPoint[][] result 	= new FetchPoint[datasources.length][];
-		int[][] indices			= new int[MAX_CF][];
+		long rrdStep			= rrd.getRrdDef().getStep();
+		FetchData[] result		= new FetchData[datasources.length];
+		
+		String[] names 			= new String[numSources];
+		int tblPos		= 0;
 		
 		for (int i = 0; i < datasources.length; i++)
 		{
 			if ( datasources[i].size() > 0 ) {
+				// Set the list of ds names
+				String[] dsNames 	= new String[ datasources[i].size() ];
+				String[] vNames		= new String[ datasources[i].size() ];
+				
+				for (int j = 0; j < dsNames.length; j++ ) {
+					String[] spair	= (String[])datasources[i].elementAt(j);
+					dsNames[j]	 	= spair[0];
+					vNames[j]		= spair[1];
+				}
 				
 				// Fetch datasources
 				FetchRequest request 		= rrd.createFetchRequest( cfNames[i], startTime, endTime + rrdStep);
-				FetchPoint[] fetchPoints 	= request.fetch();
+				request.setFilter( dsNames );
 				
-				result[i]					= fetchPoints;
-				indices[i]					= new int[datasources[i].size()];
+				FetchData data				= request.fetchData();
+				
+				for (int j = 0; j < vNames.length; j++)
+					names[ data.getDsIndex(dsNames[j]) + tblPos ] = vNames[j];
+				tblPos				+= dsNames.length; 
+				
+				result[i]					= data;
 			}
-			else
-				indices[i] = new int[0];	
 		}
-
-		String[] names 	= new String[numSources];
-		int tblPos		= 0;
 		
-		for (int i = 0; i < datasources.length; i++) {
-			for (int j = 0; j < datasources[i].size(); j++) {
-				String[] spair		= (String[])datasources[i].elementAt(j);
-				indices[i][j]		= rrd.getDsIndex(spair[0]);
-				names[tblPos++] 	= spair[1];				
-			}
-		}
-	
-		return new ValueExtractor( names, indices, result );
+		return new ValueExtractor( names, result );
 	}
 	
 }

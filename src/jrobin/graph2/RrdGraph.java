@@ -295,7 +295,7 @@ public class RrdGraph implements Serializable
 				return img;
 			}
 		}
-		catch (RrdException e) {
+		catch (Exception e) { 	// Temporary
 			e.printStackTrace();
 		}
 		

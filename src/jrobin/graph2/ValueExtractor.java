@@ -24,60 +24,73 @@
  */
 package jrobin.graph2;
 
-import jrobin.core.FetchPoint;
+import jrobin.core.FetchData;
 import jrobin.core.RrdException;
 
 /**
  * <p>Class used to extract specific time-based values, out of a number of fetched datasources.</p>
  * 
- * @author Arne Vandamme (arne.vandamme@jrobin.org)
+ * @author Arne Vandamme (cobralord@jrobin.org)
  */
 class ValueExtractor 
 {
 	private String[] varNames;			// Name of the variable, NOT it's dsName in the file
-	private int[][] varIndices;			// Index of a variable in the FetchPoint value table
-	private int[][] timePos;
-	private FetchPoint[][] values;
+
+	private int[] tPos;
+	private long[][] timestamps;
+	private double[][][] dsValues;
 	
-	ValueExtractor( String[] names, int[][] indices, FetchPoint[][] values )
+	protected ValueExtractor( String[] names, FetchData[] values )
 	{
 		this.varNames	= names;
-		this.varIndices	= indices;
-		this.values		= values;
 		
-		timePos			= new int[indices.length][];
-		for (int i = 0; i < indices.length; i++)
-			timePos[i]	= new int[ indices[i].length ];
+		// Set timestamps
+		tPos			= new int[values.length];
+		timestamps 		= new long[values.length][];
+		dsValues		= new double[values.length][][];
+		
+		for (int i = 0; i < timestamps.length; i++) {
+			if ( values[i] != null ) {
+				timestamps[i] 	= values[i].getTimestamps();
+				dsValues[i]		= values[i].getValues();
+			}
+		}
 	}
 
 	// Return the table position offset for the next datasource
-	int extract( long timestamp, Source[] sources, int row, int offset ) throws RrdException
+	protected int extract( long timestamp, Source[] sources, int row, int offset ) throws RrdException
 	{
-		int tblPos = offset;
-		
-		for ( int i = 0; i < varIndices.length; i++ ) {
-			for (int j = 0; j < varIndices[i].length; j++) 
+		int tblPos 	= offset;
+			
+		for ( int i = 0; i < dsValues.length; i++ ) 
+		{
+			if ( dsValues[i] == null )
+				continue;
+			
+			int tIndex	= tPos[i];
+			
+			if ( timestamp < timestamps[i][ tIndex ] )
+				throw new RrdException("Backward reading not allowed");
+			
+			while ( tIndex < timestamps[i].length - 1 )
 			{
-				if ( timestamp < values[i][ timePos[i][j] ].getTime() ) 
-					throw new RrdException("Backward reading not allowed");
-				
-				while( timePos[i][j] < values[i].length - 1 ) 
-				{
-					if ( values[i][ timePos[i][j] ].getTime() <= timestamp 
-							&& timestamp < values[i][ timePos[i][j] + 1 ].getTime() ) {
-						sources[tblPos++].set( row, timestamp, values[i][ timePos[i][j] + 1 ].getValue( varIndices[i][j] ) );
-						break;			
-					}
-					else
-						timePos[i][j]++;
+				if ( timestamps[i][ tIndex ] <= timestamp && timestamp < timestamps[i][ tIndex + 1] ) {
+					for (int j = 0; j < dsValues[i].length; j++)
+						sources[tblPos++].set( row, timestamp, dsValues[i][j][ tIndex + 1 ] );
+						break;				
+				}
+				else {
+					tIndex++;
 				}
 			}
+			
+			tPos[i] = tIndex;
 		}
 		
 		return tblPos;
 	}
 	
-	String[] getNames() {
+	protected String[] getNames() {
 		return varNames;
 	}
 }

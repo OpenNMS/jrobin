@@ -126,6 +126,16 @@ public class FetchData {
 	}
 
 	/**
+	 * Returns all archived values for all datasources.
+	 * Returned values correspond to timestamps
+	 * returned with {@link #getTimestamps() getTimestamps()} method.
+	 * @return Two-dimensional aray of all datasource values.
+	 */
+	public double[][] getValues() {
+		return values;
+	}
+	
+	/**
 	 * Returns all archived values for a single datasource.
 	 * Returned values correspond to timestamps
 	 * returned with {@link #getTimestamps() getTimestamps()} method.
@@ -184,6 +194,20 @@ public class FetchData {
 	 */
 	public String[] getDsNames() {
 		return dsNames;
+	}
+	
+	/**
+	 * Retrieve the table index number of a datasource by name.  Names are case sensitive.
+	 * @param dsName Name of the datasource for which to find the index.
+	 * @return Index number of the datasources in the value table.
+	 */
+	public int getDsIndex( String dsName ) {
+		// Let's assume the table of dsNames is always small, so it is not necessary to use a hashmap for lookups
+		for (int i = 0; i < dsNames.length; i++)
+			if ( dsNames[i].equals(dsName) )
+				return i;
+		
+		return -1;		// Datasource not found !
 	}
 
 	/**

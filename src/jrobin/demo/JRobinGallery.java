@@ -15,7 +15,8 @@ import java.io.IOException;
  * Time: 9:17:24 AM
  * To change this template use Options | File Templates.
  */
-public class JRobinGallery {
+public class JRobinGallery 
+{
 	public static void graph7() throws RrdException, IOException {
 		RrdGraphDef def = new RrdGraphDef();
         GregorianCalendar start = new GregorianCalendar(2003, 3, 25);
