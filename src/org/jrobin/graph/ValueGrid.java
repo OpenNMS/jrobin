@@ -173,9 +173,7 @@ class ValueGrid
 			vAxis = new ValueAxisUnit( 0.2 * mod * scaleValues[scaleIndex], 1.0 * mod * scaleValues[scaleIndex] );
 		else if ( shifted <= 5 )
 			vAxis = new ValueAxisUnit( 0.5 * mod * scaleValues[scaleIndex], 1.0 * mod * scaleValues[scaleIndex] );
-		else if ( shifted <= 9 )
-			vAxis = new ValueAxisUnit( 0.5 * mod * scaleValues[scaleIndex], 2.0 * mod * scaleValues[scaleIndex] );
 		else
-			vAxis = new ValueAxisUnit( 0.1 * mod * scaleValues[scaleIndex], 0.5 * mod * scaleValues[scaleIndex] );
+			vAxis = new ValueAxisUnit( 0.5 * mod * scaleValues[scaleIndex], 2.0 * mod * scaleValues[scaleIndex] );
 	}
 }

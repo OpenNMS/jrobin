@@ -140,7 +140,7 @@ class ChartGraphics
 	{
 		yStart 	= lower;
 		yEnd	= upper; 
-	
+		
 		if ( yEnd != yStart )
 			heightDelta = height * 1.0d / (( yEnd - yStart) * 1.0d);
 		else
@@ -167,8 +167,8 @@ class ChartGraphics
 		if ( Double.isNaN(value) ) return Integer.MIN_VALUE;
 	
 		int tmp = new Double( (value - ( yStart < 0 ? 0 : Math.abs(yStart) ) ) * heightDelta).intValue();
-	
-		return ( tmp > value * heightDelta ? tmp - 1 : tmp ); 
+		
+		return ( tmp > value * heightDelta ? tmp - 1 : tmp );
 	}
 	
 	/**

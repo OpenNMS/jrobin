@@ -193,9 +193,8 @@ class Grapher
 		plotComments( graphics );					// draw all comment lines
 			
 		plotOverlay( graphics );					// draw a possible image overlay
-			
-		plotSignature( graphics );					// draw the JRobin signature
 
+		plotSignature( graphics );					// draw the JRobin signature
 		
 		// Dispose graphics context
 		graphics.dispose();
@@ -253,9 +252,8 @@ class Grapher
 		plotComments( graphics );					// draw all comment lines
 		
 		plotOverlay( graphics );					// draw a possible image overlay
-		
-		plotSignature( graphics );					// draw the JRobin signature
 
+		plotSignature( graphics );					// draw the JRobin signature
 	
 		// Dispose graphics context
 		graphics.dispose();
@@ -332,7 +330,7 @@ class Grapher
 			
 			veList[ vePos++ ] = ve;
 		}
-	
+		
 		// Add all Pdefs to the source table
 		for ( int i = 0; i < pdefList.length; i++ )
 		{
@@ -481,7 +479,7 @@ class Grapher
 			{
 				double min = src.getAggregate( Source.AGG_MINIMUM );
 				double max = src.getAggregate( Source.AGG_MAXIMUM );
-			
+				
 				// If the plotdef is a stack, evaluate ALL previous values to find a possible max
 				if ( plotDefs[i].plotType == PlotDef.PLOT_STACK && i >= 1 ) 
 				{
@@ -525,7 +523,7 @@ class Grapher
 		
 		lowerValue		= vGrid.getLowerValue();
 		upperValue		= vGrid.getUpperValue();
-						
+		
 		// Use a special graph 'object' that takes care of resizing and reversing y coordinates
 		ChartGraphics g 	= new ChartGraphics( graphics );
 		g.setDimensions( chartWidth, chartHeight );
@@ -900,7 +898,7 @@ class Grapher
 				} 
 				else if ( tkn == Comment.TKN_ARF ) {
 					newLine	= true;
-					posx 	= imgWidth - RBORDER_SPACE - (tmpStr.length() * tfont_width);
+					posx 	= imgWidth - RBORDER_SPACE - (tmpStr.length() * tfont_width) - tfont_width;
 				}
 				else if ( tkn == Comment.TKN_ACF ) {
 					newLine	= true;
@@ -909,7 +907,7 @@ class Grapher
 				else if ( tkn == Comment.TKN_AL )
 					posx	= LBORDER_SPACE;
 				else if ( tkn == Comment.TKN_AR )
-					posx 	= imgWidth - RBORDER_SPACE - (tmpStr.length() * tfont_width);
+					posx 	= imgWidth - RBORDER_SPACE - (tmpStr.length() * tfont_width) - tfont_width;
 				else if ( tkn == Comment.TKN_AC )
 					posx 	= imgWidth / 2 - (tmpStr.length() * tfont_width) / 2;
 			}

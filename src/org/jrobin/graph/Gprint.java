@@ -87,6 +87,8 @@ class Gprint extends Comment
 			aggregate = Source.AGG_LAST;
 		else if ( consolFunc.equalsIgnoreCase("FIRST") )
 			aggregate = Source.AGG_FIRST;
+		else if ( consolFunc.equalsIgnoreCase("TOTAL") )
+			aggregate = Source.AGG_TOTAL;
 		else
 			throw new RrdException( "Invalid consolidation function specified." );
 	}

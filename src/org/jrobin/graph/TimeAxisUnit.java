@@ -46,16 +46,6 @@ public class TimeAxisUnit
 					Calendar.MONTH,
 					Calendar.YEAR	
 				};
-	private static final int[] nullValue =
-				{
-					0,
-					0,
-					0,
-					1,
-					1,
-					0,
-					1970			// Should never be used, but put there to avoid index out of bounds	
-				};
 
 	// Indices in the calendarUnit table
 	/** constant for seconds */
@@ -78,12 +68,12 @@ public class TimeAxisUnit
 	};
 
 	private int minGridTimeUnit				= HOUR;			// minor grid
-	private int minGridUnitSteps				= 1;
+	private int minGridUnitSteps			= 1;
 	private int majGridTimeUnit				= HOUR;			// major grid
-	private int majGridUnitSteps				= 6;
+	private int majGridUnitSteps			= 6;
 	
-	private boolean centerLabels		= false; 
-	private SimpleDateFormat dateFormat 		= new SimpleDateFormat("HH:mm", Locale.ENGLISH );
+	private boolean centerLabels			= false; 
+	private SimpleDateFormat dateFormat 	= new SimpleDateFormat("HH:mm", Locale.ENGLISH );
  	
 	
 	// ================================================================
@@ -249,10 +239,23 @@ public class TimeAxisUnit
 	private void setStartPoint( Calendar t, int unit, long exactStart )
 	{
 		t.setTimeInMillis( exactStart );
-		for (int i = 0; i < calendarUnit.length && i <= unit; i++)
-			t.set( calendarUnit[i], nullValue[i] );
+		
+		t.setFirstDayOfWeek(Calendar.MONDAY);
+		for (int i = 0; i < HOUR && i <= unit; i++)
+			t.set( calendarUnit[i], 0 );
+		
+		if ( unit >= HOUR )
+			t.set( Calendar.HOUR_OF_DAY, 0 );
+		
 		if ( unit == WEEK )
 			t.set( Calendar.DAY_OF_WEEK, t.getFirstDayOfWeek() );
+		else if ( unit == MONTH )
+			t.set( Calendar.DAY_OF_MONTH, 1 );
+		else if ( unit == YEAR ) 
+		{
+			t.set( Calendar.DATE, 1 );
+			t.set( Calendar.MONTH, 0 );
+		}
 	}
 	
 	/**
@@ -265,6 +268,7 @@ public class TimeAxisUnit
 	private long getNextPoint( Calendar t, int unit, int unitSteps )
 	{
 		t.add( calendarUnit[unit], unitSteps );
+		
 		return t.getTimeInMillis();
 	}
 

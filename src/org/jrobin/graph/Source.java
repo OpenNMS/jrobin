@@ -41,8 +41,9 @@ class Source
 	protected static final int AGG_AVERAGE	= 2;
 	protected static final int AGG_FIRST	= 3;
 	protected static final int AGG_LAST		= 4;
+	protected static final int AGG_TOTAL	= 5;
 	
-	protected static final String[] aggregates = { "MINIMUM", "MAXIMUM", "AVERAGE", "FIRST", "LAST" };
+	protected static final String[] aggregates = { "MINIMUM", "MAXIMUM", "AVERAGE", "FIRST", "LAST", "TOTAL" };
 	private String name;
 	protected double[] values;
 	
@@ -53,7 +54,7 @@ class Source
 	
 	private long lastTime					= 0;
 	private long totalTime					= 0; 
-	
+	double testval = 0;
 	
 	// ================================================================
 	// -- Constructors
@@ -96,7 +97,7 @@ class Source
 	/**
 	 * Gets a specific aggregate of this datasource.
 	 * Requested aggregate can be one of the following:
-	 * <code>AGG_MINIMUM, AGG_MAXIMUM, AGG_AVERAGE, AGG_FIRST</code>
+	 * <code>AGG_MINIMUM, AGG_MAXIMUM, AGG_AVERAGE, AGG_FIRST, AGG_TOTAL</code>
 	 * and <code>AGG_LAST</code>.
 	 * @param aggType Type of the aggregate requested.
 	 * @return The double value of the requested aggregate.
@@ -124,7 +125,10 @@ class Source
 			case AGG_LAST:
 				if ( values != null && values.length > 0)
 					return values[values.length - 1];
-				break;	
+				break;
+				
+			case AGG_TOTAL:
+				return testval;
 		}
 		
 		return Double.NaN;
@@ -159,6 +163,7 @@ class Source
 		if ( !Double.isNaN(lastValue) && !Double.isNaN(value) )
 		{
 			long timeDelta 	= time - lastTime;
+			testval += value;
 			totalValue		+= timeDelta * ( value + lastValue ) / 2.0;
 			totalTime		+= timeDelta;
 		}

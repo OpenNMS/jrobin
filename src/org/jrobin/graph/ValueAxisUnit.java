@@ -225,17 +225,17 @@ class ValueAxisUnit
 		}
 		
 		double value		= ovalue * gridFactor;
-		int valueInt		= new Double(value).intValue();
-		int roundStep		= new Double(gridStep).intValue();
+		long valueInt		= new Double(value).longValue();
+		long roundStep		= new Double(gridStep).longValue();
 		if ( roundStep == 0 ) roundStep = 1;
-		int num 			= valueInt / roundStep; 
+		long num 			= valueInt / roundStep; 
 		// int mod 			= valueInt % roundStep;
 		double gridValue	= (roundStep * (num + 1)) * 1.0d;
 		if ( gridValue - value < (gridStep) / 8 )
 			gridValue		+= roundStep;
 		
 		value				= ovalue * mGridFactor;
-		roundStep			= new Double(mGridStep).intValue();
+		roundStep			= new Double(mGridStep).longValue();
 		if ( roundStep == 0 ) roundStep = 1;
 		num					= valueInt / roundStep;
 		// mod					= valueInt % roundStep;
