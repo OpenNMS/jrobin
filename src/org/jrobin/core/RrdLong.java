@@ -28,20 +28,26 @@ package org.jrobin.core;
 import java.io.IOException;
 
 class RrdLong extends RrdPrimitive {
+	private long cache;
+	private boolean cached = false;
+
 	RrdLong(RrdUpdater updater) throws IOException {
 		super(updater, RrdPrimitive.RRD_LONG);
 	}
 
 	void set(long value) throws IOException {
-		if(cache.setLong(value)) {
+		if(!isCachingAllowed()) {
 			writeLong(value);
+		}
+		// caching allowed
+		else if(!cached || cache != value) {
+			// update cache
+			writeLong(cache = value);
+			cached = true;
 		}
 	}
 
 	long get() throws IOException {
-		if(cache.isEmpty()) {
-			cache.setLong(readLong());
-		}
-		return cache.getLong();
+		return cached? cache: readLong();
 	}
 }

@@ -28,7 +28,7 @@ package org.jrobin.core;
 import java.io.IOException;
 
 /**
- * Backend which is used to store all RRD bytes in memory.<p>
+ * Backend to be used to store all RRD bytes in memory.<p>
  */
 public class RrdMemoryBackend extends RrdBackend {
 	private byte[] buffer = new byte[0];
@@ -82,5 +82,14 @@ public class RrdMemoryBackend extends RrdBackend {
 	 */
 	public void close() {
 		// NOP
+	}
+
+	/**
+	 * This method is overriden to disable high-level caching in frontend JRobin classes.
+	 * @return Always returns <code>false</code>. There is no need to cache anything in high-level classes
+	 * since all RRD bytes are already in memory.
+	 */
+	protected boolean isCachingAllowed() {
+		return false;
 	}
 }

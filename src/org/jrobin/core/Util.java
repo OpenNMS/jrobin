@@ -544,18 +544,13 @@ public class Util {
 	}
 
 	/**
-	 * Compares two doubles, but returns true if x = y = Double.NaN
-	 * @param x First double
-	 * @param y Second double
-	 * @return true, if doubles are equal, false otherwise.
+	 * Compares two doubles, but returns true if x=y=Double.NaN (by default Double.NaN != Double.NaN)
+	 * @param x first value
+	 * @param y second value
+	 * @return <code>true</code> if x and y are both equal to Double.NaN, or if x == y. <code>false</code> otherwise
 	 */
 	public static boolean equal(double x, double y) {
-		if(Double.isNaN(x) && Double.isNaN(y)) {
-			return true;
-		}
-		else {
-			return x == y;
-		}
+		return (Double.isNaN(x) && Double.isNaN(y)) || (x == y);
 	}
 
 }

@@ -191,8 +191,20 @@ public abstract class RrdBackend {
 	 * Method called by the framework when a RrdDb file is about to be closed. This method
 	 * calls {@link #sync()} internally.
 	 */
-	public void beforeClose() throws IOException {
+	protected void beforeClose() throws IOException {
 		sync();
+	}
+
+	/**
+	 * This method suggests the caching policy to the JRobin frontend (high-level) classes. If <code>true</code>
+	 * is returned, frontent classes will cache frequently used parts of a RRD file in memory to improve
+	 * performance. If </code>false</code> is returned, high level classes will never cache RRD file sections
+	 * in memory.
+	 * @return <code>true</code> if file caching is enabled, <code>false</code> otherwise. By default, the
+	 * method returns <code>true</code> but it can be overriden in subclasses.
+	 */
+	protected boolean isCachingAllowed() {
+		return true;
 	}
 
 	final void writeInt(long offset, int value) throws IOException {
