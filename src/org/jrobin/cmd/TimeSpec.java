@@ -32,10 +32,14 @@ import java.util.GregorianCalendar;
 import java.util.Date;
 import java.util.Calendar;
 
-class TimeSpec {
-	public static final int TYPE_ABSOLUTE = 0;
-	public static final int TYPE_START = 1;
-	public static final int TYPE_END = 2;
+/**
+ * Simple class to represent time obtained by parsing at-style date specification (described
+ * in detail on the rrdfetch man page. See javadoc {@link TimeParser} for more information.
+ */
+public class TimeSpec {
+	static final int TYPE_ABSOLUTE = 0;
+	static final int TYPE_START = 1;
+	static final int TYPE_END = 2;
 
 	int type = TYPE_ABSOLUTE;
 	int year, month, day, hour, min, sec;
@@ -46,7 +50,7 @@ class TimeSpec {
 
 	TimeSpec context;
 
-	public TimeSpec(String dateString) {
+	TimeSpec(String dateString) {
 		this.dateString = dateString;
 	}
 
@@ -86,7 +90,17 @@ class TimeSpec {
 		return gc;
 	}
 
-	long getTimestamp() throws RrdException {
+	/**
+	 * Returns the corresponding timestamp (seconds since Epoch). Example:<p>
+	 * <pre>
+	 * TimeParser p = new TimeParser("now-1day");
+	 * TimeSpec ts = p.parse();
+	 * System.out.println("Timestamp was: " + ts.getTimestamp();
+	 * </pre>
+	 * @return Timestamp (in seconds, no milliseconds)
+	 * @throws RrdException Thrown if this TimeSpec object does not represent absolute time.
+	 */
+	public long getTimestamp() throws RrdException {
 		return Util.getTimestamp(getTime());
 	}
 
@@ -98,7 +112,22 @@ class TimeSpec {
 				"/" + dhour + "/" + dmin + "/" + dsec + ")";
 	}
 
-	static GregorianCalendar[] getTimes(TimeSpec spec1, TimeSpec spec2) throws RrdException {
+	/**
+	 * Use this static method to resolve relative time references and obtain the corresponding
+	 * GregorianCalendar objects. Example:<p>
+	 * <pre>
+	 * TimeParser pStart = new TimeParser("now-1month"); // starting time
+	 * TimeParser pEnd = new TimeParser("start+1week");  // ending time
+	 * TimeSpec specStart = pStart.parse();
+	 * TimeSpec specEnd = pEnd.parse();
+	 * GregorianCalendar[] gc = TimeSpec.getTimes(specStart, specEnd);
+	 * </pre>
+	 * @param spec1 Starting time specification
+	 * @param spec2 Ending time specification
+	 * @return
+	 * @throws RrdException Thrown if relative time references cannot be resolved
+	 */
+	public static GregorianCalendar[] getTimes(TimeSpec spec1, TimeSpec spec2) throws RrdException {
 		if(spec1.type == TYPE_START || spec2.type == TYPE_END) {
 			throw new RrdException("Recursive time specifications not allowed");
 		}
@@ -110,7 +139,22 @@ class TimeSpec {
 		};
 	}
 
-	static long[] getTimestamps(TimeSpec spec1, TimeSpec spec2) throws RrdException {
+	/**
+	 * Use this static method to resolve relative time references and obtain the corresponding
+	 * timestamps (seconds since epoch). Example:<p>
+	 * <pre>
+	 * TimeParser pStart = new TimeParser("now-1month"); // starting time
+	 * TimeParser pEnd = new TimeParser("start+1week");  // ending time
+	 * TimeSpec specStart = pStart.parse();
+	 * TimeSpec specEnd = pEnd.parse();
+	 * long[] ts = TimeSpec.getTimestamps(specStart, specEnd);
+	 * </pre>
+	 * @param spec1 Starting time specification
+	 * @param spec2 Ending time specification
+	 * @return
+	 * @throws RrdException Thrown if relative time references cannot be resolved
+	 */
+	public static long[] getTimestamps(TimeSpec spec1, TimeSpec spec2) throws RrdException {
 		GregorianCalendar[] gcs = getTimes(spec1, spec2);
 		return new long[] {
 			Util.getTimestamp(gcs[0]), Util.getTimestamp(gcs[1])

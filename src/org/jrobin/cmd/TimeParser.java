@@ -35,8 +35,13 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.IOException;
 
-class TimeParser {
-	public static final int PREVIOUS_OP = -1;
+/**
+ * Class which parses at-style time specification (describided in detail on the rrdfetch man page),
+ * used in all RRDTool commands. This code is in most parts just a java port of Tobi's parsetime.c
+ * code.
+ */
+public class TimeParser {
+	private static final int PREVIOUS_OP = -1;
 
 	TimeToken token;
 	TimeScanner scanner;
@@ -45,6 +50,11 @@ class TimeParser {
 	int op = TimeToken.PLUS;
 	int prev_multiplier = -1;
 
+	/**
+	 * Constructs TimeParser instance from the given input string.
+	 * @param dateString at-style time specification (read rrdfetch man page
+	 * for the complete explanation)
+	 */
 	public TimeParser(String dateString) {
 		scanner = new TimeScanner(dateString);
 		spec = new TimeSpec(dateString);
@@ -294,7 +304,12 @@ class TimeParser {
 		}
 	}
 
-	TimeSpec parse() throws RrdException {
+	/**
+	 * Parses the input string specified in the constructor.
+	 * @return Object representing parsed date/time.
+	 * @throws RrdException Thrown if the date string cannot be parsed.
+	 */
+	public TimeSpec parse() throws RrdException {
 		long now = Util.getTime();
 		int hr = 0;
 		/* this MUST be initialized to zero for midnight/noon/teatime */
@@ -402,6 +417,7 @@ class TimeParser {
 		return spec;
 	}
 
+	/*
 	public static void main(String[] args) throws IOException {
 		BufferedReader r = new BufferedReader(new InputStreamReader(System.in));
 		while (true) {
@@ -416,4 +432,5 @@ class TimeParser {
 			}
 		}
 	}
+	*/
 }

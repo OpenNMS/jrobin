@@ -79,7 +79,7 @@ class RrdXportCmd extends RrdToolCmd {
 		RrdExport export = new RrdExport(exportDef);
 		ExportData data = export.fetch(maxRows);
 
-		System.out.println(data.exportXml());
+		println(data.exportXml());
 
 		return data;
 	}
@@ -132,6 +132,7 @@ class RrdXportCmd extends RrdToolCmd {
 		else
 			def.export(tokens[1], tokens[2]);
 	}
+	
 	/*
 	public static void main(String[] args) throws Exception {
 		String cmd = "xport --start now-1h --end now DEF:xx=host-inout.lo.rrd:output:AVERAGE DEF:yy=host-inout.lo.rrd:input:AVERAGE CDEF:aa=xx,yy,+,8,* "
