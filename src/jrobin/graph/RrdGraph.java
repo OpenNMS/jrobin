@@ -24,10 +24,11 @@ package jrobin.graph;
 
 import jrobin.core.RrdException;
 
-import javax.swing.*;
 import javax.imageio.*;
+import javax.imageio.stream.*;
 import java.awt.image.*;
 
+import java.util.*;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -50,7 +51,8 @@ public class RrdGraph implements Serializable
 	 * @throws IOException Thrown in case of I/O error.
 	 * @throws RrdException Thrown in case of JRobin specific error.
 	 */
-	public RrdGraph(RrdGraphDef graphDef) throws IOException, RrdException {
+	public RrdGraph(RrdGraphDef graphDef) throws IOException, RrdException 
+	{
 		grapher = new Grapher( graphDef );
 	}
 
@@ -60,7 +62,16 @@ public class RrdGraph implements Serializable
 	 * @param height Image height.
 	 * @return Graph as a buffered image.
 	 */
-	public BufferedImage getBufferedImage(int width, int height) {
+	public BufferedImage getBufferedImage(int width, int height) 
+	{
+		try
+		{
+			return grapher.createImage( width, height );
+		} 
+		catch (RrdException e) {
+			e.printStackTrace();
+		}
+		
 		return null;
 	}
 
@@ -91,19 +102,61 @@ public class RrdGraph implements Serializable
 	 * @param quality JPEG qualitty (between 0 and 1).
 	 * @throws IOException Thrown in case of I/O error.
 	 */
-	public void saveAsJPEG(String path, int width, int height, float quality)	throws IOException {
-        //ChartUtilities.saveChartAsJPEG(new File(path), quality, chart, width, height);
+	public void saveAsJPEG(String path, int width, int height, float quality)	throws IOException 
+	{
+		// Based on http://javaalmanac.com/egs/javax.imageio/JpegWrite.html?l=rel
+		try {
+			// Retrieve jpg image to be compressed
+			BufferedImage gImage 	= grapher.createImage( width, height );
+			RenderedImage rndImage	= (RenderedImage) gImage;
+			
+			// Find a jpeg writer
+			ImageWriter writer = null;
+			Iterator iter = ImageIO.getImageWritersByFormatName("jpg");
+			if (iter.hasNext()) {
+				writer = (ImageWriter)iter.next();
+			}
+
+			// Prepare output file
+			ImageOutputStream ios = ImageIO.createImageOutputStream(new File(path));
+			writer.setOutput(ios);
+
+			// Set the compression quality
+			ImageWriteParam iwparam = new JpegImageWriteParam();
+			iwparam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT) ;
+			iwparam.setCompressionQuality(quality);
+
+			// Write the image
+			writer.write(null, new IIOImage(rndImage, null, null), iwparam);
+
+			// Cleanup
+			ios.flush();
+			writer.dispose();
+			ios.close();
+		} 
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+
 	}
 
 	/**
 	 * Returns panel object so that graph can be easily embedded in swing applications.
 	 * @return Swing panel object with graph embedded in panel.
 	 */
-	/*
-	public ChartPanel getChartPanel() {
-		return new ChartPanel(chart);
-	}
-	*/
+	public ChartPanel getChartPanel()
+	{
+		ChartPanel p = new ChartPanel();
+		try 
+		{
+			p.setChart( grapher.createImage(0,0) );
+		}
+		catch ( RrdException e ) {
+			e.printStackTrace();
+		}
+	
+		return p;
+	} 
 
 	/**
 	 * Returns graph as an array of PNG bytes
@@ -112,7 +165,8 @@ public class RrdGraph implements Serializable
 	 * @return Array of PNG bytes.
 	 * @throws IOException Thrown in case of I/O error.
 	 */
-	public byte[] getPNGBytes(int width, int height) throws IOException {
+	public byte[] getPNGBytes(int width, int height) throws IOException 
+	{
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 		try 
 		{
@@ -123,7 +177,7 @@ public class RrdGraph implements Serializable
 		catch ( RrdException e ) {
 			e.printStackTrace();
 		}    
-		//ChartUtilities.writeBufferedImageAsPNG(outputStream, getBufferedImage(width, height));
+		
 		return outputStream.toByteArray();
 	}
 
@@ -135,20 +189,42 @@ public class RrdGraph implements Serializable
 	 * @return Array of PNG bytes.
 	 * @throws IOException Thrown in case of I/O error.
 	 */
-	public byte[] getJPEGBytes(int width, int height, float quality) throws IOException {
+	public byte[] getJPEGBytes(int width, int height, float quality) throws IOException 
+	{
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-		//ChartUtilities.writeBufferedImageAsJPEG(outputStream,
-		//	quality, getBufferedImage(width, height));
+		try {
+			// Retrieve jpg image to be compressed
+			BufferedImage gImage 	= grapher.createImage( width, height );
+			RenderedImage rndImage	= (RenderedImage) gImage;
+			
+			// Find a jpeg writer
+			ImageWriter writer = null;
+			Iterator iter = ImageIO.getImageWritersByFormatName("jpg");
+			if (iter.hasNext()) {
+				writer = (ImageWriter)iter.next();
+			}
+
+			// Prepare output file
+			ImageOutputStream ios = ImageIO.createImageOutputStream(outputStream);
+			writer.setOutput(ios);
+
+			// Set the compression quality
+			ImageWriteParam iwparam = new JpegImageWriteParam();
+			iwparam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT) ;
+			iwparam.setCompressionQuality(quality);
+
+			// Write the image
+			writer.write(null, new IIOImage(rndImage, null, null), iwparam);
+
+			// Cleanup
+			ios.flush();
+			writer.dispose();
+			ios.close();
+		} 
+		catch (Exception e) {
+			e.printStackTrace();
+		}
 		return outputStream.toByteArray();
 	}
-
-	/**
-	 * Returns the underlying JFreeChart object.
-	 * @return The underlying JFreeChart object.
-	 */
-	/*
-	public JFreeChart getChart() {
-		return chart;
-	}
-	*/
+	
 }

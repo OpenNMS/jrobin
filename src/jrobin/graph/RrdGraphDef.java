@@ -25,6 +25,7 @@ package jrobin.graph;
 import jrobin.core.Util;
 import jrobin.core.RrdException;
 
+import java.io.*;
 import java.awt.*;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -107,24 +108,6 @@ import java.util.GregorianCalendar;
  */
 public class RrdGraphDef 
 {
-	  /** A constant for years. */
-    public static final int YEAR = 0;
-
-    /** A constant for months. */
-    public static final int MONTH = 1;
-
-    /** A constant for days. */
-    public static final int DAY = 2;
-
-    /** A constant for hours. */
-    public static final int HOUR = 3;
-
-    /** A constant for minutes. */
-    public static final int MINUTE = 4;
-
-    /** A constant for seconds. */
-    public static final int SECOND = 5;
-
 	private ArrayList sources = new ArrayList();
 	private ArrayList plotDefs = new ArrayList();
 	private ArrayList graphs = new ArrayList();
@@ -148,8 +131,11 @@ public class RrdGraphDef
 	private boolean majorGridY		= true;
 	private boolean rigidGrid		= false;
 	private boolean frontGrid		= true;
-	
+	private boolean antiAliasing	= true;
 	private boolean showLegend		= true;
+	
+	private File background			= null;
+	private File overlay			= null;
 	
 	private BasicStroke borderStroke;
 		
@@ -166,6 +152,14 @@ public class RrdGraphDef
 	private Color axisColor			= new Color(130,30,30);
 	private Color arrowColor		= Color.RED;
 	private Color frameColor		= Color.LIGHT_GRAY;
+	
+	private TimeAxisUnit tAxis		= null;
+	private boolean tAxisCentered	= false;
+	private double valueGridStep	= Double.NaN;
+	private double valueLabelStep	= Double.NaN;
+	
+	private double baseValue		= 1000;
+	private int scaleIndex			= -1;			// NO_SCALE
 	
 	private int chart_lpadding		= Grapher.CHART_LPADDING;
 
@@ -496,6 +490,9 @@ public class RrdGraphDef
 	 * @param unitCount Number of time units between time ticks.
 	 * @param format Format to be used for tick label.
 	 */
+	/**
+	 * @deprecated  As of JDK 1.1, replaced by {@link #setBounds(int,int,int,int)}
+	 */
 	public void setTimeUnit(int unit, int unitCount, SimpleDateFormat format) {
 		this.timeUnit = unit;
 		this.timeUnitCount = unitCount;
@@ -594,11 +591,11 @@ public class RrdGraphDef
 		this.minorGridY = visible;
 	}
 	
-	public boolean getMinorGridX() {
+	boolean getMinorGridX() {
 		return minorGridX;
 	}
 	
-	public boolean getMinorGridY() {
+	boolean getMinorGridY() {
 		return minorGridY;
 	}
 	
@@ -618,11 +615,11 @@ public class RrdGraphDef
 		this.majorGridY = visible;
 	}
 
-	public boolean getMajorGridX() {
+	boolean getMajorGridX() {
 		return majorGridX;
 	}
 
-	public boolean getMajorGridY() {
+	boolean getMajorGridY() {
 		return majorGridY;
 	}
 
@@ -644,11 +641,11 @@ public class RrdGraphDef
 		this.gridY		= visible;
 	}
 
-	public boolean getGridX() {
+	boolean getGridX() {
 		return gridX;
 	}
 
-	public boolean getGridY() {
+	boolean getGridY() {
 		return gridY;
 	}
 	
@@ -663,11 +660,11 @@ public class RrdGraphDef
 			this.borderColor	= c;
 	}
 	
-	public Color getImageBorderColor() {
+	Color getImageBorderColor() {
 		return borderColor;
 	}
 	
-	public BasicStroke getImageBorderStroke() {
+	BasicStroke getImageBorderStroke() {
 		return borderStroke;
 	}
 	
@@ -681,7 +678,7 @@ public class RrdGraphDef
 		this.rigidGrid = rigid;
 	}
 	
-	public boolean getRigidGrid() {
+	boolean getRigidGrid() {
 		return this.rigidGrid;
 	}
 	
@@ -694,7 +691,7 @@ public class RrdGraphDef
 		this.frontGrid = frontGrid;
 	}
 	
-	public boolean getFrontGrid() {
+	boolean getFrontGrid() {
 		return this.frontGrid;
 	}
 	
@@ -706,7 +703,7 @@ public class RrdGraphDef
 		this.showLegend	= showLegend;
 	}
 	
-	public boolean getShowLegend() {
+	boolean getShowLegend() {
 		return this.showLegend;
 	}
 	
@@ -718,7 +715,7 @@ public class RrdGraphDef
 		this.fontColor = c;
 	}
 	
-	public Color getFontColor() {
+	Color getFontColor() {
 		return this.fontColor;
 	}
 	
@@ -730,7 +727,7 @@ public class RrdGraphDef
 		this.majorGridColor = c;	
 	}
 	
-	public Color getMajorGridColor() {
+	Color getMajorGridColor() {
 		return majorGridColor;
 	}
 	
@@ -742,7 +739,7 @@ public class RrdGraphDef
 		this.minorGridColor = c;
 	}
 	
-	public Color getMinorGridColor() {
+	Color getMinorGridColor() {
 		return minorGridColor;
 	}
 	
@@ -754,7 +751,7 @@ public class RrdGraphDef
 		this.frameColor = c;
 	}
 
-	public Color getFrameColor() {
+	Color getFrameColor() {
 		return frameColor;
 	}
 	
@@ -766,7 +763,7 @@ public class RrdGraphDef
 		this.axisColor = c;
 	}
 
-	public Color getAxisColor() {
+	Color getAxisColor() {
 		return axisColor;
 	}
 	
@@ -778,7 +775,7 @@ public class RrdGraphDef
 		this.arrowColor = c;
 	}
 
-	public Color getArrowColor() {
+	Color getArrowColor() {
 		return arrowColor;
 	}
 	
@@ -790,8 +787,128 @@ public class RrdGraphDef
 		this.chart_lpadding = lp;
 	}
 	
-	public int getChartLeftPadding() {
+	int getChartLeftPadding() {
 		return this.chart_lpadding;
 	}
 	
+	/**
+	 * Set the anti-aliasing option for the drawing area of the graph.
+	 * Default uses anti-aliasing.
+	 * @param aa True if anti-aliasing is on, false if off
+	 */
+	public void setAntiAliasing( boolean aa ) {
+		this.antiAliasing = aa;
+	}
+	
+	boolean getAntiAliasing() {
+		return this.antiAliasing;
+	}
+	
+	/**
+	 * Sets a background image to use for the graph.
+	 * The image can be any of the supported imageio formats,
+	 * default <i>.gif, .jpg or .png</i>.
+	 * @param fileName Filename of the image to use
+	 */
+	public void setBackground( String fileName ) {
+		File bgFile	= new File( fileName );
+		if ( bgFile.exists() )
+			this.background = bgFile;
+	}
+	
+	File getBackground() {
+		return this.background;
+	}
+	
+	/**
+	 * Sets a overlay image to use for the graph.
+	 * The image can be any of the supported imageio formats,
+	 * default <i>.gif, .jpg or .png</i>.  All pixels with the color white
+	 * RGB (255, 255, 255) will be treated as transparent.
+	 * @param fileName Filename of the image to use
+	 */
+	public void setOverlay( String fileName ) {
+		File ovFile	= new File( fileName );
+		if ( ovFile.exists() )
+			this.overlay = ovFile;
+	}
+
+	File getOverlay() {
+		return this.overlay;
+	}
+	
+	/**
+	 * Should write explanation of custom grid specs here.
+	 * @param minGridTime
+	 * @param minGridUnits
+	 * @param majGridTime
+	 * @param majGridUnits
+	 * @param df
+	 * @param centered
+	 */
+	public void setTimeAxis( int minGridTime, 
+								int minGridUnits, 
+								int majGridTime, 
+								int majGridUnits, 
+								String df,
+								boolean centered ) 
+	{
+		this.tAxis 			= new TimeAxisUnit( minGridTime, 
+												minGridUnits, 
+												majGridTime, 
+												majGridUnits, 
+												new SimpleDateFormat( df ) 
+											);
+		this.tAxisCentered	= centered;		
+	}
+	
+	TimeAxisUnit getTimeAxis() {
+		return this.tAxis;
+	}
+	
+	boolean getTimeAxisCentered() {
+		return this.tAxisCentered;
+	}
+	
+	/**
+	 * Should write explanation of custom grid specs here
+	 * @param gridStep
+	 * @param labelStep
+	 */
+	public void setValueAxis( double gridStep, double labelStep ) {
+		this.valueGridStep 	= gridStep;
+		this.valueLabelStep = labelStep;
+	}
+	
+	double getValueGridStep() {
+		return this.valueGridStep;
+	}
+	
+	double getValueLabelStep() {
+		return this.valueLabelStep;
+	}
+	
+	/**
+	 * 
+	 * @param base
+	 */
+	public void setBaseValue( double base ) {
+		this.baseValue = base;
+	}
+	
+	double getBaseValue() {
+		return this.baseValue;
+	}
+	
+	/**
+	 * 
+	 * @param e
+	 */
+	public void setUnitsExponent( int e ) {
+		this.scaleIndex = (6 - e / 3);	// Index in the scale table
+	}
+	
+	int getScaleIndex() {
+		return this.scaleIndex;
+	}
 }

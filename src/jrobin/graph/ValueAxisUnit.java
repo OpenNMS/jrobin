@@ -69,10 +69,15 @@ public class ValueAxisUnit
 	
 	private double round( double value )
 	{
-		return new java.math.BigDecimal(value).setScale(14 , java.math.BigDecimal.ROUND_HALF_EVEN).doubleValue();
+		return round( value, 14 );		// Big precision
 	}
 	
-	public ValueMarker[] getValueMarkers( double lower, double upper )
+	private double round( double value, int numDecs )
+	{
+		return new java.math.BigDecimal(value).setScale(numDecs , java.math.BigDecimal.ROUND_HALF_EVEN).doubleValue();
+	}
+	
+	public ValueMarker[] getValueMarkers( double lower, double upper, double base, int scaleIndex )
 	{
 		double minPoint	= 0.0d;
 		double majPoint	= 0.0d;
@@ -95,7 +100,6 @@ public class ValueAxisUnit
 		
 		while ( minPoint <= upper && majPoint <= upper )
 		{
-			//System.out.println( minPoint + "||" + majPoint );
 			if ( minPoint < majPoint )
 			{
 				markerList.add( new ValueMarker(minPoint, "", false) );
@@ -104,12 +108,12 @@ public class ValueAxisUnit
 			else
 			{
 				String str;
-				ValueScaler vs 	= new ValueScaler( majPoint, -1);
+				ValueScaler vs 	= new ValueScaler( majPoint, scaleIndex, base);
 				int ival		= new Double(vs.getScaledValue()).intValue();
 				if ( ival == vs.getScaledValue() )
 					str		= (ival + vs.getPrefix()).trim();
 				else
-					str		= (vs.getScaledValue() + vs.getPrefix()).trim();
+					str		= (round(vs.getScaledValue(), 2) + vs.getPrefix()).trim();
 				
 				if ( minPoint == majPoint )	// Special case, but will happen most of the time
 				{
@@ -134,7 +138,7 @@ public class ValueAxisUnit
 		while ( majPoint <= upper )
 		{
 			String str;
-			ValueScaler vs 	= new ValueScaler( majPoint, -1);
+			ValueScaler vs 	= new ValueScaler( majPoint, scaleIndex, base);
 			int ival		= new Double(vs.getScaledValue()).intValue();
 			if ( ival == vs.getScaledValue() )
 				str		= (ival + vs.getPrefix()).trim();

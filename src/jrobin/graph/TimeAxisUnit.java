@@ -30,7 +30,7 @@ import java.text.SimpleDateFormat;
  * To change the template for this generated type comment go to
  * Window - Preferences - Java - Code Generation - Code and Comments
  */
-class TimeAxisUnit 
+public class TimeAxisUnit 
 {
 	private static final int[] calendarUnit =
 				{
@@ -54,13 +54,13 @@ class TimeAxisUnit
 				};
 
 	// Indices in the calendarUnit table
-	static final int SECOND		= 0;
-	static final int MINUTE		= 1;
-	static final int HOUR 		= 2;
-	static final int DAY 		= 3;
-	static final int WEEK 		= 4;
-	static final int MONTH 		= 5;
-	static final int YEAR 		= 6;
+	public static final int SECOND		= 0;
+	public static final int MINUTE		= 1;
+	public static final int HOUR 		= 2;
+	public static final int DAY 		= 3;
+	public static final int WEEK 		= 4;
+	public static final int MONTH 		= 5;
+	public static final int YEAR 		= 6;
 	
 	private int gridTime		= HOUR;			// minor grid
 	private int gridUnits		= 1;

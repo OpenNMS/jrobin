@@ -27,7 +27,9 @@ import jrobin.core.RrdException;
 import java.awt.*;
 import java.awt.image.*;
 
-import java.io.IOException;
+import java.io.*;
+import javax.imageio.*;
+
 import java.text.SimpleDateFormat;
 
 class Grapher 
@@ -149,6 +151,8 @@ class Grapher
 			
 			if ( graphDef.getShowLegend() )
 				plotComments( graphics );
+			
+			plotOverlay( graphics );
 		}
 		catch (IOException e)
 		{
@@ -162,7 +166,45 @@ class Grapher
 		
 		System.out.println( "Graph created ok." );
 		
+		// Dispose context
+		graphics.dispose();
+		
 		return bImg;
+	}
+	
+	private void plotOverlay( Graphics2D g )
+	{
+		// If overlay drawing fails, just ignore it
+		try 
+		{
+			File overlayImg = graphDef.getOverlay();
+			if ( overlayImg != null )
+			{
+				BufferedImage img = ImageIO.read(overlayImg);
+				
+				int w 			= img.getWidth();
+				int h 			= img.getHeight();
+				int rgbWhite 	= Color.WHITE.getRGB(); 
+				int pcolor, red, green, blue;
+
+				// For better performance we might want to load all color
+				// ints of the overlay in one go
+				for (int i = 0; i < w; i++) {
+					for (int j = 0; j < h; j++) {
+						pcolor = img.getRGB(i, j);
+						if ( pcolor != rgbWhite ) 
+						{
+							red 	= (pcolor >> 16) & 0xff;
+							green 	= (pcolor >> 8) & 0xff;
+							blue 	= pcolor & 0xff;
+
+							g.setColor( new Color(red, green, blue) );
+							g.drawLine( i, j, i, j );
+						}
+					}
+				}
+			}
+		} catch (IOException e) {}	
 	}
 	
 	private void plotChartGrid( ChartGraphics chartGraph, TimeMarker[] timeList, ValueMarker[] valueList )
@@ -284,15 +326,16 @@ class Grapher
 	{
 		int posy		= y_offset + chartHeight + CHART_UPADDING + CHART_BPADDING + font_height;
 		int posx		= LBORDER_SPACE;
-			
+		double base		= graphDef.getBaseValue();
+		
 		Comment[] cl	= graphDef.getComments();
 
 		g.setColor( Color.BLACK );
 		g.setFont( SUBTITLE_FONT );
-	
+		
 		for (int i = 0; i < cl.length; i++)
 		{
-			String comment 	= cl[i].getMessage();
+			String comment 	= cl[i].getMessage(base);
 			String str;
 		
 			// If legend, draw color rectangle
@@ -362,8 +405,12 @@ class Grapher
 		int lux		= x_offset + chart_lpadding;
 		int luy		= y_offset + CHART_UPADDING;
 		
-		graphics.setColor( graphDef.getCanvasColor() );
-		graphics.fillRect( lux, luy, chartWidth, chartHeight );
+		// Canvas color should only be drawn if no background image is set
+		// If there's a background image, canvas should be transparent
+		if ( graphDef.getBackground() == null ) {
+			graphics.setColor( graphDef.getCanvasColor() );
+			graphics.fillRect( lux, luy, chartWidth, chartHeight );
+		}
 		graphics.setColor( frameColor );
 		graphics.drawRect( lux, luy, chartWidth, chartHeight );
 								
@@ -409,7 +456,8 @@ class Grapher
 
 		if ( !graphDef.getFrontGrid() ) plotChartGrid( g, tlist, vlist );
 	
-		graphics.setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON );
+		if ( graphDef.getAntiAliasing() )
+			graphics.setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON );
 	
 		// Prepare clipping area and origin
 		graphics.setClip( lux, luy, chartWidth, chartHeight);
@@ -599,9 +647,18 @@ class Grapher
 	 */
 	private void plotImageBackground( Graphics2D g )
 	{
-		// Background
+		// Background color
 		g.setColor( graphDef.getBackColor() );
 		g.fillRect(0, 0, imgWidth, imgHeight );
+		
+		// Background image, if background image fails, just continue
+		try {
+			File bgImage = graphDef.getBackground();
+			if ( bgImage != null ) {
+				RenderedImage img = ImageIO.read(bgImage);
+				g.drawRenderedImage( img, null );
+			}
+		} catch (IOException e) {}
 	
 		// Border
 		Color bc 		= graphDef.getImageBorderColor();
@@ -788,57 +845,63 @@ class Grapher
 		long endTime = graphDef.getEndTime();
 		double days = (endTime - startTime) / 86400.0;
 		
-		vLabelCentered = false;
-		if (days <= 2.0 / 24.0) {
-			t = new TimeAxisUnit( TimeAxisUnit.MINUTE, 5, TimeAxisUnit.MINUTE, 10, new SimpleDateFormat("HH:mm"));
-		}
-		else if (days <= 3.0 / 24.0) {
-			t = new TimeAxisUnit( TimeAxisUnit.MINUTE, 5, TimeAxisUnit.MINUTE, 20, new SimpleDateFormat("HH:mm"));
-		}
-		else if (days <= 5.0 / 24.0) {
-			t = new TimeAxisUnit( TimeAxisUnit.MINUTE, 10, TimeAxisUnit.MINUTE, 30, new SimpleDateFormat("HH:mm"));
-		}
-		else if (days <= 10.0 / 24.0) {
-			t = new TimeAxisUnit( TimeAxisUnit.MINUTE, 15, TimeAxisUnit.HOUR, 1, new SimpleDateFormat("HH:mm"));
-		}
-		else if (days <= 15.0 / 24.0) {
-			t = new TimeAxisUnit( TimeAxisUnit.MINUTE, 30, TimeAxisUnit.HOUR, 2, new SimpleDateFormat("HH:mm"));
-			//t = new TimeAxisUnit( TimeAxisUnit.HOUR, 2, TimeAxisUnit.HOUR, 6, new SimpleDateFormat("HH:mm"));
-		}
-		else if(days <= 20.0 / 24.0) {
-			t = new TimeAxisUnit( TimeAxisUnit.HOUR, 1, TimeAxisUnit.HOUR, 1, new SimpleDateFormat("HH"));
-			vLabelCentered = true;
-		}
-		else if(days <= 36.0 / 24.0) {
-			t = new TimeAxisUnit( TimeAxisUnit.HOUR, 1, TimeAxisUnit.HOUR, 4, new SimpleDateFormat("HH:mm"));
-		}
-		else if (days <= 2) {
-			t = new TimeAxisUnit( TimeAxisUnit.HOUR, 2, TimeAxisUnit.HOUR, 6, new SimpleDateFormat("HH:mm"));
-		}
-		else if (days <= 3) {
-			t = new TimeAxisUnit( TimeAxisUnit.HOUR, 3, TimeAxisUnit.HOUR, 12, new SimpleDateFormat("HH:mm"));
-		}
-		else if(days <= 7) {
-			t = new TimeAxisUnit( TimeAxisUnit.HOUR, 6, TimeAxisUnit.DAY, 1, new SimpleDateFormat("EEE dd"));
-			vLabelCentered = true;
-		}
-		else if(days <= 14) {
-			t = new TimeAxisUnit( TimeAxisUnit.HOUR, 12, TimeAxisUnit.DAY, 1, new SimpleDateFormat("dd"));
-			vLabelCentered = true;
-		}
-		else if (days <= 43) {
-			t = new TimeAxisUnit( TimeAxisUnit.DAY, 1, TimeAxisUnit.WEEK, 1, new SimpleDateFormat("'week' ww"));
-			vLabelCentered = true;
-		}
-		else if(days <= 157) {
-			t = new TimeAxisUnit( TimeAxisUnit.WEEK, 1, TimeAxisUnit.WEEK, 1, new SimpleDateFormat("ww"));
-			vLabelCentered	= true;			
-		}
-		else {
-			t = new TimeAxisUnit( TimeAxisUnit.MONTH, 1, TimeAxisUnit.MONTH, 1, new SimpleDateFormat("MMM"));
-			vLabelCentered 	= true;
-		}
+		t 				= graphDef.getTimeAxis();
+		vLabelCentered 	= graphDef.getTimeAxisCentered();
 		
+		if ( t == null )
+		{
+			vLabelCentered = false;
+			if (days <= 2.0 / 24.0) {
+				t = new TimeAxisUnit( TimeAxisUnit.MINUTE, 5, TimeAxisUnit.MINUTE, 10, new SimpleDateFormat("HH:mm"));
+			}
+			else if (days <= 3.0 / 24.0) {
+				t = new TimeAxisUnit( TimeAxisUnit.MINUTE, 5, TimeAxisUnit.MINUTE, 20, new SimpleDateFormat("HH:mm"));
+			}
+			else if (days <= 5.0 / 24.0) {
+				t = new TimeAxisUnit( TimeAxisUnit.MINUTE, 10, TimeAxisUnit.MINUTE, 30, new SimpleDateFormat("HH:mm"));
+			}
+			else if (days <= 10.0 / 24.0) {
+				t = new TimeAxisUnit( TimeAxisUnit.MINUTE, 15, TimeAxisUnit.HOUR, 1, new SimpleDateFormat("HH:mm"));
+			}
+			else if (days <= 15.0 / 24.0) {
+				t = new TimeAxisUnit( TimeAxisUnit.MINUTE, 30, TimeAxisUnit.HOUR, 2, new SimpleDateFormat("HH:mm"));
+				//t = new TimeAxisUnit( TimeAxisUnit.HOUR, 2, TimeAxisUnit.HOUR, 6, new SimpleDateFormat("HH:mm"));
+			}
+			else if(days <= 20.0 / 24.0) {
+				t = new TimeAxisUnit( TimeAxisUnit.HOUR, 1, TimeAxisUnit.HOUR, 1, new SimpleDateFormat("HH"));
+				vLabelCentered = true;
+			}
+			else if(days <= 36.0 / 24.0) {
+				t = new TimeAxisUnit( TimeAxisUnit.HOUR, 1, TimeAxisUnit.HOUR, 4, new SimpleDateFormat("HH:mm"));
+			}
+			else if (days <= 2) {
+				t = new TimeAxisUnit( TimeAxisUnit.HOUR, 2, TimeAxisUnit.HOUR, 6, new SimpleDateFormat("HH:mm"));
+			}
+			else if (days <= 3) {
+				t = new TimeAxisUnit( TimeAxisUnit.HOUR, 3, TimeAxisUnit.HOUR, 12, new SimpleDateFormat("HH:mm"));
+			}
+			else if(days <= 7) {
+				t = new TimeAxisUnit( TimeAxisUnit.HOUR, 6, TimeAxisUnit.DAY, 1, new SimpleDateFormat("EEE dd"));
+				vLabelCentered = true;
+			}
+			else if(days <= 14) {
+				t = new TimeAxisUnit( TimeAxisUnit.HOUR, 12, TimeAxisUnit.DAY, 1, new SimpleDateFormat("dd"));
+				vLabelCentered = true;
+			}
+			else if (days <= 43) {
+				t = new TimeAxisUnit( TimeAxisUnit.DAY, 1, TimeAxisUnit.WEEK, 1, new SimpleDateFormat("'week' ww"));
+				vLabelCentered = true;
+			}
+			else if(days <= 157) {
+				t = new TimeAxisUnit( TimeAxisUnit.WEEK, 1, TimeAxisUnit.WEEK, 1, new SimpleDateFormat("ww"));
+				vLabelCentered	= true;			
+			}
+			else {
+				t = new TimeAxisUnit( TimeAxisUnit.MONTH, 1, TimeAxisUnit.MONTH, 1, new SimpleDateFormat("MMM"));
+				vLabelCentered 	= true;
+			}
+		}
+
 		vLabelGridWidth	= t.getMajorGridWidth();
 			
 		return t.getTimeMarkers( graphDef.getStartTime(), graphDef.getEndTime() );
@@ -885,18 +948,26 @@ class Grapher
 			mod		/= 10;
 		}
 		
-		if ( shifted <= 3 )
-			v = new ValueAxisUnit( 1, 0.2*mod, 1, 1.0*mod );
-		else if ( shifted <= 5 )
-			v = new ValueAxisUnit( 1, 0.5*mod, 1, 1.0*mod );
-		else if ( shifted <= 9 )
-			v = new ValueAxisUnit( 1, 0.5*mod, 1, 2.0*mod );
+		double fixedGridStep 	= graphDef.getValueGridStep();
+		double fixedLabelStep 	= graphDef.getValueLabelStep();
+		
+		if ( !Double.isNaN(fixedGridStep) && !Double.isNaN(fixedLabelStep) )
+			v = new ValueAxisUnit( 1, fixedGridStep, 1, fixedLabelStep );
 		else
-			v = new ValueAxisUnit( 1, 1.0*mod, 1, 5.0*mod );
+		{
+			if ( shifted <= 3 )
+				v = new ValueAxisUnit( 1, 0.2*mod, 1, 1.0*mod );
+			else if ( shifted <= 5 )
+				v = new ValueAxisUnit( 1, 0.5*mod, 1, 1.0*mod );
+			else if ( shifted <= 9 )
+				v = new ValueAxisUnit( 1, 0.5*mod, 1, 2.0*mod );
+			else
+				v = new ValueAxisUnit( 1, 1.0*mod, 1, 5.0*mod );
+		}
 		
 		if ( !upperFromRange ) upperValue = v.getNiceHigher( upperValue );
 		if ( !lowerFromRange ) lowerValue = v.getNiceLower( lowerValue );
 			
-		return v.getValueMarkers( lowerValue, upperValue );
+		return v.getValueMarkers( lowerValue, upperValue, graphDef.getBaseValue(), graphDef.getScaleIndex() );
 	}
 }

@@ -31,11 +31,12 @@ import java.util.regex.Pattern;
 /**
  *
  */
-class Gprint extends Comment {
+class Gprint extends Comment 
+{
 	private static final String SCALE_MARKER 			= "@s";
 	private static final String UNIFORM_SCALE_MARKER 	= "@S";
 	private static final String VALUE_MARKER 			= "@([0-9]*\\.[0-9]{1}|[0-9]{1}|\\.[0-9]{1})";
-	private static final Pattern VALUE_PATTERN = Pattern.compile(VALUE_MARKER);
+	private static final Pattern VALUE_PATTERN 			= Pattern.compile(VALUE_MARKER);
 	private Source source;
 	private String consolFun;
 
@@ -45,33 +46,33 @@ class Gprint extends Comment {
 		this.consolFun = consolFun;
 	}
 
-	String getMessage() throws RrdException 
+	String getMessage( double base ) throws RrdException 
 	{
 		double value = source.getAggregate(consolFun);
 		Matcher m = VALUE_PATTERN.matcher(comment);
 		if ( m.find() ) 
 		{
 			String valueStr 		= "" + value;
-			String prefixStr 		= "";
-			String uniformPrefixStr = "";
+			String prefixStr 		= " ";
+			String uniformPrefixStr = " ";
 			
-			if(!Double.isNaN(value)) 
+			String[] group = m.group(1).split("\\.");
+			int len = -1, numDec = 0;
+	
+			if ( group.length > 1 ) 
 			{
-				String[] group = m.group(1).split("\\.");
-				int len = -1, numDec = 0;
-				
-				if ( group.length > 1 ) 
-				{
-					if ( group[0].length() > 0 ) {
-						len 	= Integer.parseInt(group[0]);
-						numDec 	= Integer.parseInt(group[1]);
-					}
-					else
-						numDec = Integer.parseInt(group[1]);
+				if ( group[0].length() > 0 ) {
+					len 	= Integer.parseInt(group[0]);
+					numDec 	= Integer.parseInt(group[1]);
 				}
 				else
-					numDec 	= Integer.parseInt(group[0]);
-				
+					numDec = Integer.parseInt(group[1]);
+			}
+			else
+				numDec 	= Integer.parseInt(group[0]);
+			
+			if( !Double.isNaN(value) ) 
+			{
 				DecimalFormat df = getDecimalFormat(numDec);
 				// TO BE DONE
 				// Treat special case here, if the value is something like 0.336985464
@@ -79,13 +80,13 @@ class Gprint extends Comment {
 				// use the scaler, otherwise just don't (it all depends also on the total
 				// length we predefined) 
 				if(shouldScale() && !shouldUniformScale()) {
-					ValueScaler scaler = new ValueScaler(value);
+					ValueScaler scaler = new ValueScaler(value, base);
 					valueStr = df.format(scaler.getScaledValue());
 					prefixStr = scaler.getPrefix();
 					scaleIndex = scaler.getScaleIndex();
 				}
 				else if(!shouldScale() && shouldUniformScale()) {
-					ValueScaler scaler = new ValueScaler(value, scaleIndex);
+					ValueScaler scaler = new ValueScaler(value, scaleIndex, base);
 					valueStr = df.format(scaler.getScaledValue());
 					uniformPrefixStr = scaler.getPrefix();
 					scaleIndex = scaler.getScaleIndex();
@@ -97,14 +98,15 @@ class Gprint extends Comment {
 					throw new RrdException("You cannot specify uniform and non-uniform value " +
 						"scaling at the same time");
 				}
-				
-				int diff = len - valueStr.length();
-				
-				StringBuffer preSpace = new StringBuffer("");
-				for (int i = 0; i < diff; i++)
-					preSpace.append(' ');
-				valueStr = preSpace.append(valueStr).toString();
 			}
+			
+			int diff = len - valueStr.length();
+				
+			StringBuffer preSpace = new StringBuffer("");
+			for (int i = 0; i < diff; i++)
+				preSpace.append(' ');
+			valueStr = preSpace.append(valueStr).toString();
+			
 			comment = comment.replaceFirst(VALUE_MARKER, valueStr);
 			comment = comment.replaceFirst(SCALE_MARKER, prefixStr);
 			comment = comment.replaceFirst(UNIFORM_SCALE_MARKER, uniformPrefixStr);

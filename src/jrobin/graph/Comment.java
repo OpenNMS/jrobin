@@ -74,7 +74,12 @@ class Comment
 	String getMessage() throws RrdException {
 		return comment.replaceAll(MONKEY, "@");
 	}
-
+	
+	// Add a base value for valuescaler transforms
+	String getMessage( double base ) throws RrdException {
+		return comment.replaceAll(MONKEY, "@");
+	}
+		
 	int getAlign() {
     	return align;
 	}
@@ -93,7 +98,7 @@ class Comment
 
 	public static void main(String[] args) throws RrdException {
 		Comment c = new Comment("@r");
-		System.out.println("Comment = [" + c.getMessage() + "], align = " + c.getAlign());
+		System.out.println("Comment = [" + c.getMessage(1000.0) + "], align = " + c.getAlign());
 	}
 
 }
