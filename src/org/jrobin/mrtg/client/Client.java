@@ -39,7 +39,7 @@ import java.io.IOException;
 class Client extends JFrame {
 	static final String TITLE = "JRobin-MRTG client";
 	static final String SUBTITLE = "http://www.jrobin.org";
-	static final String COPYRIGHT = "Copyright \u00A9 2003 Sasa Markovic";
+	static final String COPYRIGHT = "\u00A9 2003,2004 Sasa Markovic";
 	static final String ICON = "mrtg-res/icon.png";
 
 	static Dimension MAIN_TREE_SIZE = new Dimension(320, 400);
