@@ -95,6 +95,8 @@ public class RrdCommander {
 	 * <li><b>update</b>: returns java.lang.Long representing timestamp of the last update.
 	 *<li><b>dump</b>: returns (very long) java.lang.String representing the content of a RRD file
 	 * in XML format.
+	 * <li><b>fetch</b>: returns {@link org.jrobin.core.FetchData} object representing fetched data.
+	 * <li><b>restore</b>: returns java.lang.String containing path to the restored RRD file.
 	 * </ul>
 	 * @throws IOException thrown in case of I/O error
 	 * @throws RrdException thrown for all other errors (parsing errors,
@@ -107,7 +109,8 @@ public class RrdCommander {
 			new RrdLastCmd(cmdScanner),
 			new RrdUpdateCommand(cmdScanner),
 			new RrdDumpCmd(cmdScanner),
-			new RrdFetchCmd(cmdScanner)
+			new RrdFetchCmd(cmdScanner),
+			new RrdRestoreCmd(cmdScanner)
 		};
 		for(int i = 0; i < commanders.length; i++) {
 			Object result = commanders[i].go();
