@@ -24,46 +24,25 @@
  */
 package jrobin.graph2;
 
+import java.awt.Graphics;
+import java.awt.image.BufferedImage;
+import javax.swing.JPanel;
+
 /**
- * <p>Represents a value grid marker (grid line with or without label on the Y axis).</p>
+ * <p>JPanel containing the graph.</p>
  * 
  * @author Arne Vandamme (cobralord@jrobin.org)
  */
-class ValueMarker 
+public class ChartPanel extends JPanel
 {
-	// ================================================================
-	// -- Members
-	// ================================================================	
-	private double value	= 0;
-	private boolean major 	= false;
-
-
-	// ================================================================
-	// -- Constructors
-	// ================================================================	
-	/**
-	 * Constructs a ValueMarker object by specifying the value at which the grid line
-	 * should appear, and specifying if this grid line is a major line or not.  In case of a
-	 * major grid line, the value will be shown as a label next to the line.
-	 * @param value Value as a double at which the grid line should appear.
-	 * @param major True if this marker is a major grid line (with label), false if not.
-	 */
-	ValueMarker( double value, boolean major )
-	{
-		this.major	= major;
-		this.value 	= value;
+	private BufferedImage chart;
+	
+	void setChart( BufferedImage chart ) {
+		this.chart = chart;
 	}
 	
-	// ================================================================
-	// -- Protected methods
-	// ================================================================	
-	double getValue()
+	public void paintComponent( Graphics g )
 	{
-		return value;
-	}
-	
-	boolean isMajor()
-	{
-		return major;
+		if ( chart != null ) g.drawImage( chart, 0, 0, null );
 	}
 }

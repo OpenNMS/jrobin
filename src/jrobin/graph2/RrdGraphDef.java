@@ -645,8 +645,9 @@ public class RrdGraphDef implements Serializable
 	 * try to specify alignment in the legend string).
 	 *
 	 * @param sourceName Graph source name.
-	 * @param color Line collor to be used.
+	 * @param color Line color to be used.
 	 * @param legend Legend to be printed on the graph.
+	 * @param lineWidth Width of the line in pixels.
 	 * @throws RrdException Thrown if invalid graph source name is supplied.
 	 */
 	public void line( String sourceName, Color color, String legend, int lineWidth ) throws RrdException 
@@ -655,6 +656,17 @@ public class RrdGraphDef implements Serializable
 		addLegend( legend, color );
 	}
 	
+	/**
+	 * 
+	 * @param t1
+	 * @param v1
+	 * @param t2
+	 * @param v2
+	 * @param color Line color to be used.
+	 * @param legend Legend to be printed on the graph.
+	 * @param lineWidth Width of the line in pixels.
+	 * @throws RrdException Thrown if invalid graph source name is supplied.
+	 */
 	public void line( GregorianCalendar t1, double v1, GregorianCalendar t2, double v2, Color color, String legend, int lineWidth ) throws RrdException
 	{
 		plotDefs.add( new CustomLine( t1.getTimeInMillis() / 1000, v1, t2.getTimeInMillis() / 1000, v2, color, lineWidth ) );
@@ -679,6 +691,16 @@ public class RrdGraphDef implements Serializable
 		addLegend( legend, color );
 	}
 	
+	/**
+	 * 
+	 * @param t1
+	 * @param v1
+	 * @param t2
+	 * @param v2
+	 * @param color
+	 * @param legend
+	 * @throws RrdException
+	 */
 	public void area( GregorianCalendar t1, double v1, GregorianCalendar t2, double v2, Color color, String legend ) throws RrdException
 	{
 		plotDefs.add( new CustomArea( t1.getTimeInMillis() / 1000, v1, t2.getTimeInMillis() / 1000, v2, color ) );

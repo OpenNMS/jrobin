@@ -33,40 +33,75 @@ import jrobin.core.FetchRequest;
 import jrobin.core.RrdException;
 
 /**
- * <p>Class used to group datasources per RRD db, for faster fetching.</p>
+ * <p>Class used to group datasources per RRD db, for faster fetching.
+ * A FetchSource represents one RRD database file, and will take care of all datasource
+ * fetching using objects of the <code>core</code> package.  Fetching will be done in such 
+ * a way that all datasources per consolidation function are fetched with the minimum possible
+ * file reads.</p>
  * 
- * @author Arne Vandamme (arne.vandamme@jrobin.org)
+ * @author Arne Vandamme (cobralord@jrobin.org)
  */
 class FetchSource 
 {
-	static final int AVG			= 0;
-	static final int MAX 			= 1;
-	static final int MIN 			= 2;
-	static final int LAST			= 3;
-	static final int MAX_CF 		= 4;
+	// ================================================================
+	// -- Members
+	// ================================================================
+	protected static final int AVG			= 0;
+	protected static final int MAX 			= 1;
+	protected static final int MIN 			= 2;
+	protected static final int LAST			= 3;
+	protected static final int MAX_CF 		= 4;
 	
-	static final String[] cfNames	= new String[] { "AVERAGE", "MAX", "MIN", "LAST" };
+	protected static final String[] cfNames	= new String[] { "AVERAGE", "MAX", "MIN", "LAST" };
 	
 	private String rrdFile;						// Holds the name of the RRD file
 	
-	private int numSources			= 0;
-	private Vector[] datasources	= new Vector[MAX_CF];
+	private int numSources					= 0;
+	private Vector[] datasources			= new Vector[MAX_CF];
 	
+	
+	// ================================================================
+	// -- Constructors
+	// ================================================================
+	/**
+	 * Constructs a FetchSource object based on a RRD file name.
+	 * @param rrdFile Name of the RRD file holding all datasources.
+	 */
 	protected FetchSource( String rrdFile )
 	{
 		this.rrdFile = rrdFile;
 		
-		// Initialization
+		// Initialization of datasource lists per CF
 		for (int i = 0; i < datasources.length; i++)
 			datasources[i] = new Vector();	
 	}
 	
-	protected FetchSource( String rrdFile, String consolFunc, String dsName, String name ) throws RrdException
+	/**
+	 * Constructs a FetchSource object based on a RRD file name, and
+	 * adds a given datasource to the datasources list.
+	 * @param rrdFile Name of the RRD file holding all datasources.
+	 * @param consolFunc Consolidation function of the datasource to fetch.
+	 * @param dsName Internal name of the datasource in the RRD file.
+	 * @param name Variable name of the datasource in the graph definition.
+	 * @throws RrdException Thrown in case of a JRobin specific error.
+	 */
+	FetchSource( String rrdFile, String consolFunc, String dsName, String name ) throws RrdException
 	{
 		this( rrdFile );
 		addSource( consolFunc, dsName, name );	
 	}
 	
+	
+	// ================================================================
+	// -- Protected methods
+	// ================================================================
+	/**
+	 * Adds a given datasource to the datasources list for this FetchSource.
+	 * @param consolFunc Consolidation function of the datasource to fetch.
+	 * @param dsName Internal name of the datasource in the RRD file.
+	 * @param name Variable name of the datasource in the graph definition.
+	 * @throws RrdException Thrown in case of a JRobin specific error.
+	 */
 	protected void addSource( String consolFunc, String dsName, String name ) throws RrdException
 	{
 		if ( consolFunc.equalsIgnoreCase("AVERAGE") || consolFunc.equalsIgnoreCase("AVG") )
@@ -83,10 +118,15 @@ class FetchSource
 		numSources++;				
 	}
 	
-	protected String getRrdFile() {
-		return rrdFile;
-	}
-	
+	/**
+	 * Fetches all datavalues for a given timespan out of the provided RRD file.
+	 * @param rrd An open <code>RrdDb</code> object holding the necessary datasources.
+	 * @param startTime Start time of the given timespan.
+	 * @param endTime End time of the given timespan.
+	 * @return A <code>ValueExtractor</code> object holding all fetched data.
+	 * @throws IOException Thrown in case of fetching I/O error.
+	 * @throws RrdException Thrown in case of a JRobin specific error.
+	 */
 	protected ValueExtractor fetch ( RrdDb rrd, long startTime, long endTime ) throws IOException, RrdException
 	{
 		long rrdStep			= rrd.getRrdDef().getStep();
@@ -103,7 +143,7 @@ class FetchSource
 				String[] vNames		= new String[ datasources[i].size() ];
 				
 				for (int j = 0; j < dsNames.length; j++ ) {
-					String[] spair	= (String[])datasources[i].elementAt(j);
+					String[] spair	= (String[]) datasources[i].elementAt(j);
 					dsNames[j]	 	= spair[0];
 					vNames[j]		= spair[1];
 				}
@@ -124,5 +164,8 @@ class FetchSource
 		
 		return new ValueExtractor( names, result );
 	}
-	
+
+	protected String getRrdFile() {
+		return rrdFile;
+	}	
 }

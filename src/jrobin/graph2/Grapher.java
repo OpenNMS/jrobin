@@ -54,7 +54,7 @@ class Grapher
 	// -- Members
 	// ================================================================
 	protected static final String SPACER			= "  ";					// default comment spacer (two blank spaces)
-	protected static final int GRAPH_RESOLUTION		= 1000;					// default graph resolution
+	protected static final int GRAPH_RESOLUTION		= 400;					// default graph resolution
 	protected static final int DEFAULT_WIDTH		= 400;					// default width in pixels of the chart area
 	protected static final int DEFAULT_HEIGHT		= 100;					// default height in pixels of the chart area
 	
@@ -156,7 +156,7 @@ class Grapher
 		chartWidth			= ( cWidth == 0 ? DEFAULT_WIDTH : cWidth );
 		chartHeight			= ( cHeight == 0 ? DEFAULT_HEIGHT : cHeight );
 
-		if ( cWidth > GRAPH_RESOLUTION ) numPoints = cWidth;
+		if ( cWidth > 0 ) numPoints = cWidth;
 
 		// Padding depends on grid visibility
 		chart_lpadding 		= ( graphDef.showMajorGridY() ? graphDef.getChartLeftPadding() : CHART_LPADDING_NM );
@@ -254,7 +254,7 @@ class Grapher
 				sources[tblPos]	= new Def(varList[i], numPoints);
 				sourceIndex.put( varList[i], new Integer(tblPos++) );
 			}
-		
+			
 			veList[ vePos++ ] = ve;
 		}
 	
@@ -444,7 +444,7 @@ class Grapher
 						
 		// Use a special graph 'object' that takes care of resizing and reversing y coordinates
 		ChartGraphics g 	= new ChartGraphics( graphics );
-		g.setMeasurements( chartWidth, chartHeight );
+		g.setDimensions( chartWidth, chartHeight );
 		g.setXRange( tGrid.getStartTime(), tGrid.getEndTime() );
 		g.setYRange( lowerValue, upperValue );
 		
@@ -500,7 +500,7 @@ class Grapher
 	 */
 	private void plotChartGrid( ChartGraphics chartGraph )
 	{
-		Graphics2D g = chartGraph.g;
+		Graphics2D g = chartGraph.getGraphics();
 		g.setFont( normal_font );
 
 		int lux = x_offset + chart_lpadding;
@@ -596,7 +596,7 @@ class Grapher
 				int valRel 		= chartGraph.getY( valueList[i].getValue() );
 				
 				valueFormat.setFormat( valueList[i].getValue(), 2, 0 );
-				String label	= valueFormat.getScaledValue() + valueFormat.getPrefix().trim();
+				String label	= (valueFormat.getScaledValue() + " " + valueFormat.getPrefix()).trim();
 	
 				if ( majorY && valueList[i].isMajor() )
 				{

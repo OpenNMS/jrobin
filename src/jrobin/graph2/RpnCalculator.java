@@ -32,11 +32,14 @@ import jrobin.core.RrdException;
 /**
  * <p>Used to calculate result of an RPN expression.</p>
  * 
- * @author Arne Vandamme (arne.vandamme@jrobin.org)
+ * @author Arne Vandamme (cobralord@jrobin.org)
  * @author Sasa Markovic (saxon@jrobin.org)
  */
 public class RpnCalculator 
 {
+	// ================================================================
+	// -- Members
+	// ================================================================	
 	// Token definitions
 	public static final byte TKN_CONSTANT	= 0;
 	public static final byte TKN_DATASOURCE	= 1;
@@ -79,20 +82,40 @@ public class RpnCalculator
 	public static final byte TKN_XOR		= 38;
 	
 	private Source[] sources;
-	ArrayList stack = new ArrayList();
+	private ArrayList stack = new ArrayList();
 	
+	
+	// ================================================================
+	// -- Constructors
+	// ================================================================	
+	/**
+	 * Constructs a RPN calculator object by providing the source array to use for value lookups.
+	 * @param sources Table containing all retrieved datasources of the graph definition.
+	 */
 	RpnCalculator( Source[] sources )
 	{
 		this.sources = sources;
 	}
 	
-	double evaluate( Cdef cdef, int row, long timestamp ) throws RrdException
+	
+	// ================================================================
+	// -- Public methods
+	// ================================================================	
+	/**
+	 * Evaluates a Cdef RPN expression into a single value.
+	 * @param cdef Cdef object representing the parsed RPN expression.
+	 * @param row Row index in the source table to retrieve all necessary values.
+	 * @param timestamp Timestamp of the datapoint for which the value should be calculated.
+	 * @return Calculated double value of the requested datapoint.
+	 * @throws RrdException Thrown in case of a JRobin specific error.
+	 */
+	public double evaluate( Cdef cdef, int row, long timestamp ) throws RrdException
 	{
 		stack.clear();
 		
-		byte[] tokens 		= cdef.tokens;
-		int[] dsIndices		= cdef.dsIndices;
-		double[] constants	= cdef.constants;
+		byte[] tokens 		= cdef.getTokens();
+		int[] dsIndices		= cdef.getDsIndices();
+		double[] constants	= cdef.getConstants();
 		
 		double x1, x2, x3;
 		
@@ -297,11 +320,24 @@ public class RpnCalculator
 		return pop();
 	}
 	
+	
+	// ================================================================
+	// -- Private methods
+	// ================================================================	
+	/**
+	 * Pushes as a double value on the internal stack.
+	 * @param value Value to push on the stack.
+	 */
 	private void push( double value ) 
 	{
 		stack.add( new Double(value) );
 	}
 
+	/**
+	 * Pops a double value off the internal stack.
+	 * @return Value popped off the stack.
+	 * @throws RrdException Thrown in case of a JRobin specific error.
+	 */
 	private double pop() throws RrdException 
 	{
 		int last = stack.size() - 1;

@@ -29,51 +29,63 @@ import java.util.Vector;
 import jrobin.core.RrdException;
 
 /**
- * <p>description</p>
+ * <p>Represent a piece of aligned text to be drawn on the graph.</p>
  * 
- * @author Arne Vandamme (arne.vandamme@jrobin.org)
+ * @author Arne Vandamme (cobralord@jrobin.org)
  */
 class Comment 
 {
-	static final int CMT_DEFAULT	= 0;
-	static final int CMT_LEGEND		= 1;
-	static final int CMT_GPRINT		= 2;
+	// ================================================================
+	// -- Members
+	// ================================================================
+	protected static final int CMT_DEFAULT	= 0;
+	protected static final int CMT_LEGEND	= 1;
+	protected static final int CMT_GPRINT	= 2;
 	
-	static final Byte TKN_ALF	= new Byte( (byte) 1);		// Align left with Linefeed
-	static final Byte TKN_ARF	= new Byte( (byte) 2);		// Align right with linefeed
-	static final Byte TKN_ACF	= new Byte( (byte) 3);		// Align center with linefeed
-	static final Byte TKN_AL	= new Byte( (byte) 4);		// Align right no linefeed
-	static final Byte TKN_AR	= new Byte( (byte) 5);		// Align left no linefeed
-	static final Byte TKN_AC	= new Byte( (byte) 6);		// Align center no linefeed
-	static final Byte TKN_NULL 	= null;
+	protected static final Byte TKN_ALF		= new Byte( (byte) 1);		// Align left with Linefeed
+	protected static final Byte TKN_ARF		= new Byte( (byte) 2);		// Align right with linefeed
+	protected static final Byte TKN_ACF		= new Byte( (byte) 3);		// Align center with linefeed
+	protected static final Byte TKN_AL		= new Byte( (byte) 4);		// Align right no linefeed
+	protected static final Byte TKN_AR		= new Byte( (byte) 5);		// Align left no linefeed
+	protected static final Byte TKN_AC		= new Byte( (byte) 6);		// Align center no linefeed
+	protected static final Byte TKN_NULL 	= null;
 	
-	String text;
-	Vector oList = new Vector();
+	protected int lineCount 				= 0;
+	protected boolean endLf					= false;
+	protected int commentType				= CMT_DEFAULT;
+	protected Byte lfToken					= TKN_ALF;
 	
-	protected int lineCount 	= 0;
-	protected boolean endLf		= false;
-	protected int commentType	= CMT_DEFAULT;
-	protected Byte lfToken		= TKN_ALF;
-	
-	/**
-	 * Implicit super constructor.
-	 */
+	protected String text;
+	protected Vector oList 					= new Vector();
+
+
+	// ================================================================
+	// -- Constructors
+	// ================================================================	
 	Comment( ) {		
 	}
 	
 	/**
-	 * 
-	 * @param text
+	 * Constructs a <code>Comment</code> object of a given text string.
+	 * The original text string is parsed into new string/token pairs
+	 * where byte tokens are used to specify alignment markers. 
+	 * @param text Text with alignment/new-line tokens as a single string.
+	 * @throws RrdException Thrown in case of a JRobin specific error.
 	 */
 	Comment( String text ) throws RrdException
 	{
 		this.text = text;
 		parseComment();		
 	}
-	
+
+
+	// ================================================================
+	// -- Protected methods
+	// ================================================================	
 	/**
 	 * Splits the string up in string/token pairs.
 	 * The tokens specify alignment or new-lines.
+	 * @throws RrdException Thrown in case of a JRobin specific error.
 	 */
 	protected void parseComment() throws RrdException
 	{
@@ -148,9 +160,9 @@ class Comment
 	}
 	
 	/**
-	 * 
-	 * @param tokenChar
-	 * @return
+	 * Retrieves the corresponding token-byte for a given token character.
+	 * @param tokenChar Character to retrieve corresponding bytevalue of.
+	 * @return Token bytevalue for the corresponding token character.
 	 */
 	protected Byte getToken( char tokenChar )
 	{
@@ -179,19 +191,27 @@ class Comment
 		}
 	}
 	
+	/**
+	 * Used to check it a <code>Comment</code> item ends with a linefeed.
+	 * @return True if this Comment ends with a linefeed.
+	 */
 	boolean isCompleteLine()
 	{
 		return endLf;
 	}
 	
+	/**
+	 * Retrieves a <code>Vector</code> containing all string/token pairs in order of <code>String</code> - <code>Byte</code>.
+	 * @return Vector containing all string/token pairs of this Comment.
+	 */
 	Vector getTokens()
 	{
 		return oList;
 	}
 	
 	/**
-	 * 
-	 * @return
+	 * Counts the number of complete lines (linefeed markers) in the <code>Comment</code> object.
+	 * @return Number of complete lines in this Comment.
 	 */
 	int getLineCount()
 	{

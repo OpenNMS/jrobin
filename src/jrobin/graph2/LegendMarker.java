@@ -27,21 +27,37 @@ package jrobin.graph2;
 import java.awt.Color;
 
 /**
- * <p>description</p>
+ * <p>Class used to represent a legend marker (filled rectangle) with a specific color,
+ * at a specific X position in the graph.</p>
  * 
- * @author Arne Vandamme (arne.vandamme@jrobin.org)
+ * @author Arne Vandamme (cobralord@jrobin.org)
  */
 class LegendMarker 
 {
-	int markerPos;
-	Color color;
+	// ================================================================
+	// -- Members
+	// ================================================================	
+	private int markerPos;
+	private Color color;
 	
+	
+	// ================================================================
+	// -- Constructors
+	// ================================================================		
+	/**
+	 * @param markerPos X position of where the legend marker should appear.
+	 * @param c Color of the marker rectangle.
+	 */
 	LegendMarker( int markerPos, Color c )
 	{
 		this.markerPos 	= markerPos;
 		this.color		= c;
 	}
 	
+	
+	// ================================================================
+	// -- Protected methods
+	// ================================================================		
 	Color getColor() {
 		return color;
 	}

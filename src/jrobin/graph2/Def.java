@@ -25,18 +25,37 @@
 package jrobin.graph2;
 
 /**
- * <p>Represents a fetched datasource for a graph.</p>
+ * <p>Represents a fetched datasource for a graph.  A Def collects all his datavalues from an existing
+ * RRD file.</p>
  * 
- * @author Arne Vandamme (arne.vandamme@jrobin.org)
+ * @author Arne Vandamme (cobralord@jrobin.org)
  */
 class Def extends Source
 {
+	// ================================================================
+	// -- Constructors
+	// ================================================================
+	/**
+	 * Constructs a new Def object holding a number of fetched datapoints for a graph.
+	 * @param name Name of the datasource in the graph definition.
+	 * @param numPoints Number of points used as graph resolution (size of the value table).
+	 */
 	Def( String name, int numPoints )
 	{
 		super(name);
 		values = new double[ numPoints ];
 	}
 	
+	
+	// ================================================================
+	// -- Protected methods
+	// ================================================================	
+	/**
+	 * Sets the value of a specific datapoint for this Def.
+	 * @param pos Position (index in the value table) of the new datapoint.
+	 * @param time Timestamp of the new datapoint in number of seconds.
+	 * @param val Double value of the new datapoint.
+	 */
 	void set( int pos, long timestamp, double val )
 	{
 		super.set( pos, timestamp, val );

@@ -27,17 +27,32 @@ package jrobin.graph2;
 import java.text.SimpleDateFormat;
 
 /**
- * <p>description</p>
+ * <p>Holds specific information about the Time axis grid of the chart.</p>
  * 
  * @author Arne Vandamme (cobralord@jrobin.org)
  */
 class TimeGrid 
 {
+	// ================================================================
+	// -- Members
+	// ================================================================	
 	private long startTime;
 	private long endTime;
 	
-	TimeAxisUnit tAxis;
+	private TimeAxisUnit tAxis;
 	
+	
+	// ================================================================
+	// -- Constructors
+	// ================================================================	
+	/**
+	 * Creates a time grid based on a timespan and possibly a time axis
+	 * unit specification.
+	 * @param startTime Start time of the timespan.
+	 * @param endTime End time of the timespan.
+	 * @param tAxis TimeAxisUnit specified to determine the grid lines, if the given
+	 * TimeAxisUnit is null, one will be automatically determined.
+	 */
 	TimeGrid( long startTime, long endTime, TimeAxisUnit tAxis )
 	{
 		this.startTime 	= startTime;
@@ -48,6 +63,38 @@ class TimeGrid
 		setTimeAxis();
 	}
 	
+	
+	// ================================================================
+	// -- Protected methods
+	// ================================================================
+	long getStartTime() {
+		return startTime;
+	}
+
+	long getEndTime() {
+		return endTime;
+	}
+
+	TimeMarker[] getTimeMarkers() {
+		return tAxis.getTimeMarkers( startTime, endTime );
+	}
+
+	long getMajorGridWidth() {
+		return tAxis.getMajorGridWidth();
+	}
+
+	boolean centerLabels() {
+		return tAxis.centerLabels();
+	}	
+	
+	
+	// ================================================================
+	// -- Private methods
+	// ================================================================		
+	/**
+	 * Determines a good TimeAxisUnit to use for grid calculation.
+	 * A decent grid is selected based on the timespan being used in the chart.
+	 */
 	private void setTimeAxis()
 	{
 		if ( tAxis != null )
@@ -85,7 +132,7 @@ class TimeGrid
 		else if ( days <= 3 ) {
 			tAxis = new TimeAxisUnit( TimeAxisUnit.HOUR, 3, TimeAxisUnit.HOUR, 12, new SimpleDateFormat("HH:mm"), false );
 		}
-		else if ( days <= 7 ) {
+		else if ( days < 8 ) {
 			tAxis = new TimeAxisUnit( TimeAxisUnit.HOUR, 6, TimeAxisUnit.DAY, 1, new SimpleDateFormat("EEE dd"), true);
 		}
 		else if ( days <= 14 ) {
@@ -101,26 +148,4 @@ class TimeGrid
 			tAxis = new TimeAxisUnit( TimeAxisUnit.MONTH, 1, TimeAxisUnit.MONTH, 1, new SimpleDateFormat("MMM"), true );
 		}
 	}
-	
-	long getStartTime() {
-		return startTime;
-	}
-	
-	long getEndTime() {
-		return endTime;
-	}
-	
-	protected TimeMarker[] getTimeMarkers() {
-		return tAxis.getTimeMarkers( startTime, endTime );
-	}
-	
-	protected long getMajorGridWidth() {
-		return tAxis.getMajorGridWidth();
-	}
-	
-	protected boolean centerLabels() {
-		return tAxis.centerLabels();
-	}
-	
-	
 }

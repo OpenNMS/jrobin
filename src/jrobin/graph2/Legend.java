@@ -29,20 +29,40 @@ import java.awt.Color;
 import jrobin.core.RrdException;
 
 /**
- * <p>description</p>
+ * <p>Represents a PlotDef legend string on the graph.  A Legend item is comprised out of two parts, 
+ * a text string, and a legend marker (small rectangle in the same color as the PlotDef).</p>
  * 
- * @author Arne Vandamme (arne.vandamme@jrobin.org)
+ * @author Arne Vandamme (cobralord@jrobin.org)
  */
 class Legend extends Comment 
 {
+	// ================================================================
+	// -- Members
+	// ================================================================
 	private Color color = Color.WHITE;
 	
+	
+	// ================================================================
+	// -- Constructors
+	// ================================================================
+	/**
+	 * Constructs a Legend object based on a specified text string.
+	 * The legend marker for this Legend will be drawn in white color.
+	 * @param text Text part of the legend.
+	 * @throws RrdException Thrown in case of a JRobin specific error.
+	 */
 	Legend( String text ) throws RrdException
 	{
 		super(text);
 		this.commentType = Comment.CMT_LEGEND;
 	}
 	
+	/**
+	 * Constructs a Legend object based on a specified text string and marker color.
+	 * @param text Text part of the legend.
+	 * @param color Color to use for the rectangular legend marker.
+	 * @throws RrdException Thrown in case of a JRobin specific error.
+	 */
 	Legend( String text, Color color ) throws RrdException
 	{
 		super(text);
@@ -50,8 +70,11 @@ class Legend extends Comment
 		this.color = color;
 	}
 	
-	Color getColor()
-	{
+	
+	// ================================================================
+	// -- Protected methods
+	// ================================================================
+	Color getColor() {
 		return color;
 	}
 }

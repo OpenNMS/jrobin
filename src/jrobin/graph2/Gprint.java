@@ -31,12 +31,16 @@ import java.util.regex.Pattern;
 import jrobin.core.RrdException;
 
 /**
- * <p>description</p>
+ * <p>Represents a piece of aligned text (containing a retrieved datasource value) to be drawn on the graph.</p>
  * 
- * @author Arne Vandamme (arne.vandamme@jrobin.org)
+ * @author Arne Vandamme (cobralord@jrobin.org)
+ * @author Sasa Markovic (saxon@jrobin.org)
  */
 class Gprint extends Comment 
 {
+	// ================================================================
+	// -- Members
+	// ================================================================
 	private static final String SCALE_MARKER 			= "@s";
 	private static final String UNIFORM_SCALE_MARKER 	= "@S";
 	private static final String VALUE_MARKER 			= "@([0-9]*\\.[0-9]{1}|[0-9]{1}|\\.[0-9]{1})";
@@ -49,6 +53,20 @@ class Gprint extends Comment
 	private boolean normalScale							= false;
 	private boolean uniformScale						= false;
 	
+	
+	// ================================================================
+	// -- Constructors
+	// ================================================================
+	/**
+	 * Constructs a Gprint object based on a string of text (with a specific placement
+	 * marker in), a source from which to retrieve a value, and a consolidation function that
+	 * specifies which value to retrieve.  Possible consolidation functions are <code>AVERAGE, MAX, MIN, FIRST</code>
+	 * and <code>LAST</code>.
+	 * @param sourceName Name of the datasource from which to retrieve the consolidated value.
+	 * @param consolFunc Consolidation function to use.
+	 * @param text String of text with a placement marker for the resulting value.
+	 * @throws RrdException Thrown in case of a JRobin specific error.
+	 */
 	Gprint( String sourceName, String consolFunc, String text ) throws RrdException
 	{
 		this.text = text;
@@ -72,6 +90,20 @@ class Gprint extends Comment
 			throw new RrdException( "Invalid consolidation function specified." );
 	}
 	
+	
+	// ================================================================
+	// -- Protected methods
+	// ================================================================
+	/**
+	 * Sets the consolidated value based on the internal sourceName and consolFunc, and the
+	 * provided list of datasources with lookup table.  The retrieved value will be formatted
+	 * to a string using a <code>ValueFormatter</code> object.
+	 * @param sources Source table containing all datasources necessary to create the final graph.
+	 * @param sourceIndex HashMap containing the sourcename - index keypairs, to retrieve the index 
+	 * in the Source table based on the sourcename.
+	 * @param vFormat ValueFormatter object used to retrieve a formatted string of the requested value.
+	 * @throws RrdException Thrown in case of a JRobin specific error.
+	 */
 	void setValue( Source[] sources, HashMap sourceIndex, ValueFormatter vFormat ) throws RrdException
 	{
 		try
@@ -101,13 +133,16 @@ class Gprint extends Comment
 		}
 	}
 	
+	
+	// ================================================================
+	// -- Private methods
+	// ================================================================
 	/**
-	 * Check value placement by finding placeholder.
-	 * Check for uniform or regular scaling.
-	 * Check for the number of decimals and the complete value string length.
-	 * @throws RrdException
+	 * Checks value placement by finding placeholder, checks for uniform or regular scaling and 
+	 * checks for the number of decimals to allow and the complete value string length.
+	 * @throws RrdException Thrown in case of a JRobin specific error.
 	 */
-	protected void checkValuePlacement() throws RrdException
+	private void checkValuePlacement() throws RrdException
 	{
 		Matcher m = VALUE_PATTERN.matcher(text);
 		
@@ -119,9 +154,9 @@ class Gprint extends Comment
 			if ( normalScale && uniformScale )
 				throw new RrdException( "Can't specify normal scaling and uniform scaling at the same time." );
 			
-			String[] group = m.group(1).split("\\.");
-			strLen = -1;
-			numDec = 0;
+			String[] group 	= m.group(1).split("\\.");
+			strLen 			= -1;
+			numDec 			= 0;
 	
 			if ( group.length > 1 ) 
 			{
@@ -130,10 +165,10 @@ class Gprint extends Comment
 					numDec 	= Integer.parseInt(group[1]);
 				}
 				else
-					numDec = Integer.parseInt(group[1]);
+					numDec 	= Integer.parseInt(group[1]);
 			}
 			else
-				numDec 	= Integer.parseInt(group[0]);
+				numDec = Integer.parseInt(group[0]);
 		}
 		else
 			throw new RrdException( "Could not find where to place value. No @ placeholder found." );

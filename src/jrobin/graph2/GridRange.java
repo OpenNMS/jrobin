@@ -25,22 +25,45 @@
 package jrobin.graph2;
 
 /**
- * <p>description</p>
+ * <p>Represents Y grid specifications for the chart area.</p>
  * 
- * @author Arne Vandamme (arne.vandamme@jrobin.org)
+ * @author Arne Vandamme (cobralord@jrobin.org)
  */
 class GridRange 
 {
+	// ================================================================
+	// -- Members
+	// ================================================================	
 	private double lower 	= Double.NaN;
 	private double upper 	= Double.NaN;
 	private boolean rigid	= false;
 	
+	
+	// ================================================================
+	// -- Constructors
+	// ================================================================	
+	/**
+	 * Constructs a <code>GridRange</code> object based on a lower and upper value.
+	 * @param lower Lower value of the grid range.
+	 * @param upper Upper value of the grid range.
+	 */	
 	GridRange( double lower, double upper )
 	{
 		this.lower	= lower;
 		this.upper	= upper;	
 	}
 	
+	/**
+	 * Constructs a <code>GridRange</code> object based on a lower and upper value and a rigid specification.
+	 * If a grid is specified as rigid, then the specified range of lower/upper value will be used as graph boundaries.
+	 * If a grid is not rigid, then the boundaries might be scaled to allow for the complete necessary range of values:
+	 * if the maximum Y value is higher than upper value, then upper value will be raised, reverse with the lower value.
+	 * A non-rigid grid will always at least display a range of lower/upper value, a rigid grid will always display the range
+	 * of lower and upper value, no more and no less.
+	 * @param lower Lower value of the grid range.
+	 * @param upper Upper value of the grid range.
+	 * @param rigid True if the grid is rigid, false if not (default: false).
+	 */
 	GridRange( double lower, double upper, boolean rigid )
 	{
 		this.lower	= lower;
@@ -48,6 +71,10 @@ class GridRange
 		this.rigid	= rigid;
 	}
 	
+	
+	// ================================================================
+	// -- Protected methods
+	// ================================================================		
 	double getLowerValue() {
 		return lower;
 	}

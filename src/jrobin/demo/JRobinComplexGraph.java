@@ -159,9 +159,6 @@ public class JRobinComplexGraph {
 			
 			gf.saveAsPNG("/demo_graph2.png", 0, 200);
 			
-			// Wrap up
-			gf.closeFiles();
-			
 			// Print out timing information for the new package API
 			long s2 = Calendar.getInstance().getTimeInMillis();
 			System.err.println( "New package: " + (s2 - s1) + " ms" );

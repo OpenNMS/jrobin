@@ -26,21 +26,28 @@ package jrobin.graph2;
 
 import javax.swing.JPanel;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
+import java.io.ByteArrayOutputStream;
 import javax.imageio.ImageIO;
+import javax.imageio.IIOImage;
+import javax.imageio.ImageWriter;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.stream.ImageOutputStream;
 import java.awt.image.RenderedImage;
 import java.awt.image.BufferedImage;
 
-import jrobin.core.RrdDb;
 import jrobin.core.Util;
+import jrobin.core.RrdDb;
+import jrobin.core.RrdDbPool;
 import jrobin.core.RrdException;
 
 /**
  * <p>Class to represent JRobin graphs.  This class needs an appropriate RrdGraphDef to generate graphs.</p>
  * 
- * @author Arne Vandamme (arne.vandamme@jrobin.org)
+ * @author Arne Vandamme (cobralord@jrobin.org)
  * @author Sasa Markovic (saxon@jrobin.org)
  */
 public class RrdGraph implements Serializable
@@ -53,6 +60,8 @@ public class RrdGraph implements Serializable
 	private Grapher grapher;
 	private BufferedImage img;
 	private ArrayList rrdDbPool;
+	
+	private RrdDbPool pool;
 		
 	private int maxPoolSize				= DEFAULT_POOLSIZE;
 	
@@ -61,21 +70,19 @@ public class RrdGraph implements Serializable
 	// -- Constructors
 	// ================================================================
 	/**
-	 * Constructs a new JRobin graph object. 
+	 * Constructs a new JRobin graph object, without a shared database pool.
 	 */
 	public RrdGraph() 
 	{	
-		this( DEFAULT_POOLSIZE );
 	}
 
 	/**
 	 * Constructs a new JRobin graph object.
 	 * @param poolSize Maximum number of concurrent open rrd files in the RrdGraph object.
 	 */
-	public RrdGraph( int poolSize )
+	public RrdGraph( RrdDbPool pool )
 	{
-		maxPoolSize	= poolSize;
-		rrdDbPool 	= new ArrayList( poolSize );
+		this.pool = pool;
 	}
 
 	/**
@@ -86,7 +93,7 @@ public class RrdGraph implements Serializable
 	 */
 	public RrdGraph( RrdGraphDef graphDef ) throws IOException, RrdException
 	{
-		this( graphDef, DEFAULT_POOLSIZE );
+		this( graphDef, null );
 	}
 
 	/**
@@ -96,11 +103,9 @@ public class RrdGraph implements Serializable
 	 * @throws IOException Thrown in case of I/O error.
 	 * @throws RrdException Thrown in case of JRobin specific error.
 	 */
-	public RrdGraph( RrdGraphDef graphDef, int poolSize ) throws IOException, RrdException
+	public RrdGraph( RrdGraphDef graphDef, RrdDbPool pool ) throws IOException, RrdException
 	{
-		maxPoolSize	= poolSize;
-		rrdDbPool 	= new ArrayList( poolSize );
-
+		this.pool	= pool;
 		grapher		= new Grapher( graphDef, this );
 	}
 	
@@ -153,7 +158,7 @@ public class RrdGraph implements Serializable
 	 * @param quality JPEG quality, between 0 (= low) and 1.0f (= high).
 	 * @throws IOException Thrown in case of I/O error.
 	 */
-	public void saveAsJPEG( String path, float quality ) throws IOException
+	public void saveAsJPEG( String path, float quality ) throws RrdException, IOException
 	{
 		saveAsJPEG( path, 0, 0, quality );
 	}
@@ -167,9 +172,36 @@ public class RrdGraph implements Serializable
 	 * @param quality JPEG quality, between 0 (= low) and 1.0f (= high).
 	 * @throws IOException Thrown in case of I/O error.
 	 */
-	public void saveAsJPEG( String path, int width, int height, float quality ) throws IOException
+	public void saveAsJPEG( String path, int width, int height, float quality ) throws RrdException, IOException
 	{
-		System.err.println( "Method not implemented..." );
+		// Based on http://javaalmanac.com/egs/javax.imageio/JpegWrite.html?l=rel
+		// Retrieve jpg image to be compressed
+		BufferedImage gImage 	= getBufferedImage(width, height);
+		RenderedImage rndImage	= (RenderedImage) gImage;
+	
+		// Find a jpeg writer
+		ImageWriter writer = null;
+		Iterator iter = ImageIO.getImageWritersByFormatName("jpg");
+		if (iter.hasNext()) {
+			writer = (ImageWriter)iter.next();
+		}
+
+		// Prepare output file
+		ImageOutputStream ios = ImageIO.createImageOutputStream(new File(path));
+		writer.setOutput(ios);
+
+		// Set the compression quality
+		ImageWriteParam iwparam = new JpegImageWriteParam();
+		iwparam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT) ;
+		iwparam.setCompressionQuality(quality);
+
+		// Write the image
+		writer.write(null, new IIOImage(rndImage, null, null), iwparam);
+
+		// Cleanup
+		ios.flush();
+		writer.dispose();
+		ios.close();
 	}
 	
 	/**
@@ -179,7 +211,7 @@ public class RrdGraph implements Serializable
 	 * @return Array of PNG bytes.
 	 * @throws IOException Thrown in case of I/O error.
 	 */
-	public byte[] getPNGBytes() throws IOException
+	public byte[] getPNGBytes() throws IOException, RrdException
 	{
 		return getPNGBytes( 0, 0 );
 	}
@@ -191,10 +223,13 @@ public class RrdGraph implements Serializable
 	 * @return Array of PNG bytes.
 	 * @throws IOException Thrown in case of I/O error.
 	 */
-	public byte[] getPNGBytes( int width, int height ) throws IOException
+	public byte[] getPNGBytes( int width, int height ) throws IOException, RrdException
 	{
-		System.err.println( "Method not implemented..." );
-		return null;
+		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+		
+		ImageIO.write( (RenderedImage) getBufferedImage(width, height), "png", outputStream );
+				
+		return outputStream.toByteArray();
 	}
 	
 	/**
@@ -203,7 +238,7 @@ public class RrdGraph implements Serializable
 	 * @return Array of PNG bytes.
 	 * @throws IOException Thrown in case of I/O error.
 	 */
-	public byte[] getJPEGBytes( float quality ) throws IOException
+	public byte[] getJPEGBytes( float quality ) throws IOException, RrdException
 	{
 		return getJPEGBytes( 0, 0, quality );
 	}
@@ -216,40 +251,51 @@ public class RrdGraph implements Serializable
 	 * @return Array of JPEG bytes.
 	 * @throws IOException Thrown in case of I/O error.
 	 */
-	public byte[] getJPEGBytes( int width, int height, float quality ) throws IOException
+	public byte[] getJPEGBytes( int width, int height, float quality ) throws IOException, RrdException
 	{
-		System.err.println( "Method not implemented..." );
-		return null;
+		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+		
+		// Retrieve jpg image to be compressed
+		BufferedImage gImage 	= getBufferedImage(width, height);
+		RenderedImage rndImage	= (RenderedImage) gImage;
+	
+		// Find a jpeg writer
+		ImageWriter writer = null;
+		Iterator iter = ImageIO.getImageWritersByFormatName("jpg");
+		if (iter.hasNext()) {
+			writer = (ImageWriter)iter.next();
+		}
+
+		// Prepare output file
+		ImageOutputStream ios = ImageIO.createImageOutputStream(outputStream);
+		writer.setOutput(ios);
+
+		// Set the compression quality
+		ImageWriteParam iwparam = new JpegImageWriteParam();
+		iwparam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT) ;
+		iwparam.setCompressionQuality(quality);
+
+		// Write the image
+		writer.write(null, new IIOImage(rndImage, null, null), iwparam);
+
+		// Cleanup
+		ios.flush();
+		writer.dispose();
+		ios.close();
+		
+		return outputStream.toByteArray();
 	}
 	
 	/**
 	 * Returns panel object so that graph can be easily embedded in swing applications.
 	 * @return Swing JPanel object with graph embedded in panel.
 	 */
-	public JPanel getChartPanel()
+	public JPanel getChartPanel() throws RrdException, IOException
 	{
-		System.err.println( "Method not implemented..." );
-		return null;
-	}
-	
-	/**
-	 * Closes all open RRD files in the rrd database pool of the object, and removes each file from the pool.
-	 */
-	public void closeFiles()
-	{
-		// Close all RrdDb objects
-		for (int i = 0; i < rrdDbPool.size(); i++) {
-			try
-			{
-				((RrdDb) rrdDbPool.get(i)).close();
-			}
-			catch (IOException e) {
-				// Ignore this exception, continue trying to close the next RrdDb
-			}
-		}
+		ChartPanel p = new ChartPanel();
+		p.setChart( getBufferedImage(0, 0) );
 		
-		// Empty the pool
-		rrdDbPool.clear();
+		return p;
 	}
 	
 	// ================================================================
@@ -257,46 +303,21 @@ public class RrdGraph implements Serializable
 	// ================================================================
 	RrdDb getRrd( String rrdFile ) throws IOException, RrdException
 	{
-		RrdDb rrd;
-		
-		// Look for an open rrdDb
-		for (int i = 0; i < rrdDbPool.size(); i++) {
-			rrd = (RrdDb) rrdDbPool.get(i);
-			if ( rrd.getRrdFile().getFilePath().equalsIgnoreCase(rrdFile) )
-				return rrd;
+		if ( pool != null ) {
+			return pool.requestRrdDb( rrdFile );
 		}
-		
-		// Not in the pool, create new object
-		rrd = new RrdDb( rrdFile );
-		if ( rrdDbPool.size() < maxPoolSize )
-			rrdDbPool.add( rrd );
-		else if ( maxPoolSize > 1 ) {
-			rrdDbPool.remove(0);		// Remove the first (oldest) RrdDb
-			rrdDbPool.add( rrd );
-		}
-		
-		return rrd;
+		else 
+			return new RrdDb( rrdFile );
 	}
 	
 	// ================================================================
 	// -- Private methods
 	// ================================================================
-	private BufferedImage getBufferedImage(int width, int height)
+	private BufferedImage getBufferedImage(int width, int height) throws RrdException, IOException
 	{
-		try 
-		{
-			if ( img != null )
-				return img;
-			else
-			{
-				img = grapher.createImage( width, height );
-				return img;
-			}
-		}
-		catch (Exception e) { 	// Temporary
-			e.printStackTrace();
-		}
+		// Always regenerate graph
+		img = grapher.createImage( width, height );
 		
-		return null;
+		return img;
 	}
 }

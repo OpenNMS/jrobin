@@ -28,19 +28,31 @@ import jrobin.core.FetchData;
 import jrobin.core.RrdException;
 
 /**
- * <p>Class used to extract specific time-based values, out of a number of fetched datasources.</p>
+ * <p>Class used to extract specific time-based values out of a number of fetched datasources.</p>
  * 
  * @author Arne Vandamme (cobralord@jrobin.org)
  */
 class ValueExtractor 
 {
+	// ================================================================
+	// -- Members
+	// ================================================================	
 	private String[] varNames;			// Name of the variable, NOT it's dsName in the file
 
 	private int[] tPos;
 	private long[][] timestamps;
 	private double[][][] dsValues;
 	
-	protected ValueExtractor( String[] names, FetchData[] values )
+	
+	// ================================================================
+	// -- Constructors
+	// ================================================================	
+	/**
+	 * Constructs a ValueExtractor object used to extract fetched datapoints for specific points in time.
+	 * @param names Array containing the datasource names in the graph definition.
+	 * @param values Array of FetchData objects holding all fetched datasources for a specific RRD file.
+	 */
+	ValueExtractor( String[] names, FetchData[] values )
 	{
 		this.varNames	= names;
 		
@@ -57,8 +69,21 @@ class ValueExtractor
 		}
 	}
 
-	// Return the table position offset for the next datasource
-	protected int extract( long timestamp, Source[] sources, int row, int offset ) throws RrdException
+
+	// ================================================================
+	// -- Protected methods
+	// ================================================================	
+	/**
+	 * Extracts a number of values out of the fetched values, and approximates them
+	 * to a specific timestamp, to store them in the complete Source array for the graph definition.
+	 * @param timestamp Timestamp to which a fetched value should be approximated.
+	 * @param sources Array containing all datasources.
+	 * @param row Row index in the Source table where the values should stored.
+	 * @param offset Offset in the Source table of where to start storing the values.
+	 * @return Table position offset for the next datasource.
+	 * @throws RrdException Thrown in case of a JRobin specific error.
+	 */
+	int extract( long timestamp, Source[] sources, int row, int offset ) throws RrdException
 	{
 		int tblPos 	= offset;
 			
@@ -90,7 +115,7 @@ class ValueExtractor
 		return tblPos;
 	}
 	
-	protected String[] getNames() {
+	String[] getNames() {
 		return varNames;
 	}
 }

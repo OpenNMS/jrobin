@@ -31,6 +31,7 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.GregorianCalendar;
 
+import jrobin.core.RrdDbPool;
 import jrobin.core.RrdException;
 import jrobin.core.Util;
 import jrobin.graph2.*;
@@ -51,7 +52,7 @@ public class ProfileGraphsNew
 	private JRobinTimeProfiler profiler;
 	
 	// Demo sake
-	private GregorianCalendar startDate = new GregorianCalendar(2002, 7, 24, 00, 30);
+	private GregorianCalendar startDate = new GregorianCalendar(2003, 7, 24, 00, 30);
 	private GregorianCalendar endDate 	= new GregorianCalendar(2003, 7, 25, 00, 00);
 	
 	private void addTimingInfo( int profileIndex, LinkedList v )
@@ -79,7 +80,7 @@ public class ProfileGraphsNew
 		
 		try
 		{
-			graph = new RrdGraph();		// Default rrddb pool size
+			graph = new RrdGraph( RrdDbPool.getInstance() );		// Default rrddb pool size
 			
 			createDemo1();
 			
@@ -92,8 +93,6 @@ public class ProfileGraphsNew
 			createDemoEx(5);
 			
 			createDemoEx(6);
-			
-			graph.closeFiles();
 		}
 		catch ( Exception e ) 
 		{

@@ -29,63 +29,77 @@ import jrobin.core.Util;
 /**
  * <p>Class used to represent a number of datapoints for a graph.</p>
  * 
- * @author Arne Vandamme (arne.vandamme@jrobin.org)
+ * @author Arne Vandamme (cobralord@jrobin.org)
  */
 class Source 
 {
-	static final int AGG_MINIMUM	= 0;
-	static final int AGG_MAXIMUM	= 1;
-	static final int AGG_AVERAGE	= 2;
-	static final int AGG_FIRST		= 3;
-	static final int AGG_LAST		= 4;
+	// ================================================================
+	// -- Members
+	// ================================================================
+	protected static final int AGG_MINIMUM	= 0;
+	protected static final int AGG_MAXIMUM	= 1;
+	protected static final int AGG_AVERAGE	= 2;
+	protected static final int AGG_FIRST	= 3;
+	protected static final int AGG_LAST		= 4;
 	
 	private String name;
 	protected double[] values;
 	
-	private double min				= Double.MAX_VALUE;
-	private double max				= Double.MIN_VALUE;
-	private double lastValue 		= Double.NaN;
-	private double totalValue		= 0;
+	private double min						= Double.MAX_VALUE;
+	private double max						= Double.MIN_VALUE;
+	private double lastValue 				= Double.NaN;
+	private double totalValue				= 0;
 	
-	private long lastTime			= 0;
-	private long totalTime			= 0; 
+	private long lastTime					= 0;
+	private long totalTime					= 0; 
 	
+	
+	// ================================================================
+	// -- Constructors
+	// ================================================================
+	/**
+	 * Constructs a new Source object holding a number of datapoints for a graph.
+	 * @param name Name of the datasource in the graph definition.
+	 */
 	Source( String name )
 	{
 		this.name = name;
 	}
 	
+	
+	// ================================================================
+	// -- Protected methods
+	// ================================================================
+	/**
+	 * Stub method, sets the value of a specific datapoint.
+	 * Forces this point to be used in aggregate function calculating.
+	 * @param pos Position (index in the value table) of the new datapoint.
+	 * @param time Timestamp of the new datapoint in number of seconds.
+	 * @param val Double value of the new datapoint.
+	 */
 	void set( int pos, long time, double val )
 	{
 		aggregate( time, val );		
 	}
 	
-	double get( int pos )
+	/**
+	 * Get the double value of a datapoint.
+	 * @param pos Index in the value table of the datapoint.
+	 * @return The double value of the requested datapoint.
+	 */
+	double get( int pos ) 
 	{
 		return values[pos];
 	}
 	
-	String getName()
-	{
-		return name;	
-	}
-	
-	private void aggregate( long time, double value ) 
-	{
-		min = Util.min( min, value );
-		max = Util.max( max, value );
-		
-		if ( !Double.isNaN(lastValue) && !Double.isNaN(value) )
-		{
-			long timeDelta 	= time - lastTime;
-			totalValue		+= timeDelta * ( value + lastValue ) / 2.0;
-			totalTime		+= timeDelta;
-		}
-		
-		lastTime	= time;
-		lastValue	= value;
-	}
-	
+	/**
+	 * Gets a specific aggregate of this datasource.
+	 * Requested aggregate can be one of the following:
+	 * <code>AGG_MINIMUM, AGG_MAXIMUM, AGG_AVERAGE, AGG_FIRST</code>
+	 * and <code>AGG_LAST</code>.
+	 * @param aggType Type of the aggregate requested.
+	 * @return The double value of the requested aggregate.
+	 */
 	double getAggregate( int aggType )
 	{
 		switch ( aggType )
@@ -113,5 +127,38 @@ class Source
 		}
 		
 		return Double.NaN;
+	}
+	
+	String getName() {
+		return name;	
+	}
+	
+	double[] getValues() {
+		return values;
+	}
+	
+	
+	// ================================================================
+	// -- Private methods
+	// ================================================================
+	/**
+	 * Adds a datapoint to the aggregate function calculation.
+	 * @param time Timestamp in seconds of the datapoint.
+	 * @param value Double value of the datapoint.
+	 */
+	private void aggregate( long time, double value ) 
+	{
+		min = Util.min( min, value );
+		max = Util.max( max, value );
+		
+		if ( !Double.isNaN(lastValue) && !Double.isNaN(value) )
+		{
+			long timeDelta 	= time - lastTime;
+			totalValue		+= timeDelta * ( value + lastValue ) / 2.0;
+			totalTime		+= timeDelta;
+		}
+		
+		lastTime	= time;
+		lastValue	= value;
 	}
 }

@@ -25,18 +25,35 @@
 package jrobin.graph2;
 
 /**
- * <p>description</p>
+ * <p>Holds specific information about the Value axis grid of the chart.</p>
  * 
  * @author Arne Vandamme (cobralord@jrobin.org)
  */
 class ValueGrid 
 {
+	// ================================================================
+	// -- Members
+	// ================================================================	
 	private boolean rigid;
 	private double lower;
 	private double upper;
 	
-	ValueAxisUnit vAxis;
+	private ValueAxisUnit vAxis;
 	
+	
+	// ================================================================
+	// -- Constructors
+	// ================================================================	
+	/**
+	 * Creates a value grid based on a value range and possibly a value axis
+	 * unit specification.  The grid can also be specified to be rigid, to prevent
+	 * auto scaling of the displayed value range.
+	 * @param rigid True if the grid is rigid, false if not.
+	 * @param lower Lower value of the value range.
+	 * @param upper Upper value of the value range.
+	 * @param vAxis ValueAxisUnit specified to determine the grid lines, if the given
+	 * ValueAxisUnit is null, one will be automatically determined.
+	 */
 	ValueGrid( boolean rigid, double lower, double upper, ValueAxisUnit vAxis )
 	{
 		this.rigid	= rigid;
@@ -53,6 +70,30 @@ class ValueGrid
 		}
 	}
 	
+	
+	// ================================================================
+	// -- Protected methods
+	// ================================================================
+	double getLowerValue() {
+		return lower;
+	}
+
+	double getUpperValue() {
+		return upper;
+	}
+
+	ValueMarker[] getValueMarkers() {
+		return vAxis.getValueMarkers( lower, upper );
+	}
+	
+		
+	// ================================================================
+	// -- Private methods
+	// ================================================================		
+	/**
+	 * Determines a good ValueAxisUnit to use for grid calculation.
+	 * A decent grid is selected based on the value range being used in the chart.
+	 */
 	private void setValueAxis()
 	{
 		if ( vAxis != null )
@@ -74,7 +115,9 @@ class ValueGrid
 		}
 	
 		// Create nice grid based on 'fixed' ranges
-		if ( shifted <= 3 )
+		if ( shifted <= 1.5 )
+			vAxis = new ValueAxisUnit( 0.1*mod, 0.5*mod );
+		else if ( shifted <= 3 )
 			vAxis = new ValueAxisUnit( 0.2*mod, 1.0*mod );
 		else if ( shifted <= 5 )
 			vAxis = new ValueAxisUnit( 0.5*mod, 1.0*mod );
@@ -82,17 +125,5 @@ class ValueGrid
 			vAxis = new ValueAxisUnit( 0.5*mod, 2.0*mod );
 		else
 			vAxis = new ValueAxisUnit( 1.0*mod, 5.0*mod );
-	}
-	
-	protected double getLowerValue() {
-		return lower;
-	}
-	
-	protected double getUpperValue() {
-		return upper;
-	}
-	
-	protected ValueMarker[] getValueMarkers() {
-		return vAxis.getValueMarkers( lower, upper );
 	}
 }

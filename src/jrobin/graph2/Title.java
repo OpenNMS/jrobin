@@ -27,13 +27,21 @@ package jrobin.graph2;
 import jrobin.core.RrdException;
 
 /**
- * <p>description</p>
+ * <p>Represents the Title used in the graph.  The title object has the same alignment
+ * possibilities as all other text/comment objects in a graph.</p>
  * 
- * @author Arne Vandamme (arne.vandamme@jrobin.org)
- * @author Sasa Markovic (saxon@jrobin.org)
+ * @author Arne Vandamme (cobralord@jrobin.org)
  */
 class Title extends Comment 
 {
+	// ================================================================
+	// -- Constructors
+	// ================================================================	
+	/**
+	 * Constructs a Title object based on a text string.
+	 * @param text Text string with alignment markers representing the title.
+	 * @throws RrdException Thrown in case of a JRobin specific error.
+	 */
 	Title( String text ) throws RrdException
 	{
 		this.text 	= text;

@@ -86,7 +86,7 @@ public class JRobinGallery
 		def.area("blank1", Color.WHITE, null);
 		def.area("blank2", Color.WHITE, null);
 		def.line("v1", Color.BLUE, null, 1);
-		def.line("v2", null, null, 1);
+		def.line("v2", Color.BLUE, null, 1);
 		def.setTitle("Voltage measurement");
 		def.setVerticalLabel("[Volts]");
 		//def.setValueAxisLabel("[Volts]");

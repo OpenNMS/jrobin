@@ -31,12 +31,15 @@ import java.util.HashMap;
 import jrobin.core.RrdException;
 
 /**
- * <p>description</p>
+ * <p>Class used to represent a line defined by two points in a graph.  The line is drawn between those two points.</p>
  * 
- * @author Arne Vandamme (arne.vandamme@jrobin.org)
+ * @author Arne Vandamme (cobralord@jrobin.org)
  */
 class CustomLine extends Line
 {
+	// ================================================================
+	// -- Members
+	// ================================================================
 	private long xVal1;
 	private long xVal2;
 	
@@ -45,6 +48,19 @@ class CustomLine extends Line
 	
 	private double dc;
 	
+	
+	// ================================================================
+	// -- Constructors
+	// ================================================================
+	/**
+	 * Constructs a <code>CustomLine</code> PlotDef object based on a startpoint, endpoint and a graph color.
+	 * The resulting line will have a width of 1 pixel.
+	 * @param startTime Timestamp of the first datapoint (startpoint).
+	 * @param startValue Value of the first datapoint (startpoint).
+	 * @param endTime Timestamp of the second datapoint (endpoint).
+	 * @param endValue Value of the second datapoint (endpoint).
+	 * @param color Color of the resulting line, if no color is specified, the CustomLine will not be drawn.
+	 */
 	CustomLine( long startTime, double startValue, long endTime, double endValue, Color color )
 	{
 		this.color = color;
@@ -69,12 +85,32 @@ class CustomLine extends Line
 		}  
 	}
 	
+	/**
+	 * Constructs a <code>CustomLine</code> PlotDef object based on a startpoint, a endpoint, a graph color and a line width.
+	 * @param startTime Timestamp of the first datapoint (startpoint).
+	 * @param startValue Value of the first datapoint (startpoint).
+	 * @param endTime Timestamp of the second datapoint (endpoint).
+	 * @param endValue Value of the second datapoint (endpoint).
+	 * @param color Color of the resulting line, if no color is specified, the CustomLine will not be drawn.
+	 * @param lineWidth Width in pixels of the line to draw.
+	 */
 	CustomLine( long startTime, double startValue, long endTime, double endValue, Color color, int lineWidth )
 	{
 		this( startTime, startValue, endTime, endValue, color );
 		this.lineWidth = lineWidth;
 	}
 	
+	
+	// ================================================================
+	// -- Protected methods
+	// ================================================================
+	/**
+	 * Draws the actual CustomLine on the chart.
+	 * @param g ChartGraphics object representing the graphing area.
+	 * @param xValues List of relative chart area X positions corresponding to the datapoints, obsolete with CustomLine.
+	 * @param stackValues Datapoint values of previous PlotDefs, used to stack on if necessary.
+	 * @param lastPlotType Type of the previous PlotDef, used to determine PlotDef type of a stack.
+	 */	
 	void draw( ChartGraphics g, int[] xValues, int[] stackValues, int lastPlotType ) throws RrdException
 	{
 		g.setColor( color );
@@ -135,6 +171,13 @@ class CustomLine extends Line
 		g.setStroke( new BasicStroke() );
 	}
 	
+	/**
+	 * Retrieves the value for a specific point of the CustomLine.  The corresponding value is calculated based
+	 * on the mathematical line function with the timestamp as a X value.
+	 * @param tblPos Table index of the datapoint to be retrieved.
+	 * @param timestamps Table containing the timestamps corresponding to all datapoints.
+	 * @return Y value of the point as a double.
+	 */
 	double getValue( int tblPos, long[] timestamps )
 	{
 		long time = timestamps[tblPos];
@@ -159,8 +202,7 @@ class CustomLine extends Line
 		return ( dc * ( time - xVal1 ) + yVal1 );
 	}
 	
-	void setSource( Source[] sources, HashMap sourceIndex ) throws RrdException
-	{
-		// Stub
+	// Stubbed method, irrelevant for this PlotDef
+	void setSource( Source[] sources, HashMap sourceIndex ) throws RrdException	{
 	}
 }

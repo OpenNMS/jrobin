@@ -25,45 +25,26 @@
 package jrobin.graph2;
 
 /**
- * <p>Represents a value grid marker (grid line with or without label on the Y axis).</p>
- * 
+ * <i>Based on http://javaalmanac.com/egs/javax.imageio/JpegWrite.html?l=rel</i>
+ * <p>JPEG creation parameters.</p>
  * @author Arne Vandamme (cobralord@jrobin.org)
  */
-class ValueMarker 
+import java.util.Locale;
+import javax.imageio.plugins.jpeg.JPEGImageWriteParam;;
+
+public class JpegImageWriteParam extends JPEGImageWriteParam
 {
-	// ================================================================
-	// -- Members
-	// ================================================================	
-	private double value	= 0;
-	private boolean major 	= false;
-
-
-	// ================================================================
-	// -- Constructors
-	// ================================================================	
-	/**
-	 * Constructs a ValueMarker object by specifying the value at which the grid line
-	 * should appear, and specifying if this grid line is a major line or not.  In case of a
-	 * major grid line, the value will be shown as a label next to the line.
-	 * @param value Value as a double at which the grid line should appear.
-	 * @param major True if this marker is a major grid line (with label), false if not.
-	 */
-	ValueMarker( double value, boolean major )
-	{
-		this.major	= major;
-		this.value 	= value;
+	public JpegImageWriteParam() {
+		super(Locale.getDefault());
 	}
-	
-	// ================================================================
-	// -- Protected methods
-	// ================================================================	
-	double getValue()
+    
+	// This method accepts quality levels between 0 (lowest) and 1 (highest) and simply converts
+	// it to a range between 0 and 256
+	public void setCompressionQuality( float quality ) 
 	{
-		return value;
-	}
-	
-	boolean isMajor()
-	{
-		return major;
+		if (quality < 0.0F || quality > 1.0F) {
+			throw new IllegalArgumentException("Quality out-of-bounds!");
+		}
+		this.compressionQuality = (quality * 256);
 	}
 }

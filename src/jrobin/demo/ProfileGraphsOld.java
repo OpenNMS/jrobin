@@ -51,7 +51,7 @@ class ProfileGraphsOld
 	private JRobinTimeProfiler profiler;
 	
 	// Demo sake
-	private GregorianCalendar startDate = new GregorianCalendar(2002, 7, 24, 00, 00);
+	private GregorianCalendar startDate = new GregorianCalendar(2003, 7, 24, 00, 00);
 	private GregorianCalendar endDate 	= new GregorianCalendar(2003, 7, 25, 00, 00);
 	
 	private void addTimingInfo( int profileIndex, LinkedList v )

@@ -30,13 +30,15 @@ package jrobin.graph2;
 import java.util.*;
 
 /**
- * @author cbld
- *
- * To change the template for this generated type comment go to
- * Window - Preferences - Java - Code Generation - Code and Comments
+ * <p>Class used to determine the chart grid shown on the Y (value) axis.</p>
+ * 
+ * @author Arne Vandamme (cobralord@jrobin.org)
  */
-public class ValueAxisUnit 
+class ValueAxisUnit 
 {
+	// ================================================================
+	// -- Members
+	// ================================================================	
 	private double labelStep 	= 2;
 	private double markStep		= 1;
 	private int roundStep 		= 2;
@@ -44,23 +46,35 @@ public class ValueAxisUnit
 	private double gridStep		= 2;
 	private double mGridStep	= 10;
 	
+	
+	// ================================================================
+	// -- Constructors
+	// ================================================================	
+	/**
+	 * Creates a ValueAxisUnit based on a minor and major grid step.
+	 * Minor grid lines appear at <code>gridStep</code>, major grid lines accompanied by a label
+	 * will appear every <code>labelStep</code> value.   
+	 * @param gridStep Value step on which a minor grid line will appear.
+	 * @param labelStep Value step on which a major grid line with value label will appear.
+	 */
 	ValueAxisUnit( double gridStep, double labelStep )
 	{
 		this.gridStep	= gridStep;
 		this.mGridStep	= labelStep;
 	}
 	
-	private double round( double value )
-	{
-		return round( value, 14 );		// Big precision
-	}
 	
-	private double round( double value, int numDecs )
-	{
-		return new java.math.BigDecimal(value).setScale(numDecs , java.math.BigDecimal.ROUND_HALF_EVEN).doubleValue();
-	}
-	
-	protected ValueMarker[] getValueMarkers( double lower, double upper )
+	// ================================================================
+	// -- Protected methods
+	// ================================================================
+	/**
+	 * Returns a set of markers making up the grid for the Y axis.
+	 * All markers are situated in a given value range.
+	 * @param lower Lower value of the value range.
+	 * @param upper Upper value of the value range.
+	 * @return List of markers as a ValueMarker array.
+	 */
+	ValueMarker[] getValueMarkers( double lower, double upper )
 	{
 		double minPoint	= 0.0d;
 		double majPoint	= 0.0d;
@@ -118,8 +132,14 @@ public class ValueAxisUnit
 		
 		return (ValueMarker[]) markerList.toArray( new ValueMarker[0] );
 	}
-		
-	public double getNiceLower( double ovalue )
+	
+	/**
+	 * Gets a rounded value that's slightly below the given exact value.
+	 * The rounding is based on the given grid specifications of the axis.
+	 * @param ovalue Original exact value.
+	 * @return Rounded value lower than the given exact value.
+	 */
+	double getNiceLower( double ovalue )
 	{
 		// Add some checks
 		double gridFactor	= 1.0;
@@ -173,7 +193,13 @@ public class ValueAxisUnit
 		return ovalue;
 	}
 	
-	public double getNiceHigher( double ovalue )
+	/**
+	 * Gets a rounded value that's slightly above the given exact value.
+	 * The rounding is based on the given grid specifications of the axis.
+	 * @param ovalue Original exact value.
+	 * @return Rounded value higher than the given exact value.
+	 */
+	double getNiceHigher( double ovalue )
 	{
 		// Add some checks
 		double gridFactor	= 1.0;
@@ -218,5 +244,31 @@ public class ValueAxisUnit
 		}
 		
 		return ovalue;
+	}
+	
+		
+	// ================================================================
+	// -- Private methods
+	// ================================================================		
+	/**
+	 * Rounds a specific double value to 14 decimals.  This is used to avoid strange double values due to the
+	 * internal double representation of the JVM.
+	 * @param value Original value to round.
+	 * @return Value rounded to 14 decimals.
+	 */
+	private double round( double value )
+	{
+		return round( value, 14 );		// Big precision
+	}
+	
+	/**
+	 * Rounds a specific double value to a given number of decimals.
+	 * @param value Original value to round.
+	 * @param numDecs Number of decimals to round the value to.
+	 * @return Value rounded to given number of decimals.
+	 */
+	private double round( double value, int numDecs )
+	{
+		return new java.math.BigDecimal(value).setScale(numDecs , java.math.BigDecimal.ROUND_HALF_EVEN).doubleValue();
 	}
 }

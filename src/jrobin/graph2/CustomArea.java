@@ -30,18 +30,39 @@ import java.util.HashMap;
 import jrobin.core.RrdException;
 
 /**
- * <p>description</p>
+ * <p>Class used to represent an area defined by two points in a graph.  The area is drawn as a rectangle 
+ * that has the line startpoint-endpoint as a diagonal.  Direction of plotting the CustomArea can be seen as 
+ * drawing a rectangle from the bottom-left corner to the upper-right corner.
+ * It is possible to stack another PlotDef on top of the CustomArea, in that case the stacked PlotDef will 
+ * always be stacked on top of the (Y) value of the second defined datapoint of the CustomArea.</p>
  * 
- * @author Arne Vandamme (arne.vandamme@jrobin.org)
+ * @author Arne Vandamme (cobralord@jrobin.org)
  */
 class CustomArea extends PlotDef
 {
+	// ================================================================
+	// -- Members
+	// ================================================================
 	private long xVal1;
 	private long xVal2;
-
+	
 	private double yVal1;
-	private double yVal2;	
+	private double yVal2;
 
+
+	// ================================================================
+	// -- Constructors
+	// ================================================================
+	/**
+	 * Constructs a <code>CustomArea</code> PlotDef object based on a startpoint, endpoint and a graph color.
+	 * The resulting area will be graphed as a rectangle from the bottom-left corner (startpoint) to the
+	 * upper-right coner (endpoint).
+	 * @param startTime Timestamp of the first datapoint (startpoint).
+	 * @param startValue Value of the first datapoint (startpoint).
+	 * @param endTime Timestamp of the second datapoint (endpoint).
+	 * @param endValue Value of the second datapoint (endpoint).
+	 * @param color Color of the resulting line, if no color is specified, the CustomLine will not be drawn.
+	 */
 	CustomArea( long startTime, double startValue, long endTime, double endValue, Color color )
 	{
 		this.color = color;
@@ -53,7 +74,18 @@ class CustomArea extends PlotDef
 		this.yVal1 = startValue;
 		this.yVal2 = endValue;
 	}
-	
+
+
+	// ================================================================
+	// -- Protected methods
+	// ================================================================	
+	/**
+	 * Draws the actual CustomArea on the chart.
+	 * @param g ChartGraphics object representing the graphing area.
+	 * @param xValues List of relative chart area X positions corresponding to the datapoints, obsolete with CustomArea.
+	 * @param stackValues Datapoint values of previous PlotDefs, used to stack on if necessary.
+	 * @param lastPlotType Type of the previous PlotDef, used to determine PlotDef type of a stack.
+	 */	
 	void draw( ChartGraphics g, int[] xValues, int[] stackValues, int lastPlotType ) throws RrdException
 	{
 		g.setColor( color );
@@ -108,7 +140,16 @@ class CustomArea extends PlotDef
 				else
 					stackValues[i] = ny;
 	}
-
+	
+	/**
+	 * Retrieves the value for a specific point of the CustomArea.  The CustomArea is always a rectangle,
+	 * this means the returned double value will always be equal to the (Y) value of the second datapoint.
+	 * In case of an unlimited CustomArea (second datapoint Y value is <code>Double.MAX_VALUE</code>)
+	 * the returned value is <code>Double.NaN</code>.
+	 * @param tblPos Table index of the datapoint to be retrieved.
+	 * @param timestamps Table containing the timestamps corresponding to all datapoints.
+	 * @return Y value of the point as a double.
+	 */
 	double getValue( int tblPos, long[] timestamps )
 	{
 		long time = timestamps[tblPos];
@@ -123,9 +164,7 @@ class CustomArea extends PlotDef
 		return yVal2;
 	}
 
-	void setSource( Source[] sources, HashMap sourceIndex ) throws RrdException
-	{
-		// Stub
+	// Stubbed method, irrelevant for this PlotDef
+	void setSource( Source[] sources, HashMap sourceIndex ) throws RrdException {
 	}
-	
 }

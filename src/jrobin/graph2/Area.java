@@ -27,26 +27,56 @@ package jrobin.graph2;
 import java.awt.Color;
 
 /**
- * <p>description</p>
+ * <p>Class used to represent a datasource plotted as an area in a graph.</p>
  * 
- * @author Arne Vandamme (arne.vandamme@jrobin.org)
+ * @author Arne Vandamme (cobralord@jrobin.org)
  */
 class Area extends PlotDef
 {
-	Area( String sourceName, Color c )
+	// ================================================================
+	// -- Constructors
+	// ================================================================	
+	/**
+	 * Constructs a <code>Area</code> PlotDef object based on a datasource name and a graph color. 
+	 * @param sourceName Name of the graph definition <code>Source</code> containing the datapoints.
+	 * @param color Color of the resulting area, if no color is specified, the Area will not be drawn.
+	 */
+	Area( String sourceName, Color color )
 	{
-		super( sourceName, c );
+		super( sourceName, color );
 		this.plotType	= PlotDef.PLOT_AREA;
 	}
 	
-	Area( Source source, Color c, boolean stacked, boolean visible )
+	/**
+	 * Constructs a <code>Area</code> object based on a Source containing all necessary datapoints and
+	 * a color to draw the resulting graph in.  The last two parameters define if the
+	 * Area should be drawn, and if it is stacked onto a previous PlotDef yes or no.
+	 * @param source Source containing all datapoints for this Area.
+	 * @param color Color of the resulting graphed area.
+	 * @param stacked True if this PlotDef is stacked on the previous one, false if not.
+	 * @param visible True if this PlotDef should be graphed, false if not.
+	 */
+	Area( Source source, Color color, boolean stacked, boolean visible )
 	{
-		super( source, c, stacked, visible );
+		super( source, color, stacked, visible );
 	}
 	
+	
+	// ================================================================
+	// -- Protected methods
+	// ================================================================	
+	/**
+	 * Draws the actual Area on the chart.
+	 * @param g ChartGraphics object representing the graphing area.
+	 * @param xValues List of relative chart area X positions corresponding to the datapoints.
+	 * @param stackValues Datapoint values of previous PlotDefs, used to stack on if necessary.
+	 * @param lastPlotType Type of the previous PlotDef, used to determine PlotDef type of a stack.
+	 */
 	void draw( ChartGraphics g, int[] xValues, int[] stackValues, int lastPlotType )
 	{
 		g.setColor( color );
+		
+		double[] values = source.getValues();
 		
 		int ax = 0, ay = 0, py;
 		int nx = 0, ny = 0, last = -1;
@@ -56,7 +86,7 @@ class Area extends PlotDef
 			py = 0;
 			
 			nx = xValues[i];
-			ny = g.getY( source.values[i] );
+			ny = g.getY( values[i] );
 		
 			if ( stacked ) {
 				py 	= stackValues[i];

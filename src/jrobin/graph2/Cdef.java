@@ -30,18 +30,32 @@ import java.util.StringTokenizer;
 import jrobin.core.RrdException;
 
 /**
- * <p>Represents a 'calculated' datasource for a graph.</p>
+ * <p>Represents a 'calculated' datasource for a graph.  A calculated datasource is always based on a RPN
+ * (Reverse Polar Notation) expression the algorithm to be used for calculating values.</p>
  * 
- * @author Arne Vandamme (arne.vandamme@jrobin.org)
+ * @author Arne Vandamme (cobralord@jrobin.org)
  */
 public class Cdef extends Source
 {
+	// ================================================================
+	// -- Members
+	// ================================================================
 	private String[] strTokens;
 		
-	double[] constants;
-	int[] dsIndices;
-	byte[] tokens;
+	private double[] constants;
+	private int[] dsIndices;
+	private byte[] tokens;
 	
+	
+	// ================================================================
+	// -- Constructors
+	// ================================================================	
+	/**
+	 * Constructs a new Cdef object holding a number of datapoints for a graph.
+	 * A Cdef is always based on a RPN expression holding the calculation algorithm.
+	 * @param name Name of the datasource in the graph definition.
+	 * @param rpn Algorithm to use for value calculation in reverse polar notation (RPN) form.
+	 */
 	Cdef( String name, String rpn )
 	{
 		super(name);
@@ -53,7 +67,18 @@ public class Cdef extends Source
 		for( int i = 0; st.hasMoreTokens(); i++ )
 			strTokens[i] = st.nextToken().trim();	
 	}
-	
+
+
+	// ================================================================
+	// -- Protected methods
+	// ================================================================
+	/**
+	 * Prepares the Cdef for faster value calculation by parsing the given RPN expression to 
+	 * a better more efficient format. 
+	 * @param sourceIndex Lookup table holding the name - index pairs for all datasources.
+	 * @param numPoints Number of points used as graph resolution (size of the value table).
+	 * @throws RrdException Thrown in case of a JRobin specific error.
+	 */	
 	void prepare( HashMap sourceIndex, int numPoints ) throws RrdException
 	{
 		// Create values table of correct size
@@ -157,23 +182,50 @@ public class Cdef extends Source
 			
 		}
 	}
-		
-	private boolean isNumber(String token) 
-	{
-		try 
-		{
-			Double.parseDouble(token);
-			return true;
-		}
-		catch (NumberFormatException nfe) {
-				return false;
-		}
-	}
-	
+
+	/**
+	 * Sets the value of a specific datapoint for this Cdef.
+	 * @param pos Position (index in the value table) of the new datapoint.
+	 * @param time Timestamp of the new datapoint in number of seconds.
+	 * @param val Double value of the new datapoint.
+	 */
 	void set( int pos, long timestamp, double val )
 	{
 		super.set( pos, timestamp, val );
 		values[pos] = val;
 	}
 	
+	byte[] getTokens() {
+		return tokens;
+	}
+	
+	double[] getConstants() {
+		return constants;
+	}
+	
+	int[] getDsIndices() {
+		return dsIndices;
+	}
+	
+	
+	// ================================================================
+	// -- Private methods
+	// ================================================================
+	/**
+	 * Checks if a given string is a number.
+	 * @param token String to check.
+	 * @return True if the token is a number, false if not.
+	 */	
+	private boolean isNumber( String token ) 
+	{
+		try 
+		{
+			Double.parseDouble(token);
+			
+			return true;
+		}
+		catch (NumberFormatException nfe) {
+			return false;
+		}
+	}
 }
