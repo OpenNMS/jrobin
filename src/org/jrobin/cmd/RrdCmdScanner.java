@@ -28,192 +28,163 @@ package org.jrobin.cmd;
 import org.jrobin.core.RrdException;
 
 import java.util.LinkedList;
-import java.util.regex.Pattern;
-import java.util.regex.Matcher;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.IOException;
 
 class RrdCmdScanner {
-	//private static final Pattern PATTERN = Pattern.compile("([^\"\\s]*\"[^\"]*\")|([^\"\\s]+)");
+	private LinkedList words = new LinkedList();
+	private StringBuffer buff;
 
-	private String cmdType;
-	private String command;
-
-	private LinkedList options	= new LinkedList();
-	private LinkedList words 	= new LinkedList();
-
-	RrdCmdScanner(String[] cmdWords) {
-		for(int i = 0; i < cmdWords.length; i++) {
-			words.add(cmdWords[i]);
-			if(words.size() == 1) {
-				cmdType = cmdWords[i];
+	RrdCmdScanner(String command) throws RrdException {
+		String cmd = command.trim();
+		// parse words
+		char activeQuote = 0;
+		for(int i = 0; i < cmd.length(); i++) {
+			char c = cmd.charAt(i);
+			if((c == '"' || c == '\'') && activeQuote == 0) {
+				// opening double or single quote
+				initWord();
+				activeQuote = c;
+				continue;
 			}
-		}
-	}
-
-	RrdCmdScanner( String command )
-	{
-		// Set the command type only
-		String cmd 		= command.trim();
-		int typePos 	= command.indexOf( ' ' );
-		cmdType			= cmd.substring( 0, typePos );
-
-		this.command	= cmd.substring( typePos ).trim();
-
-		//parseWords(command);
-	}
-
-	protected void parse( String[] keywords )
-	{
-		StringBuffer sbuf = new StringBuffer( "( -)");
-
-		for ( int i = 0; i < keywords.length; i++ )
-			sbuf.append( "|( " + keywords[i] + ":)" );
-
-		Pattern pattern = Pattern.compile( sbuf.toString() );
-
-		parseWords( command, pattern );
-	}
-
-	private void parseWords( String command, Pattern pattern )
-	{
-		int start = 0, stop = 0;
-
-		Matcher m 		= pattern.matcher(command);
-
-		while ( m.find() )
-		{
-			if ( start == 0 )
-				start 	= m.start();
-			else
-			{
-				stop 	= m.start();
-
-				// Put this 'word' away
-				storeWord( command.substring( start, stop ).trim() );
-
-				// This is a new start
-				start	= stop;
-				stop	= 0;
+			if(c == activeQuote) {
+				// closing quote
+				activeQuote = 0;
+				continue;
 			}
-		}
-
-		// Ok, see if we have to put the last word away
-		if ( start > 0 && stop == 0 )
-			storeWord( command.substring( start ).trim() );
-	}
-
-	private void storeWord( String word )
-	{
-		if ( word.charAt(0) == '-' )		// This is an option
-			options.add( word );
-		else								// This is a general 'word'
-		{
-			// TODO: Remove \ characters or other 'in between' characters that are used in scripting
-			// TODO: Remove leading single and double quotes in text, make sure all special characters are detected and treated okay
-			// TODO: Best way to try this probably to put the code from: http://www.jrobin.org/phpBB2/viewtopic.php?t=39 in a file
-			// TODO: read that file in, and then see if the resulting string parses correctly
-			words.add( word );
-		}
-	}
-
-/*
-	private void parseWords2(String command) {
-		// Make this a bit more complex, read until ' -', or keyword
-		Matcher m = PATTERN.matcher(command);
-		while(m.find()) {
-			String word = m.group();
-			word = word.replaceAll("\"", "");
-			// System.out.println("Adding: [" + word + "]");
-			words.add(word);
-			if(words.size() == 1) {
-				cmdType = word;
+			if(c == ' ' && activeQuote == 0) {
+				// separator encountered
+				finishWord();
+				continue;
 			}
+			if(c == '\\' && activeQuote == '"' && i + 1 < cmd.length()) {
+				// check for \" and \\ inside double quotes
+				char c2 = cmd.charAt(i + 1);
+				if(c2 == '\\' || c2 == '"') {
+					appendWord(c2);
+					i++;
+					continue;
+				}
+			}
+			// ordinary character
+			appendWord(c);
 		}
+		if(activeQuote != 0) {
+			throw new RrdException("End of command reached but " + activeQuote + " expected");
+		}
+		finishWord();
 	}
-*/
 
 	String getCmdType() {
-		return cmdType;
+		if(words.size() > 0) {
+			return (String) words.get(0);
+		}
+		else {
+			return null;
+		}
 	}
 
-	String getOptionValue( String shortFormWord, String longFormWord ) throws RrdException
-	{
-		String shortForm 	= "-" + shortFormWord;
-		String longForm		= "--" + longFormWord;
+	private void appendWord(char c) {
+		if(buff == null) {
+			buff = new StringBuffer("");
+		}
+		buff.append(c);
+	}
 
-		for ( int i = 0; i < options.size(); i++ )
-		{
-			String value	= null;
-			String option 	= (String) options.get( i );
+	private void finishWord() {
+		if(buff != null) {
+			words.add(buff.toString());
+			buff = null;
+		}
+	}
 
-			if ( shortForm != null && option.startsWith( shortForm ) )
-				value = option.substring( shortForm.length() ).trim();
-			else if ( longForm != null && option.startsWith( longForm ) )
-			{
-				// Next character might be =
-				value = option.substring( longForm.length() ).trim();
-				if ( value.length() > 1 && value.charAt(0) == '=' )
-					value = value.substring( 1 );
-			}
+	private void initWord() {
+		if(buff == null) {
+			buff = new StringBuffer("");
+		}
+	}
 
-			if ( value != null )
-			{
-				options.remove( i );
+	void dump() {
+		for(int i = 0; i < words.size(); i++) {
+			System.out.println(words.get(i));
+		}
+	}
 
-				return value;
+	String getOptionValue(String shortForm, String longForm, String defaultValue)
+			throws RrdException {
+		String value = getOptionValue("-" + shortForm);
+		if(value == null) {
+			value = getOptionValue("--" + longForm);
+			if(value == null) {
+				value = defaultValue;
 			}
 		}
-
-		// Option not found
-		return null;
+		return value;
 	}
-/*
-	String getOptionValue(String shortForm, String longForm) throws RrdException {
+
+	String getOptionValue(String shortForm, String longForm)
+			throws RrdException {
+		return getOptionValue(shortForm, longForm, null);
+	}
+
+	private String getOptionValue(String fullForm) throws RrdException {
 		for(int i = 0; i < words.size(); i++) {
 			String word = (String) words.get(i);
-			if((shortForm != null && word.equals("-" + shortForm)) ||
-				(longForm != null && word.equals("--" + longForm))) {
-				// match found
-				if(i < words.size() - 1) {
-					// value available
+			if(word.equals(fullForm)) {
+				// full match
+				// the value is in the next word
+				if(i + 1 < words.size()) {
 					String value = (String) words.get(i + 1);
 					words.remove(i + 1);
 					words.remove(i);
 					return value;
 				}
 				else {
-					throw new RrdException("Option found but value is not available");
+					throw new RrdException("Value for option " + fullForm + " expected but not found");
 				}
+			}
+			if(word.startsWith(fullForm)) {
+				int pos = fullForm.length();
+				if(word.charAt(pos) == '=') {
+					// skip '=' if present
+					pos++;
+				}
+				words.remove(i);
+				return word.substring(pos);
 			}
 		}
 		return null;
 	}
-*/
 
-	String getOptionValue(String shortForm, String longForm, String defaultValue) throws RrdException {
-		String value = getOptionValue(shortForm, longForm);
-		return value != null? value: defaultValue;
-	}
-
-	boolean getBooleanOption(String shortForm, String longForm) throws RrdException {
-		return (getOptionValue( shortForm, longForm ) != null);
-	}
-
-/*
-	boolean getBooleanOption2(String shortForm, String longForm) throws RrdException {
+	boolean getBooleanOption(String shortForm, String longForm) {
 		for(int i = 0; i < words.size(); i++) {
 			String word = (String) words.get(i);
-			if((shortForm != null && word.equals("-" + shortForm)) ||
-				(longForm != null && word.equals("--" + longForm))) {
-				// match found
+			if(word.equals("-" + shortForm) || word.equals("--" + longForm)) {
 				words.remove(i);
 				return true;
 			}
 		}
 		return false;
 	}
-*/
 
 	String[] getRemainingWords() {
 		return (String[]) words.toArray(new String[0]);
+	}
+
+	public static void main(String[] args) {
+		BufferedReader r = new BufferedReader(new InputStreamReader(System.in));
+		while (true) {
+			try {
+				System.out.print("$ ");
+				String s = r.readLine();
+				RrdCmdScanner sc = new RrdCmdScanner(s);
+				System.out.println("Value for option x is: [" + sc.getOptionValue("x", "xx") + "]");
+			} catch (IOException e) {
+				System.err.println(e);
+			} catch (RrdException e) {
+				System.err.println(e);
+			}
+		}
 	}
 }

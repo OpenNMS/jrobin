@@ -31,20 +31,16 @@ import java.io.IOException;
 class RrdUpdateCommand extends RrdToolCmd {
 	private String[] dsNames;
 
-	RrdUpdateCommand(RrdCmdScanner cmdScanner) {
-		super(cmdScanner);
-	}
-
 	String getCmdType() {
 		return "update";
 	}
 
 	Object execute() throws RrdException, IOException {
-		String template = cmdScanner.getOptionValue("t", "template");
+		String template = getOptionValue("t", "template");
 		if (template != null) {
 			dsNames = template.split(":");
 		}
-		String[] words = cmdScanner.getRemainingWords();
+		String[] words = getRemainingWords();
 		if (words.length < 3) {
 			throw new RrdException("Insufficent number of parameters for rrdupdate");
 		}

@@ -37,21 +37,17 @@ class RrdCreateCmd extends RrdToolCmd {
 
 	private RrdDef rrdDef;
 
-	public RrdCreateCmd(RrdCmdScanner cmdScanner) {
-		super(cmdScanner);
-	}
-
 	String getCmdType() {
 		return "create";
 	}
 
 	Object execute() throws RrdException, IOException {
-		String startStr = cmdScanner.getOptionValue("b", "start", DEFAULT_START);
+		String startStr = getOptionValue("b", "start", DEFAULT_START);
 		TimeSpec spec = new TimeParser(startStr).parse();
 		long start = spec.getTimestamp();
-		String stepStr = cmdScanner.getOptionValue("s", "step", DEFAULT_STEP);
+		String stepStr = getOptionValue("s", "step", DEFAULT_STEP);
 		long step = parseLong(stepStr);
-		String[] words = cmdScanner.getRemainingWords();
+		String[] words = getRemainingWords();
 		if(words.length < 2) {
 			throw new RrdException("RRD file path not specified");
 		}
@@ -65,7 +61,7 @@ class RrdCreateCmd extends RrdToolCmd {
 				parseRra(words[i]);
 			}
 			else {
-				throw new RrdException("Invalid word in the rrdcreate syntax: " + words[i]);
+				throw new RrdException("Invalid rrdcreate syntax: " + words[i]);
 			}
 		}
 		return createRrdDb();

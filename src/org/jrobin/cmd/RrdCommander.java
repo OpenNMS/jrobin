@@ -35,6 +35,12 @@ import java.io.InputStreamReader;
  * Class to be used to execute various RRDTool commands (original syntax of RRDTool must be used).
  */
 public class RrdCommander {
+	// just add all new commands here
+	private static final RrdToolCmd[] rrdCommands = {
+		new RrdCreateCmd(),
+		new RrdUpdateCommand()
+	};
+
 	/**
 	 * Checks if the output from any RRDTool command will be visible on the standard output device
 	 * (console). Default setting is <code>true</code>.
@@ -104,41 +110,15 @@ public class RrdCommander {
 	 */
 	public static synchronized Object execute(String command) throws IOException, RrdException
 	{
-		RrdCmdScanner cmdScanner = new RrdCmdScanner(command);
-		RrdToolCmd[] commanders = {
-			new RrdCreateCmd(cmdScanner),
-			new RrdLastCmd(cmdScanner),
-			new RrdUpdateCommand(cmdScanner),
-			new RrdDumpCmd(cmdScanner),
-			new RrdFetchCmd(cmdScanner),
-			new RrdRestoreCmd(cmdScanner)
-		};
-		for(int i = 0; i < commanders.length; i++) {
-			Object result = commanders[i].go();
-			if(result != null) {
-				return result;
+		String cmd = command.trim();
+		for(int i = 0; i < rrdCommands.length; i++) {
+			if(cmd.startsWith(rrdCommands[i].getCmdType())) {
+				rrdCommands[i].setCommand(cmd);
+				return rrdCommands[i].execute();
 			}
 		}
 		throw new RrdException("Unknown RRDTool command: " + command);
 	}
-	/*public static synchronized Object execute(String command) throws IOException, RrdException {
-		RrdCmdScanner cmdScanner = new RrdCmdScanner(command);
-		RrdToolCmd[] commanders = {
-			new RrdCreateCmd(cmdScanner),
-			new RrdLastCmd(cmdScanner),
-			new RrdUpdateCommand(cmdScanner),
-			new RrdDumpCmd(cmdScanner),
-			new RrdFetchCmd(cmdScanner),
-			new RrdXportCmd(cmdScanner)
-		};
-		for(int i = 0; i < commanders.length; i++) {
-			Object result = commanders[i].go();
-			if(result != null) {
-				return result;
-			}
-		}
-		throw new RrdException("Unknown RRDTool command: " + command);
-	}*/
 
 	public static void main(String[] args) {
 		System.out.println("== JRobin's RRDTool commander ==");
@@ -146,6 +126,7 @@ public class RrdCommander {
 		System.out.println("Start your RRDTool command with 'create', 'update', 'fetch' etc.");
 		System.out.println("Use any word starting with a dot '.' to bail out");
 		System.out.println("================================");
+		RrdToolCmd.setRrdDbPoolUsed(false);
 		BufferedReader r = new BufferedReader(new InputStreamReader(System.in));
 		while (true) {
 			try {
@@ -156,9 +137,9 @@ public class RrdCommander {
 				}
 				execute(s);
 			} catch (IOException e) {
-				System.err.println(e);
+				e.printStackTrace();
 			} catch (RrdException e) {
-				System.err.println(e);
+				e.printStackTrace();
 			}
 		}
 	}

@@ -34,8 +34,30 @@ import java.io.IOException;
 
 abstract class RrdToolCmd {
 
-	// Holds the list of keywords
-	static String[] keywords = new String[0];
+	private RrdCmdScanner cmdScanner;
+
+	abstract String getCmdType();
+	abstract Object execute() throws RrdException, IOException;
+
+	public void setCommand(String command) throws RrdException {
+		cmdScanner = new RrdCmdScanner(command);
+	}
+
+	String getOptionValue(String shortForm, String longForm) throws RrdException {
+		return cmdScanner.getOptionValue(shortForm, longForm);
+	}
+
+	String getOptionValue(String shortForm, String longForm, String defaultValue) throws RrdException {
+		return cmdScanner.getOptionValue(shortForm, longForm, defaultValue);
+	}
+
+	boolean getBooleanOption(String shortForm, String longForm) {
+		return cmdScanner.getBooleanOption(shortForm, longForm);
+	}
+
+	String[] getRemainingWords() {
+		return cmdScanner.getRemainingWords();
+	}
 
 	static boolean rrdDbPoolUsed = true;
 	static boolean standardOutUsed = true;
@@ -55,29 +77,6 @@ abstract class RrdToolCmd {
 	static void setStandardOutUsed(boolean standardOutUsed) {
 		RrdToolCmd.standardOutUsed = standardOutUsed;
 	}
-
-
-	RrdCmdScanner cmdScanner;
-
-	RrdToolCmd(RrdCmdScanner cmdScanner) {
-		this.cmdScanner = cmdScanner;
-	}
-
-	abstract String getCmdType();
-
-	Object go() throws IOException, RrdException
-	{
-		if(!getCmdType().equals(cmdScanner.getCmdType())) {
-			return null;
-		}
-
-		// Parse the command based on the keywords
-		cmdScanner.parse( keywords );
-
-		return execute();
-	}
-
-	abstract Object execute() throws RrdException, IOException;
 
 	static long parseLong(String value) throws RrdException {
 		try {
