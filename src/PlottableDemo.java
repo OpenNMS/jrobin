@@ -2,45 +2,41 @@ import org.jrobin.graph.*;
 import org.jrobin.core.RrdException;
 import java.awt.*;
 import java.io.IOException;
-import java.util.GregorianCalendar;
+import java.util.Date;
 
 class PlottableDemo {
 	public static void main(String[] args) throws RrdException, IOException {
-		// create plottable datasource
-		GregorianCalendar[] gc = {
-			new GregorianCalendar(2004, 0, 1),
-			new GregorianCalendar(2004, 0, 4),
-			new GregorianCalendar(2004, 0, 6),
-			new GregorianCalendar(2004, 0, 12),
-			new GregorianCalendar(2004, 0, 18),
-			new GregorianCalendar(2004, 0, 19),
-			new GregorianCalendar(2004, 0, 21)
+		final long t0 = new Date().getTime() / 1000L, dt = 86400L;
+		final int n = 10;
+		final long t1 = t0 + (n - 1) * dt;
+		Plottable p = new Plottable() {
+			public double getValue(long t) {
+				double x = (t - t0) / (double)(t1 - t0);
+				return Math.exp(-x * 2) * Math.cos(x * 7 * Math.PI);
+			}
 		};
-		double values[] = {
-			1.2, 3.4, 2.7, 3.0, 1.1, 1.2, 1.6
-		};
-		// four different imterpolation methods
-		LinearInterpolator i1 = new LinearInterpolator(gc, values); // defaults to INTERPOLATE_LINEAR
-		LinearInterpolator i2 = new LinearInterpolator(gc, values);
-		i2.setInterpolationMethod(LinearInterpolator.INTERPOLATE_LEFT);
-		LinearInterpolator i3 = new LinearInterpolator(gc, values);
-		i3.setInterpolationMethod(LinearInterpolator.INTERPOLATE_RIGHT);
-		CubicSplineInterpolator i4 = new CubicSplineInterpolator(gc, values);
+
+		long t[] = new long[n];
+		double x[] = new double[n];
+		for(int i = 0; i < n; i++) {
+			t[i] = t0 + i * dt;
+			x[i] = p.getValue(t[i]);
+		}
+		LinearInterpolator i1 = new LinearInterpolator(t, x); // defaults to INTERPOLATE_LINEAR
+		CubicSplineInterpolator i2 = new CubicSplineInterpolator(t, x);
 		// graph definition
-		RrdGraphDef gdef = new RrdGraphDef(gc[0], gc[gc.length - 1]);
+		RrdGraphDef gdef = new RrdGraphDef(t0, t1);
 		gdef.setTitle("Plottable demonstration");
 		gdef.setTimeAxisLabel("days of our lives");
 		gdef.setVerticalLabel("inspiration");
+		gdef.datasource("real", p);
 		gdef.datasource("linear", i1);
-		gdef.datasource("left", i2);
-		gdef.datasource("right", i3);
-		gdef.datasource("spline", i4);
-		gdef.area("linear", Color.RED, "Linear");
-		gdef.line("left", Color.BLUE, "Left", 2);
-		gdef.line("right", Color.GREEN, "Right@L", 2);
-		gdef.line("spline", Color.MAGENTA, "Spline@R", 2);
+		gdef.datasource("spline", i2);
+		gdef.line("real", Color.BLUE, "Real values", 1);
+		gdef.line("linear", Color.RED, "Linear interpolation", 1);
+		gdef.line("spline", Color.MAGENTA, "Spline interpolation@r", 1);
 		gdef.setTimeAxis(TimeAxisUnit.DAY, 1, TimeAxisUnit.DAY, 1, "dd", true);
 		RrdGraph g = new RrdGraph(gdef);
-		g.saveAsPNG("plottable.png", 500, 250);
+		g.saveAsPNG("plottable2.png", 400, 200);
 	}
 }
