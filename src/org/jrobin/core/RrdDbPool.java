@@ -29,50 +29,49 @@ import java.util.*;
 
 /**
  * Class to represent the pool of open RRD files.<p>
- * <p/>
+ *
  * To open already existing RRD file with JRobin, you have to create a
  * {@link org.jrobin.core.RrdDb RrdDb} object by specifying RRD file path
  * as constructor argument. This operation can be time consuming
  * especially with large RRD files with many datasources and
  * several long archives.<p>
- * <p/>
+ *
  * In a multithreaded environment you might probably need a reference to the
  * same RRD file from two different threads (RRD file updates are performed in
  * one thread but data fetching and graphing is performed in another one). To make
  * the RrdDb construction process more efficient it might be convenient to open all
  * RRD files in a centralized place. That's the purpose of RrdDbPool class.<p>
- * <p/>
+ *
  * How does it work? The typical usage scenario goes like this:<p>
- * <p/>
+ *
  * <pre>
  * // obtain instance to RrdDbPool object
  * RrdDbPool pool = RrdDbPool.getInstance();
- * <p/>
+ *
  * // request a reference to RrdDb object
  * String path = "some_relative_or_absolute_path_to_any_RRD_file";
  * RrdDb rrdDb = RrdDbPool.requestRrdDb(path);
- * <p/>
+ *
  * // reference obtained, do whatever you want with it...
  * ...
  * ...
- * <p/>
+ *
  * // once you don't need the reference, release it.
  * // DO NOT CALL rrdDb.close() - files no longer in use are eventually closed by the pool
  * pool.release(rrdDb);
  * </pre>
- * <p/>
- * It's that simple. When the reference is requested for the first time,
- * RrdDbPool will open the RRD file
+ *
+ * It's that simple. When the reference is requested for the first time, RrdDbPool will open the RRD file
  * for you and make some internal note that the RRD file is used only once. When the reference
  * to the same file (same RRD file path) is requested for the second time, the same RrdDb
  * reference will be returned, and its usage count will be increased by one. When the
  * reference is released its usage count will be decremented by one.<p>
- * <p/>
+ *
  * When the reference count drops to zero, RrdDbPool will not close the underlying
  * RRD file immediatelly. Instead of it, it will be marked as 'eligible for closing'.
  * If someone request the same RRD file again (before it gets closed), the same
  * reference will be returned again.<p>
- * <p/>
+ *
  * RrdDbPool has a 'garbage collector' which runs in a separate, low-priority
  * thread and gets activated only when the number of RRD files kept in the
  * pool is too big (greater than number returned from {@link #getCapacity getCapacity()}).
@@ -80,22 +79,26 @@ import java.util.*;
  * will be eligible for closing. Unreleased RrdDb references are never invalidated.
  * RrdDbPool object keeps track of the time when each RRD file
  * becomes eligible for closing so that the oldest RRD file gets closed first.<p>
- * <p/>
+ *
  * Initial RrdDbPool capacity is set to {@link #INITIAL_CAPACITY}. Use {@link #setCapacity(int)}
  * method to change it at any time.<p>
- * <p/>
+ *
  * <b>WARNING:</b>Never use close() method on the reference returned from the pool.
  * When the reference is no longer needed, return it to the pool with the
  * {@link #release(RrdDb) release()} method.<p>
- * <p/>
+ *
  * However, you are not forced to use RrdDbPool methods to obtain RrdDb references
  * to RRD files, 'ordinary' RrdDb constructors are still available. But RrdDbPool class
  * offers serious performance improvement especially in complex applications with many
  * threads and many simultaneously open RRD files.<p>
- * <p/>
+ *
  * The pool is thread-safe. Not that the {@link RrdDb} objects returned from the pool are
  * also thread-safe<p>
- * <p/>
+ *
+ * You should know that each operating system has its own internal limit on the number
+ * of simultaneously open files. The capacity of your RrdDbPool should be
+ * reasonably smaller than the limit imposed by your operating system.<p>
+ *
  * <b>WARNING:</b> The pool cannot be used to manipulate RrdDb objects
  * with {@link RrdBackend backends} different from default.<p>
  */
