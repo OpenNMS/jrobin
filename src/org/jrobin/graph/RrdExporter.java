@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.ArrayList;
 
 import org.jrobin.core.*;
+import org.jrobin.data.DataProcessor;
 
 /**
  * <p>RrdExporter takes care of calculating a reduced dataset based on a RrdExportDef.</p>
@@ -48,6 +49,8 @@ class RrdExporter
 	protected Source[] sources;
 	protected HashMap sourceIndex;
 
+	protected DataProcessor processor;
+
 	RrdExporter( RrdExportDef def )
 	{
 		setRrdOpener( new RrdOpener( false, true ) );
@@ -63,6 +66,7 @@ class RrdExporter
 	void setExportDef( RrdExportDef def )
 	{
 		this.def 			= def;
+		processor			= def.getProcessor();
 	}
 
 	void setRrdOpener( RrdOpener rrdOpener )
@@ -82,6 +86,9 @@ class RrdExporter
 	 */
 	protected void calculateSeries( int maxRows ) throws RrdException, IOException
 	{
+		processor.processData();
+/*
+
 		FetchSourceList fetchSources;
 		ValueExtractor ve;
 		FetchSource src;
@@ -443,15 +450,16 @@ class RrdExporter
 
 		this.startTime 	= startTime;
 		this.endTime	= ( changingEndTime ? finalEndTime : endTime );
+		*/
 	}
 
-	private Source getSource( String name ) throws RrdException
+	/*private Source getSource( String name ) throws RrdException
 	{
 		if ( !sourceIndex.containsKey(name) )
 			throw new RrdException( "No such datasource: " + name );
 
 		return sources[ ( (Integer) sourceIndex.get(name) ).intValue() ];
-	}
+	}*/
 
 	/**
 	 * Creates an ExportData object corresponding to the reduced dataset
@@ -463,7 +471,8 @@ class RrdExporter
 	 */
 	protected ExportData createExportData() throws RrdException
 	{
-		if ( sources == null)
+		throw new RuntimeException( "Unsupported method createExportData()" );	// TODO Reimplement ExportData creation
+	/*	if ( sources == null)
 			throw new RrdException( "Sources not calculated, no data to return." );
 		
 		// Now create a RrdDataSet object containing the results
@@ -493,10 +502,10 @@ class RrdExporter
 		long[] reducedTs = new long[ reducedNumRows ];
 		System.arraycopy( timestamps, 0, reducedTs, 0, reducedNumRows );
 
-		return new ExportData( reducedTs, sourceSet, legends );
+		return new ExportData( reducedTs, sourceSet, legends );*/
 	}
 
-	private Def createReducedDef( Source origSrc )
+	/*private Def createReducedDef( Source origSrc )
 	{
 		Def src = new Def( origSrc.getName(), reducedNumRows, reducedNumRows );
 		src.setFetchSettings( reducedStep, startTime, endTime );
@@ -505,7 +514,7 @@ class RrdExporter
 			src.set( i, timestamps[i], origSrc.get(i) );
 
 		return src;
-	}
+	}*/
 
 	/**
 	 * Provides a convenient synchronized wrapper around calculateSeries and createExportData.

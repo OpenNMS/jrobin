@@ -73,7 +73,10 @@ class Stack extends PlotDef
 				stack = new Line( source, values, color, true, visible );
 			else if ( lastPlotType == PlotDef.PLOT_AREA )
 				stack = new Area( source, values, color, true, visible );
-	
+
+			stack.sourceName 	= sourceName;
+			stack.processor		= processor;
+
 			stack.draw( g, xValues, stackValues, lastPlotType );
 		}
 		catch (Exception e) 

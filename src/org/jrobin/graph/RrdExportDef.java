@@ -32,6 +32,7 @@ import java.util.GregorianCalendar;
 import org.jrobin.core.Util;
 import org.jrobin.core.RrdException;
 import org.jrobin.core.XmlWriter;
+import org.jrobin.data.DataProcessor;
 
 /**
  * <p>Class used to collect information for a JRobin export.</p>
@@ -67,6 +68,8 @@ public class RrdExportDef implements Serializable
 	protected ArrayList cdefList				= new ArrayList( 10 );				// holds the list of Cdef datasources
 	protected ArrayList exportList				= new ArrayList( 10 );				// holds the list of datasources to export
 	protected ArrayList edefList				= new ArrayList( 3 );				// holds the list of export data objects
+
+	private DataProcessor processor				= new DataProcessor();
 
 	// ================================================================
 	// -- Constructors
@@ -126,11 +129,7 @@ public class RrdExportDef implements Serializable
 	 */
 	public void setTimePeriod( long startTime, long endTime ) throws RrdException
 	{
-		if ( startTime < 0 || ( endTime != 0 && endTime <= startTime ) )
-			throw new RrdException( "Invalid start/end time: " + startTime + "/" + endTime );
-
-		this.startTime 	= startTime;
-		this.endTime 	= endTime;
+		processor.setTimePeriod( startTime, endTime );
 	}
 
 	/**
@@ -165,7 +164,7 @@ public class RrdExportDef implements Serializable
 	 */
 	public void setResolution( long resolution )
 	{
-		this.resolution = resolution;
+		processor.setFetchRequestResolution( resolution );
 	}
 
 	/**
@@ -187,9 +186,7 @@ public class RrdExportDef implements Serializable
 	 */
 	public void datasource( String name, String file, String dsName, String consolFunc ) throws RrdException
 	{
-		fetchSources.add( name, file, dsName, consolFunc );
-
-		numDefs++;
+		processor.addDatasource( name, file, dsName, consolFunc );
 	}
 
 	/**
@@ -212,9 +209,7 @@ public class RrdExportDef implements Serializable
 	 */
 	public void datasource( String name, String file, String dsName, String consolFunc, String backend ) throws RrdException
 	{
-		fetchSources.add( name, file, dsName, consolFunc, backend );
-
-		numDefs++;
+		processor.addDatasource( name, file, dsName, consolFunc, backend );
 	}
 
 	/**
@@ -225,9 +220,11 @@ public class RrdExportDef implements Serializable
 	 */
 	public void setDatasources( FetchSourceList datasourceList )
 	{
+		throw new RuntimeException( "Unsupported method: setDatasources(FetchSourceList)" );	// TODO Reimplement FetchSourceList functionality
+		/*
 		fetchSources	= datasourceList;
 
-		numDefs			= fetchSources.defCount();
+		numDefs			= fetchSources.defCount();*/
 	}
 
 	/**
@@ -254,7 +251,7 @@ public class RrdExportDef implements Serializable
 	 */
 	public void datasource( String name, String rpn )
 	{
-		cdefList.add( new Cdef(name, rpn) );
+		processor.addDatasource( name, rpn );
 	}
 
 	/**
@@ -268,8 +265,7 @@ public class RrdExportDef implements Serializable
 	 */
 	public void datasource( String name, String defName, String consolFunc ) throws RrdException
 	{
-		cdefList.add( new Sdef(name, defName, consolFunc) );
-		numSdefs++;
+		processor.addDatasource( name, defName, consolFunc );
 	}
 
 	/**
@@ -281,7 +277,7 @@ public class RrdExportDef implements Serializable
 	 */
 	public void datasource( String name, Plottable plottable )
 	{
-		pdefList.add( new Pdef(name, plottable) );
+		processor.addDatasource( name, plottable );
 	}
 
 	/**
@@ -294,7 +290,7 @@ public class RrdExportDef implements Serializable
 	 */
 	public void datasource( String name, Plottable plottable, int index )
 	{
-		pdefList.add( new Pdef(name, plottable, index) );
+		processor.addDatasource( name, plottable, index );
 	}
 
 	/**
@@ -307,7 +303,7 @@ public class RrdExportDef implements Serializable
 	 */
 	public void datasource( String name, Plottable plottable, String sourceName )
 	{
-		pdefList.add( new Pdef(name, plottable, sourceName) );
+		processor.addDatasource( name, plottable, sourceName );
 	}
 
 	/**
@@ -317,7 +313,8 @@ public class RrdExportDef implements Serializable
 	 */
 	public void addExportData( ExportData edata )
 	{
-		edefList.add( edata );
+		throw new RuntimeException( "Unsupported method: addExportData(ExportData)" );	// TODO Reimplement ExportData functionality
+		//edefList.add( edata );
 	}
 
 	/**
@@ -377,7 +374,8 @@ public class RrdExportDef implements Serializable
 	 */
 	public void exportXmlTemplate( OutputStream stream )
 	{
-		XmlWriter xml = new XmlWriter( stream );
+		throw new RuntimeException( "Unsupported method: exportXmlTemplate(OutputStream)" );	// TODO Reimplement XmlTemplate functionality
+		/*XmlWriter xml = new XmlWriter( stream );
 
 		xml.startTag("rrd_export_def");
 
@@ -422,7 +420,7 @@ public class RrdExportDef implements Serializable
 		xml.closeTag(); // rrd_export_def
 		xml.flush();
 
-		xml.flush();
+		xml.flush();*/
 	}
 
 	/**
@@ -466,16 +464,20 @@ public class RrdExportDef implements Serializable
 	// ================================================================
 	// -- Protected (package) methods
 	// ================================================================
+	protected DataProcessor getProcessor() {
+		return processor;
+	}
+
 	protected long getStartTime() {
-		return startTime;
+		return processor.getStartingTimestamp();
 	}
 
 	protected long getEndTime() {
-		return endTime;
+		return processor.getEndingTimestamp();
 	}
 
 	protected long getResolution() {
-		return resolution;
+		return processor.getFetchRequestResolution();
 	}
 
 	protected int getNumDefs()

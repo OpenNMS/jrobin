@@ -636,7 +636,7 @@ public class RrdGraphDefTemplate extends XmlTemplate {
 				String colorStr = getValue(optionNode);
 				rrdGraphDef.setCanvasColor(Color.decode(colorStr));
 			}
-			// LEFT PADDING
+			// HORIZONTAL_LEFT PADDING
 			else if(option.equals("left_padding")) {
 				int padding = getValueAsInt(optionNode);
 				rrdGraphDef.setChartLeftPadding(padding);

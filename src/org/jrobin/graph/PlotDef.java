@@ -29,6 +29,7 @@ import java.util.HashMap;
 
 import org.jrobin.core.RrdException;
 import org.jrobin.core.XmlWriter;
+import org.jrobin.data.DataProcessor;
 
 /**
  * <p>Class used to represent a drawn datasource in the graph.
@@ -56,6 +57,8 @@ abstract class PlotDef
 	protected Color color						= Color.BLACK;	// Default color is black
 
 	protected double[] values					= null;
+
+	protected DataProcessor processor			= null;
 
 	// ================================================================
 	// -- Constructors
@@ -98,7 +101,11 @@ abstract class PlotDef
 
 	// ================================================================
 	// -- Protected methods
-	// ================================================================	
+	// ================================================================
+	void setProcessor( DataProcessor processor ) {
+		this.processor = processor;
+	}
+
 	/**
 	 * Sets the Source for this PlotDef, based on the internal datasource name.
 	 * @param sources Source table containing all datasources necessary to create the final graph.
@@ -130,9 +137,10 @@ abstract class PlotDef
 	 * @param timestamps Table containing the timestamps corresponding to all datapoints.
 	 * @return Double value of the datapoint.
 	 */
-	double getValue( int tblPos, long[] timestamps )
+	double getValue( int tblPos, long[] timestamps ) throws RrdException
 	{
-		return source.get( tblPos );	
+		return processor.getValues( sourceName )[tblPos];
+		//return source.get( tblPos );
 	}
 	
 	/**

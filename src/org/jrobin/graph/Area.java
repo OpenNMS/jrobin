@@ -25,6 +25,7 @@
 package org.jrobin.graph;
 
 import org.jrobin.core.XmlWriter;
+import org.jrobin.core.RrdException;
 
 import java.awt.*;
 
@@ -74,10 +75,11 @@ class Area extends PlotDef
 	 * @param stackValues Datapoint values of previous PlotDefs, used to stack on if necessary.
 	 * @param lastPlotType Type of the previous PlotDef, used to determine PlotDef type of a stack.
 	 */
-	void draw( ChartGraphics g, int[] xValues, double[] stackValues, int lastPlotType )
+	void draw( ChartGraphics g, int[] xValues, double[] stackValues, int lastPlotType ) throws RrdException
 	{
 		g.setColor( color );
 
+		values		= processor.getValues( sourceName );
 		int len 	= values.length;
 
 		double value;

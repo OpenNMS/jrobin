@@ -71,8 +71,9 @@ public class DataProcessor implements ConsolFuns {
 	public static final boolean DEFAULT_POOL_USAGE_POLICY = false;
 	private boolean poolUsed = DEFAULT_POOL_USAGE_POLICY;
 
-	private final long tStart;
-	private long tEnd, timestamps[];
+	private long generationTime	= 0;
+
+	private long tStart, tEnd, timestamps[];
 	private double dblTimestamps[];
 	// this will be adjusted later
 	private long step = 0;
@@ -84,6 +85,11 @@ public class DataProcessor implements ConsolFuns {
 
 	private Def[] defSources;
 
+	public DataProcessor()
+	{
+		// TODO Insert a check on valid timestamps later on
+	}
+
 	/**
 	 * Creates new DataProcessor object for the given time span. Ending timestamp may be set to zero.
 	 * In that case, the class will try to find the optimal ending timestamp based on the last update time of
@@ -93,14 +99,9 @@ public class DataProcessor implements ConsolFuns {
 	 * @param t2 Ending timestamp in seconds without milliseconds
 	 * @throws RrdException Thrown if invalid timestamps are supplied
 	 */
-	public DataProcessor(long t1, long t2) throws RrdException {
-		if ((t1 < t2 && t1 > 0 && t2 > 0) || (t1 > 0 && t2 == 0)) {
-			this.tStart = t1;
-			this.tEnd = t2;
-		}
-		else {
-			throw new RrdException("Invalid timestamps specified: " + t1 + ", " + t2);
-		}
+	public DataProcessor(long t1, long t2) throws RrdException
+	{
+		setTimePeriod( t1, t2 );
 	}
 
 	/**
@@ -127,6 +128,17 @@ public class DataProcessor implements ConsolFuns {
 	 */
 	public DataProcessor(GregorianCalendar gc1, GregorianCalendar gc2) throws RrdException {
 		this(Util.getTimestamp(gc1), gc2 != null ? Util.getTimestamp(gc2) : 0);
+	}
+
+	public void setTimePeriod( long t1, long t2 ) throws RrdException
+	{
+		if ((t1 < t2 && t1 > 0 && t2 > 0) || (t1 > 0 && t2 == 0)) {
+			tStart = t1;
+			tEnd = t2;
+		}
+		else {
+			throw new RrdException("Invalid timestamps specified: " + t1 + ", " + t2);
+		}
 	}
 
 	/**
@@ -240,6 +252,15 @@ public class DataProcessor implements ConsolFuns {
 	 */
 	public long getEndingTimestamp() {
 		return tEnd;
+	}
+
+	/**
+	 * Returns the starting timestamp.
+	 *
+	 * @return Starting timestamp in seconds
+	 */
+	public long getStartingTimestamp() {
+		return tStart;
 	}
 
 	/**
@@ -571,6 +592,7 @@ public class DataProcessor implements ConsolFuns {
 	 * @throws RrdException Thrown in case of JRobin specific error
 	 */
 	public void processData() throws IOException, RrdException {
+		generationTime = System.currentTimeMillis();
 		extractDefs();
 		fetchRrdData();
 		fixZeroEndingTimestamp();
@@ -686,6 +708,10 @@ public class DataProcessor implements ConsolFuns {
 			buffer.append("\n");
 		}
 		return buffer.toString();
+	}
+
+	public long getGenerationTime() {
+		return generationTime;
 	}
 
 	// PRIVATE METHODS

@@ -38,6 +38,8 @@ import java.awt.image.BufferedImage;
 
 import org.jrobin.core.RrdException;
 import org.jrobin.core.Util;
+import org.jrobin.core.ConsolFuns;
+import org.jrobin.data.Aggregates;
 
 /**
  * <p>Creates a BufferedImage of a graph, based on data from a GraphDef.</p>
@@ -130,7 +132,7 @@ class Grapher extends RrdExporter
 		defaultStroke	= new BasicStroke();
 
 		startTime		= graphDef.getStartTime();
-		endTime			= graphDef.getStartTime();
+		endTime			= graphDef.getEndTime();
 	}
 	
 	
@@ -340,12 +342,19 @@ class Grapher extends RrdExporter
 		// Calculate the reduced set of datasources
 		super.calculateSeries( chartWidth );
 
-		numPoints			= numRows;
+		tsChart				= processor.getTimestamps();
+		numPoints			= tsChart.length;
+
+		plotDefs			= graphDef.getPlotDefs();
+
+		for ( int i = 0; i < plotDefs.length; i++ )
+			plotDefs[i].setProcessor( processor );
 
 		/**
 		 * Expand the reduced set back to a set matching the chart width,
 		 * this allows for much nicer graphing.
 		 */
+		/*
 		tsChart 	= new long[ chartWidth ];
 		plotDefs 	= graphDef.getPlotDefs();
 
@@ -364,6 +373,7 @@ class Grapher extends RrdExporter
 
 			tsChart[i]	= t;
 		}
+		*/
 	}
 
 	/**
@@ -457,11 +467,60 @@ class Grapher extends RrdExporter
 			if ( Double.isNaN(upperValue) ) upperValue = Util.MIN_DOUBLE;
 		}
 
+
 		// For autoscale, detect lower and upper limit of values
 		for ( int i = 0; i < plotDefs.length; i++ )
 		{
-			Source src = plotDefs[i].getSource();
-		
+			String srcName	= plotDefs[i].getSourceName();
+
+			if ( srcName == null || "".equals( srcName ) ) continue;
+
+			Aggregates agg	= processor.getAggregates( srcName );
+
+			// Only try autoscale when we do not have a rigid grid
+			if ( !rigid )
+			{
+				double min = agg.getMin();
+				double max = agg.getMax();
+
+				// If the plotdef is a stack, evaluate ALL previous values to find a possible max
+				if ( plotDefs[i].plotType == PlotDef.PLOT_STACK && i >= 1 )
+				{
+					if ( plotDefs[i - 1].plotType == PlotDef.PLOT_STACK ) {		// Use this source plus stack of previous ones
+
+						for (int j = 0; j < tmpSeries.length; j++)
+						{
+							val = tmpSeries[j] + plotDefs[i].getValue(j, timestamps);
+
+							if ( val < lowerValue ) lowerValue = val;
+							if ( val > upperValue ) upperValue = val;
+
+							tmpSeries[j] = val;
+						}
+					}
+					else {														// Use this source plus the previous one
+
+						for (int j = 0; j < tmpSeries.length; j++)
+						{
+							val = plotDefs[i - 1].getValue(j, timestamps) + plotDefs[i].getValue(j, timestamps);
+
+							if ( val < lowerValue ) lowerValue = val;
+							if ( val > upperValue ) upperValue = val;
+
+							tmpSeries[j] = val;
+						}
+
+					}
+				}
+				else		// Only use min/max of a single datasource
+				{
+					if ( min < lowerValue ) lowerValue 	= min;
+					if ( max > upperValue ) upperValue	= max;
+				}
+			}
+
+			/*Source src = plotDefs[i].getSource();
+
 			// Only try autoscale when we do not have a rigid grid
 			if ( !rigid && src != null )
 			{
@@ -502,13 +561,13 @@ class Grapher extends RrdExporter
 					if ( min < lowerValue ) lowerValue 	= min;
 					if ( max > upperValue ) upperValue	= max;
 				}
-			}
+			}*/
 		
 		}
 
 		vGrid 			= new ValueGrid( range, lowerValue, upperValue, graphDef.getValueAxis(), graphDef.getBaseValue() );
 		tGrid			= new TimeGrid( startTime, endTime, graphDef.getTimeAxis(), graphDef.getFirstDayOfWeek() );
-		
+
 		lowerValue		= vGrid.getLowerValue();
 		upperValue		= vGrid.getUpperValue();
 
@@ -723,7 +782,7 @@ class Grapher extends RrdExporter
 				tmpStr.append( "   " );		// Add 3 spaces where the mark will be
 			} 
 			else if ( clist[i].commentType == Comment.CMT_GPRINT )
-				((Gprint) clist[i]).setValue( sources, sourceIndex, valueFormat );
+				((Gprint) clist[i]).setValue( processor, valueFormat );//.setValue( sources, sourceIndex, valueFormat );
 			
 			ArrayList tknpairs = clist[i].getTokens();
 			

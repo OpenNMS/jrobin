@@ -43,10 +43,10 @@ import java.util.GregorianCalendar;
  * RrdGraphDef.datasource()} to provide interpolated datasource values to JRobin grapher.<p>
  */
 public class LinearInterpolator extends Plottable {
-	/** constant used to specify LEFT interpolation.
+	/** constant used to specify HORIZONTAL_LEFT interpolation.
 	 * See {@link #setInterpolationMethod(int) setInterpolationMethod()} for explanation. */
 	public static final int INTERPOLATE_LEFT = 0;
-	/** constant used to specify RIGHT interpolation.
+	/** constant used to specify HORIZONTAL_RIGHT interpolation.
 	 * See {@link #setInterpolationMethod(int) setInterpolationMethod()} for explanation. */
 	public static final int INTERPOLATE_RIGHT = 1;
 	/** constant used to specify LINEAR interpolation (default interpolation method).

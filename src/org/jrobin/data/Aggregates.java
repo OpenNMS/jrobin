@@ -101,7 +101,7 @@ public class Aggregates implements ConsolFuns {
 	 * @throws RrdException Thrown if unsupported consolidation function is supplied
 	 */
 	public double getAggregate(String consolFun) throws RrdException {
-		if(consolFun.equals(CF_AVERAGE)) {
+		if(consolFun.equals(CF_AVERAGE) || consolFun.equalsIgnoreCase( "AVG" ) ) {
 			return average;
 		}
 		else if(consolFun.equals(CF_FIRST)) {
@@ -110,10 +110,10 @@ public class Aggregates implements ConsolFuns {
 		else if(consolFun.equals(CF_LAST)) {
 			return last;
 		}
-		else if(consolFun.equals(CF_MAX)) {
+		else if(consolFun.equals(CF_MAX) || consolFun.equalsIgnoreCase( "MAXIMUM" ) ) {
 			return max;
 		}
-		else if(consolFun.equals(CF_MIN)) {
+		else if(consolFun.equals(CF_MIN) || consolFun.equalsIgnoreCase( "MINIMUM" ) ) {
 			return min;
 		}
 		else if(consolFun.equals(CF_TOTAL)) {

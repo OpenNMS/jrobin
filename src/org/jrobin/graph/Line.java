@@ -105,6 +105,7 @@ class Line extends PlotDef
 		g.setStroke( lineWidth != 1 ? new BasicStroke(lineWidth) : DEF_LINE_STROKE );
 
 		Graphics2D gd 	= g.getGraphics();
+		values			= processor.getValues( sourceName );
 		int len			= values.length;
 
 		double value;

@@ -32,6 +32,7 @@ import java.util.regex.Pattern;
 import org.jrobin.core.RrdException;
 import org.jrobin.core.XmlWriter;
 import org.jrobin.core.ConsolFuns;
+import org.jrobin.data.DataProcessor;
 
 /**
  * <p>Represents a piece of aligned text (containing a retrieved datasource value) to be drawn on the graph.</p>
@@ -49,8 +50,9 @@ class Gprint extends Comment implements ConsolFuns
 	private static final String VALUE_MARKER 			= "@([0-9]*\\.[0-9]{1}|[0-9]{1}|\\.[0-9]{1})";
 	private static final Pattern VALUE_PATTERN 			= Pattern.compile(VALUE_MARKER);
 	
-	private String sourceName;
-	private int aggregate; 
+	private String sourceName, aggName;
+	private DataProcessor processor;
+	private int aggregate;
 	private int numDec									= 3;		// Show 3 decimal values by default
 	private int strLen									= -1;
 	private double baseValue							= -1;		// Default: use global base value
@@ -83,7 +85,8 @@ class Gprint extends Comment implements ConsolFuns
 
 		this.commentType 	= Comment.CMT_GPRINT;
 		this.sourceName 	= sourceName;
-		
+		this.aggName		= consolFunc;
+
 		if ( consolFunc.equalsIgnoreCase(CF_AVERAGE) || consolFunc.equalsIgnoreCase("AVG") )
 			aggregate = Source.AGG_AVERAGE;
 		else if ( consolFunc.equalsIgnoreCase(CF_MAX) || consolFunc.equalsIgnoreCase("MAXIMUM") )
@@ -131,12 +134,14 @@ class Gprint extends Comment implements ConsolFuns
 	 * @param vFormat ValueFormatter object used to retrieve a formatted string of the requested value.
 	 * @throws RrdException Thrown in case of a JRobin specific error.
 	 */
-	void setValue( Source[] sources, HashMap sourceIndex, ValueFormatter vFormat ) throws RrdException
+	//void setValue( Source[] sources, HashMap sourceIndex, ValueFormatter vFormat ) throws RrdException
+	void setValue( DataProcessor processor, ValueFormatter vFormat ) throws RrdException
 	{
-		try
-		{
-			double value 	= sources[ ((Integer) sourceIndex.get(sourceName)).intValue() ].getAggregate( aggregate );
-						
+		/*try
+		{*/
+			//double value 	= sources[ ((Integer) sourceIndex.get(sourceName)).intValue() ].getAggregate( aggregate );
+			double value	= processor.getAggregate( sourceName, aggName );
+
 			// See if we need to use a specific value for the formatting
 			double oldBase	= vFormat.getBase();
 			if ( baseValue != -1 && baseValue != vFormat.getBase() )
@@ -166,10 +171,10 @@ class Gprint extends Comment implements ConsolFuns
 			// Reset the base value of the formatter
 			if ( baseValue != -1 )
 				vFormat.setBase( oldBase );
-		}
+		/*}
 		catch (Exception e) {
 			throw new RrdException( "Could not find datasource: " + sourceName );
-		}
+		}*/
 	}
 
 	/**
