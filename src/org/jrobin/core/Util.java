@@ -214,6 +214,12 @@ public class Util {
 		return Util.getTimestamp(year, month, day, 0, 0);
 	}
 
+	/**
+	 * Parses input string as a double value. If the value cannot be parsed, Double.NaN
+	 * is returned (NumberFormatException is never thrown).
+	 * @param valueStr String representing double value
+	 * @return a double corresponding to the input string
+	 */
 	public static double parseDouble(String valueStr) {
 		double value;
 		try {
@@ -225,6 +231,12 @@ public class Util {
 		return value;
 	}
 
+	/**
+	 * Parses input string as a boolean value. The parser is case insensitive.
+	 * @param valueStr String representing boolean value
+	 * @return <code>true</code>, if valueStr equals to 'true', 'on', 'yes', 'y' or '1';
+	 * <code>false</code> in all other cases.
+	 */
 	public static boolean parseBoolean(String valueStr) {
 		return valueStr.equalsIgnoreCase("true") ||
 			valueStr.equalsIgnoreCase("on") ||
