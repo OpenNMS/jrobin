@@ -642,4 +642,18 @@ public class RrdDb implements RrdUpdater {
 	protected void finalize() throws Throwable {
 		close();
 	}
+
+    public static void main(String[] args) throws RrdException, IOException {
+		RrdDb rrd = new RrdDb("demo.rrd");
+		long t1 = Util.getTimestamp(2003, 4, 1);
+		long t2 = Util.getTimestamp(2003, 4, 2);
+		FetchData data = rrd.createFetchRequest("AVERAGE", t1, t2).fetchData();
+		data.dump();
+		System.out.println("MAX : " + data.getAggregate("sun", "MAX"));
+		System.out.println("MAX2: " + data.getAggregate("sun", "MAX", "value,2,*"));
+		System.out.println("MIN : " + data.getAggregate("sun", "MIN"));
+		System.out.println("MIN2: " + data.getAggregate("sun", "MIN", "value,2,*"));
+		System.out.println("AVG : " + data.getAggregate("sun", "AVERAGE"));
+		System.out.println("AVG2: " + data.getAggregate("sun", "AVERAGE", "value,2,*"));
+	}
 }

@@ -195,4 +195,123 @@ public class FetchData {
 		}
 	}
 
+	/**
+	 * Returns aggregated value from the fetched data for a single datasource.
+	 * @param dsName Datasource name
+	 * @param consolFun Consolidation function to be applied to fetched datasource values.
+	 * Valid consolidation functions are MIN, MAX, LAST and AVERAGE
+	 * @return MIN, MAX, LAST or AVERAGE value calculated from the fetched data
+	 * for the given datasource name
+	 * @throws RrdException Thrown if the given datasource name cannot be found in fetched data.
+	 */
+	public double getAggregate(String dsName, String consolFun) throws RrdException {
+		return getAggregate(dsName, consolFun, null);
+	}
+
+	/**
+	 * Returns aggregated value from the fetched data for a single datasource.
+	 * Before applying aggrregation functions, specified RPN expression is applied to fetched
+	 * data. For example, if you have a gauge datasource named 'foots' but you wont to
+	 * find the maximum fetched value in meters use something like:</p>
+	 * <code>getAggregate("foots", "MAX", "value,0.3048,*");</code>
+	 * Note that 'value' in the RPN expression is a reserved word and stands for the
+	 * original value (value fetched from RRD file)</p>
+	 * @param dsName Datasource name
+	 * @param consolFun Consolidation function to be applied to fetched datasource values.
+	 * Valid consolidation functions are MIN, MAX, LAST and AVERAGE
+	 * @return MIN, MAX, LAST or AVERAGE value calculated from the fetched data
+	 * for the given datasource name
+	 * @throws RrdException Thrown if the given datasource name cannot be found in fetched data.
+	 */
+	public double getAggregate(String dsName, String consolFun, String rpnExpression)
+		throws RrdException {
+		if(consolFun.equals("MAX")) {
+			return getMax(dsName, rpnExpression);
+		}
+		else if(consolFun.equals("MIN")) {
+			return getMin(dsName, rpnExpression);
+		}
+		else if(consolFun.equals("LAST")) {
+			return getLast(dsName, rpnExpression);
+		}
+		else if(consolFun.equals("AVERAGE")) {
+			return getAverage(dsName, rpnExpression);
+		}
+		else {
+			throw new RrdException("Unsupported consolidation function [" + consolFun + "]");
+		}
+	}
+
+	private double getMax(String dsName, String rpnExpression) throws RrdException {
+		RpnCalculator rpnCalculator = null;
+		if(rpnExpression != null) {
+			rpnCalculator = new RpnCalculator(rpnExpression);
+		}
+		double vals[] = getValues(dsName), max = Double.NaN;
+		for(int i = 0; i < vals.length - 1; i++) {
+			double value = vals[i + 1];
+			if(rpnCalculator != null) {
+				rpnCalculator.setValue(value);
+				value = rpnCalculator.calculate();
+			}
+			max = Util.max(max, value);
+		}
+		return max;
+	}
+
+	private double getMin(String dsName, String rpnExpression) throws RrdException {
+		RpnCalculator rpnCalculator = null;
+		if(rpnExpression != null) {
+			rpnCalculator = new RpnCalculator(rpnExpression);
+		}
+		double vals[] = getValues(dsName), min = Double.NaN;
+		for(int i = 0; i < vals.length - 1; i++) {
+			double value = vals[i + 1];
+			if(rpnCalculator != null) {
+				rpnCalculator.setValue(value);
+				value = rpnCalculator.calculate();
+			}
+			min = Util.min(min, value);
+		}
+		return min;
+	}
+
+	private double getLast(String dsName, String rpnExpression) throws RrdException {
+		RpnCalculator rpnCalculator = null;
+		if(rpnExpression != null) {
+			rpnCalculator = new RpnCalculator(rpnExpression);
+		}
+		double vals[] = getValues(dsName);
+		double value = vals[vals.length - 1];
+		if(rpnCalculator != null) {
+			rpnCalculator.setValue(value);
+			value = rpnCalculator.calculate();
+		}
+		return value;
+	}
+
+	private double getAverage(String dsName, String rpnExpression) throws RrdException {
+		RpnCalculator rpnCalculator = null;
+		if(rpnExpression != null) {
+			rpnCalculator = new RpnCalculator(rpnExpression);
+		}
+		double vals[] = getValues(dsName);
+		double totalVal = 0;
+		long totalSecs = 0;
+		for(int i = 0; i < vals.length - 1; i++) {
+			long t1 = Math.max(request.getFetchStart(), timestamps[i]);
+			long t2 = Math.min(request.getFetchEnd(), timestamps[i + 1]);
+			double value = vals[i + 1];
+			if(rpnCalculator != null) {
+				rpnCalculator.setValue(value);
+				value = rpnCalculator.calculate();
+			}
+			if(!Double.isNaN(value)) {
+                totalSecs += (t2 - t1);
+				totalVal += (t2 - t1) * value;
+			}
+		}
+		return totalSecs > 0? totalVal / totalSecs: Double.NaN;
+	}
+
 }
