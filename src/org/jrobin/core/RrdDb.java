@@ -913,10 +913,16 @@ public class RrdDb implements RrdUpdater {
 	 * ordinary RRD files created on the disk - an exception will be thrown for RRD objects created in
 	 * memory or with custom backends.
 	 * @return Canonical path to RRD file;
-	 * @throws IOException Thrown in case of I/O error.
+	 * @throws IOException Thrown in case of I/O error or if the underlying backend is
+	 * not derived from RrdFileBackend.
 	 */
 	public String getCanonicalPath() throws IOException {
-		return ((RrdFileBackend) backend).getCanonicalPath();
+		if(backend instanceof RrdFileBackend) {
+			return ((RrdFileBackend) backend).getCanonicalPath();
+		}
+		else {
+			throw new IOException("The underlying backend has no canonical path");
+		}
 	}
 
 	/**
