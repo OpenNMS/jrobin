@@ -78,7 +78,9 @@ public class RrdNioBackend extends RrdFileBackend {
 
 	private void unmapFile() {
 		if(byteBuffer != null) {
-			((DirectBuffer) byteBuffer).cleaner().clean();
+			if(byteBuffer instanceof DirectBuffer) {
+				((DirectBuffer) byteBuffer).cleaner().clean();
+			}
 			byteBuffer = null;
 		}
 	}
