@@ -1087,11 +1087,40 @@ public class RrdDb implements RrdUpdater {
 		RrdBackendFactory.setDefaultFactory(factoryName);
 	}
 
+    /**
+	 * Returns an array of last datasource values. The first value in the array corresponds
+	 * to the first datasource defined in the RrdDb and so on.
+	 * @return Array of last datasource values
+	 * @throws IOException Thrown in case of I/O error
+	 */
+	public synchronized double[] getLastDatasourceValues() throws IOException {
+		double[] values = new double[datasources.length];
+		for(int i = 0; i < values.length; i++) {
+			values[i] = datasources[i].getLastValue();
+		}
+		return values;
+	}
+
+	/**
+	 * Returns the last stored value for the given datasource.
+	 * @param dsName Datasource name
+	 * @return Last stored value for the given datasource
+	 * @throws IOException Thrown in case of I/O error
+	 * @throws RrdException Thrown if no datasource in this RrdDb matches the given datasource name
+	 */
+	public synchronized double getLastDatasourceValue(String dsName) throws IOException, RrdException {
+		int dsIndex = getDsIndex(dsName);
+		return datasources[dsIndex].getLastValue();
+	}
+
 	public static void main(String[] args) {
-		System.out.println("JRobin base directory: " + Util.getJRobinHomeDirectory());
 		System.out.println("JRobin Java Library :: RRDTool choice for the Java world");
-		System.out.println("http://www.jrobin.org");
-		System.out.println("(C) 2004 Sasa Markovic & Arne Vandamme");
+		System.out.println("==================================================================");
+		System.out.println("JRobin base directory: " + Util.getJRobinHomeDirectory());
+		System.out.println("Current timestamp: " + Util.getTime());
+		System.out.println("------------------------------------------------------------------");
+		System.out.println("For the latest information visit: http://www.jrobin.org");
+		System.out.println("(C) 2003, 2004 Sasa Markovic & Arne Vandamme. All rights reserved.");
 	}
 
 }
