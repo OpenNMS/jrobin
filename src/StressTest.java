@@ -117,7 +117,7 @@ class StressTest {
 				printLapTime("RRD ERROR: " + line);
 			}
 		}
-		rrd.close();
+		RrdDbPool.getInstance().release(rrd);
 		printLapTime("FINISHED: " + count + " samples stored");
         // GRAPH
 		printLapTime("Creating composite graph definition");
