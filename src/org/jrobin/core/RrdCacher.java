@@ -92,4 +92,8 @@ final class RrdCacher {
 		return s;
 	}
 
+	final void clearCache() {
+		cached = false;
+	}
+
 }

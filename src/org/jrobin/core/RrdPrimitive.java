@@ -36,6 +36,8 @@ abstract class RrdPrimitive {
 	private int byteCount;
 	private final long pointer;
 
+	protected RrdCacher cache = new RrdCacher();
+
 	RrdPrimitive(RrdUpdater updater, int type) throws IOException {
 		this(updater, type, 1);
 	}
@@ -107,5 +109,9 @@ abstract class RrdPrimitive {
 
 	void writeString(String value) throws IOException {
 		backend.writeString(pointer, value);
+	}
+
+	void clearCache() {
+		cache.clearCache();
 	}
 }

@@ -28,8 +28,6 @@ package org.jrobin.core;
 import java.io.IOException;
 
 class RrdLong extends RrdPrimitive {
-	private RrdCacher cache = new RrdCacher();
-
 	RrdLong(RrdUpdater updater) throws IOException {
 		super(updater, RrdPrimitive.RRD_LONG);
 	}
