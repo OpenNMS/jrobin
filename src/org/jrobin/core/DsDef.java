@@ -116,8 +116,15 @@ public class DsDef {
 	}
 
 	private void validate() throws RrdException {
-		if(dsName == null || dsName.length() == 0) {
-			throw new RrdException("Invalid datasource name specified");
+		if(dsName == null) {
+			throw new RrdException("Null datasource name specified");
+		}
+		if(dsName.length() == 0) {
+			throw new RrdException("Datasource name length equal to zero");
+		}
+		if(dsName.length() > RrdPrimitive.STRING_LENGTH) {
+			throw new RrdException("Datasource name [" + dsName + "] to long (" +
+				dsName.length() + " chars found, only " + RrdPrimitive.STRING_LENGTH + " allowed");
 		}
 		if(!isValidDsType(dsType)) {
 			throw new RrdException("Invalid datasource type specified: " + dsType);
