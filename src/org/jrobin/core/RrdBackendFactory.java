@@ -189,5 +189,5 @@ public abstract class RrdBackendFactory {
 	 * Returns the name (primary ID) for the factory.
 	 * @return Name of the factory.
 	 */
-	protected abstract String getFactoryName();
+	public abstract String getFactoryName();
 }

@@ -132,7 +132,7 @@ public class RrdNioBackendFactory extends RrdFileBackendFactory{
 	 * Returns the name of this factory.
 	 * @return Factory name (equals to string "NIO")
 	 */
-	protected String getFactoryName() {
+	public String getFactoryName() {
 		return NAME;    
 	}
 }

@@ -63,7 +63,7 @@ public class RrdFileBackendFactory extends RrdBackendFactory {
 	 * Returns the name of this factory.
 	 * @return Factory name (equals to string "FILE")
 	 */
-	protected String getFactoryName() {
+	public String getFactoryName() {
 		return NAME;
 	}
 }

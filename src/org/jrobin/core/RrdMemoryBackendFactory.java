@@ -93,7 +93,7 @@ public class RrdMemoryBackendFactory extends RrdBackendFactory {
 	 * Returns the name of this factory.
 	 * @return Factory name (equals to "MEMORY").
 	 */
-	protected String getFactoryName() {
+	public String getFactoryName() {
 		return NAME;
 	}
 }
