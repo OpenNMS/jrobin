@@ -194,7 +194,7 @@ public class Archive implements RrdUpdater {
 		long nanSteps = state.getNanSteps();
 		double nanPct = (double) nanSteps / (double) arcSteps;
 		double accumValue = state.getAccumValue();
-		if(nanPct <= xff.get() && !Double.isNaN(accumValue)) {
+		if(nanPct < xff.get() && !Double.isNaN(accumValue)) {
 			if(consolFun.get().equals("AVERAGE")) {
 				accumValue /= (arcSteps - nanSteps);
 			}
