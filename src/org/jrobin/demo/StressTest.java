@@ -123,7 +123,7 @@ class StressTest {
 		printLapTime("FINISHED: " + count + " samples stored");
         // GRAPH
 		printLapTime("Creating composite graph definition");
-		RrdGraphDef gdef = new RrdGraphDef(TIME_START, 0);			// A 0 end time makes sure the last sample time i used
+		RrdGraphDef gdef = new RrdGraphDef(TIME_START, 0);	// A 0 end time makes sure the last sample time i used
 		gdef.setTitle("Temperatures");
 		gdef.setVerticalLabel("Fahrenheits");
 		final Color[] colors =  { Color.RED, Color.GREEN, Color.BLUE, Color.MAGENTA,

@@ -37,10 +37,10 @@ import java.util.Calendar;
 
 class PlottableDemo {
 	static final double[] SF_DOWNLOAD_COUNT = {
-		0, 0, 13, 34, 76, 72, 255, 144, 135, 194, 358, 304, 293
+		0, 0, 13, 34, 76, 72, 255, 144, 135, 194, 358, 304, 293, 293, 289, 530, 252, 251
 	};
 	static final double[] SF_PAGE_HITS = {
-		0, 1072, 517, 979, 2132, 2532, 5515, 3519, 3500, 4942, 7858, 7797, 6570
+		0, 1072, 517, 979, 2132, 2532, 5515, 3519, 3500, 4942, 7858, 7797, 6570, 8415, 8368, 12353, 12711, 11008
 	};
 	static final GregorianCalendar[] SF_TIMESTAMPS = 
 		new GregorianCalendar[SF_DOWNLOAD_COUNT.length];
@@ -173,17 +173,22 @@ class PlottableDemo {
 				new LinearInterpolator(SF_TIMESTAMPS, SF_PAGE_HITS);
 		LinearInterpolator downloadsInterpolator =
 				new LinearInterpolator(SF_TIMESTAMPS, SF_DOWNLOAD_COUNT);
-		RrdGraphDef gDef = new RrdGraphDef(SF_TIMESTAMPS[0], 
+		LinearInterpolator trendInterpolator =
+				new LinearInterpolator(SF_TIMESTAMPS, SF_PAGE_HITS);
+		trendInterpolator.setInterpolationMethod(LinearInterpolator.INTERPOLATE_REGRESSION);
+		RrdGraphDef gDef = new RrdGraphDef(SF_TIMESTAMPS[0],
 			SF_TIMESTAMPS[SF_TIMESTAMPS.length - 1]);
 		gDef.setTitle("JRobin statistics at SourceForge");
 		gDef.setTimeAxisLabel("month");
 		gDef.setVerticalLabel("hits/downloads");
 		gDef.datasource("hits", hitsInterpolator);
 		gDef.datasource("downloads", downloadsInterpolator);
+		gDef.datasource("trend", trendInterpolator);
 		gDef.datasource("ratio", "downloads,0,EQ,UNKN,hits,downloads,/,IF");
 		gDef.area("hits", Color.GREEN, null);
 		gDef.line("hits", Color.RED, "page hits", 2);
-		gDef.area("downloads", Color.MAGENTA, "downloads@L");
+		gDef.area("downloads", Color.MAGENTA, "downloads");
+		gDef.line("trend", Color.ORANGE, "trend@L");
 		gDef.vrule(new GregorianCalendar(2004, 0, 1), Color.BLUE, null, 3);
 		gDef.setTimeAxis(TimeAxisUnit.MONTH, 1, TimeAxisUnit.MONTH, 1, "MMM", false);
 		gDef.gprint("ratio", "AVERAGE", "Average number of page hits per download: @0@r");
