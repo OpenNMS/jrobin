@@ -83,7 +83,7 @@ public class RrdNioBackend extends RrdFileBackend {
 	 */
 	protected void setLength(long length) throws IOException {
 		super.setLength(length);
-		byteBuffer = file.getChannel().map(FileChannel.MapMode.READ_WRITE, 0, length);
+		byteBuffer = channel.map(FileChannel.MapMode.READ_WRITE, 0, length);
 	}
 
 	/**
