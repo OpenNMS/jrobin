@@ -101,12 +101,15 @@ class StressTest {
 		BufferedReader r = new BufferedReader(new FileReader(args[0]));
 		printLapTime("Buffered reader created, processing data");
 		int count = 0;
+		Date updateStart = new Date();
 		for(String line; (line = r.readLine()) != null;) {
 			Sample sample = rrd.createSample();
 			try {
 				sample.setAndUpdate(line);
 				if(++count % 1000 == 0) {
-					printLapTime(count + " samples stored");
+					Date now = new Date();
+					long speed = (long)(count * 1000.0 / (now.getTime() - updateStart.getTime()));
+					printLapTime(count + " samples stored, " + speed + " updates/sec");
 				}
 			}
 			catch(RrdException e) {

@@ -42,6 +42,7 @@ class RrdLong extends RrdPrimitive {
 		if(rrdFile.getMode() == RrdFile.MODE_RESTORE) {
 			rrdFile.seek(getPointer());
 			cache = rrdFile.readLong();
+			cached = true;
 		}
 	}
 
@@ -51,13 +52,17 @@ class RrdLong extends RrdPrimitive {
 	}
 
 	void set(long value) throws IOException {
-		cache = value;
-		RrdFile rrdFile = getRrdFile();
-		rrdFile.seek(getPointer());
-		rrdFile.writeLong(cache);
+		if(!cached || cache != value) {
+			RrdFile rrdFile = getRrdFile();
+			rrdFile.seek(getPointer());
+			rrdFile.writeLong(value);
+			cache = value;
+			cached = true;
+		}
 	}
 
 	long get() {
+		assert cached: "Not cached!";
 		return cache;
 	}
 }

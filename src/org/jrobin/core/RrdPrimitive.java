@@ -31,7 +31,9 @@ abstract class RrdPrimitive {
 	private RrdUpdater parent;
 	private long pointer;
 	private int byteCount;
-	
+
+	protected boolean cached = false;
+
 	RrdPrimitive(RrdUpdater parent, int byteCount) throws IOException {
 		this.parent = parent;
 		// this will set pointer and byteCount

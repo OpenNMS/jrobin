@@ -42,6 +42,7 @@ class RrdDouble extends RrdPrimitive {
 		if(rrdFile.getMode() == RrdFile.MODE_RESTORE) {
 			rrdFile.seek(getPointer());
 			cache = rrdFile.readDouble();
+			cached = true;
 		}
 	}
 
@@ -51,13 +52,17 @@ class RrdDouble extends RrdPrimitive {
 	}
 
 	void set(double value) throws IOException {
-		cache = value;
-		RrdFile rrdFile = getRrdFile();
-		rrdFile.seek(getPointer());
-		rrdFile.writeDouble(cache);
+		if(!cached || cache != value) {
+			RrdFile rrdFile = getRrdFile();
+			rrdFile.seek(getPointer());
+			rrdFile.writeDouble(value);
+			cache = value;
+			cached = true;
+		}
 	}
 
 	double get() {
+		assert cached: "Not cached!";
 		return cache;
 	}
 }
