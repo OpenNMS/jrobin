@@ -38,7 +38,7 @@ import java.io.IOException;
  * @author <a href="mailto:saxon@jrobin.org">Sasa Markovic</a>
  */
 
-public class Datasource implements RrdUpdater {
+public class Datasource implements RrdUpdater, DsTypes {
 	private RrdDb parentDb;
 	// definition
 	private RrdString dsName, dsType;
@@ -207,20 +207,20 @@ public class Datasource implements RrdUpdater {
 		double updateValue = Double.NaN;
 		if(newTime - oldTime <= heartbeat.get()) {
 			String type = dsType.get();
-        	if(type.equals("GAUGE")) {
+        	if(type.equals(GAUGE)) {
 				updateValue = newValue;
 			}
-			else if(type.equals("ABSOLUTE")) {
+			else if(type.equals(ABSOLUTE)) {
 				if(!Double.isNaN(newValue)) {
 					updateValue = newValue / (newTime - oldTime);
 				}
 			}
-			else if(type.equals("DERIVE")) {
+			else if(type.equals(DERIVE)) {
 				if(!Double.isNaN(newValue) && !Double.isNaN(oldValue)) {
 					updateValue = (newValue - oldValue) / (newTime - oldTime);
 				}
 			}
-			else if(type.equals("COUNTER")) {
+			else if(type.equals(COUNTER)) {
 				if(!Double.isNaN(newValue) && !Double.isNaN(oldValue)) {
 					double diff = newValue - oldValue;
 					double max32bit = Math.pow(2, 32);

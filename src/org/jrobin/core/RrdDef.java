@@ -196,7 +196,8 @@ public class RrdDef {
 	 *
 	 * @param dsName Data source name.
 	 * @param dsType Data source type. Valid types are "COUNTER",
-	 * "GAUGE", "DERIVE" and "ABSOLUTE".
+	 * "GAUGE", "DERIVE" and "ABSOLUTE" (these string constants are conveniently defined in
+	 * the {@link DsTypes} class).
 	 * @param heartbeat Data source heartbeat.
 	 * @param minValue Minimal acceptable value. Use <code>Double.NaN</code> if unknown.
 	 * @param maxValue Maximal acceptable value. Use <code>Double.NaN</code> if unknown.
@@ -310,7 +311,8 @@ public class RrdDef {
 	 * definition parameters see RRDTool's
 	 * <a href="../../../../man/rrdcreate.html" target="man">rrdcreate man page</a>.</p>
 	 * @param consolFun Consolidation function. Valid values are "AVERAGE",
-	 * "MIN", "MAX" and "LAST"
+	 * "MIN", "MAX" and "LAST" (these constants are also defined in the
+	 * {@link ConsolFuns} class)
 	 * @param xff X-files factor. Valid values are between 0 and 1.
 	 * @param steps Number of archive steps
 	 * @param rows Number of archive rows

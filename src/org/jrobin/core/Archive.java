@@ -38,7 +38,7 @@ import java.io.IOException;
  *
  * @author <a href="mailto:saxon@jrobin.org">Sasa Markovic</a>
  */
-public class Archive implements RrdUpdater {
+public class Archive implements RrdUpdater, ConsolFuns {
 	private RrdDb parentDb;
 	// definition
 	private RrdString consolFun;
@@ -148,16 +148,16 @@ public class Archive implements RrdUpdater {
 			state.setNanSteps(state.getNanSteps() + 1);
 		}
 		else {
-			if(consolFun.get().equals("MIN")) {
+			if(consolFun.get().equals(MIN)) {
 				state.setAccumValue(Util.min(state.getAccumValue(), value));
 			}
-			else if(consolFun.get().equals("MAX")) {
+			else if(consolFun.get().equals(MAX)) {
 				state.setAccumValue(Util.max(state.getAccumValue(), value));
 			}
-			else if(consolFun.get().equals("LAST")) {
+			else if(consolFun.get().equals(LAST)) {
 				state.setAccumValue(value);
 			}
-			else if(consolFun.get().equals("AVERAGE")) {
+			else if(consolFun.get().equals(AVERAGE)) {
 				state.setAccumValue(Util.sum(state.getAccumValue(), value));
 			}
 		}
@@ -171,7 +171,7 @@ public class Archive implements RrdUpdater {
 		//double nanPct = (double) nanSteps / (double) arcSteps;
 		double accumValue = state.getAccumValue();
 		if(nanSteps <= arcXff * arcSteps && !Double.isNaN(accumValue)) {
-			if(consolFun.get().equals("AVERAGE")) {
+			if(consolFun.get().equals(AVERAGE)) {
 				accumValue /= (arcSteps - nanSteps);
 			}
 			robin.store(accumValue);
@@ -184,7 +184,7 @@ public class Archive implements RrdUpdater {
 	}
 
 	/**
-	 * Returns archive consolidation function (AVERAGE, MIN, MAX or LAST).
+	 * Returns archive consolidation function ("AVERAGE", "MIN", "MAX" or "LAST").
 	 * @return Archive consolidation function.
 	 * @throws IOException Thrown in case of I/O error.
 	 */

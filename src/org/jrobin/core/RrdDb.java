@@ -105,16 +105,16 @@ public class RrdDb implements RrdUpdater {
 	 * <pre>
 	 * // create new RRD definition
      * RrdDef def = new RrdDef("test.rrd", 300);
-     * def.addDatasource("input", "COUNTER", 600, 0, Double.NaN);
-     * def.addDatasource("output", "COUNTER", 600, 0, Double.NaN);
-     * def.addArchive("AVERAGE", 0.5, 1, 600);
-     * def.addArchive("AVERAGE", 0.5, 6, 700);
-     * def.addArchive("AVERAGE", 0.5, 24, 797);
-     * def.addArchive("AVERAGE", 0.5, 288, 775);
-     * def.addArchive("MAX", 0.5, 1, 600);
-     * def.addArchive("MAX", 0.5, 6, 700);
-     * def.addArchive("MAX", 0.5, 24, 797);
-     * def.addArchive("MAX", 0.5, 288, 775);
+     * def.addDatasource("input", DsTypes.COUNTER, 600, 0, Double.NaN);
+     * def.addDatasource("output", DsTypes.COUNTER, 600, 0, Double.NaN);
+     * def.addArchive(ConsolFuns.AVERAGE, 0.5, 1, 600);
+     * def.addArchive(ConsolFuns.AVERAGE, 0.5, 6, 700);
+     * def.addArchive(ConsolFuns.AVERAGE, 0.5, 24, 797);
+     * def.addArchive(ConsolFuns.AVERAGE, 0.5, 288, 775);
+     * def.addArchive(ConsolFuns.MAX, 0.5, 1, 600);
+     * def.addArchive(ConsolFuns.MAX, 0.5, 6, 700);
+     * def.addArchive(ConsolFuns.MAX, 0.5, 24, 797);
+     * def.addArchive(ConsolFuns.MAX, 0.5, 288, 775);
      *
      * // RRD definition is now completed, create the database!
      * RrdDb rrd = new RrdDb(def);
@@ -513,7 +513,8 @@ public class RrdDb implements RrdUpdater {
 	 * <code>FetchRequest</code> object and its {@link org.jrobin.core.FetchRequest#fetch() fetch()}
 	 * method to actually fetch data from the RRD file.</p>
 	 * @param consolFun Consolidation function to be used in fetch request. Allowed values are
-	 * "AVERAGE", "MIN", "MAX" and "LAST".
+	 * "AVERAGE", "MIN", "MAX" and "LAST" (these constants are conveniently defined in the
+	 * {@link ConsolFuns} class).
 	 * @param fetchStart Starting timestamp for fetch request.
 	 * @param fetchEnd Ending timestamp for fetch request.
 	 * @param resolution Fetch resolution (see RRDTool's
@@ -537,7 +538,8 @@ public class RrdDb implements RrdUpdater {
 	 * for the explanation of the resolution parameter).</p>
 	 *
 	 * @param consolFun Consolidation function to be used in fetch request. Allowed values are
-	 * "AVERAGE", "MIN", "MAX" and "LAST".
+	 * "AVERAGE", "MIN", "MAX" and "LAST" (these constants are conveniently defined in the
+	 * {@link ConsolFuns} class).
 	 * @param fetchStart Starting timestamp for fetch request.
 	 * @param fetchEnd Ending timestamp for fetch request.
 	 * @return Request object that should be used to actually fetch data from RRD.

@@ -42,9 +42,9 @@ package org.jrobin.core;
  * @author <a href="mailto:saxon@jrobin.org">Sasa Markovic</a>
  */
 
-public class ArcDef {
+public class ArcDef implements ConsolFuns {
 	/** array of valid consolidation function names */
-	public static final String CONSOL_FUNS[] = { "AVERAGE", "MAX", "MIN", "LAST" };
+	public static final String CONSOL_FUNS[] = { AVERAGE, MAX, MIN, LAST };
 
 	private String consolFun;
 	private double xff;
@@ -59,7 +59,8 @@ public class ArcDef {
 	 * <a href="../../../../man/rrdcreate.html" target="man">rrdcreate man page</a></p>
 	 *
 	 * @param consolFun Consolidation function. Allowed values are "AVERAGE", "MIN",
-	 * "MAX" and "LAST".
+	 * "MAX" and "LAST" (these string constants are conveniently defined in the
+	 * {@link ConsolFuns} class).
 	 * @param xff X-files factor, between 0 and 1.
 	 * @param steps Number of archive steps.
 	 * @param rows Number of archive rows.

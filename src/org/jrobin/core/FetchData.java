@@ -53,7 +53,7 @@ import java.text.DecimalFormat;
  * all values for the i-th datasource. Returned datasource values correspond to
  * the values returned with {@link #getTimestamps() getTimestamps()} method.<p>
  */
-public class FetchData implements RrdDataSet {
+public class FetchData implements RrdDataSet, ConsolFuns {
 	private FetchRequest request;
 	private Archive matchingArchive;
 	private String[] dsNames;
@@ -275,7 +275,8 @@ public class FetchData implements RrdDataSet {
 	 * Returns aggregated value from the fetched data for a single datasource.
 	 * @param dsName Datasource name
 	 * @param consolFun Consolidation function to be applied to fetched datasource values.
-	 * Valid consolidation functions are MIN, MAX, LAST and AVERAGE
+	 * Valid consolidation functions are MIN, MAX, LAST and AVERAGE (these string constants
+	 * are conveniently defined in the {@link ConsolFuns} class).
 	 * @return MIN, MAX, LAST or AVERAGE value calculated from the fetched data
 	 * for the given datasource name
 	 * @throws RrdException Thrown if the given datasource name cannot be found in fetched data.
@@ -289,28 +290,29 @@ public class FetchData implements RrdDataSet {
 	 * Before applying aggrregation functions, specified RPN expression is applied to fetched
 	 * data. For example, if you have a gauge datasource named 'foots' but you wont to
 	 * find the maximum fetched value in meters use something like:</p>
-	 * <code>getAggregate("foots", "MAX", "value,0.3048,*");</code>
+	 * <code>getAggregate("foots", ConsolFuns.MAX, "value,0.3048,*");</code>
 	 * Note that 'value' in the RPN expression is a reserved word and stands for the
 	 * original value (value fetched from RRD)</p>
 	 * @param dsName Datasource name
 	 * @param consolFun Consolidation function to be applied to fetched datasource values.
-	 * Valid consolidation functions are MIN, MAX, LAST and AVERAGE
+	 * Valid consolidation functions are MIN, MAX, LAST and AVERAGE (these string constants
+	 * are conveniently defined in the {@link ConsolFuns} class)
 	 * @return MIN, MAX, LAST or AVERAGE value calculated from the fetched data
 	 * for the given datasource name
 	 * @throws RrdException Thrown if the given datasource name cannot be found in fetched data.
 	 */
 	public double getAggregate(String dsName, String consolFun, String rpnExpression)
 		throws RrdException {
-		if(consolFun.equals("MAX")) {
+		if(consolFun.equals(MAX)) {
 			return getMax(dsName, rpnExpression);
 		}
-		else if(consolFun.equals("MIN")) {
+		else if(consolFun.equals(MIN)) {
 			return getMin(dsName, rpnExpression);
 		}
-		else if(consolFun.equals("LAST")) {
+		else if(consolFun.equals(LAST)) {
 			return getLast(dsName, rpnExpression);
 		}
-		else if(consolFun.equals("AVERAGE")) {
+		else if(consolFun.equals(AVERAGE)) {
 			return getAverage(dsName, rpnExpression);
 		}
 		else {

@@ -41,9 +41,9 @@ package org.jrobin.core;
  *
  * @author <a href="mailto:saxon@jrobin.org">Sasa Markovic</a>
  */
-public class DsDef {
+public class DsDef implements DsTypes {
 	/** array of valid source types */
-	public static final String[] DS_TYPES = { "GAUGE", "COUNTER", "DERIVE", "ABSOLUTE" };
+	public static final String[] DS_TYPES = { GAUGE, COUNTER, DERIVE, ABSOLUTE };
 
 	private String dsName, dsType;
 	private long heartbeat;
@@ -51,15 +51,16 @@ public class DsDef {
 
 	/**
 	 * <p>Creates new data source definition object. This object should be passed as argument
-	 * to {@link org.jrobin.core.RrdDef#addDatasource(org.jrobin.core.DsDef) addDatasource()} method of
-	 * {@link org.jrobin.core.RrdDb RrdDb} object.</p>
+	 * to {@link org.jrobin.core.RrdDef#addDatasource(org.jrobin.core.DsDef) addDatasource()}
+	 * method of {@link org.jrobin.core.RrdDb RrdDb} object.</p>
 	 *
      * <p>For the complete explanation of all source definition parameters, see RRDTool's
      * <a href="../../../../man/rrdcreate.html" target="man">rrdcreate man page</a></p>
 	 *
 	 * @param dsName Data source name.
 	 * @param dsType Data source type. Valid values are "COUNTER", "GAUGE", "DERIVE"
-	 * and "ABSOLUTE"
+	 * and "ABSOLUTE" (these string constants are conveniently defined in the
+	 * {@link DsTypes} class).
 	 * @param heartbeat Hearbeat
 	 * @param minValue Minimal value. Use <code>Double.NaN</code> if unknown.
 	 * @param maxValue Maximal value. Use <code>Double.NaN</code> if unknown.
