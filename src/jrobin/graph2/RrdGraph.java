@@ -141,9 +141,7 @@ public class RrdGraph implements Serializable
 	public void saveAsPNG( String path, int width, int height ) throws RrdException, IOException
 	{
 		Util.time();
-		RenderedImage r =(RenderedImage) getBufferedImage(width, height);
-		Util.time();
-		ImageIO.write( r, "png", new File(path) );
+		ImageIO.write( (RenderedImage) getBufferedImage(width, height), "png", new File(path) );
 		Util.time(5);
 	}
 	

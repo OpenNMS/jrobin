@@ -53,6 +53,7 @@ class ValueFormatter
 	
 	private double scaledValue;
 	private int scaleIndex				= NO_SCALE;		// Last used scale index
+	private int fixedIndex				= NO_SCALE;
 	private String prefix;
 	
 	private boolean scale		= false;
@@ -60,9 +61,10 @@ class ValueFormatter
 	ValueFormatter() {
 	}
 	
-	ValueFormatter( double base ) 
+	ValueFormatter( double base, int scaleIndex ) 
 	{
 		setBase( base );
+		this.fixedIndex	= scaleIndex;
 	}
 	
 	void setFormat( double value, int numDec, int strLen )
@@ -74,9 +76,15 @@ class ValueFormatter
 	
 	void setScaling( boolean normalScale, boolean uniformScale )
 	{
-		scale = (normalScale || uniformScale);
-		if ( !uniformScale ) 
-			this.scaleIndex = NO_SCALE;
+		if ( fixedIndex >= 0 ) {
+			scale 		= true;
+			scaleIndex	= fixedIndex;
+		}
+		else {
+			scale = (normalScale || uniformScale);
+			if ( !uniformScale ) 
+				scaleIndex = NO_SCALE;
+		}
 	}
 	
 	String getFormattedValue()
@@ -100,6 +108,18 @@ class ValueFormatter
 		valueStr = preSpace.append(valueStr).toString();
 		
 		return valueStr;
+	}
+	
+	// returns a more 'rounded' value for grid steps
+	String getScaledValue()
+	{
+		scaleValue( scaleIndex );
+		long intVal = new Double( scaledValue ).longValue();
+		
+		if ( intVal == scaledValue )
+			return "" + intVal;
+		else
+			return "" + scaledValue;
 	}
 	
 	private void scaleValue( int scaleIndex)
@@ -157,17 +177,17 @@ class ValueFormatter
 	
 	private DecimalFormat getDecimalFormat(int numDec) 
 	{
-		String formatStr = "###0";		// "#,##0", removed the 'grouping' separator
+		StringBuffer formatStr = new StringBuffer("###0");		// "#,##0", removed the 'grouping' separator
 		for(int i = 0; i < numDec; i++) {
 			if(i == 0) {
-				formatStr += ".";
+				formatStr.append('.');
 			}
-			formatStr += "0";
+			formatStr.append('0');
 		}
 
-		NumberFormat nf = NumberFormat.getNumberInstance(Locale.ENGLISH);
-		DecimalFormat df = (DecimalFormat) nf;
-		df.applyPattern( formatStr );
+		NumberFormat nf 	= NumberFormat.getNumberInstance(Locale.ENGLISH);
+		DecimalFormat df 	= (DecimalFormat) nf;
+		df.applyPattern( formatStr.toString() );
 		
 		return df;
 	}

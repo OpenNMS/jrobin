@@ -29,8 +29,8 @@ package jrobin.graph2;
  */
 public class TimeMarker 
 {
-	long timestamp			= 0;
-	String text				= "";
+	private long timestamp	= 0;
+	private String text		= "";
 	private boolean label	= false;
 	
 	TimeMarker( long ts, String v, boolean l )
@@ -43,5 +43,15 @@ public class TimeMarker
 	public boolean isLabel()
 	{
 		return label;
+	}
+	
+	long getTimestamp() 
+	{
+		return timestamp / 1000;	
+	}
+	
+	String getLabel()
+	{
+		return text;
 	}
 }

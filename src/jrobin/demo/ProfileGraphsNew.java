@@ -46,12 +46,12 @@ public class ProfileGraphsNew
 	private final int DNUM = 1;		// profiler num, 0 or 1 (1 = new, 0 = old)
 	private int demoNum;
 	
-	private PrintWriter out;
+	private PrintWriter out; 
 	private RrdGraph graph;
 	private JRobinTimeProfiler profiler;
 	
 	// Demo sake
-	private GregorianCalendar startDate = new GregorianCalendar(2003, 7, 24, 00, 30);
+	private GregorianCalendar startDate = new GregorianCalendar(2002, 7, 24, 00, 30);
 	private GregorianCalendar endDate 	= new GregorianCalendar(2003, 7, 25, 00, 00);
 	
 	private void addTimingInfo( int profileIndex, LinkedList v )

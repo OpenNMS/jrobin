@@ -33,20 +33,24 @@ package jrobin.graph2;
  * To change the template for this generated type comment go to
  * Window - Preferences - Java - Code Generation - Code and Comments
  */
-public class ValueMarker {
-	double value			= 0;
-	String text				= "";
-	private boolean label 	= false;
+class ValueMarker 
+{
+	private double value	= 0;
+	private boolean major 	= false;
 
-	ValueMarker( double value, String text, boolean label )
+	ValueMarker( double value, boolean major )
 	{
-		this.label	= label;
+		this.major	= major;
 		this.value 	= value;
-		this.text 	= text;
 	}
 	
-	public boolean isLabel()
+	protected double getValue()
 	{
-		return label;
+		return value;
+	}
+	
+	protected boolean isMajor()
+	{
+		return major;
 	}
 }

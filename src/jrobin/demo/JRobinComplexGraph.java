@@ -44,8 +44,8 @@ public class JRobinComplexGraph {
 
 	public static void main(String[] args) 
 	{
-		GregorianCalendar start = new GregorianCalendar(2003, 7, 24, 00, 00);
-		GregorianCalendar end 	= new GregorianCalendar(2003, 7, 25, 00, 00);
+		GregorianCalendar start = new GregorianCalendar(2002, 7, 24, 0, 0);
+		GregorianCalendar end 	= new GregorianCalendar(2003, 7, 25, 0, 0);
 		
 		try 
 		{
@@ -64,7 +64,7 @@ public class JRobinComplexGraph {
 			gl.setCanvasColor( Color.LIGHT_GRAY );
 			gl.setImageBorder( Color.BLACK, 1 );
 			gl.setDefaultFontColor( Color.WHITE );
-			gl.setTitleFontColor( Color.GREEN );
+			gl.setTitleFontColor( Color.PINK );
 			gl.setMajorGridColor(Color.YELLOW);
 			gl.setMinorGridColor( new Color( 130, 30, 30) );
 			gl.setFrameColor( Color.BLACK );
@@ -74,9 +74,10 @@ public class JRobinComplexGraph {
 			//gl.setGridY( false );
 			//gl.setFrontGrid(false);
 			gl.setShowLegend(true);
+			//gl.setShowSignature(false);
 			//gl.setUnitsExponent(3);
 			//gl.setAntiAliasing(false);
-			gl.setGridRange( 0, 1, false );
+			//gl.setGridRange( 0, 10, false );
 			//gl.setBackground( "/demo6.png" );
 			//gl.setOverlay( "/overview.gif" );
 			gl.datasource("load", "c:/test.rrd", "serverLoad", "AVERAGE");
@@ -124,10 +125,10 @@ public class JRobinComplexGraph {
 			gl.gprint("load", "LAST", "Current: @6.2@s\n");
 			//gl.hrule( 3.0, null, "legende", 1);
 			//gl.vrule( new GregorianCalendar(2003, 7, 24, 9, 00), Color.BLUE, "9am", 2 );
-			gl.area( new GregorianCalendar(2003, 7, 24, 9, 00), Double.MIN_VALUE, new GregorianCalendar(2003, 7, 24, 17, 00), Double.MAX_VALUE, Color.ORANGE, "deviation@r" );
-			gl.area( new GregorianCalendar(2003, 7, 24, 8, 00), Double.MIN_VALUE, new GregorianCalendar(2003, 7, 24, 10, 00), Double.MAX_VALUE, Color.PINK, null );
-			gl.area( new GregorianCalendar(2003, 7, 24, 16, 00), Double.MIN_VALUE, new GregorianCalendar(2003, 7, 24, 18, 00), 12, Color.PINK, null );
-			gl.stack("load", Color.BLUE, "hmm");
+			//gl.area( new GregorianCalendar(2003, 7, 24, 9, 00), Double.MIN_VALUE, new GregorianCalendar(2003, 7, 24, 17, 00), Double.MAX_VALUE, Color.ORANGE, "deviation@r" );
+			//gl.area( new GregorianCalendar(2003, 7, 24, 8, 00), Double.MIN_VALUE, new GregorianCalendar(2003, 7, 24, 10, 00), Double.MAX_VALUE, Color.PINK, null );
+			//gl.area( new GregorianCalendar(2003, 7, 24, 16, 00), Double.MIN_VALUE, new GregorianCalendar(2003, 7, 24, 18, 00), 12, Color.PINK, null );
+			//gl.stack("load", Color.BLUE, "hmm");
 			gl.comment("\n-------------------------------------------------------------------------------@c");
 			
 			//gl.vrule( new GregorianCalendar(2003, 7, 24, 17, 00), Color.BLUE, "5pm", 3f );

@@ -54,39 +54,31 @@ public class TimeAxisUnit
 				};
 
 	// Indices in the calendarUnit table
-	public static final int SECOND		= 0;
-	public static final int MINUTE		= 1;
-	public static final int HOUR 		= 2;
-	public static final int DAY 		= 3;
-	public static final int WEEK 		= 4;
-	public static final int MONTH 		= 5;
-	public static final int YEAR 		= 6;
+	public static final int SECOND	= 0;
+	public static final int MINUTE	= 1;
+	public static final int HOUR 	= 2;
+	public static final int DAY 	= 3;
+	public static final int WEEK 	= 4;
+	public static final int MONTH 	= 5;
+	public static final int YEAR 	= 6;
 	
-	private int gridTime		= HOUR;			// minor grid
-	private int gridUnits		= 1;
-	private int mGridTime		= HOUR;			// major grid
-	private int mGridUnits		= 6;
-	// By default labels are shown at the major grid
+	private int gridTime			= HOUR;			// minor grid
+	private int gridUnits			= 1;
+	private int mGridTime			= HOUR;			// major grid
+	private int mGridUnits			= 6;
 	
-	private int unitType 		= HOUR;
-	private int unitParts 		= 1;
-	
-	private SimpleDateFormat df = new SimpleDateFormat("HH:mm");
+	private boolean centerLabels	= false; 
+	private SimpleDateFormat df 	= new SimpleDateFormat("HH:mm");
  	
-	TimeAxisUnit( int unitType, int unitParts, SimpleDateFormat df )
-	{
-		this.unitType 	= unitType;
-		this.unitParts 	= unitParts;
-		//this.df			= df; 
-	}
 	
-	TimeAxisUnit( int gridTime, int gridUnits, int mGridTime, int mGridUnits, SimpleDateFormat df )
+	TimeAxisUnit( int gridTime, int gridUnits, int mGridTime, int mGridUnits, SimpleDateFormat df, boolean centerLabels )
 	{
-		this.gridTime	= gridTime;
-		this.gridUnits	= gridUnits;
-		this.mGridTime	= mGridTime;
-		this.mGridUnits	= mGridUnits;
-		this.df			= df;	
+		this.gridTime		= gridTime;
+		this.gridUnits		= gridUnits;
+		this.mGridTime		= mGridTime;
+		this.mGridUnits		= mGridUnits;
+		this.df				= df;
+		this.centerLabels	= centerLabels;
 	}
 	
 	private void setStartPoint( Calendar t, int unit, long exactStart )
@@ -177,5 +169,9 @@ public class TimeAxisUnit
 		c.add( calendarUnit[mGridTime], mGridUnits );
 		
 		return (c.getTimeInMillis() / 1000) - now;
+	}
+	
+	boolean centerLabels() {
+		return centerLabels;
 	}
 }

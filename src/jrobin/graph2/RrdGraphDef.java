@@ -63,68 +63,60 @@ public class RrdGraphDef implements Serializable
 	// ================================================================
 	// -- Members
 	// ================================================================
-	long endTime				= Util.getTime();					// default time spam of the last 24 hours
-	long startTime				= Util.getTime() - 86400L;
+	private long endTime				= Util.getTime();					// default time spam of the last 24 hours
+	private long startTime				= Util.getTime() - 86400L;
 	
-	Title title					= null;								// no title
-	String valueAxisLabel		= null;								// no vertical label
+	private Title title					= null;								// no title
+	private String valueAxisLabel		= null;								// no vertical label
 	
-	boolean gridX				= true;								// hide entire X axis grid (default: no)
-	boolean gridY				= true;								// hide entire Y axis grid (default: no)
-	boolean minorGridX			= true;								// hide minor X axis grid (default: no)
-	boolean minorGridY			= true;								// hide minor Y axis grid (default: no)
-	boolean majorGridX			= true;								// hide major X axis grid with labels (default: no)
-	boolean majorGridY			= true;								// hide major Y axis grid with labels (default: no)
-	boolean frontGrid			= true;								// show grid in front of the chart (default: yes)
-	boolean antiAliasing		= true;								// use anti-aliasing for the chart (default: yes)
-	boolean showLegend			= true;								// show legend and comments (default: yes)
-	boolean drawSignature		= true;								// show JRobin url signature (default: yes)
+	private boolean gridX				= true;								// hide entire X axis grid (default: no)
+	private boolean gridY				= true;								// hide entire Y axis grid (default: no)
+	private boolean minorGridX			= true;								// hide minor X axis grid (default: no)
+	private boolean minorGridY			= true;								// hide minor Y axis grid (default: no)
+	private boolean majorGridX			= true;								// hide major X axis grid with labels (default: no)
+	private boolean majorGridY			= true;								// hide major Y axis grid with labels (default: no)
+	private boolean frontGrid			= true;								// show grid in front of the chart (default: yes)
+	private boolean antiAliasing		= true;								// use anti-aliasing for the chart (default: yes)
+	private boolean showLegend			= true;								// show legend and comments (default: yes)
+	private boolean drawSignature		= true;								// show JRobin url signature (default: yes)
 		
-	Color backColor				= new Color( 245, 245, 245 );		// variation of light gray
-	Color canvasColor			= Color.WHITE;						// white
-	Color borderColor			= Color.LIGHT_GRAY;					// light gray, only applicable with a borderStroke
-	Color normalFontColor		= Color.BLACK;						// black
-	Color titleFontColor		= Color.BLACK;						// black
-	Color majorGridColor		= new Color(130,30,30);				// variation of dark red
-	Color minorGridColor		= new Color(140,140,140);			// variation of gray
-	Color axisColor				= new Color(130,30,30);				// variation of dark red
-	Color arrowColor			= Color.RED;						// red
-	Color frameColor			= Color.LIGHT_GRAY;					// light gray
+	private Color backColor				= new Color( 245, 245, 245 );		// variation of light gray
+	private Color canvasColor			= Color.WHITE;						// white
+	private Color borderColor			= Color.LIGHT_GRAY;					// light gray, only applicable with a borderStroke
+	private Color normalFontColor		= Color.BLACK;						// black
+	private Color titleFontColor		= Color.BLACK;						// black
+	private Color majorGridColor		= new Color(130,30,30);				// variation of dark red
+	private Color minorGridColor		= new Color(140,140,140);			// variation of gray
+	private Color axisColor				= new Color(130,30,30);				// variation of dark red
+	private Color arrowColor			= Color.RED;						// red
+	private Color frameColor			= Color.LIGHT_GRAY;					// light gray
 	
-	Font titleFont 				= null;								// use default 'grapher' font
-	Font normalFont 			= null;								// use default 'grapher' font
+	private Font titleFont 				= null;								// use default 'grapher' font
+	private Font normalFont 			= null;								// use default 'grapher' font
 	
-	File background				= null;								// no background image by default
-	File overlay				= null;								// no overlay image by default
+	private File background				= null;								// no background image by default
+	private File overlay				= null;								// no overlay image by default
 	
-	int chart_lpadding			= Grapher.CHART_LPADDING;			// padding space on the left of the chart area
+	private int chart_lpadding			= Grapher.CHART_LPADDING;			// padding space on the left of the chart area
 	
-	double baseValue			= ValueFormatter.DEFAULT_BASE;		// unit base value to use (default: 1000)
-	int scaleIndex				= ValueFormatter.NO_SCALE;			// fixed units exponent value to use
+	private double baseValue			= ValueFormatter.DEFAULT_BASE;		// unit base value to use (default: 1000)
+	private int scaleIndex				= ValueFormatter.NO_SCALE;			// fixed units exponent value to use
 	
-	BasicStroke borderStroke	= null;								// defaults to standard beveled border
-	TimeAxisUnit tAxis			= null;								// custom time axis grid, defaults to no custom
-	ValueAxisUnit vAxis			= null;								// custom value axis grid, defaults to no custom
-	GridRange gridRange			= null;								// custom value range definition, defaults to auto-scale
+	private BasicStroke borderStroke	= null;								// defaults to standard beveled border
+	private TimeAxisUnit tAxis			= null;								// custom time axis grid, defaults to no custom
+	private ValueAxisUnit vAxis			= null;								// custom value axis grid, defaults to no custom
+	private GridRange gridRange			= null;								// custom value range definition, defaults to auto-scale
 	
 	// -- Non-settable members
-	int numDefs					= 0;								// number of Def datasources added
-	int commentLines			= 0;								// number of complete lines in the list of comment items
-	int commentLineShift		= 0;								// modifier to add to get minimum one complete line of comments
+	private int numDefs					= 0;								// number of Def datasources added
+	private int commentLines			= 0;								// number of complete lines in the list of comment items
+	private int commentLineShift		= 0;								// modifier to add to get minimum one complete line of comments
 	
-	HashMap fetchSources		= new HashMap();					// holds the list of FetchSources
-	Vector cdefList				= new Vector();						// holds the list of Cdef datasources
-	Vector plotDefs				= new Vector();						// holds the list of PlotDefs
-	Vector comments				= new Vector();						// holds the list of comment items
+	private HashMap fetchSources		= new HashMap();					// holds the list of FetchSources
+	private Vector cdefList				= new Vector();						// holds the list of Cdef datasources
+	private Vector plotDefs				= new Vector();						// holds the list of PlotDefs
+	private Vector comments				= new Vector();						// holds the list of comment items
 	
-	
-	
-	// REMOVE THESE
-	boolean tAxisCentered		= false;
-	double valueGridStep		= Double.NaN;						
-	double valueLabelStep		= Double.NaN;
-	double valueStep 			= 0;
-
 		
 	// ================================================================
 	// -- Constructors
@@ -251,6 +243,7 @@ public class RrdGraphDef implements Serializable
 	/**
 	 * Specifies the settings of the image border.
 	 * Default is sort of beveled border around the image.
+	 * To disable the image border, just specify a pixel width of 0.
 	 * @param c Bordercolor of the image.
 	 * @param w Pixel width of the image border.
 	 */
@@ -539,8 +532,7 @@ public class RrdGraphDef implements Serializable
 	 */
 	public void setValueAxis( double gridStep, double labelStep ) 
 	{
-		this.valueGridStep 	= gridStep;
-		this.valueLabelStep = labelStep;
+		vAxis = new ValueAxisUnit( gridStep, labelStep );
 	}
 
 	/**
@@ -557,22 +549,22 @@ public class RrdGraphDef implements Serializable
 	 * @param majGridTimeUnit Time unit for the major grid lines.
 	 * @param majGridUnitSteps Time unit steps for the major grid lines.
 	 * @param dateFormat Format string of the time labels, according to <code>java.text.SimpleDateFormat</code> specifications.
-	 * @param centeredLabels True if the time label should be centered in the area between two major grid lines.
+	 * @param centerLabels True if the time label should be centered in the area between two major grid lines.
 	 */
 	public void setTimeAxis( int minGridTimeUnit, 
 								int minGridUnitSteps, 
 								int majGridTimeUnit, 
 								int majGridUnitSteps, 
 								String dateFormat,
-								boolean centeredLabels ) 
+								boolean centerLabels ) 
 	{
 		this.tAxis 			= new TimeAxisUnit( minGridTimeUnit, 
 												minGridUnitSteps, 
 												majGridTimeUnit, 
 												majGridUnitSteps, 
-												new SimpleDateFormat( dateFormat ) 
+												new SimpleDateFormat( dateFormat ),
+												centerLabels 
 											);
-		this.tAxisCentered	= centeredLabels;		
 	}
 
 	/**
@@ -642,7 +634,7 @@ public class RrdGraphDef implements Serializable
 	 */
 	public void line( String sourceName, Color color, String legend ) throws RrdException 
 	{
-		plotDefs.add( new PlotDef(sourceName, color) );
+		plotDefs.add( new Line(sourceName, color) );
 		addLegend( legend, color );
 	}
 	
@@ -659,7 +651,7 @@ public class RrdGraphDef implements Serializable
 	 */
 	public void line( String sourceName, Color color, String legend, int lineWidth ) throws RrdException 
 	{
-		plotDefs.add( new PlotDef(sourceName, color, lineWidth) );
+		plotDefs.add( new Line(sourceName, color, lineWidth) );
 		addLegend( legend, color );
 	}
 	
@@ -873,6 +865,14 @@ public class RrdGraphDef implements Serializable
 		return arrowColor;
 	}
 	
+	protected Color getBorderColor() {
+		return borderColor;
+	}
+	
+	protected BasicStroke getBorderStroke() {
+		return borderStroke;	
+	}
+	
 	protected boolean showMinorGridX() {
 		return minorGridX;
 	}
@@ -909,6 +909,10 @@ public class RrdGraphDef implements Serializable
 		return drawSignature;
 	}
 	
+	protected boolean isFrontGrid() {
+		return frontGrid;
+	}
+	
 	protected boolean useAntiAliasing() {
 		return antiAliasing;
 	}
@@ -937,11 +941,13 @@ public class RrdGraphDef implements Serializable
 		return gridRange;
 	}
 	
-	//protected getValueAxis()
+	protected ValueAxisUnit getValueAxis() {
+		return vAxis;
+	}
 	
-	//protected getTimeAxis()
-	
-	
+	protected TimeAxisUnit getTimeAxis() {
+		return tAxis;
+	}
 	
 	protected PlotDef[] getPlotDefs()
 	{

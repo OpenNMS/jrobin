@@ -25,7 +25,6 @@
 package jrobin.graph2;
 
 import java.awt.Color;
-import java.awt.BasicStroke;
 import java.util.HashMap;
 
 import jrobin.core.RrdException;
@@ -35,24 +34,27 @@ import jrobin.core.RrdException;
  * 
  * @author Arne Vandamme (arne.vandamme@jrobin.org)
  */
-class PlotDef
+abstract class PlotDef
 {
+	// ================================================================
+	// -- Members
+	// ================================================================
 	static final int PLOT_LINE 	= 0;
 	static final int PLOT_AREA 	= 1;
 	static final int PLOT_STACK	= 2;
-	static final int PLOT_VRULE	= 3;
 	
 	protected boolean visible 	= true;
 	protected boolean stacked	= false;
-	
 	protected int plotType		= PLOT_LINE;	// Default plotdef is a line
-	protected int lineWidth		= 1;			// Default line width of 1 pixel
-	
+		
 	protected String sourceName	= "";
 	protected Source source		= null;
 	protected Color color		= Color.BLACK;	// Default color is black
 	
-	// Implicit
+	
+	// ================================================================
+	// -- Constructors
+	// ================================================================
 	PlotDef() {
 	}
 	
@@ -64,13 +66,7 @@ class PlotDef
 		if ( color == null ) 
 			visible = false;	
 	}
-	
-	PlotDef( String sourceName, Color color, int lineWidth )
-	{
-		this( sourceName, color );
-		this.lineWidth	= lineWidth;
-	}
-	
+		
 	PlotDef( Source source, Color color, boolean stacked, boolean visible )
 	{
 		this.source		= source;
@@ -79,8 +75,10 @@ class PlotDef
 		this.visible	= visible;
 	}
 	
+	
 	// ================================================================
-		
+	// -- Protected methods
+	// ================================================================	
 	void setSource( Source[] sources, HashMap sourceIndex ) throws RrdException
 	{
 		if ( sourceIndex.containsKey(sourceName) ) {
@@ -91,38 +89,15 @@ class PlotDef
 	}
 	
 	// Default draw is a standard line
-	void draw( ChartGraphics g, int[] xValues, int[] stackValues, int lastPlotType ) throws RrdException
-	{
-		g.setColor( color );
-		g.setStroke( new BasicStroke(lineWidth) );
-
-		int ax = 0, ay = 0;
-		int nx = 0, ny = 0, last = -1;
+	abstract void draw( ChartGraphics g, int[] xValues, int[] stackValues, int lastPlotType ) throws RrdException;
 		
-		for (int i = 0; i < xValues.length; i++)
-		{
-			nx = xValues[i];
-			ny = g.getY( source.values[i] );
-			
-			if ( stacked && ny != Integer.MIN_VALUE )
-				ny += stackValues[i];
-			
-			if ( visible && ny != Double.NaN && nx != 0 && ay != Integer.MIN_VALUE && ny != Integer.MIN_VALUE )
-				g.drawLine( ax, ay, nx, ny );
-			
-			stackValues[i] 	= ny;
-			ax 				= nx;
-			ay 				= ny;
-		}
-		
-		g.setStroke( new BasicStroke() );
-	}
-	
 	double getValue( int tblPos, long[] timestamps )
 	{
 		return source.values[tblPos];	
 	}
 	
+	// ================================================================
+	// -- Private methods
 	// ================================================================
 	Source getSource() {
 		return source;
@@ -138,9 +113,5 @@ class PlotDef
 	
 	Color getColor() {
 		return color;
-	}
-	
-	int getLineWidth() {
-		return lineWidth;
 	}
 }

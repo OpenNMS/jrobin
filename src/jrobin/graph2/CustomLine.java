@@ -35,7 +35,7 @@ import jrobin.core.RrdException;
  * 
  * @author Arne Vandamme (arne.vandamme@jrobin.org)
  */
-class CustomLine extends PlotDef
+class CustomLine extends Line
 {
 	private long xVal1;
 	private long xVal2;

@@ -48,7 +48,7 @@ class Stack extends PlotDef
 		try
 		{
 			if ( lastPlotType == PlotDef.PLOT_LINE )
-				stack = new PlotDef( source, color, true, visible );	
+				stack = new Line( source, color, true, visible );	
 			else if ( lastPlotType == PlotDef.PLOT_AREA )
 				stack = new Area( source, color, true, visible );
 	
