@@ -30,7 +30,7 @@ import org.w3c.dom.Node;
 import java.io.IOException;
 import java.io.File;
 
-class XmlReader {
+class XmlReader extends DataImporter {
 
 	private Element root;
 	private Node[] dsNodes, arcNodes;
@@ -134,15 +134,4 @@ class XmlReader {
 		}
 		return values;
 	}
-
-	long getEstimatedSize() throws RrdException {
-		int dsCount = getDsCount();
-		int arcCount = getArcCount();
-		int rowCount = 0;
-		for(int i = 0; i < arcCount; i++) {
-			rowCount += getRows(i);
-		}
-		return RrdDef.calculateSize(dsCount, arcCount, rowCount);
-	}
-
 }
