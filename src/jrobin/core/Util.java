@@ -7,6 +7,9 @@
  *
  * (C) Copyright 2003, by Sasa Markovic.
  *
+ * Developers:    Sasa Markovic (saxon@jrobin.org)
+ *                Arne Vandamme (cobralord@jrobin.org)
+ *
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation;
  * either version 2.1 of the License, or (at your option) any later version.
@@ -27,6 +30,7 @@ import java.text.NumberFormat;
 import java.util.Date;
 import java.util.Locale;
 import java.util.GregorianCalendar;
+import java.io.File;
 
 /**
  * Class defines various utility functions used in JRobin. 
@@ -37,6 +41,9 @@ public class Util {
 	
 	// pattern RRDTool uses to format doubles in XML files
 	static final String PATTERN = "0.0000000000E00";
+	// directory under $USER_HOME used for demo graphs storing
+	static final String JROBIN_DIR = "jrobin-demo";
+
 	static final DecimalFormat df;
 	static {
 		df = (DecimalFormat) NumberFormat.getNumberInstance(Locale.ENGLISH);
@@ -165,6 +172,25 @@ public class Util {
 			value = Double.NaN;
 		}
 		return value;
+	}
+
+	private static final File homeDirFile;
+	private static final String homeDirPath;
+
+	static {
+		String delim = System.getProperty("file.separator");
+		homeDirPath = System.getProperty("user.home") + delim + JROBIN_DIR + delim;
+		homeDirFile = new File(homeDirPath);
+	}
+
+	/**
+	 * Returns path to directory used for placement of JRobin demo graphs.  and creates it
+	 * if necessary.
+	 * @return Path to demo directory (defaults to $HOME/jrobin/) if directory exists or
+	 * was successfully created. Null if such directory could not be created.
+	 */
+	public static String getJRobinDemoDirectory() {
+		return (homeDirFile.exists() || homeDirFile.mkdirs())? homeDirPath: null;
 	}
 
 }
