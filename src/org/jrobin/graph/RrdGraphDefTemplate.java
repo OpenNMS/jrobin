@@ -95,6 +95,8 @@ import java.util.GregorianCalendar;
  *             &lt;maj_grid_unit_steps&gt;2&lt;/maj_grid_unit_steps&gt;
  *             &lt;date_format&gt;HH:mm&lt;/date_format&gt;
  *             &lt;center_labels&gt;true&lt;/center_labels&gt;
+ * 			   &lt;!-- ALLOWED DAYS OF WEEK: MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY --&gt;	
+ * 			   &lt;first_day_of_week&gt;MONDAY&lt;/first_day_of_week&gt;
  *         &lt;/time_axis&gt;
  *         &lt;time_axis_label&gt;time&lt;/time_axis_label&gt;
  *         &lt;title&gt;Graph title&lt;/title&gt;
@@ -356,26 +358,30 @@ public class RrdGraphDefTemplate extends XmlTemplate {
 				String datasource = getChildValue(childs[i], "datasource");
 				String colorStr = getChildValue(childs[i], "color");
 				Color color = Color.decode(colorStr);
-				String legend = getChildValue(childs[i], "legend");
+				String legend = getChildValue(childs[i], "legend", false);
 				rrdGraphDef.stack(datasource, color, legend);
 			}
 			else if(nodeName.equals("comment")) {
-				String comment = getValue(childs[i]);
+				String comment = getValue(childs[i], false);
 				rrdGraphDef.comment(comment);
 			}
 			else if(nodeName.equals("gprint")) {
-				validateTagsOnlyOnce(childs[i], new String[] { "datasource", "cf", "format" });
-				String datasource = getChildValue(childs[i], "datasource");
-				String consolFun = getChildValue(childs[i], "cf");
-				String format = getChildValue(childs[i], "format");
-				rrdGraphDef.gprint(datasource, consolFun, format);
+				validateTagsOnlyOnce(childs[i], new String[] { "datasource", "cf", "format", "base" });
+				String datasource 	= getChildValue(childs[i], "datasource");
+				String consolFun 	= getChildValue(childs[i], "cf");
+				String format 		= getChildValue(childs[i], "format", false );
+				
+				if ( !hasChildNode(childs[i], "base") )
+					rrdGraphDef.gprint( datasource, consolFun, format );
+				else
+					rrdGraphDef.gprint( datasource, consolFun, format, getChildValueAsDouble(childs[i], "base") );
 			}
 			else if(nodeName.equals("hrule")) {
 				validateTagsOnlyOnce(childs[i], new String[] { "value", "color", "legend", "width" });
 				double value = getChildValueAsDouble(childs[i], "value");
 				String colorStr = getChildValue(childs[i], "color");
 				Color color = Color.decode(colorStr);
-				String legend = getChildValue(childs[i], "legend");
+				String legend = getChildValue(childs[i], "legend", false);
 				int width = 1;
 				try {
 					width = getChildValueAsInt(childs[i], "width");
@@ -388,7 +394,7 @@ public class RrdGraphDefTemplate extends XmlTemplate {
 				GregorianCalendar gc = Util.getGregorianCalendar(timeStr);
 				String colorStr = getChildValue(childs[i], "color");
 				Color color = Color.decode(colorStr);
-				String legend = getChildValue(childs[i], "legend");
+				String legend = getChildValue(childs[i], "legend", false);
 				int width = 1;
 				try {
 					width = getChildValueAsInt(childs[i], "width");
@@ -405,7 +411,7 @@ public class RrdGraphDefTemplate extends XmlTemplate {
 			String datasource = getChildValue(lineNode, "datasource");
 			String colorStr = getChildValue(lineNode, "color");
 			Color color = Color.decode(colorStr);
-			String legend = getChildValue(lineNode, "legend");
+			String legend = getChildValue(lineNode, "legend", false);
 			// line width is not mandatory
 			int width = 1;
 			try {
@@ -426,7 +432,7 @@ public class RrdGraphDefTemplate extends XmlTemplate {
 			double v2 = getChildValueAsDouble(lineNode, "value2");
             String colorStr = getChildValue(lineNode, "color");
 			Color color = Color.decode(colorStr);
-			String legend = getChildValue(lineNode, "legend");
+			String legend = getChildValue(lineNode, "legend", false);
 			int width = 1;
 			try {
 				width = getChildValueAsInt(lineNode, "width");
@@ -445,7 +451,7 @@ public class RrdGraphDefTemplate extends XmlTemplate {
 			String datasource = getChildValue(areaNode, "datasource");
 			String colorStr = getChildValue(areaNode, "color");
 			Color color = Color.decode(colorStr);
-			String legend = getChildValue(areaNode, "legend");
+			String legend = getChildValue(areaNode, "legend", false);
 			rrdGraphDef.area(datasource, color, legend);
 		}
 		else if(hasChildNode(areaNode, "time1")) {
@@ -461,7 +467,7 @@ public class RrdGraphDefTemplate extends XmlTemplate {
 			double v2 = getChildValueAsDouble(areaNode, "value2");
             String colorStr = getChildValue(areaNode, "color");
 			Color color = Color.decode(colorStr);
-			String legend = getChildValue(areaNode, "legend");
+			String legend = getChildValue(areaNode, "legend", false);
 			rrdGraphDef.area(gc1, v1, gc2, v2, color, legend);
 		}
 		else {
@@ -644,15 +650,26 @@ public class RrdGraphDefTemplate extends XmlTemplate {
 			else if(option.equals("time_axis")) {
 				validateTagsOnlyOnce(optionNode, new String[] {
 					"min_grid_time_unit", "min_grid_unit_steps", "maj_grid_time_unit",
-					"maj_grid_unit_steps", "date_format", "center_labels"
+					"maj_grid_unit_steps", "date_format", "center_labels", "first_day_of_week"
 				});
-				int unit1 = resolveUnit(getChildValue(optionNode, "min_grid_time_unit"));
-				int step1 = getChildValueAsInt(optionNode, "min_grid_unit_steps");
-				int unit2 = resolveUnit(getChildValue(optionNode, "maj_grid_time_unit"));
-				int step2 = getChildValueAsInt(optionNode, "maj_grid_unit_steps");
-				String format = getChildValue(optionNode, "date_format");
-				boolean center = getChildValueAsBoolean(optionNode, "center_labels");
-				rrdGraphDef.setTimeAxis(unit1, step1, unit2, step2, format, center);
+				
+				if ( hasChildNode( optionNode, "min_grid_time_unit" ) )
+				{	
+					int unit1 = resolveUnit(getChildValue(optionNode, "min_grid_time_unit"));
+					int step1 = getChildValueAsInt(optionNode, "min_grid_unit_steps");
+					int unit2 = resolveUnit(getChildValue(optionNode, "maj_grid_time_unit"));
+					int step2 = getChildValueAsInt(optionNode, "maj_grid_unit_steps");
+					String format = getChildValue(optionNode, "date_format");
+					boolean center = getChildValueAsBoolean(optionNode, "center_labels");
+					rrdGraphDef.setTimeAxis(unit1, step1, unit2, step2, format, center);
+				}
+				
+				// Determine first day of the week
+				if ( hasChildNode( optionNode, "first_day_of_week" ) )
+				{	
+					int dow	  = resolveDayUnit( getChildValue(optionNode, "first_day_of_week") );
+					rrdGraphDef.setFirstDayOfWeek( dow );
+				}
 			}
 			// TIME AXIS LABEL
 			else if(option.equals("time_axis_label")) {
@@ -719,6 +736,34 @@ public class RrdGraphDefTemplate extends XmlTemplate {
 		else {
 			throw new IllegalArgumentException("Invalid unit specified: " + unit);
 		}
+	}
+	
+	private int resolveDayUnit( String unit ) {
+		if ( unit.equalsIgnoreCase("monday") ) {
+			return TimeAxisUnit.MONDAY;
+		}
+		else if ( unit.equalsIgnoreCase("tuesday") ) {
+			return TimeAxisUnit.TUESDAY;
+		}
+		else if ( unit.equalsIgnoreCase("wednesday") ) {
+			return TimeAxisUnit.WEDNESDAY;
+		}
+		else if ( unit.equalsIgnoreCase("thursday") ) {
+			return TimeAxisUnit.THURSDAY;
+		}
+		else if ( unit.equalsIgnoreCase("friday") ) {
+			return TimeAxisUnit.FRIDAY;
+		}
+		else if ( unit.equalsIgnoreCase("saturday") ) {
+			return TimeAxisUnit.SATURDAY;
+		}
+		else if ( unit.equalsIgnoreCase("sunday") ) {
+			return TimeAxisUnit.SUNDAY;
+		}
+		else {
+			throw new IllegalArgumentException( "Invalid day unit specified: " + unit );
+		}
+		
 	}
 
 	private void resolveSpan(Node spanNode) throws RrdException {

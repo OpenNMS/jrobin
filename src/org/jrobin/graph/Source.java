@@ -54,7 +54,6 @@ class Source
 	
 	private long lastTime					= 0;
 	private long totalTime					= 0; 
-	double testval = 0;
 	
 	// ================================================================
 	// -- Constructors
@@ -128,7 +127,7 @@ class Source
 				break;
 				
 			case AGG_TOTAL:
-				return testval;
+				return totalValue;
 		}
 		
 		return Double.NaN;
@@ -163,7 +162,7 @@ class Source
 		if ( !Double.isNaN(lastValue) && !Double.isNaN(value) )
 		{
 			long timeDelta 	= time - lastTime;
-			testval += value;
+
 			totalValue		+= timeDelta * ( value + lastValue ) / 2.0;
 			totalTime		+= timeDelta;
 		}

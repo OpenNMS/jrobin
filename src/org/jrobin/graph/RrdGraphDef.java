@@ -915,6 +915,24 @@ public class RrdGraphDef implements Serializable
 	{
 		addComment( new Gprint(sourceName, consolFun, format) );
 	}
+	
+	/**
+	 * <p>See the {@link #gprint(java.lang.String, java.lang.String, java.lang.String) gprint()} method for more details.
+	 * This gprint implementation allows a specific base value to be specified for this particular gprint only, the specified
+	 * base value can be different than the global base value used through the entire graph for the drawing.  The resulting value of the gprint
+	 * will be formatted according to the specified base value.   
+	 * </p> 
+	 * 
+	 * @param sourceName Graph source name
+	 * @param consolFun Consolidation function to be used for calculation ("AVERAGE", "MIN", "MAX" or "LAST")
+	 * @param format Format string. For example: "speed is @5.2 @sbits/sec@c", "temperature = @0 degrees"
+	 * @param base Base value for the formatting, defaults to the graphing base value
+	 * @throws RrdException Thrown in case of JRobin specific error
+	 */
+	public void gprint( String sourceName, String consolFun, String format, double base ) throws RrdException
+	{
+		addComment( new Gprint(sourceName, consolFun, format, base) );
+	}
 
 	/**
 	 * Exports RrdGraphDef (graph definition) object in XML format to output stream.

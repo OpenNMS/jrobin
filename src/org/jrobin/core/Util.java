@@ -350,23 +350,33 @@ public class Util {
 			return childs.length > 0;
 		}
 
-		static String getChildValue(Node parentNode, String childName) throws RrdException {
+		// -- Wrapper around getChildValue with trim
+		static String getChildValue( Node parentNode, String childName ) throws RrdException {
+			return getChildValue( parentNode, childName, true );
+		}
+		
+		static String getChildValue( Node parentNode, String childName, boolean trim ) throws RrdException {
 			NodeList children = parentNode.getChildNodes();
 			for (int i = 0; i < children.getLength(); i++) {
 				Node child = children.item(i);
 				if (child.getNodeName().equals(childName)) {
-					return getValue(child);
+					return getValue(child, trim);
 				}
 			}
 			throw new RrdException("XML Error, no such child: " + childName);
 		}
 
+		// -- Wrapper around getValue with trim
 		static String getValue(Node node) {
+			return getValue( node, true );
+		}
+		
+		static String getValue(Node node, boolean trimValue ) {
 			String value = null;
 			Node child = node.getFirstChild();
 			if(child != null) {
 				value = child.getNodeValue();
-				if(value != null) {
+				if( value != null && trimValue ) {
 					value = value.trim();
 				}
 			}

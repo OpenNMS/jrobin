@@ -68,6 +68,10 @@ public class TimeAxisUnit
 	private static final String[] UNIT_NAMES = {
 		"SECOND", "MINUTE", "HOUR", "DAY", "WEEK", "MONTH", "YEAR"
 	};
+	
+	private static final String[] DAY_NAMES	= {
+		"SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"
+	};
 
 	private int minGridTimeUnit				= HOUR;			// minor grid
 	private int minGridUnitSteps			= 1;
@@ -281,6 +285,10 @@ public class TimeAxisUnit
 	static String getUnitName(int unit) {
 		return UNIT_NAMES[unit];
 	}
+	
+	static String getDayName( int dayIndex ) {
+		return DAY_NAMES[dayIndex];
+	}
 
 	void exportXmlTemplate(XmlWriter xml) {
 		xml.startTag("time_axis");
@@ -290,6 +298,10 @@ public class TimeAxisUnit
 		xml.writeTag("maj_grid_unit_steps", getMajGridUnitSteps());
 		xml.writeTag("date_format", getDateFormat().toPattern());
 		xml.writeTag("center_labels", getCenterLabels());
+		
+		if ( firstDayOfWeek != MONDAY )
+			xml.writeTag( "first_day_of_week", getDayName(firstDayOfWeek) );
+		
 		xml.closeTag(); // time_axis
 	}
 

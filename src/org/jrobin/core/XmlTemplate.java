@@ -177,13 +177,21 @@ public abstract class XmlTemplate {
 		return Util.Xml.hasChildNode(parentNode, childName);
 	}
 
-	protected String getChildValue(Node parentNode, String childName) throws RrdException {
-		String value = Util.Xml.getChildValue(parentNode, childName);
+	protected String getChildValue( Node parentNode, String childName ) throws RrdException {
+		return getChildValue( parentNode, childName, true );
+	}
+	
+	protected String getChildValue(Node parentNode, String childName, boolean trim) throws RrdException {
+		String value = Util.Xml.getChildValue(parentNode, childName, trim);
 		return resolveMappings(value);
 	}
 
-	protected String getValue(Node parentNode) {
-		String value = Util.Xml.getValue(parentNode);
+	protected String getValue( Node parentNode ) {
+		return getValue( parentNode, true ); 
+	}
+	
+	protected String getValue(Node parentNode, boolean trim ) {
+		String value = Util.Xml.getValue(parentNode, trim);
 		return resolveMappings(value);
 	}
 

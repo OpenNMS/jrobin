@@ -51,6 +51,7 @@ class Gprint extends Comment
 	private int aggregate; 
 	private int numDec									= 3;		// Show 3 decimal values by default
 	private int strLen									= -1;
+	private double baseValue							= -1;		// Default: use global base value
 	private boolean normalScale							= false;
 	private boolean uniformScale						= false;
 	
@@ -61,8 +62,8 @@ class Gprint extends Comment
 	/**
 	 * Constructs a Gprint object based on a string of text (with a specific placement
 	 * marker in), a source from which to retrieve a value, and a consolidation function that
-	 * specifies which value to retrieve.  Possible consolidation functions are <code>AVERAGE, MAX, MIN, FIRST</code>
-	 * and <code>LAST</code>.
+	 * specifies which value to retrieve.  Possible consolidation functions are <code>AVERAGE, MAX, MIN, FIRST, LAST</code>
+	 * and <code>TOTAL</code>.
 	 * @param sourceName Name of the datasource from which to retrieve the consolidated value.
 	 * @param consolFunc Consolidation function to use.
 	 * @param text String of text with a placement marker for the resulting value.
@@ -93,6 +94,24 @@ class Gprint extends Comment
 			throw new RrdException( "Invalid consolidation function specified." );
 	}
 	
+	/**
+	 * Constructs a Gprint object based on a string of text (with a specific placement
+	 * marker in), a source from which to retrieve a value, and a consolidation function that
+	 * specifies which value to retrieve.  Possible consolidation functions are <code>AVERAGE, MAX, MIN, FIRST</code>
+	 * and <code>LAST</code>.
+	 * @param sourceName Name of the datasource from which to retrieve the consolidated value.
+	 * @param consolFunc Consolidation function to use.
+	 * @param text String of text with a placement marker for the resulting value.
+	 * @param base Base value to use for formatting the value that needs to be printed.
+	 * @throws RrdException Thrown in case of a JRobin specific error.
+	 */
+	Gprint( String sourceName, String consolFunc, String text, double base ) throws RrdException
+	{
+		this( sourceName, consolFunc, text );
+		
+		baseValue	= base;
+	}
+	
 	
 	// ================================================================
 	// -- Protected methods
@@ -113,6 +132,11 @@ class Gprint extends Comment
 		{
 			double value 	= sources[ ((Integer) sourceIndex.get(sourceName)).intValue() ].getAggregate( aggregate );
 						
+			// See if we need to use a specific value for the formatting
+			double oldBase	= vFormat.getBase();
+			if ( baseValue != -1 )
+				vFormat.setBase( baseValue );
+			
 			vFormat.setFormat( value, numDec, strLen );
 			vFormat.setScaling( normalScale, uniformScale );
 			
@@ -130,6 +154,10 @@ class Gprint extends Comment
 				
 				oList.set( i, str );
 			}
+			
+			// Reset the base value of the formatter
+			if ( baseValue != -1 )
+				vFormat.setBase( oldBase );
 		}
 		catch (Exception e) {
 			throw new RrdException( "Could not find datasource: " + sourceName );
@@ -182,6 +210,8 @@ class Gprint extends Comment
 		xml.writeTag("datasource", sourceName);
 		xml.writeTag("cf", Source.aggregates[aggregate]);
 		xml.writeTag("format", text);
+		if ( baseValue != -1 )
+			xml.writeTag( "base", baseValue );
 		xml.closeTag(); // gprint
 	}
 
