@@ -23,7 +23,10 @@ class Convertor {
 	}
 
 	private void convert() {
-		println("Conversion started");
+		println("Converting RRDTool files to JRobin native format");
+		println("Converted files will be placed in the same directory, with " +
+			suffix + " suffix appended");
+		println("==========================================");
 		long start = System.currentTimeMillis();
 		if(!workingDirectory.endsWith(SEPARATOR)) {
 			workingDirectory += SEPARATOR;
@@ -42,6 +45,7 @@ class Convertor {
 			};
 			File[] files = parent.listFiles(filter);
 			for(int i = 0; i < files.length; i++) {
+				print("[" + i + "/" + files.length + "] ");
 				convertFile(files[i]);
 			}
 		}
@@ -61,48 +65,56 @@ class Convertor {
 
 	private long convertFile(File rrdFile) {
 		long start = System.currentTimeMillis();
+		String xmlPath = null, destPath = null;
 		try {
 			String sourcePath = rrdFile.getCanonicalPath();
-			String xmlPath = sourcePath + ".xml";
-			String destPath = sourcePath + suffix;
+			xmlPath = sourcePath + ".xml";
+			destPath = sourcePath + suffix;
 			print(rrdFile.getName() + " ");
-			// dump to XML file
 			xmlDump(sourcePath, xmlPath);
-			// create RRD file from XML file
 			RrdDb rrd = new RrdDb(destPath, xmlPath);
 			rrd.close();
 			rrd = null;
 			System.gc();
-			new File(xmlPath).delete();
 			okCount++;
 			long elapsed = System.currentTimeMillis() - start;
 			println("[OK, " + (elapsed / 1000.0) + "]");
 			return elapsed;
 		} catch (IOException e) {
+			removeFile(destPath);
 			badCount++;
 			println("[IO ERROR]");
 			return -1;
 		} catch (RrdException e) {
+			removeFile(destPath);
 			badCount++;
 			println("[RRD ERROR]");
 			return -2;
 		}
+		finally {
+			removeFile(xmlPath);
+		}
+	}
+
+	private static boolean removeFile(String filePath) {
+		if(filePath != null) {
+			return new File(filePath).delete();
+		}
+		return true;
 	}
 
 	private void xmlDump(String sourcePath, String xmlPath) throws IOException {
 		String[] cmd = new String[] { rrdtoolBinary, "dump", sourcePath };
 		Process p = RUNTIME.exec(cmd);
 		OutputStream outStream = new BufferedOutputStream(new FileOutputStream(xmlPath, false));
-		readStream(p.getInputStream(), outStream);
-		readStream(p.getErrorStream(), null);
+		transportStream(p.getInputStream(), outStream);
+		transportStream(p.getErrorStream(), null);
 		try {
 			p.waitFor();
 		}
 		catch(InterruptedException ie) {
 			// NOP
 		}
-		outStream.flush();
-		outStream.close();
 	}
 
 	public static void main(String[] args) {
@@ -124,11 +136,20 @@ class Convertor {
 		System.out.print(msg);
 	}
 
-	private static void readStream(InputStream in, OutputStream out) throws IOException {
-		int b;
-		while((b = in.read()) != -1) {
+	private static void transportStream(InputStream in, OutputStream out) throws IOException {
+		try {
+			int b;
+			while((b = in.read()) != -1) {
+				if(out != null) {
+					out.write(b);
+				}
+			}
+		}
+		finally {
+			in.close();
 			if(out != null) {
-				out.write(b);
+				out.flush();
+				out.close();
 			}
 		}
 	}
