@@ -38,7 +38,7 @@ class XmlReader {
 	private Element root;
 	private Node[] dsNodes, arcNodes;
 
-    public XmlReader(String xmlFilePath) throws IOException, RrdException {
+    XmlReader(String xmlFilePath) throws IOException, RrdException {
 		try {
 			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 			factory.setValidating(false);

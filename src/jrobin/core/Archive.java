@@ -190,15 +190,15 @@ class Archive implements RrdUpdater {
 		return consolFun.get();
 	}
 
-	public double getXff() throws IOException {
+	double getXff() throws IOException {
 		return xff.get();
 	}
 
-	public int getSteps() throws IOException {
+	int getSteps() throws IOException {
 		return steps.get();
 	}
 
-	public int getRows() throws IOException{
+	int getRows() throws IOException{
 		return rows.get();
 	}
 
@@ -215,7 +215,7 @@ class Archive implements RrdUpdater {
 		return Util.normalize(lastUpdateTime, arcStep);
 	}
 
-	public FetchPoint[] fetch(FetchRequest request) throws IOException, RrdException {
+	FetchPoint[] fetch(FetchRequest request) throws IOException, RrdException {
 		long arcStep = getArcStep();
 		long fetchStart = Util.normalize(request.getFetchStart(), arcStep);
 		long fetchEnd = Util.normalize(request.getFetchEnd(), arcStep);

@@ -92,19 +92,19 @@ class Datasource implements RrdUpdater {
 		return dsName.get();
 	}
 
-	public String getDsType() throws IOException {
+	String getDsType() throws IOException {
 		return dsType.get();
 	}
 
-	public long getHeartbeat() throws IOException {
+	long getHeartbeat() throws IOException {
 		return heartbeat.get();
 	}
 
-	public double getMinValue() throws IOException {
+	double getMinValue() throws IOException {
 		return minValue.get();
 	}
 
-	public double getMaxValue() throws IOException {
+	double getMaxValue() throws IOException {
 		return maxValue.get();
 	}
 
