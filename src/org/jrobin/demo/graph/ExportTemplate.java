@@ -24,29 +24,27 @@
  */
 package org.jrobin.demo.graph;
 
-import org.jrobin.graph.RrdGraphDefTemplate;
-import org.jrobin.graph.RrdGraph;
+import org.jrobin.graph.RrdExport;
+import org.jrobin.graph.RrdExportDefTemplate;
+import org.jrobin.graph.ExportData;
 import org.jrobin.core.RrdException;
 
-import java.io.File;
-import java.io.IOException;
 import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.File;
 import java.io.InputStreamReader;
 
 /**
- * <p>Simple command line application that allows you to generate a graph
- * from a RrdGraphDefTemplate.  Pretty straightforward in use.</p>
+ * <p>Simple command line application that allows you to export RRD data by means
+ * of a RrdGraphDefTemplate.  Pretty straightforward in use.</p>
  * 
  * @author Arne Vandamme (cobralord@jrobin.org)
  */
-public class GraphTemplate
+public class ExportTemplate
 {
-	private static String format 	= "gif";
-	private static int width		= 0;			// Auto scale
-	private static int height		= 0;			// Auto scale
-	private static float quality	= 1.0f;			// JPEG quality
+	private static int maxRows		= 400;			// Maximum number of rows
 
-	private static String templateFile, imageName;
+	private static String templateFile, dumpFile;
 
 	private static void die( String msg )
 	{
@@ -58,8 +56,7 @@ public class GraphTemplate
 	{
 		int rpos		= args.length - 1;
 
-		// Last two arguments should be templateFile and imageName
-		imageName		= args[rpos--];
+		// Last argument should be the templateFile
 		templateFile	= args[rpos];
 
 		// Remaining number of parameters should be even
@@ -73,14 +70,10 @@ public class GraphTemplate
 
 			try
 			{
-				if ( arg.equalsIgnoreCase("-img") )
-					format = val;
-				else if ( arg.equalsIgnoreCase("-w") )
-					width = Integer.parseInt(val);
-				else if ( arg.equalsIgnoreCase("-h") )
-					height = Integer.parseInt(val);
-				else if ( arg.equalsIgnoreCase("-q") )
-					quality = Float.parseFloat(val);
+				if ( arg.equalsIgnoreCase("-m") )
+					maxRows = Integer.parseInt(val);
+				else if ( arg.equalsIgnoreCase("-f") )
+					dumpFile = val;
 			}
 			catch ( Exception e ) {
 				die( "Error with option '" + arg + "': " + e.getMessage() );
@@ -99,7 +92,7 @@ public class GraphTemplate
 	{
 		if ( args.length < 2 )
 		{
-			System.out.println( "Usage: GraphTemplate [-img (png|gif|jpg)] [-w width] [-h height] [-q jpegQuality] <template_file> <image_name>" );
+			System.out.println( "Usage: ExportTemplate [-m width] [-f <dump_file>] <template_file>" );
 			System.exit(0);
 		}
 
@@ -109,7 +102,7 @@ public class GraphTemplate
 		{
 			// -- Read the RrdGraphDefTemplate (XML format)
 			System.out.println( ">>> Reading XML template" );
-			RrdGraphDefTemplate template = new RrdGraphDefTemplate( new File(templateFile) );
+			RrdExportDefTemplate template = new RrdExportDefTemplate( new File(templateFile) );
 
 			// -- Set the parameters (if there are any)
 			System.out.println( ">>> Setting template variables" );
@@ -122,23 +115,22 @@ public class GraphTemplate
 					template.setVariable( variables[i], readVariable( in, variables[i] ) );
 			}
 
-			System.out.println( ">>> Generating graph..." );
+			System.out.println( ">>> Exporting data..." );
 
-			long start 		= System.currentTimeMillis();
+			long start 			= System.currentTimeMillis();
 
 			// -- Generate the actual graph
-			RrdGraph graph	= new RrdGraph( template.getRrdGraphDef() );
+			RrdExport export	= new RrdExport( template.getRrdExportDef() );
+			ExportData data		= export.fetch( maxRows );
 
-			if ( format.equalsIgnoreCase("png") )
-				graph.saveAsPNG( imageName, width, height );
-			else if ( format.equalsIgnoreCase("gif") )
-				graph.saveAsGIF( imageName, width, height );
-			else if ( format.equalsIgnoreCase("jpg") )
-				graph.saveAsJPEG( imageName, width, height, quality );
+			if ( dumpFile != null )
+				data.exportXml( dumpFile );
+			else
+				data.exportXml( System.out );
 
 			long stop		= System.currentTimeMillis();
 
-			System.out.println( ">>> Graph generated and saved in " + (stop - start) + " milliseconds" );
+			System.out.println( ">>> Data exported in " + (stop - start) + " milliseconds" );
 		}
 		catch ( RrdException rrde ) {
 			die( "RrdException occurred: " + rrde.getMessage() );
