@@ -140,9 +140,12 @@ public class RrdNioBackend extends RrdFileBackend {
 		if(syncTask != null) {
 			syncTask.cancel();
 		}
-		super.close(); // calls sync() eventually
+		// synchronize with the disk for the last time
+		sync();
 		// release the buffer, make it eligible for GC as soon as possible
 		byteBuffer = null;
+		// close the underlying file		
+		super.close();
 	}
 
 	/**
