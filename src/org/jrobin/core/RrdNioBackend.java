@@ -32,27 +32,33 @@ import java.util.TimerTask;
 import java.util.Timer;
 
 /**
- * JRobin backend which is used to store RRD data to ordinary files on the disk
- * by using java.nio.* package. This is the default backend engine since JRobin 1.4.0.
+ * JRobin backend which is used to store RRD data to ordinary disk files
+ * by using fast java.nio.* package. This is the default backend engine since JRobin 1.4.0.
  */
 public class RrdNioBackend extends RrdFileBackend {
 	/**
-	 * Defines if the <code>System.gc()</code> method should be executed when necessary.
-	 * NIO backend uses large in-memory buffer to cache file data. The buffer remains 'active'
-	 * (by prohibiting file re-creation, for example) as long as it is not garbage collected.
-	 * By forcing <code>gc()</code> where appropriate, memory gets freed sooner and file
-	 * re-creation won't fail.<p>
+	 * Defines <code>System.gc()</code> usage policy for this backend.<p>
 	 *
-	 * The constant is set to true initially and currently there is no API to change it
-	 * during runtime.<p>
+	 * NIO backend uses potentially large in-memory buffer to cache file data.
+	 * The buffer remains 'active' (by prohibiting file re-creation with the smaller file size)
+	 * as long as it is not garbage-collected. By forcing <code>System.gc()</code> call where
+	 * appropriate, this backend will free in-memory buffers sooner and file re-creation won't fail.<p>
+	 *
+	 * The constant is set to <b><code>true</code></b> initially and currently there is no
+	 * API to change it during runtime.
+	 *
+	 * Garbage collection will be forced only in some special circumstances.
+	 * It should not affect the speed of your application significantly.<p>
 	 */
 	public static final boolean SHOULD_GC = true;
 
 	static {
 		if(SHOULD_GC) {
-			Runtime.getRuntime().addShutdownHook(new Thread() {
+			final Runtime runtime = Runtime.getRuntime();
+			runtime.addShutdownHook(new Thread() {
 				public void run() {
-					System.gc();
+					runtime.runFinalization();
+					runtime.gc();
 				}
 			});
 		}
@@ -67,25 +73,22 @@ public class RrdNioBackend extends RrdFileBackend {
 	protected RrdNioBackend(String path, boolean readOnly, int lockMode, int syncMode, int syncPeriod)
 			throws IOException {
 		super(path, readOnly, lockMode);
-		map(false, readOnly);
+		map(readOnly);
 		this.syncMode = syncMode;
 		if(syncMode == RrdNioBackendFactory.SYNC_BACKGROUND && !readOnly) {
 			createSyncTask(syncPeriod);
 		}
 	}
 
-	private void map(boolean isShorter, boolean readOnly) throws IOException {
-		if(isShorter) {
-			byteBuffer = null;
-			if(SHOULD_GC) {
-				System.gc();
-			}
-		}
-		long newLength = getLength();
-		if(newLength > 0) {
+	private void map(boolean readOnly) throws IOException {
+		long length = getLength();
+		if(length > 0) {
 			FileChannel.MapMode mapMode =
 				readOnly? FileChannel.MapMode.READ_ONLY: FileChannel.MapMode.READ_WRITE;
-			byteBuffer = channel.map(mapMode, 0, newLength);
+			byteBuffer = channel.map(mapMode, 0, length);
+		}
+		else {
+			byteBuffer = null;
 		}
 	}
 
@@ -105,9 +108,15 @@ public class RrdNioBackend extends RrdFileBackend {
 	 * @throws IOException Thrown in case of I/O error.
 	 */
 	protected void setLength(long newLength) throws IOException {
-		boolean isShorter = newLength < getLength();
+		if(newLength < getLength()) {
+			// the file will be truncated
+			if(SHOULD_GC) {
+				byteBuffer = null;
+				System.gc();
+			}
+		}
 		super.setLength(newLength);
-		map(isShorter, false);
+		map(false);
 	}
 
 	/**
