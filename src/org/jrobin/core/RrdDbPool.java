@@ -111,6 +111,7 @@ public class RrdDbPool implements Runnable {
 
 	private Map rrdMap = new HashMap();
 	private List rrdGcList = new LinkedList();
+	private RrdBackendFactory factory;
 
 	/**
 	 * Returns an instance to RrdDbPool object. Only one such object may exist in each JVM.
@@ -153,7 +154,7 @@ public class RrdDbPool implements Runnable {
 			return rrdEntry.getRrdDb();
 		} else {
 			// not found, open it
-			RrdDb rrdDb = new RrdDb(path);
+			RrdDb rrdDb = new RrdDb(path, getFactory());
 			addRrdEntry(keypath, rrdDb);
 			return rrdDb;
 		}
@@ -173,7 +174,7 @@ public class RrdDbPool implements Runnable {
 		throws IOException, RrdException {
 		String keypath = getCanonicalPath(path);
 		prooveInactive(keypath);
-		RrdDb rrdDb = new RrdDb(path, xmlPath);
+		RrdDb rrdDb = new RrdDb(path, xmlPath, getFactory());
 		addRrdEntry(keypath, rrdDb);
 		return rrdDb;
 	}
@@ -190,7 +191,7 @@ public class RrdDbPool implements Runnable {
 		String path = rrdDef.getPath();
 		String keypath = getCanonicalPath(path);
 		prooveInactive(keypath);
-		RrdDb rrdDb = new RrdDb(rrdDef);
+		RrdDb rrdDb = new RrdDb(rrdDef, getFactory());
 		addRrdEntry(keypath, rrdDb);
 		return rrdDb;
 	}
@@ -367,6 +368,18 @@ public class RrdDbPool implements Runnable {
 	 */
 	public synchronized void setCapacity(int capacity) {
 		this.capacity = capacity;
+	}
+
+	private RrdBackendFactory getFactory() throws RrdException {
+		if(factory == null) {
+			factory = RrdBackendFactory.getDefaultFactory();
+			if(!(factory instanceof RrdFileBackendFactory)) {
+				factory = null;
+				throw new RrdException(
+					"RrdDbPool cannot work with factories not derived from RrdFileBackendFactory");
+			}
+		}
+		return factory;
 	}
 
 	private class RrdEntry {

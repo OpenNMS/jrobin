@@ -167,9 +167,7 @@ public class FetchRequest {
 	 * @deprecated As of version 1.2.0 replaced with {@link #fetchData() fetchData()}.
 	 */
 	public FetchPoint[] fetch() throws RrdException, IOException {
-		synchronized(parentDb) {
-			return parentDb.fetch(this);
-		}
+		return parentDb.fetch(this);
 	}
 
 	/**
@@ -181,9 +179,7 @@ public class FetchRequest {
 	 * @throws IOException Thrown in case of I/O error.
 	 */
 	public FetchData fetchData() throws RrdException, IOException {
-		synchronized(parentDb) {
-			return parentDb.fetchData(this);
-		}
+		return parentDb.fetchData(this);
 	}
 
 	/**

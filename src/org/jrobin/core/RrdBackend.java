@@ -139,6 +139,16 @@ public abstract class RrdBackend {
 	 */
 	public abstract void close() throws IOException;
 
+	/**
+	 * This method forces all data cached in memory but not yet stored in the persistant
+	 * storage, to be stored in it. In the base class this method does nothing but
+	 * subclasses might provide real functionality.<p>
+	 *
+	 * @throws IOException Thrown in case of I/O error
+	 */
+	protected void sync() throws IOException {
+	}
+
 	final void writeInt(long offset, int value) throws IOException {
 		write(offset, getIntBytes(value));
 	}

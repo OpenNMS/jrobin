@@ -458,7 +458,7 @@ public class RrdDb implements RrdUpdater {
         return createFetchRequest(consolFun, fetchStart, fetchEnd, 1);
 	}
 
-	void store(Sample sample) throws IOException, RrdException {
+	synchronized void store(Sample sample) throws IOException, RrdException {
 		if(closed) {
 			throw new RrdException("RRD already closed, cannot store this  sample");
 		}
@@ -476,7 +476,7 @@ public class RrdDb implements RrdUpdater {
 		header.setLastUpdateTime(newTime);
 	}
 
-	FetchPoint[] fetch(FetchRequest request) throws IOException, RrdException {
+	synchronized FetchPoint[] fetch(FetchRequest request) throws IOException, RrdException {
 		if(closed) {
 			throw new RrdException("RRD already closed, cannot fetch data");
 		}
@@ -485,7 +485,7 @@ public class RrdDb implements RrdUpdater {
 		return points;
 	}
 
-	FetchData fetchData(FetchRequest request) throws IOException, RrdException {
+	synchronized FetchData fetchData(FetchRequest request) throws IOException, RrdException {
 		if(closed) {
 			throw new RrdException("RRD already closed, cannot fetch data");
 		}
@@ -695,7 +695,7 @@ public class RrdDb implements RrdUpdater {
 	 * Returns time of last update operation as timestamp (in seconds).
 	 * @return Last update time (in seconds).
 	 */
-	public long getLastUpdateTime() throws IOException {
+	public synchronized long getLastUpdateTime() throws IOException {
 		return header.getLastUpdateTime();
 	}
 
@@ -716,7 +716,7 @@ public class RrdDb implements RrdUpdater {
 	 * @return RRD definition.
 	 * @throws RrdException Thrown in case of JRobin specific error.
 	 */
-	public RrdDef getRrdDef() throws RrdException, IOException {
+	public synchronized RrdDef getRrdDef() throws RrdException, IOException {
 		// set header
 		long startTime = header.getLastUpdateTime();
 		long step = header.getStep();
@@ -784,7 +784,7 @@ public class RrdDb implements RrdUpdater {
 	 * @throws IOException Thrown in case of I/O error
 	 * @throws RrdException Thrown if supplied argument is not a compatible RrdDb object
 	 */
-	public void copyStateTo(RrdUpdater other) throws IOException, RrdException {
+	public synchronized void copyStateTo(RrdUpdater other) throws IOException, RrdException {
 		if(!(other instanceof RrdDb)) {
 			throw new RrdException(
 				"Cannot copy RrdDb object to " + other.getClass().getName());
@@ -897,8 +897,21 @@ public class RrdDb implements RrdUpdater {
 	 * @return All RRD bytes
 	 * @throws IOException Thrown in case of I/O related error.
 	 */
-	public byte[] getBytes() throws IOException {
+	public synchronized byte[] getBytes() throws IOException {
 		return backend.readAll();
+	}
+
+	/**
+	 * This method forces all RRD data cached in memory but not yet stored in the persistant
+	 * storage, to be stored in it. This method should be used only if you RrdDb object uses
+	 * RrdBackend which implements any kind of data caching (like {@link RrdNioBackend}). This method
+	 * need not be called before the {@link #close()} method call since the close() method always
+	 * synchronizes all data in memory with the data in the persisant storage.<p>
+	 *
+	 * @throws IOException Thrown in case of I/O error
+	 */
+	public synchronized void sync() throws IOException {
+		backend.sync();
 	}
 
 }

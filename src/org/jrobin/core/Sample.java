@@ -196,9 +196,7 @@ public class Sample {
 	 * @throws RrdException Thrown in case of JRobin related error.
 	 */
 	public void update() throws IOException, RrdException {
-		synchronized(parentDb) {
-			parentDb.store(this);
-		}
+		parentDb.store(this);
 		clearCurrentValues();
 	}
 

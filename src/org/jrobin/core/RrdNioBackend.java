@@ -81,8 +81,19 @@ public class RrdNioBackend extends RrdFileBackend {
 	 * @throws IOException Thrown in case of I/O error
 	 */
 	public void close() throws IOException {
-		byteBuffer.force();
 		super.close();
+	}
+
+	/**
+	 * This method forces all data cached in memory but not yet stored in the file,
+	 * to be stored in it. RrdNioBackend uses (a lot of) memory to cache I/O data.
+	 * This method is automatically invoked when the {@link #close()}
+	 * method is called. In other words, you don't have to call sync() before you call close().<p>
+	 *
+	 * @throws IOException Thrown in case of I/O error
+	 */
+	protected void sync() throws IOException {
+		byteBuffer.force();
 	}
 
 }
