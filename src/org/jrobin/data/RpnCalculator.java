@@ -23,7 +23,10 @@
  * Boston, MA 02111-1307, USA.
  */
 
-package org.jrobin.core;
+package org.jrobin.data;
+
+import org.jrobin.core.Util;
+import org.jrobin.core.RrdException;
 
 import java.util.StringTokenizer;
 import java.util.Map;
@@ -288,7 +291,7 @@ public class RpnCalculator {
 	 * Evaluates RPN expression, by replacing variable placeholders with specified values. You are free
 	 * to call this method as many times as needed, with the same or modified variable values.
 	 * @return The value of the RPN expression
-	 * @throws RrdException Thrown if some variable values are not specified before this method is called, or if the
+	 * @throws org.jrobin.core.RrdException Thrown if some variable values are not specified before this method is called, or if the
 	 * RPN expression is not valid.
 	 */
 	public double calculate() throws RrdException {
@@ -515,7 +518,7 @@ public class RpnCalculator {
 		}
 	}
 
-	/** Just a small, trivial demo */
+	/*
 	public static void main(String[] args) throws RrdException {
 		RpnCalculator c = new RpnCalculator("x,y,+,x,y,-,*,SQRT");
 		c.setValue("x", 5);
@@ -524,4 +527,5 @@ public class RpnCalculator {
 		c.setValue("x", 6);
 		System.out.println(c.calculate());
 	}
+	*/
 }

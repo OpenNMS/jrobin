@@ -25,6 +25,9 @@
 
 package org.jrobin.core;
 
+import org.jrobin.data.DataStats;
+import org.jrobin.data.RpnCalculator;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.FileOutputStream;
@@ -326,7 +329,7 @@ public class FetchData implements RrdDataSet, ConsolFuns {
 	 */
 	public double getAggregate(String dsName, String consolFun, String rpnExpression)
 			throws RrdException {
-		FetchDataStats stats = getStats(dsName, rpnExpression);
+		DataStats stats = getStats(dsName, rpnExpression);
 		if (consolFun.equals(CF_MAX)) {
 			return stats.getMax();
 		}
@@ -358,7 +361,7 @@ public class FetchData implements RrdDataSet, ConsolFuns {
 	 *         for the given datasource name
 	 * @throws RrdException Thrown if the given datasource name cannot be found in fetched data.
 	 */
-	public FetchDataStats getStats(String dsName) throws RrdException {
+	public DataStats getStats(String dsName) throws RrdException {
 		return getStats(dsName, null);
 	}
 
@@ -378,38 +381,19 @@ public class FetchData implements RrdDataSet, ConsolFuns {
 	 *         for the given datasource name and a given RPN expression
 	 * @throws RrdException Thrown if the given datasource name cannot be found in fetched data
 	 */
-	public FetchDataStats getStats(String dsName, String rpnExpression) throws RrdException {
-		double[] values = getValues(dsName);
-		long totalSecs = 0;
-		double totalValue = 0.0, min = Double.NaN, max = Double.NaN;
-		RpnCalculator rpnCalculator = null;
+	public DataStats getStats(String dsName, String rpnExpression) throws RrdException {
+		double[] values = getValues(dsName), calculatedValues = values;
 		if (rpnExpression != null) {
-			rpnCalculator = new RpnCalculator(rpnExpression);
-		}
-		for (int i = 0; i < values.length - 1; i++) {
-			long t1 = Math.max(request.getFetchStart(), timestamps[i]);
-			long t2 = Math.min(request.getFetchEnd(), timestamps[i + 1]);
-			double value = values[i + 1];
-			if (rpnCalculator != null) {
-				rpnCalculator.setValue(value);
-				rpnCalculator.setTimestamp(t2);
-				value = rpnCalculator.calculate();
+			calculatedValues = new double[values.length];
+			RpnCalculator rpnCalculator = new RpnCalculator(rpnExpression);
+			for (int i = 0; i < values.length; i++) {
+				rpnCalculator.setValue(values[i]);
+				rpnCalculator.setTimestamp(timestamps[i]);
+				calculatedValues[i] = rpnCalculator.calculate();
 			}
-			if (!Double.isNaN(value)) {
-				totalSecs += (t2 - t1);
-				totalValue += (t2 - t1) * value;
-			}
-			min = Util.min(min, value);
-			max = Util.max(max, value);
 		}
-		FetchDataStats stats = new FetchDataStats();
-		stats.setFirst(values[1]);
-		stats.setLast(values[values.length - 1]);
-		stats.setMax(max);
-		stats.setMin(min);
-		stats.setSeconds(totalSecs);
-		stats.setTotal(totalValue);
-		return stats;
+		return new DataStats(timestamps, calculatedValues,
+				request.getFetchStart(), request.getFetchEnd());
 	}
 
 	/**
