@@ -80,8 +80,9 @@ class Demo {
 		println(rrdDef.dump());
 		log.println(rrdDef.dump());
 		RrdDb rrdDb = new RrdDb(rrdDef);
+		println("== RRD file created.");
 		rrdDb.close();
-		println("== RRD file created and closed.");
+		println("== RRD file closed.");
 
 		// update database
 		GaugeSource sunSource = new GaugeSource(1200, 20);
@@ -103,7 +104,7 @@ class Demo {
 				System.out.print("*");
 			};
 		}
-		System.out.println("");
+		println("");
 		println("== Finished. RRD file updated " + n + " times");
 		println("== Last update time was: " + rrdDb.getLastUpdateTime());
 
@@ -130,7 +131,9 @@ class Demo {
 		// close files
 		println("== Closing both RRD files");
 		rrdDb.close();
+		println("== First file closed");
 		rrdRestoredDb.close();
+		println("== Second file closed");
 
 		// create graph
 		println("== Creating graph from the second file");
@@ -157,12 +160,12 @@ class Demo {
 		// create graph finally
 		RrdGraph graph = new RrdGraph(gDef);
 		println("== Graph created");
-		println("== Saving graph as PNG file " + pngPath);
 		graph.saveAsPNG(pngPath, 400, 250);
-		println("== Saving graph as JPEG file " + jpegPath);
+		println("== Graph saved as a PNG file " + pngPath);
 		graph.saveAsJPEG(jpegPath, 400, 250, 0.5F);
-		println("== Saving graph as GIF file " + gifPath);
+		println("== Graph saved as a JPEG file " + jpegPath);
 		graph.saveAsGIF(gifPath, 400, 250);
+		println("== Graph saved as a GIF file " + gifPath);
 
 		// demo ends
 		log.close();
@@ -171,7 +174,11 @@ class Demo {
 	}
 
 	static void println(String msg) {
-		System.out.println(msg);
+		System.out.println(msg + " " + Util.getLapTime());
+	}
+
+	static void print(String msg) {
+		System.out.print(msg);
 	}
 
 	static class GaugeSource {

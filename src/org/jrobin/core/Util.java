@@ -445,6 +445,21 @@ public class Util {
 			}
 		}
 	}
+
+	private static Date lastLap = new Date();
+
+	/**
+	 * Function used for debugging purposes and performance bottlenecks detection.
+	 * Probably of no use for end users of JRobin.
+	 * @return String representing time in seconds since last
+	 * <code>getLapTime()</code> method call.
+	 */
+	public static String getLapTime() {
+		Date newLap = new Date();
+		double seconds = (newLap.getTime() - lastLap.getTime()) / 1000.0;
+		lastLap = newLap;
+		return "[" + seconds + " sec]";
+	}
 }
 
 
