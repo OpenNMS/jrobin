@@ -148,16 +148,16 @@ public class Archive implements RrdUpdater, ConsolFuns {
 			state.setNanSteps(state.getNanSteps() + 1);
 		}
 		else {
-			if(consolFun.get().equals(MIN)) {
+			if(consolFun.get().equals(CF_MIN)) {
 				state.setAccumValue(Util.min(state.getAccumValue(), value));
 			}
-			else if(consolFun.get().equals(MAX)) {
+			else if(consolFun.get().equals(CF_MAX)) {
 				state.setAccumValue(Util.max(state.getAccumValue(), value));
 			}
-			else if(consolFun.get().equals(LAST)) {
+			else if(consolFun.get().equals(CF_LAST)) {
 				state.setAccumValue(value);
 			}
-			else if(consolFun.get().equals(AVERAGE)) {
+			else if(consolFun.get().equals(CF_AVERAGE)) {
 				state.setAccumValue(Util.sum(state.getAccumValue(), value));
 			}
 		}
@@ -171,7 +171,7 @@ public class Archive implements RrdUpdater, ConsolFuns {
 		//double nanPct = (double) nanSteps / (double) arcSteps;
 		double accumValue = state.getAccumValue();
 		if(nanSteps <= arcXff * arcSteps && !Double.isNaN(accumValue)) {
-			if(consolFun.get().equals(AVERAGE)) {
+			if(consolFun.get().equals(CF_AVERAGE)) {
 				accumValue /= (arcSteps - nanSteps);
 			}
 			robin.store(accumValue);

@@ -105,16 +105,16 @@ public class RrdDb implements RrdUpdater {
 	 * <pre>
 	 * // create new RRD definition
      * RrdDef def = new RrdDef("test.rrd", 300);
-     * def.addDatasource("input", DsTypes.COUNTER, 600, 0, Double.NaN);
-     * def.addDatasource("output", DsTypes.COUNTER, 600, 0, Double.NaN);
-     * def.addArchive(ConsolFuns.AVERAGE, 0.5, 1, 600);
-     * def.addArchive(ConsolFuns.AVERAGE, 0.5, 6, 700);
-     * def.addArchive(ConsolFuns.AVERAGE, 0.5, 24, 797);
-     * def.addArchive(ConsolFuns.AVERAGE, 0.5, 288, 775);
-     * def.addArchive(ConsolFuns.MAX, 0.5, 1, 600);
-     * def.addArchive(ConsolFuns.MAX, 0.5, 6, 700);
-     * def.addArchive(ConsolFuns.MAX, 0.5, 24, 797);
-     * def.addArchive(ConsolFuns.MAX, 0.5, 288, 775);
+     * def.addDatasource("input", DsTypes.DT_COUNTER, 600, 0, Double.NaN);
+     * def.addDatasource("output", DsTypes.DT_COUNTER, 600, 0, Double.NaN);
+     * def.addArchive(ConsolFuns.CF_AVERAGE, 0.5, 1, 600);
+     * def.addArchive(ConsolFuns.CF_AVERAGE, 0.5, 6, 700);
+     * def.addArchive(ConsolFuns.CF_AVERAGE, 0.5, 24, 797);
+     * def.addArchive(ConsolFuns.CF_AVERAGE, 0.5, 288, 775);
+     * def.addArchive(ConsolFuns.CF_MAX, 0.5, 1, 600);
+     * def.addArchive(ConsolFuns.CF_MAX, 0.5, 6, 700);
+     * def.addArchive(ConsolFuns.CF_MAX, 0.5, 24, 797);
+     * def.addArchive(ConsolFuns.CF_MAX, 0.5, 288, 775);
      *
      * // RRD definition is now completed, create the database!
      * RrdDb rrd = new RrdDb(def);

@@ -31,6 +31,7 @@ import java.util.regex.Pattern;
 
 import org.jrobin.core.RrdException;
 import org.jrobin.core.XmlWriter;
+import org.jrobin.core.ConsolFuns;
 
 /**
  * <p>Represents a piece of aligned text (containing a retrieved datasource value) to be drawn on the graph.</p>
@@ -38,7 +39,7 @@ import org.jrobin.core.XmlWriter;
  * @author Arne Vandamme (cobralord@jrobin.org)
  * @author Sasa Markovic (saxon@jrobin.org)
  */
-class Gprint extends Comment 
+class Gprint extends Comment implements ConsolFuns
 {
 	// ================================================================
 	// -- Members
@@ -65,8 +66,10 @@ class Gprint extends Comment
 	/**
 	 * Constructs a Gprint object based on a string of text (with a specific placement
 	 * marker in), a source from which to retrieve a value, and a consolidation function that
-	 * specifies which value to retrieve.  Possible consolidation functions are <code>AVERAGE, MAX, MIN, FIRST, LAST</code>
-	 * and <code>TOTAL</code>.
+	 * specifies which value to retrieve.  Possible consolidation functions are
+	 * <code>"AVERAGE", "MAX", "MIN", "FIRST", "LAST"</code>
+	 * and <code>"TOTAL"</code> - these string constants are conveniently defined
+	 * in the {@link org.jrobin.core.ConsolFuns ConsolFuns} class.
 	 * @param sourceName Name of the datasource from which to retrieve the consolidated value.
 	 * @param consolFunc Consolidation function to use.
 	 * @param text String of text with a placement marker for the resulting value.
@@ -81,17 +84,17 @@ class Gprint extends Comment
 		this.commentType 	= Comment.CMT_GPRINT;
 		this.sourceName 	= sourceName;
 		
-		if ( consolFunc.equalsIgnoreCase("AVERAGE") || consolFunc.equalsIgnoreCase("AVG") )
+		if ( consolFunc.equalsIgnoreCase(CF_AVERAGE) || consolFunc.equalsIgnoreCase("AVG") )
 			aggregate = Source.AGG_AVERAGE;
-		else if ( consolFunc.equalsIgnoreCase("MAX") || consolFunc.equalsIgnoreCase("MAXIMUM") )
+		else if ( consolFunc.equalsIgnoreCase(CF_MAX) || consolFunc.equalsIgnoreCase("MAXIMUM") )
 			aggregate = Source.AGG_MAXIMUM;
-		else if ( consolFunc.equalsIgnoreCase("MIN") || consolFunc.equalsIgnoreCase("MINIMUM") )
+		else if ( consolFunc.equalsIgnoreCase(CF_MIN) || consolFunc.equalsIgnoreCase("MINIMUM") )
 			aggregate = Source.AGG_MINIMUM;
-		else if ( consolFunc.equalsIgnoreCase("LAST") )
+		else if ( consolFunc.equalsIgnoreCase(CF_LAST) )
 			aggregate = Source.AGG_LAST;
-		else if ( consolFunc.equalsIgnoreCase("FIRST") )
+		else if ( consolFunc.equalsIgnoreCase(CF_FIRST) )
 			aggregate = Source.AGG_FIRST;
-		else if ( consolFunc.equalsIgnoreCase("TOTAL") )
+		else if ( consolFunc.equalsIgnoreCase(CF_TOTAL) )
 			aggregate = Source.AGG_TOTAL;
 		else
 			throw new RrdException( "Invalid consolidation function specified." );

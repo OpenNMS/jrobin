@@ -275,7 +275,8 @@ public class FetchSourceList
 	 * @param file Path to RRD file.
 	 * @param dsName Data source name defined in the RRD file.
 	 * @param consolFunc Consolidation function that will be used to extract data from the RRD
-	 * file ("AVERAGE", "MIN", "MAX" or "LAST").
+	 * file ("AVERAGE", "MIN", "MAX" or "LAST" - these string constants are conveniently defined 
+	 * in the {@link org.jrobin.core.ConsolFuns ConsolFuns} class).
 	 * @param backend Name of the RrdBackendFactory that should be used for this RrdDb.
 	 * @throws RrdException Thrown in case of a JRobin specific error.
 	 */
@@ -305,7 +306,8 @@ public class FetchSourceList
 	 * @param file Path to RRD file.
 	 * @param dsName Data source name defined in the RRD file.
 	 * @param consolFunc Consolidation function that will be used to extract data from the RRD
-	 * file ("AVERAGE", "MIN", "MAX" or "LAST").
+	 * file ("AVERAGE", "MIN", "MAX" or "LAST" - these string constants are conveniently defined
+	 * in the {@link org.jrobin.core.ConsolFuns ConsolFuns} class).
 	 * @throws RrdException Thrown in case of a JRobin specific error.
 	 */
 	public void add( String name, String file, String dsName, String consolFunc ) throws RrdException

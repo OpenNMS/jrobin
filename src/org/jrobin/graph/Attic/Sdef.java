@@ -4,15 +4,17 @@ import java.util.HashMap;
 
 import org.jrobin.core.RrdException;
 import org.jrobin.core.XmlWriter;
+import org.jrobin.core.ConsolFuns;
 
 /**
  * <p>Represents a 'static' datasource for a graph.  A static datasource is a single value (constant),
- * but can only be the result of applying a consolidation function (AVG, MIN, MAX, LAST, FIRST or TOTAL)
- * to one of the other, already defined, datasources.</p>
+ * but can only be the result of applying a consolidation function
+ * ("AVERAGE", "MIN", "MAX", "LAST", "FIRST" or "TOTAL") to one of the other,
+ * already defined, datasources.</p>
  *
  * @author Arne Vandamme (cobralord@jrobin.org)
  */
-class Sdef extends Cdef
+class Sdef extends Cdef implements ConsolFuns
 {
 	// ================================================================
 	// -- Members
@@ -20,7 +22,7 @@ class Sdef extends Cdef
 	private int defIndex		= -1;
 
 	private String defName		= "";
-	private String consolFunc	= "AVERAGE";
+	private String consolFunc	= CF_AVERAGE;
 	private int aggregate		= Source.AGG_AVERAGE;
 
 	private boolean calculated	= false;
@@ -47,17 +49,17 @@ class Sdef extends Cdef
 		this.consolFunc	= consolFunc;
 
 		// -- Parse the consolidation function to be used
-		if ( consolFunc.equalsIgnoreCase("AVERAGE") || consolFunc.equalsIgnoreCase("AVG") )
+		if ( consolFunc.equalsIgnoreCase(CF_AVERAGE) || consolFunc.equalsIgnoreCase("AVG") )
 			aggregate = Source.AGG_AVERAGE;
-		else if ( consolFunc.equalsIgnoreCase("MAX") || consolFunc.equalsIgnoreCase("MAXIMUM") )
+		else if ( consolFunc.equalsIgnoreCase(CF_MAX) || consolFunc.equalsIgnoreCase("MAXIMUM") )
 			aggregate = Source.AGG_MAXIMUM;
-		else if ( consolFunc.equalsIgnoreCase("MIN") || consolFunc.equalsIgnoreCase("MINIMUM") )
+		else if ( consolFunc.equalsIgnoreCase(CF_MIN) || consolFunc.equalsIgnoreCase("MINIMUM") )
 			aggregate = Source.AGG_MINIMUM;
-		else if ( consolFunc.equalsIgnoreCase("LAST") )
+		else if ( consolFunc.equalsIgnoreCase(CF_LAST) )
 			aggregate = Source.AGG_LAST;
-		else if ( consolFunc.equalsIgnoreCase("FIRST") )
+		else if ( consolFunc.equalsIgnoreCase(CF_FIRST) )
 			aggregate = Source.AGG_FIRST;
-		else if ( consolFunc.equalsIgnoreCase("TOTAL") )
+		else if ( consolFunc.equalsIgnoreCase(CF_TOTAL) )
 			aggregate = Source.AGG_TOTAL;
 		else
 			throw new RrdException( "Invalid consolidation function specified." );

@@ -43,7 +43,7 @@ package org.jrobin.core;
  */
 public class DsDef implements DsTypes {
 	/** array of valid source types */
-	public static final String[] DS_TYPES = { GAUGE, COUNTER, DERIVE, ABSOLUTE };
+	public static final String[] DS_TYPES = { DT_GAUGE, DT_COUNTER, DT_DERIVE, DT_ABSOLUTE };
 
 	private String dsName, dsType;
 	private long heartbeat;

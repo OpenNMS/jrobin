@@ -27,6 +27,7 @@ package org.jrobin.graph;
 import org.jrobin.core.RrdDataSet;
 import org.jrobin.core.RrdException;
 import org.jrobin.core.Util;
+import org.jrobin.core.ConsolFuns;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
@@ -38,7 +39,7 @@ import java.io.*;
  *
  * @author Arne Vandamme (cobralord@jrobin.org)
  */
-public class ExportData implements RrdDataSet
+public class ExportData implements RrdDataSet, ConsolFuns
 {
 	// ================================================================
 	// -- Members
@@ -301,25 +302,28 @@ public class ExportData implements RrdDataSet
 	 *
 	 * @param dsName Datasource name
 	 * @param consolFun Consolidation function to be applied to set datasource values datasource.
-	 * Valid consolidation functions are MIN, MAX, LAST, FIRST, AVERAGE and TOTAL
-	 * @return MIN, MAX, LAST, FIRST, AVERAGE or TOTAL value calculated from the dataset for the given datasource name
+	 * Valid consolidation functions are "MIN", "MAX", "LAST", "FIRST", "AVERAGE" and "TOTAL"
+	 * (These constants are conveniently defined in the
+	 * {@link org.jrobin.core.ConsolFuns ConsolFuns} class).
+	 * @return MIN, MAX, LAST, FIRST, AVERAGE or TOTAL value calculated from the dataset
+	 * for the given datasource name
 	 * @throws RrdException Thrown if the given datasource name cannot be found in the dataset.
 	 */
 	public double getAggregate( String dsName, String consolFun ) throws RrdException
 	{
 		Source src = getSource( dsName );
 
-		if( consolFun.equalsIgnoreCase("MAX") )
+		if( consolFun.equalsIgnoreCase(CF_MAX) )
 			return src.getAggregate( Source.AGG_MAXIMUM );
-		else if ( consolFun.equalsIgnoreCase("MIN") )
+		else if ( consolFun.equalsIgnoreCase(CF_MIN) )
 			return src.getAggregate( Source.AGG_MINIMUM );
-		else if ( consolFun.equalsIgnoreCase("LAST") )
+		else if ( consolFun.equalsIgnoreCase(CF_LAST) )
 			return src.getAggregate( Source.AGG_LAST);
-		else if ( consolFun.equalsIgnoreCase("FIRST") )
+		else if ( consolFun.equalsIgnoreCase(CF_FIRST) )
 			return src.getAggregate( Source.AGG_FIRST );
-		else if ( consolFun.equalsIgnoreCase("TOTAL") )
+		else if ( consolFun.equalsIgnoreCase(CF_TOTAL) )
 			return src.getAggregate( Source.AGG_TOTAL );
-		else if ( consolFun.equalsIgnoreCase("AVERAGE") )
+		else if ( consolFun.equalsIgnoreCase(CF_AVERAGE) )
 			return src.getAggregate( Source.AGG_AVERAGE );
 		else
 			throw new RrdException("Unsupported consolidation function [" + consolFun + "]");
@@ -341,7 +345,8 @@ public class ExportData implements RrdDataSet
 	 *
 	 * @param sourceName Source name
 	 * @param consolFun Consolidation function to be used for calculation ("AVERAGE",
-	 * "MIN", "MAX", "LAST" or "TOTAL" (since 1.3.1)
+	 * "MIN", "MAX", "LAST" or "TOTAL" (since 1.3.1) - These constants are conveniently
+	 * defined in the {@link org.jrobin.core.ConsolFuns ConsolFuns} class.
 	 * @param format Format string. For example: "speed is @5.2 @sbits/sec@c",
 	 * "temperature = @0 degrees"
 	 * @throws RrdException Thrown in case of JRobin specific error
@@ -366,7 +371,8 @@ public class ExportData implements RrdDataSet
 	 *
 	 * @param sourceName Source name
 	 * @param consolFun Consolidation function to be used for calculation ("AVERAGE",
-	 * "MIN", "MAX", "LAST" or "TOTAL" (since 1.3.1)
+	 * "MIN", "MAX", "LAST" or "TOTAL" (since 1.3.1) - These constants are conveniently
+	 * defined in the {@link org.jrobin.core.ConsolFuns ConsolFuns} class.
 	 * @param format Format string. For example: "speed is @5.2 @sbits/sec@c",
 	 * "temperature = @0 degrees"
 	 * @param base Base value used to calculate the appriopriate scaling SI magnitude.

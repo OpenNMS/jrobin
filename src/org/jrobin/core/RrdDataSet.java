@@ -127,8 +127,8 @@ public interface RrdDataSet
 	 *
 	 * @param dsName Datasource name
 	 * @param consolFun Consolidation function to be applied to set datasource values datasource.
-	 * Valid consolidation functions are MIN, MAX, LAST and AVERAGE (these string constants
-	 * are conveniently defined in the {@link ConsolFuns} class)
+	 * Valid consolidation functions are "MIN", "MAX", "LAST" and "AVERAGE"
+	 * (these string constants are conveniently defined in the {@link ConsolFuns} class)
 	 * @return MIN, MAX, LAST or AVERAGE value calculated from the dataset for the given datasource name
 	 * @throws RrdException Thrown if the given datasource name cannot be found in the dataset.
 	 */

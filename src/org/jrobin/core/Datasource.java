@@ -207,20 +207,20 @@ public class Datasource implements RrdUpdater, DsTypes {
 		double updateValue = Double.NaN;
 		if(newTime - oldTime <= heartbeat.get()) {
 			String type = dsType.get();
-        	if(type.equals(GAUGE)) {
+        	if(type.equals(DT_GAUGE)) {
 				updateValue = newValue;
 			}
-			else if(type.equals(ABSOLUTE)) {
+			else if(type.equals(DT_ABSOLUTE)) {
 				if(!Double.isNaN(newValue)) {
 					updateValue = newValue / (newTime - oldTime);
 				}
 			}
-			else if(type.equals(DERIVE)) {
+			else if(type.equals(DT_DERIVE)) {
 				if(!Double.isNaN(newValue) && !Double.isNaN(oldValue)) {
 					updateValue = (newValue - oldValue) / (newTime - oldTime);
 				}
 			}
-			else if(type.equals(COUNTER)) {
+			else if(type.equals(DT_COUNTER)) {
 				if(!Double.isNaN(newValue) && !Double.isNaN(oldValue)) {
 					double diff = newValue - oldValue;
 					double max32bit = Math.pow(2, 32);

@@ -38,7 +38,7 @@ import org.jrobin.core.*;
  * 
  * @author Arne Vandamme (cobralord@jrobin.org)
  */
-class FetchSource 
+class FetchSource implements ConsolFuns
 {
 	// ================================================================
 	// -- Members
@@ -49,7 +49,9 @@ class FetchSource
 	protected static final int LAST			= 3;
 	protected static final int MAX_CF 		= 4;
 	
-	protected static final String[] cfNames	= new String[] { "AVERAGE", "MAX", "MIN", "LAST" };
+	protected static final String[] cfNames	= new String[] {
+		CF_AVERAGE, CF_MAX, CF_MIN, CF_LAST
+	};
 
 	private RrdDb rrd;
 	private RrdDef rrdDef;
@@ -130,13 +132,13 @@ class FetchSource
 	 */
 	protected void addSource( String consolFunc, String dsName, String name ) throws RrdException
 	{
-		if ( consolFunc.equalsIgnoreCase("AVERAGE") || consolFunc.equalsIgnoreCase("AVG") )
+		if ( consolFunc.equalsIgnoreCase(CF_AVERAGE) || consolFunc.equalsIgnoreCase("AVG") )
 			datasources[AVG].add( new String[] { dsName, name } );
-		else if ( consolFunc.equalsIgnoreCase("MAX") || consolFunc.equalsIgnoreCase("MAXIMUM") )
+		else if ( consolFunc.equalsIgnoreCase(CF_MAX) || consolFunc.equalsIgnoreCase("MAXIMUM") )
 			datasources[MAX].add( new String[] { dsName, name } );
-		else if ( consolFunc.equalsIgnoreCase("MIN") || consolFunc.equalsIgnoreCase("MINIMUM") )
+		else if ( consolFunc.equalsIgnoreCase(CF_MIN) || consolFunc.equalsIgnoreCase("MINIMUM") )
 			datasources[MIN].add( new String[] { dsName, name } );
-		else if ( consolFunc.equalsIgnoreCase("LAST") )
+		else if ( consolFunc.equalsIgnoreCase(CF_LAST) )
 			datasources[LAST].add( new String[] { dsName, name } );
 		else
 			throw new RrdException( "Invalid consolidation function specified." );

@@ -311,7 +311,7 @@ public class RrdDef {
 	 * definition parameters see RRDTool's
 	 * <a href="../../../../man/rrdcreate.html" target="man">rrdcreate man page</a>.</p>
 	 * @param consolFun Consolidation function. Valid values are "AVERAGE",
-	 * "MIN", "MAX" and "LAST" (these constants are also defined in the
+	 * "MIN", "MAX" and "LAST" (these constants are conveniently defined in the
 	 * {@link ConsolFuns} class)
 	 * @param xff X-files factor. Valid values are between 0 and 1.
 	 * @param steps Number of archive steps

@@ -29,14 +29,20 @@ package org.jrobin.core;
  */
 public interface ConsolFuns {
 	/** Constant to represent AVERAGE consolidation function */
-	public static final String AVERAGE = "AVERAGE";
+	public static final String CF_AVERAGE = "AVERAGE";
 
 	/** Constant to represent MIN consolidation function */
-	public static final String MIN = "MIN";
+	public static final String CF_MIN = "MIN";
 
 	/** Constant to represent MAX consolidation function */
-	public static final String MAX = "MAX";
+	public static final String CF_MAX = "MAX";
 
 	/** Constant to represent LAST consolidation function */
-	public static final String LAST = "LAST";
+	public static final String CF_LAST = "LAST";
+
+	/** Constant to represent FIRST consolidation function */
+	public static final String CF_FIRST = "FIRST";
+
+	/** Constant to represent TOTAL consolidation function */
+	public static final String CF_TOTAL = "TOTAL";
 }

@@ -29,14 +29,14 @@ package org.jrobin.core;
  */
 public interface DsTypes {
 	/** Constant to represent GAUGE datasource type */
-	public static final String GAUGE = "GAUGE";
+	public static final String DT_GAUGE = "GAUGE";
 
 	/** Constant to represent COUNTER datasource type */
-	public static final String COUNTER = "COUNTER";
+	public static final String DT_COUNTER = "COUNTER";
 
 	/** Constant to represent DERIVE datasource type */
-	public static final String DERIVE = "DERIVE";
+	public static final String DT_DERIVE = "DERIVE";
 
 	/** Constant to represent ABSOLUTE datasource type */
-	public static final String ABSOLUTE = "ABSOLUTE";
+	public static final String DT_ABSOLUTE = "ABSOLUTE";
 }

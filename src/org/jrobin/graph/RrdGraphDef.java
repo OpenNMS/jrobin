@@ -906,7 +906,8 @@ public class RrdGraphDef extends RrdExportDef implements Serializable
 	 *
 	 * @param sourceName Graph source name
 	 * @param consolFun Consolidation function to be used for calculation ("AVERAGE",
-	 * "MIN", "MAX", "LAST" or "TOTAL" (since 1.3.1)
+	 * "MIN", "MAX", "LAST" or "TOTAL" (since 1.3.1) - these string constants are conveniently
+	 * defined in the {@link org.jrobin.core.ConsolFuns ConsolFuns} class.
 	 * @param format Format string. For example: "speed is @5.2 @sbits/sec@c",
 	 * "temperature = @0 degrees"
 	 * @throws RrdException Thrown in case of JRobin specific error
@@ -925,7 +926,8 @@ public class RrdGraphDef extends RrdExportDef implements Serializable
 	 * 
 	 * @param sourceName Graph source name
 	 * @param consolFun Consolidation function to be used for calculation ("AVERAGE", "MIN", "MAX", "LAST"
-	 * or "TOTAL" (since 1.3.1)
+	 * or "TOTAL" (since 1.3.1) - these string constants are conveniently defined
+	 * in the {@link org.jrobin.core.ConsolFuns ConsolFuns} class.
 	 * @param format Format string. For example: "speed is @5.2 @sbits/sec@c", "temperature = @0 degrees"
 	 * @param base Base value for the formatting, defaults to the graphing base value
 	 * @throws RrdException Thrown in case of JRobin specific error

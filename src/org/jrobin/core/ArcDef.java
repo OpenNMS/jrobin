@@ -44,7 +44,7 @@ package org.jrobin.core;
 
 public class ArcDef implements ConsolFuns {
 	/** array of valid consolidation function names */
-	public static final String CONSOL_FUNS[] = { AVERAGE, MAX, MIN, LAST };
+	public static final String CONSOL_FUNS[] = { CF_AVERAGE, CF_MAX, CF_MIN, CF_LAST };
 
 	private String consolFun;
 	private double xff;

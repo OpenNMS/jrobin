@@ -182,7 +182,8 @@ public class RrdExportDef implements Serializable
 	 * @param file Path to RRD file.
 	 * @param dsName Data source name defined in the RRD file.
 	 * @param consolFunc Consolidation function that will be used to extract data from the RRD
-	 * file ("AVERAGE", "MIN", "MAX" or "LAST").
+	 * file ("AVERAGE", "MIN", "MAX" or "LAST" - these string constants are conveniently defined
+	 * in the {@link org.jrobin.core.ConsolFuns ConsolFuns} class).
 	 */
 	public void datasource( String name, String file, String dsName, String consolFunc ) throws RrdException
 	{
@@ -205,7 +206,8 @@ public class RrdExportDef implements Serializable
 	 * @param file Path to RRD file.
 	 * @param dsName Data source name defined in the RRD file.
 	 * @param consolFunc Consolidation function that will be used to extract data from the RRD
-	 * file ("AVERAGE", "MIN", "MAX" or "LAST").
+	 * file ("AVERAGE", "MIN", "MAX" or "LAST" - these string constants are conveniently defined
+	 * in the {@link org.jrobin.core.ConsolFuns ConsolFuns} class).
 	 * @param backend Name of the RrdBackendFactory that should be used for this RrdDb.
 	 */
 	public void datasource( String name, String file, String dsName, String consolFunc, String backend ) throws RrdException
