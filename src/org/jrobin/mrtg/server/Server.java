@@ -26,6 +26,7 @@ package org.jrobin.mrtg.server;
 
 import org.jrobin.core.RrdDb;
 import org.jrobin.core.RrdDbPool;
+import org.jrobin.core.RrdException;
 import org.jrobin.mrtg.MrtgException;
 import org.jrobin.mrtg.MrtgConstants;
 import org.w3c.dom.Document;
@@ -74,6 +75,12 @@ public class Server implements MrtgConstants {
 	public synchronized void start(String[] acceptedClients) throws MrtgException {
 		if(active) {
 			throw new MrtgException("Cannot start Server, already started");
+		}
+		// set default backend factory
+		try {
+			RrdDb.setDefaultFactory(BACKEND_FACTORY_NAME);
+		} catch (RrdException e) {
+			throw new MrtgException("Inavlide backend factory (" + BACKEND_FACTORY_NAME + ")");
 		}
 		// create template files
 		try {

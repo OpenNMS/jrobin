@@ -46,8 +46,13 @@ public class RrdNioBackendFactory extends RrdFileBackendFactory{
 	public static final int SYNC_AFTERFETCH = 4;
 	/** See {@link #setSyncMode(int) for explanation }  */
 	public static final int SYNC_BACKGROUND = 5;
-	/** See {@link #setSyncPeriod(int)} for explanation */
-	public static final int DEFAULT_SYNC_PERIOD = 60; // seconds
+	/**
+	 * Period in seconds between consecutive synchronizations when
+	 * sync-mode is set to SYNC_BACKGROUND. By default in-memory cache will be
+	 * transferred to the disc every 300 seconds (5 minutes). Default value can be
+	 * changed via {@link #setSyncPeriod(int)} method.
+	 */
+	public static final int DEFAULT_SYNC_PERIOD = 300; // seconds
 
 	private static int syncMode = SYNC_BACKGROUND;
 	private static int syncPeriod = DEFAULT_SYNC_PERIOD;
@@ -91,7 +96,7 @@ public class RrdNioBackendFactory extends RrdFileBackendFactory{
 
 	/**
 	 * Returns time between two consecutive background synchronizations. If not changed via
-	 * {@link #setSyncPeriod(int)} method call, defaults to DEFAULT_SYNC_PERIOD (60 seconds).
+	 * {@link #setSyncPeriod(int)} method call, defaults to {@link #DEFAULT_SYNC_PERIOD}.
 	 * See {@link #setSyncPeriod(int)} for more information.
 	 * @return Time in seconds between consecutive background synchronizations.
 	 */

@@ -26,6 +26,12 @@
 package org.jrobin.mrtg;
 
 public interface MrtgConstants {
+	// backend factory to be used
+	// WARNING: Change this to "FILE" if you run the Server app
+	// on a machine with less RAM. "NIO" consumes a lot of memory
+	// but it's fast, very fast.
+	String BACKEND_FACTORY_NAME = "NIO";
+
 	// turn debugging on/off
 	boolean DEBUG = false;
 

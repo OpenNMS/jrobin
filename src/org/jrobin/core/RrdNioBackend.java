@@ -116,9 +116,12 @@ public class RrdNioBackend extends RrdFileBackend {
 	 * method is called. In other words, you don't have to call sync() before you call close().<p>
 	 */
 	protected void sync() {
+		//long t1 = System.currentTimeMillis();
 		synchronized(byteBuffer) {
 			byteBuffer.force();
 		}
+		//long t2 = System.currentTimeMillis();
+		//System.out.println("** SYNC ** " + (t2 - t1) + " millis");
 	}
 
 	protected void beforeUpdate() {
