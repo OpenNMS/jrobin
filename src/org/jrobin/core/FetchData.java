@@ -306,7 +306,7 @@ public class FetchData implements RrdDataSet, ConsolFuns {
 	 *         for the given datasource name
 	 * @throws RrdException Thrown if the given datasource name cannot be found in fetched data.
 	 * @deprecated This method may calculate averages slightly different from values displayed in the
-	 * corresponding graph. Use {@link org.jrobin.data.DataProcessor DataAnalyzer} class instead.
+	 * corresponding graph. Use {@link org.jrobin.data.DataProcessor DataProcessor} class instead.
 	 */
 	public double getAggregate(String dsName, String consolFun)	throws RrdException {
 		if(consolFun.equals(CF_MAX)) {
