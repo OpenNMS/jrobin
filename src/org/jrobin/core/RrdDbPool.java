@@ -100,6 +100,7 @@ import java.util.*;
  * with {@link RrdBackend backends} different from default.<p>
  */
 public class RrdDbPool implements Runnable {
+	static final String GC_THREAD_NAME = "RrdDbPool GC thread";
 	private static RrdDbPool ourInstance;
 	private static final boolean DEBUG = false;
 
@@ -147,7 +148,7 @@ public class RrdDbPool implements Runnable {
 	}
 
 	private void startGarbageCollector() {
-		Thread gcThread = new Thread(this);
+		Thread gcThread = new Thread(this, GC_THREAD_NAME);
 		gcThread.setPriority(GC_THREAD_PRIORITY);
 		gcThread.setDaemon(true);
 		gcThread.start();
