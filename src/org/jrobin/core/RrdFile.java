@@ -45,19 +45,23 @@ public class RrdFile extends RandomAccessFile {
 	static final int MODE_RESTORE = 1;
 	static final int MODE_CREATE = 2;	
 
-	static final long LOCK_DELAY = 500; // 0.5sec
-	static final String FLAGS = "rw";   // R/W access
+	static final long LOCK_DELAY = 100; // 0.1sec
+
+	// access mode
+	static final String ACCESS_READ_WRITE = "rw";
+	static final String ACCESS_READ_ONLY = "r";
+
 	static int lockMode = RrdDb.NO_LOCKS;
 
 	private String filePath;
 	private FileLock fileLock;
 	private List primitives = new LinkedList();
-	private int mode;
+	private int rrdMode;
 
-	RrdFile(String filePath, int mode) throws IOException {
-		super(filePath, FLAGS);
+	RrdFile(String filePath, int rrdMode, boolean readOnly) throws IOException {
+		super(filePath, readOnly? ACCESS_READ_ONLY: ACCESS_READ_WRITE);
 		this.filePath = filePath;
-		this.mode = mode;
+		this.rrdMode = rrdMode;
 		lockFile();
 	}
 
@@ -169,12 +173,12 @@ public class RrdFile extends RandomAccessFile {
 		RrdFile.lockMode = lockMode;
 	}
 	
-	int getMode() {
-		return mode;
+	int getRrdMode() {
+		return rrdMode;
 	}
 
-	void setMode(int mode) {
-		this.mode = mode;
+	void setRrdMode(int rrdMode) {
+		this.rrdMode = rrdMode;
 	}
 
 	void writeDouble(double value, int count) throws IOException {

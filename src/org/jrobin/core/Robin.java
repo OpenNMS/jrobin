@@ -48,7 +48,7 @@ public class Robin implements RrdUpdater {
 	Robin(Archive parentArc, int rows) throws IOException {
 		this.parentArc = parentArc;
 		this.rows = rows;
-		if(getRrdFile().getMode() == RrdFile.MODE_CREATE) {
+		if(getRrdFile().getRrdMode() == RrdFile.MODE_CREATE) {
 			pointer = new RrdInt(0, this);
 			values = new RrdDoubleArray(this, rows, Double.NaN);
 		}

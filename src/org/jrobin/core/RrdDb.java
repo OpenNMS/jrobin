@@ -107,7 +107,7 @@ public class RrdDb implements RrdUpdater {
 	 */
 	public RrdDb(RrdDef rrdDef) throws IOException, RrdException {
 		rrdDef.validate();
-		initializeSetup(rrdDef.getPath(), RrdFile.MODE_CREATE);
+		initializeSetup(rrdDef.getPath(), RrdFile.MODE_CREATE, false);
 		// create header
 		header = new Header(this, rrdDef);
 		// create datasources
@@ -129,21 +129,25 @@ public class RrdDb implements RrdUpdater {
 
 	/**
 	 * <p>Constructor used to open already existing RRD file.
-	 * Obtains read/write access to RRD file so that future
-	 * fetch and update operations are possible.</p>
+	 * Obtains read or read/write access to RRD file.</p>
 	 *
 	 * @param path Path to existing RRD file.
+	 * @param readOnly Should be set to <code>false</code> if you want to update
+	 * the underlying RRD file. If you want just to fetch data from the RRD file
+	 * (read-only access), specify <code>true</code>. If you try to update RRD file
+	 * open in read-only mode (<code>readOnly</code> set to <code>true</code>),
+	 * <code>IOException</code> will be thrown.
 	 * @throws IOException Thrown in case of I/O error.
 	 * @throws RrdException Thrown in case of JRobin specific error.
 	 */
-	public RrdDb(String path) throws IOException, RrdException {
+	public RrdDb(String path, boolean readOnly) throws IOException, RrdException {
 		// opens existing RRD file - throw exception if the file does not exist...
 		File rrdFile = new File(path);
 		if(!rrdFile.exists()) {
 			throw new IOException("Could not open file " + path + " [non existent]");
 		}
 		try {
-			initializeSetup(path, RrdFile.MODE_RESTORE);
+			initializeSetup(path, RrdFile.MODE_RESTORE, readOnly);
 			// restore header
 			header = new Header(this);
 			// restore datasources
@@ -163,6 +167,19 @@ public class RrdDb implements RrdUpdater {
 		catch(RuntimeException e) {
 			throw new RrdException(e);
 		}
+	}
+
+	/**
+	 * <p>Constructor used to open already existing RRD file.
+	 * Obtains <b>full</b> (read/write) access to the underlying RRD file
+	 * so that future RRD updates are possible.</p>
+	 *
+	 * @param path Path to existing RRD file.
+	 * @throws IOException Thrown in case of I/O error.
+	 * @throws RrdException Thrown in case of JRobin specific error.
+	 */
+	public RrdDb(String path) throws IOException, RrdException {
+		this(path, false);
 	}
 
 	/**
@@ -188,7 +205,7 @@ public class RrdDb implements RrdUpdater {
 	 * @throws RrdException Thrown in case of JRobin specific error
 	 */
 	public RrdDb(String rrdPath, String xmlPath) throws IOException, RrdException {
-		initializeSetup(rrdPath, RrdFile.MODE_CREATE);
+		initializeSetup(rrdPath, RrdFile.MODE_CREATE, false);
 		XmlReader reader = new XmlReader(xmlPath);
 		// create header
 		header = new Header(this, reader);
@@ -209,12 +226,12 @@ public class RrdDb implements RrdUpdater {
 	}
 
 
-	private void initializeSetup(String path, int mode) throws IOException {
-		file = new RrdFile(path, mode);
+	private void initializeSetup(String path, int mode, boolean readOnly) throws IOException {
+		file = new RrdFile(path, mode, readOnly);
 	}
 
 	private void finalizeSetup() throws IOException {
-		int mode = file.getMode(); 
+		int mode = file.getRrdMode();
 		if(mode == RrdFile.MODE_CREATE) {
 			file.truncateFile();
 		}
@@ -223,7 +240,7 @@ public class RrdDb implements RrdUpdater {
 				throw new IOException("Extra bytes found in RRD file. Not a RRD file at all?");
 			}
 		}
-		file.setMode(RrdFile.MODE_NORMAL);
+		file.setRrdMode(RrdFile.MODE_NORMAL);
 		canonicalPath = file.getCanonicalFilePath();
 	}
 

@@ -42,7 +42,7 @@ public class ArcState implements RrdUpdater {
 
 	ArcState(Archive parentArc) throws IOException {
 		this.parentArc = parentArc;
-		if(getRrdFile().getMode() == RrdFile.MODE_CREATE) {
+		if(getRrdFile().getRrdMode() == RrdFile.MODE_CREATE) {
 			// should initialize
 			Header header = parentArc.getParentDb().getHeader();
 			long step = header.getStep();
