@@ -29,6 +29,7 @@ package jrobin.demo;
 
 import java.util.*;
 import java.awt.*;
+import javax.swing.*;
 
 import jrobin.graph.*;
 
@@ -43,7 +44,7 @@ public class JRobinComplexGraph {
 	public static void main(String[] args) 
 	{
 		GregorianCalendar start = new GregorianCalendar(2003, 7, 23, 0, 0);
-		GregorianCalendar end 	= new GregorianCalendar(2003, 7, 24, 0, 0);
+		GregorianCalendar end 	= new GregorianCalendar(2003, 7, 25, 0, 0);
 
 		RrdGraphDef gDef 		= new RrdGraphDef();
 		
@@ -51,6 +52,7 @@ public class JRobinComplexGraph {
 		{
 			gDef.setTimePeriod(start, end);
 			gDef.setTitle("Server load baseline projection");
+			//gDef.setOverlay("/pkts.png");
 			gDef.datasource("load", "c:/test.rrd", "serverLoad", "AVERAGE");
 			gDef.datasource("user", "c:/test.rrd", "serverCPUUser", "AVERAGE");
 			gDef.datasource("nice", "c:/test.rrd", "serverCPUNice", "AVERAGE");
@@ -103,23 +105,27 @@ public class JRobinComplexGraph {
 			//gDef.setGridX( false );
 			//gDef.setGridY( false );
 			gDef.setImageBorder( Color.BLACK, 1 );
-			gDef.setFrontGrid(false);
+			//gDef.setFrontGrid(false);
 			gDef.setShowLegend(true);
-			gDef.setMajorGridColor(Color.BLACK);
+			gDef.setMajorGridColor(Color.YELLOW);
 			gDef.setMinorGridColor( new Color( 130, 30, 30) );
-			gDef.setFrameColor( Color.YELLOW );
+			gDef.setFrameColor( Color.BLACK );
 			gDef.setAxisColor( Color.RED );
 			gDef.setArrowColor( Color.GREEN );
 			gDef.setChartLeftPadding( 40 );
+			gDef.setAntiAliasing(true);
+			gDef.setTimeAxis( TimeAxisUnit.HOUR, 6, TimeAxisUnit.DAY, 1, "EEEEE dd MMM", true );
+			gDef.setValueAxis( 2.5, 5 );
 			// Create actual graph
 			RrdGraph graph = new RrdGraph(gDef);
 			graph.saveAsPNG("/zzzzzz.png", 0, 0);
-	
+			//graph.saveAsJPEG("/zzzzzz.jpg", 0, 0, 1f);
 			
 			// -- New graph
 			RrdGraphDef gd = new RrdGraphDef();
 			//gd.setBackColor( Color.WHITE );
 			gd.setTimePeriod( start, end );
+			//gd.setBackground("/ftp.png");
 			gd.datasource("in2", "c:/test.rrd", "ifInOctets", "AVERAGE");
 			gd.datasource("out2", "c:/test.rrd", "ifOutOctets", "AVERAGE");
 			gd.datasource("in", "in2,8,*");
@@ -132,7 +138,7 @@ public class JRobinComplexGraph {
 			
 			//////////////////////////////
 			gd = new RrdGraphDef();
-			//gd.setBackColor( Color.WHITE );
+			gd.setBackColor( Color.WHITE );
 			gd.setTimePeriod( start, end );
 			gd.datasource("in2", "c:/test.rrd", "ifInUcastPkts", "AVERAGE");
 			gd.datasource("out2", "c:/test.rrd", "ifOutUcastPkts", "AVERAGE");
@@ -140,7 +146,7 @@ public class JRobinComplexGraph {
 			gd.datasource("out", "out2,8,*");
 			gd.area("in", Color.GREEN, null);
 			gd.line("out", Color.BLUE, null);
-						
+			//gd.setUnitsExponent(6);			
 			graph2 = new RrdGraph(gd);
 			graph2.saveAsPNG("/pkts.png", 0, 0);
 			
@@ -149,10 +155,21 @@ public class JRobinComplexGraph {
 			gd.setTimePeriod( start, end );
 			gd.datasource("ftp", "c:/test.rrd", "ftpUsers", "AVERAGE");
 			gd.area("ftp", Color.BLUE, null);
-									
+					
 			graph2 = new RrdGraph(gd);
 			graph2.saveAsPNG("/ftp.png", 0, 0);
 			
+			/*
+			try {
+				JFrame frame = new JFrame("Simple chartpanel test");
+	
+				frame.getContentPane().add(graph2.getChartPanel());
+				frame.pack();
+				frame.setVisible(true);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			*/
 						
 			//graph.saveAsPNG("c:/demo.png", 495, 200);
 		} 
