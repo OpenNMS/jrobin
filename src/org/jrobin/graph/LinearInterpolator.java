@@ -35,7 +35,8 @@ import java.util.GregorianCalendar;
  *
  * Interpolation algorithm returns different values based on the value passed to
  * {@link #setInterpolationMethod(int) setInterpolationMethod()}. If not set, interpolation
- * method defaults to standard linear interpolation. Interpolation method handles NaN datasource
+ * method defaults to standard linear interpolation ({@link #INTERPOLATE_LINEAR}).
+ * Interpolation method handles NaN datasource
  * values gracefully.<p>
  *
  * Pass instances of this class to {@link RrdGraphDef#datasource(String, Plottable)
@@ -51,13 +52,18 @@ public class LinearInterpolator extends Plottable {
 	/** constant used to specify LINEAR interpolation (default interpolation method).
 	 * See {@link #setInterpolationMethod(int) setInterpolationMethod()} for explanation. */
 	public static final int INTERPOLATE_LINEAR = 2;
+	/** constant used to specify LINEAR REGRESSION as interpolation method.
+	 * See {@link #setInterpolationMethod(int) setInterpolationMethod()} for explanation. */
+	public static final int INTERPOLATE_REGRESSION = 3;
 
 	private int lastIndexUsed = 0;
-
 	private int interpolationMethod = INTERPOLATE_LINEAR;
 
 	private long[] timestamps;
 	private double[] values;
+
+	// used only if INTERPOLATE_BESTFIT is specified
+	double b0 = Double.NaN, b1 = Double.NaN;
 
 	/**
 	 * Creates LinearInterpolator from arrays of timestamps and corresponding datasource values.
@@ -128,12 +134,63 @@ public class LinearInterpolator extends Plottable {
 	 * <li><code>INTERPOLATE_RIGHT:  300</code>
 	 * <li><code>INTERPOLATE_LINEAR: 200</code>
 	 * </ul>
-	 * If not set, interpolation method defaults to <code>INTERPOLATE_LINEAR</code>.
+	 * If not set, interpolation method defaults to <code>INTERPOLATE_LINEAR</code>.<p>
+	 *
+	 * The fourth available interpolation method is INTERPOLATE_REGRESSION. This method uses
+	 * simple linear regression to interpolate supplied data with a simple straight line which does not
+	 * necessarily pass through all data points. The slope of the best-fit line will be chosen so that the
+	 * total square distance of real data points from from the best-fit line is at minimum.<p>
+	 *
+	 * The full explanation of this inteprolation method can be found
+	 * <a href="http://www.tufts.edu/~gdallal/slr.htm">here</a>.<p>
+	 *
 	 * @param interpolationMethod Should be <code>INTERPOLATE_LEFT</code>,
-	 * <code>INTERPOLATE_RIGHT</code> or <code>INTERPOLATE_LINEAR</code>.
+	 * <code>INTERPOLATE_RIGHT</code>, <code>INTERPOLATE_LINEAR</code> or
+	 * <code>INTERPOLATE_REGRESSION</code>. Any other value will be interpreted as
+	 * INTERPOLATE_LINEAR.
 	 */
 	public void setInterpolationMethod(int interpolationMethod) {
-		this.interpolationMethod = interpolationMethod;
+		switch(interpolationMethod) {
+			case INTERPOLATE_REGRESSION:
+				calculateBestFitLine();
+			case INTERPOLATE_LEFT:
+			case INTERPOLATE_RIGHT:
+			case INTERPOLATE_LINEAR:
+				this.interpolationMethod = interpolationMethod;
+				break;
+			default:
+				this.interpolationMethod = INTERPOLATE_LINEAR;
+		}
+	}
+
+	private void calculateBestFitLine() {
+		int count = timestamps.length, validCount = 0;
+		double ts = 0.0, vs = 0.0;
+		for(int i = 0; i < count; i++) {
+			if(!Double.isNaN(values[i])) {
+				ts += timestamps[i];
+				vs += values[i];
+				validCount++;
+			}
+		}
+		if(validCount <= 1) {
+			// just one not-NaN point
+			b0 = b1 = Double.NaN;
+			return;
+		}
+		ts /= validCount;
+		vs /= validCount;
+		double s1 = 0, s2 = 0;
+		for(int i = 0; i < count; i++) {
+			if(!Double.isNaN(values[i])) {
+				double dt = timestamps[i] - ts;
+				double dv = values[i] - vs;
+				s1 += dt * dv;
+				s2 += dt * dt;
+			}
+		}
+		b1 = s1 / s2;
+		b0 = vs - b1 * ts;
 	}
 
 	/**
@@ -143,6 +200,9 @@ public class LinearInterpolator extends Plottable {
 	 * @return inteprolated datasource value
 	 */
 	public double getValue(long timestamp) {
+		if(interpolationMethod == INTERPOLATE_REGRESSION) {
+			return b0 + b1 * timestamp;
+		}
 		int count = timestamps.length;
 		// check if out of range
 		if(timestamp < timestamps[0] || timestamp > timestamps[count - 1]) {

@@ -68,6 +68,9 @@ class PlottableDemo {
 		createGraph11();
 		createGraph12();
 		createGraph13();
+		createGraph14();
+		createGraph15();
+		createGraph16();
 	}
 
 	private void createGraph1() throws RrdException, IOException {
@@ -398,6 +401,82 @@ class PlottableDemo {
 		String filename = Util.getJRobinDemoPath("plottable13.png");
 		graph.saveAsPNG(filename, 400, 200);
 		System.out.println("Graph13 saved to " + filename);
+	}
+
+	private void createGraph14() throws RrdException, IOException {
+		final int STEPS = 20;
+		final Color color1 = Color.BLACK, color2 = Color.RED;
+		CubicSplineInterpolator hitsInterpolator =
+				new CubicSplineInterpolator(SF_TIMESTAMPS, SF_PAGE_HITS);
+		RrdGraphDef gDef = new RrdGraphDef(SF_TIMESTAMPS[0], SF_TIMESTAMPS[SF_TIMESTAMPS.length - 1]);
+		gDef.setTitle("Trick graph 9");
+		gDef.setTimeAxisLabel("month");
+		gDef.setVerticalLabel("hits");
+		gDef.datasource("hits", hitsInterpolator);
+		gDef.datasource("maxhits", "hits", "MAX");
+		for(int i = 1; i <= STEPS; i++) {
+			gDef.datasource("hits" + i, "maxhits," + i + ",*," + STEPS + ",/,hits,GE,hits,0,IF");
+		}
+		for(int i = STEPS; i >= 1; i--) {
+			gDef.area("hits" + i, interpolateColor(color1, color2, i / (double) STEPS), null);
+		}
+		gDef.line("hits", Color.BLUE, "page hits", 2);
+		gDef.setTimeAxis(TimeAxisUnit.MONTH, 1, TimeAxisUnit.MONTH, 1, "MMM", false);
+		RrdGraph graph = new RrdGraph(gDef);
+		String filename = Util.getJRobinDemoPath("plottable14.png");
+		graph.saveAsPNG(filename, 400, 200);
+		System.out.println("Graph14 saved to " + filename);
+	}
+
+	private void createGraph15() throws RrdException, IOException {
+		final int STEPS = 20;
+		final Color color1 = Color.BLACK, color2 = Color.RED;
+		LinearInterpolator hitsInterpolator =
+			new LinearInterpolator(SF_TIMESTAMPS, SF_PAGE_HITS);
+		hitsInterpolator.setInterpolationMethod(LinearInterpolator.INTERPOLATE_LEFT);
+		RrdGraphDef gDef = new RrdGraphDef(SF_TIMESTAMPS[0], SF_TIMESTAMPS[SF_TIMESTAMPS.length - 1]);
+		gDef.setTitle("Trick graph 10");
+		gDef.setTimeAxisLabel("month");
+		gDef.setVerticalLabel("hits");
+		gDef.datasource("hits", hitsInterpolator);
+		gDef.datasource("maxhits", "hits", "MAX");
+		for(int i = 1; i <= STEPS; i++) {
+			gDef.datasource("hits" + i, "maxhits," + i + ",*," + STEPS + ",/,hits,GE,hits,0,IF");
+		}
+		for(int i = STEPS; i >= 1; i--) {
+			gDef.area("hits" + i, interpolateColor(color1, color2, i / (double) STEPS), null);
+		}
+		gDef.line("hits", Color.BLUE, "page hits", 2);
+		gDef.setTimeAxis(TimeAxisUnit.MONTH, 1, TimeAxisUnit.MONTH, 1, "MMM", false);
+		RrdGraph graph = new RrdGraph(gDef);
+		String filename = Util.getJRobinDemoPath("plottable15.png");
+		graph.saveAsPNG(filename, 400, 200);
+		System.out.println("Graph15 saved to " + filename);
+	}
+
+	private void createGraph16() throws RrdException, IOException {
+		LinearInterpolator hitsInterpolator =
+			new LinearInterpolator(SF_TIMESTAMPS, SF_PAGE_HITS);
+		LinearInterpolator trendInterpolator = new LinearInterpolator(SF_TIMESTAMPS, SF_PAGE_HITS);
+		trendInterpolator.setInterpolationMethod(LinearInterpolator.INTERPOLATE_REGRESSION);
+		RrdGraphDef gDef = new RrdGraphDef(SF_TIMESTAMPS[0], SF_TIMESTAMPS[SF_TIMESTAMPS.length - 1]);
+		gDef.setTitle("Trend report");
+		gDef.setTimeAxisLabel("month");
+		gDef.setVerticalLabel("hits");
+		gDef.datasource("hits", hitsInterpolator);
+		gDef.datasource("trend", trendInterpolator);
+		gDef.datasource("diff", "hits,trend,-");
+		gDef.datasource("absdiff", "diff,ABS");
+		gDef.area("trend", null, null);
+		gDef.stack("diff", Color.YELLOW, "difference");
+		gDef.line("hits", Color.RED, "real page hits");
+		gDef.line("trend", Color.BLUE, "trend@L");
+		gDef.gprint("absdiff", "AVERAGE", "Average difference: @0@r");
+		gDef.setTimeAxis(TimeAxisUnit.MONTH, 1, TimeAxisUnit.MONTH, 1, "MMM", false);
+		RrdGraph graph = new RrdGraph(gDef);
+		String filename = Util.getJRobinDemoPath("plottable16.png");
+		graph.saveAsPNG(filename, 400, 200);
+		System.out.println("Graph16 saved to " + filename);
 	}
 
     private Color interpolateColor(Color c1, Color c2, double factor) {
