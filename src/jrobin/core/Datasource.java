@@ -22,10 +22,6 @@
 
 package jrobin.core;
 
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-
 import java.io.IOException;
 
 /**
@@ -206,37 +202,18 @@ class Datasource implements RrdUpdater {
 		return totalValue;
 	}
 
-    void appendXml(Element parent) throws IOException {
-		Document doc = parent.getOwnerDocument();
-		Element dsElem = doc.createElement("ds");
-        Element nameElem = doc.createElement("name");
-		nameElem.appendChild(doc.createTextNode(dsName.get()));
-		Element typeElem = doc.createElement("type");
-		typeElem.appendChild(doc.createTextNode(dsType.get()));
-		Element hearbeatElem = doc.createElement("minimal_heartbeat");
-		hearbeatElem.appendChild(doc.createTextNode("" + heartbeat.get()));
-		Element minElem = doc.createElement("min");
-		minElem.appendChild(doc.createTextNode(Util.formatDoubleXml(minValue.get())));
-		Element maxElem = doc.createElement("max");
-		maxElem.appendChild(doc.createTextNode(Util.formatDoubleXml(maxValue.get())));
-		Node stateComment = doc.createComment("PDP Status");
-		Element lastDsElem = doc.createElement("last_ds");
-		lastDsElem.appendChild(doc.createTextNode("" + Util.formatDoubleXml(lastValue.get())));
-		Element valueElem = doc.createElement("value");
-		valueElem.appendChild(doc.createTextNode("" + Util.formatDoubleXml(accumValue.get())));
-		Element unknownElem = doc.createElement("unknown_sec");
-		unknownElem.appendChild(doc.createTextNode("" + nanSeconds.get()));
-		// compose
-		parent.appendChild(dsElem);
-		dsElem.appendChild(nameElem);
-		dsElem.appendChild(typeElem);
-		dsElem.appendChild(hearbeatElem);
-		dsElem.appendChild(minElem);
-		dsElem.appendChild(maxElem);
-		dsElem.appendChild(stateComment);
-		dsElem.appendChild(lastDsElem);
-		dsElem.appendChild(valueElem);
-		dsElem.appendChild(unknownElem);
+    void appendXml(XmlWriter writer) throws IOException {
+		writer.startTag("ds");
+		writer.writeTag("name", dsName.get());
+		writer.writeTag("type", dsType.get());
+		writer.writeTag("minimal_heartbeat", heartbeat.get());
+		writer.writeTag("min", minValue.get());
+		writer.writeTag("max", maxValue.get());
+		writer.writeComment("PDP Status");
+		writer.writeTag("last_ds", lastValue.get(), "UNKN");
+		writer.writeTag("value", accumValue.get());
+		writer.writeTag("unknown_sec", nanSeconds.get());
+		writer.closeTag();  // ds
 	}
 
 }

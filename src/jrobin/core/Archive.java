@@ -22,10 +22,6 @@
 
 package jrobin.core;
 
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-
 import java.io.IOException;
 
 /**
@@ -245,45 +241,30 @@ class Archive implements RrdUpdater {
 		return points;
 	}
 
-    void appendXml(Element parent) throws IOException {
-        Document doc = parent.getOwnerDocument();
-		Element rraElem = doc.createElement("rra");
-        Element cfElem = doc.createElement("cf");
-		cfElem.appendChild(doc.createTextNode(consolFun.get()));
-		long arcStep = getArcStep();
-		Node pdpComment = doc.createComment(arcStep + " seconds");
-		Element pdpElem = doc.createElement("pdp_per_row");
-		pdpElem.appendChild(doc.createTextNode("" + steps.get()));
-        Element xffElem = doc.createElement("xff");
-		xffElem.appendChild(doc.createTextNode("" + Util.formatDoubleXml(xff.get())));
-		// dump state
-		Element cdpElem = doc.createElement("cdp_prep");
+    void appendXml(XmlWriter writer) throws IOException {
+		writer.startTag("rra");
+		writer.writeTag("cf", consolFun.get());
+		writer.writeComment(getArcStep() + " seconds");
+		writer.writeTag("pdp_per_row", steps.get());
+		writer.writeTag("xff", xff.get());
+		writer.startTag("cdp_prep");
 		for(int i = 0; i < states.length; i++) {
-			states[i].appendXml(cdpElem);
+			states[i].appendXml(writer);
 		}
-		// put icing on the cake: dump database
-		Element dbElem = doc.createElement("database");
+		writer.closeTag(); // cdp_prep
+		writer.startTag("database");
 		long startTime = getStartTime();
 		for(int i = 0; i < rows.get(); i++) {
-			long time = startTime + i * arcStep;
-            Node rowComment = doc.createComment(Util.getDate(time) + " / " + time);
-			dbElem.appendChild(rowComment);
-			Element rowElem = doc.createElement("row");
+			long time = startTime + i * getArcStep();
+			writer.writeComment(Util.getDate(time) + " / " + time);
+			writer.startTag("row");
 			for(int j = 0; j < robins.length; j++) {
-				Element vElem = doc.createElement("v");
-				vElem.appendChild(doc.createTextNode(Util.formatDoubleXml(robins[j].getValue(i))));
-				rowElem.appendChild(vElem);
+				writer.writeTag("v", robins[j].getValue(i));
 			}
-			dbElem.appendChild(rowElem);
+			writer.closeTag(); // row
 		}
-		// compose everything
-		parent.appendChild(rraElem);
-        rraElem.appendChild(cfElem);
-		rraElem.appendChild(pdpComment);
-		rraElem.appendChild(pdpElem);
-		rraElem.appendChild(xffElem);
-		rraElem.appendChild(cdpElem);
-		rraElem.appendChild(dbElem);
+		writer.closeTag(); // database
+		writer.closeTag(); // rra
 	}
 
 }

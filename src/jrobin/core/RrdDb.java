@@ -22,16 +22,6 @@
 
 package jrobin.core;
 
-import org.w3c.dom.DOMException;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.*;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
 import java.io.*;
 
 /**
@@ -469,52 +459,22 @@ public class RrdDb implements RrdUpdater {
 	 * purposes or debugging.</p>
 	 * @param destination Output stream to receive XML data
 	 * @throws IOException Thrown in case of I/O related error
-	 * @throws RrdException Thrown in case of JRobin specific error
 	 */
-	public synchronized void dumpXml(OutputStream destination) throws IOException, RrdException {
-		// create XML document
-		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-		factory.setValidating(false);
-		factory.setNamespaceAware(false);
-		try {
-			DocumentBuilder builder = factory.newDocumentBuilder();
-			Document doc = builder.newDocument();
-			// create root element
-			Element root = doc.createElement("rrd");
-			doc.appendChild(root);
-			// dump header
-			header.appendXml(root);
-			// dump datasources
-			for(int i = 0; i < datasources.length; i++) {
-				datasources[i].appendXml(root);
-			}
-			// dump archives
-			for(int i = 0; i < archives.length; i++) {
-				archives[i].appendXml(root);
-			}
-			// serialize DOM object
-			TransformerFactory tFactory = TransformerFactory.newInstance();
-			Transformer transformer = tFactory.newTransformer();
-			transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
-			transformer.setOutputProperty(OutputKeys.METHOD, "xml");
-			transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-			transformer.setOutputProperty(OutputKeys.MEDIA_TYPE, "text/xml");
-			transformer.setOutputProperty(OutputKeys.STANDALONE, "yes");
-
-			DOMSource source = new DOMSource(root);
-			StreamResult result = new StreamResult(destination);
-			transformer.transform(source, result);
-		} catch (ParserConfigurationException e) {
-			throw new RrdException("XML Error: " + e);
-		} catch (DOMException e) {
-			throw new RrdException("XML Error: " + e);
-		} catch (TransformerFactoryConfigurationError e) {
-			throw new RrdException("XML Error: " + e);
-		} catch (TransformerException e) {
-			throw new RrdException("XML Error: " + e);
-		} catch (IllegalArgumentException e) {
-			throw new RrdException("XML Error: " + e);
+	public synchronized void dumpXml(OutputStream destination) throws IOException {
+		XmlWriter writer = new XmlWriter(destination);
+		writer.startTag("rrd");
+		// dump header
+		header.appendXml(writer);
+		// dump datasources
+		for(int i = 0; i < datasources.length; i++) {
+			datasources[i].appendXml(writer);
 		}
+		// dump archives
+		for(int i = 0; i < archives.length; i++) {
+			archives[i].appendXml(writer);
+		}
+		writer.closeTag();
+		writer.finish();
 	}
 
 	/**
@@ -552,7 +512,6 @@ public class RrdDb implements RrdUpdater {
 	 */
 
 	public synchronized void dumpXml(String filename) throws IOException, RrdException {
-        // OutputStream destination = new BufferedOutputStream(new FileOutputStream(filename, false));
 		OutputStream destination = new BufferedOutputStream(new FileOutputStream(filename, false));
 		dumpXml(destination);
 		destination.close();

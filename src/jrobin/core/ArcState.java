@@ -22,9 +22,6 @@
 
 package jrobin.core;
 
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-
 import java.io.IOException;
 
 /**
@@ -78,16 +75,11 @@ class ArcState implements RrdUpdater {
 		return accumValue.get();
 	}
 
-	void appendXml(Element parent) throws IOException {
-        Document doc = parent.getOwnerDocument();
-		Element dsElem = doc.createElement("ds");
-        Element valueElem = doc.createElement("value");
-		valueElem.appendChild(doc.createTextNode(Util.formatDoubleXml(accumValue.get())));
-		Element unknownElem = doc.createElement("unknown_datapoints");
-		unknownElem.appendChild(doc.createTextNode("" + nanSteps.get()));
-		parent.appendChild(dsElem);
-        dsElem.appendChild(valueElem);
-		dsElem.appendChild(unknownElem);
+	void appendXml(XmlWriter writer) throws IOException {
+		writer.startTag("ds");
+		writer.writeTag("value", accumValue.get());
+		writer.writeTag("unknown_datapoints", nanSteps.get());
+		writer.closeTag(); // ds
 	}
 
 }

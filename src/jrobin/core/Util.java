@@ -93,13 +93,6 @@ public class Util {
 		return formatDouble(x, false);
 	}
 
-	static String formatDoubleXml(double x) {
-		if(Double.isNaN(x)) {
-			return "" + Double.NaN;
-		}
-		return df.format(x);
-	}
-
 	static void debug(String message) {
 		if(RrdDb.DEBUG) {
 			System.out.println(message);

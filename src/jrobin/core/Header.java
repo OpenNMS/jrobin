@@ -22,10 +22,6 @@
 
 package jrobin.core;
 
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-
 import java.io.IOException;
 
 /**
@@ -110,21 +106,12 @@ class Header implements RrdUpdater {
 		return parentDb.getRrdFile();
 	}
 
-    void appendXml(Element parent) throws IOException {
-		Document doc = parent.getOwnerDocument();
-		Element versionElem = doc.createElement("version");
-		versionElem.appendChild(doc.createTextNode(RRDTOOL_VERSION));
-		Element stepElem = doc.createElement("step");
-		stepElem.appendChild(doc.createTextNode("" + step.get()));
-		Node stepComment = doc.createComment("Seconds");
-		Element lastElem = doc.createElement("lastupdate");
-		lastElem.appendChild(doc.createTextNode("" + lastUpdateTime.get()));
-		Node lastComment = doc.createComment("" + Util.getDate(lastUpdateTime.get()));
-		parent.appendChild(versionElem);
-		parent.appendChild(stepComment);
-		parent.appendChild(stepElem);
-        parent.appendChild(lastComment);
-		parent.appendChild(lastElem);
+    void appendXml(XmlWriter writer) throws IOException {
+		writer.writeTag("version", RRDTOOL_VERSION);
+		writer.writeComment("Seconds");
+		writer.writeTag("step", step.get());
+		writer.writeComment(Util.getDate(lastUpdateTime.get()));
+		writer.writeTag("lastupdate", lastUpdateTime.get());
 	}
 
 }
