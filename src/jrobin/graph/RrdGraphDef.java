@@ -104,7 +104,7 @@ import java.util.*;
  *
  * @author <a href="mailto:saxon@eunet.yu">Sasa Markovic</a>
  */
-public class RrdGraphDef 
+public class RrdGraphDef implements Serializable
 {
 	private ArrayList sources = new ArrayList();
 	private ArrayList plotDefs = new ArrayList();
@@ -207,7 +207,7 @@ public class RrdGraphDef
 	 * Sets graph title.
 	 * @param title Graph title.
 	 */
-	public void setTitle(String title) {
+	public void setTitle(String title) throws RrdException {
 		this.title = title;
 	}
 

@@ -19,9 +19,7 @@
  * library; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-package jrobin.graph;
-
-import java.util.*;
+package jrobin.graph2;
 
 /**
  * @author cbld
@@ -29,41 +27,21 @@ import java.util.*;
  * To change the template for this generated type comment go to
  * Window - Preferences - Java - Code Generation - Code and Comments
  */
-public class RrdFile 
+public class TimeMarker 
 {
-	private String fileName = "";		// Fill this one in later
+	long timestamp			= 0;
+	String text				= "";
+	private boolean label	= false;
 	
-	private int AVG	= 0;
-	private int MAX = 1;
-	private int MIN = 2;
-	
-	public Vector[] cfDataSources = new Vector[3];
-	
-	public RrdFile( )
+	TimeMarker( long ts, String v, boolean l )
 	{
-		for (int i = 0; i < cfDataSources.length; i++)
-			cfDataSources[i] = new Vector();	
+		this.label	= l;
+		timestamp 	= ts;
+		text 		= v;
 	}
 	
-	public RrdFile( String consolFun, String dsName, String name )
+	public boolean isLabel()
 	{
-		this();
-		if ( consolFun.equalsIgnoreCase("AVERAGE") )
-			cfDataSources[AVG].add( new String[] { dsName, name } );
-		else if ( consolFun.equalsIgnoreCase("MAX") )
-			cfDataSources[MAX].add( new String[] { dsName, name } );
-		else if ( consolFun.equalsIgnoreCase("MIN") )
-			cfDataSources[MIN].add( new String[] { dsName, name } );				
+		return label;
 	}
-	
-	public void addSource( String consolFun, String dsName, String name )
-	{
-		if ( consolFun.equalsIgnoreCase("AVERAGE") )
-			cfDataSources[AVG].add( new String[] { dsName, name } );
-		else if ( consolFun.equalsIgnoreCase("MAX") )
-			cfDataSources[MAX].add( new String[] { dsName, name } );
-		else if ( consolFun.equalsIgnoreCase("MIN") )
-			cfDataSources[MIN].add( new String[] { dsName, name } );				
-	}
-
 }

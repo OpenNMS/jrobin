@@ -55,7 +55,7 @@ class Gprint extends Comment
 			String valueStr 		= "" + value;
 			String prefixStr 		= " ";
 			String uniformPrefixStr = " ";
-			
+
 			String[] group = m.group(1).split("\\.");
 			int len = -1, numDec = 0;
 	
@@ -100,6 +100,7 @@ class Gprint extends Comment
 						"scaling at the same time");
 				}
 			}
+			
 			
 			int diff = len - valueStr.length();
 				

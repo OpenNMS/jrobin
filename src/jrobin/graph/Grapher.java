@@ -105,12 +105,6 @@ class Grapher
 	 */
 	BufferedImage createImage( int cWidth, int cHeight ) throws RrdException
 	{
-		// Print out some information about development version
-		System.out.println( "\n\nJRobin 1.2 graph package is currently under development." );
-		System.out.println( "Graphing functionality is very limited and might fail completely." );
-		System.out.println( "-----------------------------------------------------------------" );
-		System.out.println( "Trying to create image with chart specs: w=" + cWidth + " h=" + cHeight );
-		
 		// Set chart dimensions if not given
 		chartWidth		= ( cWidth == 0 ? DEFAULT_WIDTH : cWidth );
 		chartHeight		= ( cHeight == 0 ? DEFAULT_HEIGHT : cHeight );
@@ -138,10 +132,12 @@ class Grapher
 		imgHeight 		= chartHeight + commentBlock + y_offset + BBORDER_SPACE + CHART_UPADDING + CHART_BPADDING;
 		
 		// Create the buffered image, get the graphics handle
-		System.out.println( "Trying to create image with dimensions: w=" + imgWidth + " h=" + imgHeight );
 		BufferedImage bImg 	= new BufferedImage( imgWidth, imgHeight, BufferedImage.TYPE_INT_RGB );
 		Graphics2D graphics	= (Graphics2D) bImg.getGraphics();
-				
+		
+		// DEBUG -- Prepare checkpoint
+		Util.time(0);
+		
 		// Do the actual graphing
 		try 
 		{
@@ -165,8 +161,6 @@ class Grapher
 			//throw new RrdException( e.getMessage() );
 			e.printStackTrace();
 		}
-		
-		System.out.println( "Graph created ok." );
 		
 		// Dispose context
 		graphics.dispose();
@@ -326,6 +320,8 @@ class Grapher
 	 */
 	private void plotComments( Graphics2D g ) throws RrdException
 	{
+		Util.time();
+		
 		int posy		= y_offset + chartHeight + CHART_UPADDING + CHART_BPADDING + font_height;
 		int posx		= LBORDER_SPACE;
 		double base		= graphDef.getBaseValue();
@@ -396,6 +392,8 @@ class Grapher
 			}
 			
 		}
+		
+		Util.time(4);
 	}
 	
 	/**
@@ -404,6 +402,8 @@ class Grapher
 	 */
 	private void plotChart( Graphics2D graphics )
 	{
+		Util.time();
+		
 		int lux		= x_offset + chart_lpadding;
 		int luy		= y_offset + CHART_UPADDING;
 		
@@ -507,6 +507,9 @@ class Grapher
 		graphics.setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF );
 		
 		if ( graphDef.getFrontGrid() ) plotChartGrid( g, tlist, vlist );
+		
+		// DEBUG -- PlotChart checkpoint
+		Util.time(3);
 	}
 	
 	/**
@@ -588,16 +591,13 @@ class Grapher
 	 */
 	private void calculateSeries() throws RrdException, IOException 
 	{
+		Util.time();
+		
 		Source[] sources 	= graphDef.getSources();
 		long startTime 		= graphDef.getStartTime();
 		long endTime 		= graphDef.getEndTime();
 		
-		long s1, s2, s3;
-		long t1, t2, t3;
-		
 		// Optimizing of fetch, reparse
-		s1 = Calendar.getInstance().getTimeInMillis();
-		
 		String[] cfName = new String[] { "AVERAGE", "MAX", "MIN" };
 
 		if(endTime - startTime + 1 < numPoints)
@@ -617,8 +617,6 @@ class Grapher
 			for (int z = 0; z < 3; z++) {
 				if ( d.cfDataSources[z].size() > 0 )
 				{
-					t1 = Calendar.getInstance().getTimeInMillis();
-					
 					int[] indices 		= new int[d.cfDataSources[0].size()];
 					String[][] names 	= new String[d.cfDataSources[0].size()][2];
 					
@@ -630,34 +628,25 @@ class Grapher
 					FetchRequest request 		= rrd.createFetchRequest(cfName[z], startTime, endTime + rrdStep);
 					FetchPoint[] fetchPoints 	= request.fetch();
 					
-					t2 = Calendar.getInstance().getTimeInMillis();
-					
 					for(int i = 0; i < sources.length; i++) {
 						for (int j = 0; j < names.length; j++)
 							if ( names[j][1].equalsIgnoreCase(sources[i].name) )
 								sources[i].setValues( fetchPoints, indices[j] );
 					}
 					
-					t3 = Calendar.getInstance().getTimeInMillis();
-					
-					System.err.println( "FETCHING FINISHED: " + (t3 - t1) + " ms (intermediate reached: " + (t2 - t1) +" ms)");
-	
 				}
 			}
 			rrd.close();
 		}
 		// -------------------------------------------------------
 		
-		/*
 		// -------------------------------------------------------
 		// Old fetching code
-		for(int i = 0; i < sources.length; i++)
-			sources[i].setIntervalInternal(startTime, endTime);
+		//for(int i = 0; i < sources.length; i++)
+		//	sources[i].setIntervalInternal(startTime, endTime);
 		// -------------------------------------------------------
-		*/
-
-		s3 = Calendar.getInstance().getTimeInMillis();		
 		
+	
 		for (int i = 0; i < numPoints; i++) 
 		{
 			long t = (long)(startTime + i * ((endTime - startTime) / (double)(numPoints - 1)));
@@ -665,10 +654,9 @@ class Grapher
 			for (int j = 0; j < sources.length; j++)
 				sources[j].getValueInternal(t, valueCollection);
 		}
-		
-		s2 = Calendar.getInstance().getTimeInMillis();
-		
-		System.err.println( "CALCULATING FINISHED: " + (s2 - s1) + " ms (intermediate reached: " + (s3 - s1) +" ms)");
+	
+		// DEBUG - calculate checkpoint
+		Util.time(1);	
 	}
 	
 	private void drawString( Graphics2D g, String str, int x, int y )
@@ -728,6 +716,8 @@ class Grapher
 	 */
 	private void plotImageBackground( Graphics2D g )
 	{
+		Util.time();
+		
 		// Background color
 		g.setColor( graphDef.getBackColor() );
 		g.fillRect(0, 0, imgWidth, imgHeight );
@@ -767,6 +757,9 @@ class Grapher
 		
 		plotImageTitle( g );
 		plotVerticalAxisLabels( g );
+		
+		// DEBUG -- Image background checkpoint
+		Util.time(2);
 	}
 		
 	/**
@@ -798,6 +791,9 @@ class Grapher
 			if ( list[i].isAlignSet() && i < list.length - 1 )
 				commentLines++;
 		}
+		
+		// DEBUG -- Calculate comment block checkpoint
+		//Util.time("CalcCommentBlock");
 		
 		return commentLines * (font_height + LINE_PADDING) - LINE_PADDING;
 	}

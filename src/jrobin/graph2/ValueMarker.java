@@ -19,9 +19,13 @@
  * library; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-package jrobin.graph;
-
-import java.util.*;
+/*
+ * Created on 29-aug-2003
+ *
+ * To change the template for this generated file go to
+ * Window - Preferences - Java - Code Generation - Code and Comments
+ */
+package jrobin.graph2;
 
 /**
  * @author cbld
@@ -29,41 +33,20 @@ import java.util.*;
  * To change the template for this generated type comment go to
  * Window - Preferences - Java - Code Generation - Code and Comments
  */
-public class RrdFile 
-{
-	private String fileName = "";		// Fill this one in later
-	
-	private int AVG	= 0;
-	private int MAX = 1;
-	private int MIN = 2;
-	
-	public Vector[] cfDataSources = new Vector[3];
-	
-	public RrdFile( )
-	{
-		for (int i = 0; i < cfDataSources.length; i++)
-			cfDataSources[i] = new Vector();	
-	}
-	
-	public RrdFile( String consolFun, String dsName, String name )
-	{
-		this();
-		if ( consolFun.equalsIgnoreCase("AVERAGE") )
-			cfDataSources[AVG].add( new String[] { dsName, name } );
-		else if ( consolFun.equalsIgnoreCase("MAX") )
-			cfDataSources[MAX].add( new String[] { dsName, name } );
-		else if ( consolFun.equalsIgnoreCase("MIN") )
-			cfDataSources[MIN].add( new String[] { dsName, name } );				
-	}
-	
-	public void addSource( String consolFun, String dsName, String name )
-	{
-		if ( consolFun.equalsIgnoreCase("AVERAGE") )
-			cfDataSources[AVG].add( new String[] { dsName, name } );
-		else if ( consolFun.equalsIgnoreCase("MAX") )
-			cfDataSources[MAX].add( new String[] { dsName, name } );
-		else if ( consolFun.equalsIgnoreCase("MIN") )
-			cfDataSources[MIN].add( new String[] { dsName, name } );				
-	}
+public class ValueMarker {
+	double value			= 0;
+	String text				= "";
+	private boolean label 	= false;
 
+	ValueMarker( double value, String text, boolean label )
+	{
+		this.label	= label;
+		this.value 	= value;
+		this.text 	= text;
+	}
+	
+	public boolean isLabel()
+	{
+		return label;
+	}
 }

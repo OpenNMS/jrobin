@@ -27,7 +27,8 @@ import java.awt.*;
 /**
  *
  */
-class PlotDef {
+class PlotDef 
+{
 	public static final float DEFAULT_LINE_WIDTH = 1.0F;
 	
 	static final int PLOT_LINE 	= 0;
@@ -50,7 +51,7 @@ class PlotDef {
 		this.color 	= color;
 		this.legend = legend;
 	}
-	
+
 	int getType() {
 		return plotType;	
 	}

@@ -1,7 +1,7 @@
 package jrobin.demo;
 
-import jrobin.graph.RrdGraphDef;
-import jrobin.graph.RrdGraph;
+import jrobin.graph2.RrdGraphDef;
+import jrobin.graph2.RrdGraph;
 import jrobin.core.RrdException;
 
 import java.util.GregorianCalendar;
@@ -25,7 +25,7 @@ public class JRobinGallery {
 		long t1 = end.getTime().getTime() / 1000L;
 		def.datasource("sine", "TIME," + t0 + ",-," + (t1 - t0) +
 			",/,7,PI,*,*,SIN");
-		def.datasource("v2", "demo.rrd", "shade", "AVERAGE");
+		def.datasource("v2", "/gallery.rrd", "shade", "AVERAGE");
 		def.datasource("cosine", "TIME," + t0 + ",-," + (t1 - t0) +
 			",/,3,PI,*,*,COS");
 		def.datasource("line", "TIME," + t0 + ",-," + (t1 - t0) + ",/,1000,*");
@@ -47,14 +47,16 @@ public class JRobinGallery {
 			}
 		}
 		def.line("v2", Color.YELLOW, null);
-		def.line("v1", Color.BLUE, "Input voltage", 3);
+		def.line("v1", Color.BLUE, "Input voltage@L", 3);
 		def.line("v1", Color.YELLOW, null, 1);
-		def.comment("fancy looking graphs@r");
 		def.setTitle("Voltage measurement");
-		def.setValueAxisLabel("[Volts]");
-		def.setValueStep(100);
+		def.setVerticalLabel("[Volts]");
+		//def.setValueAxisLabel("[Volts]");
+		def.comment("fancy looking graphs@r");
+		//def.setValueStep(100);
 		RrdGraph graph = new RrdGraph(def);
-		graph.saveAsPNG("demo7.png", 400, 250);
+		graph.saveAsPNG("/demo7.png", 400, 250);
+		//graph.saveAsPNG("/demo7.png");
 	}
 
 	public static void graph6() throws RrdException, IOException {
@@ -76,20 +78,22 @@ public class JRobinGallery {
 		def.datasource("blank1", "v1,0,GT,v2,0,GT,AND,v1,v2,MIN,0,IF");
 		def.datasource("blank2", "v1,0,LT,v2,0,LT,AND,v1,v2,MAX,0,IF");
 		def.datasource("median", "v1,v2,+,2,/");
-		def.line("median", Color.YELLOW, "safe zone\n");
+		def.line("median", Color.YELLOW, null);
 		def.area("v1", Color.WHITE, null);
-		def.stack("diff", Color.YELLOW, "safe zone");
+		def.stack("diff", Color.YELLOW, "safe zone\n");
 		def.area("blank1", Color.WHITE, null);
 		def.area("blank2", Color.WHITE, null);
 		def.line("v1", Color.BLUE, null, 1);
 		def.line("v2", Color.BLUE, null, 1);
-		def.gprint("absdiff", "MAX", "max safe: @2V");
-		def.gprint("absdiff", "AVERAGE", "avg safe: @2V");
-		def.comment("fancy looking graphs@r");
 		def.setTitle("Voltage measurement");
-		def.setValueAxisLabel("[Volts]");
+		def.setVerticalLabel("[Volts]");
+		//def.setValueAxisLabel("[Volts]");
+		def.gprint("absdiff", "MAX", "max safe: @2V");
+		def.gprint("absdiff", "AVERAGE", "avg safe: @2V@L");
+		def.comment("fancy looking graph@r");
 		RrdGraph graph = new RrdGraph(def);
-		graph.saveAsPNG("demo6.png", 400, 250);
+		//graph.saveAsPNG("/demo6.png");
+		graph.saveAsPNG("/demo6.png", 400, 250);
 	}
 
 	public static void main(String[] args) throws RrdException, IOException {

@@ -2,8 +2,11 @@
  * JRobin : Pure java implementation of RRDTool's functionality
  * ============================================================
  *
- * Project Info:  http://www.sourceforge.net/projects/jrobin
- * Project Lead:  Sasa Markovic (saxon@eunet.yu);
+ * Project Info:  http://www.jrobin.org
+ * Project Lead:  Sasa Markovic (saxon@jrobin.org)
+ * 
+ * Developers:    Sasa Markovic (saxon@jrobin.org)
+ *                Arne Vandamme (cobralord@jrobin.org)
  *
  * (C) Copyright 2003, by Sasa Markovic.
  *
@@ -19,35 +22,31 @@
  * library; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+package jrobin.graph2;
 
-package jrobin.graph;
-
-import jrobin.core.RrdException;
-
-import java.util.StringTokenizer;
+import java.awt.Color;
 
 /**
- *
+ * <p>description</p>
+ * 
+ * @author Arne Vandamme (arne.vandamme@jrobin.org)
  */
-class Cdef extends Source {
-	private String[] rpnTokens;
+class LegendMarker 
+{
+	int markerPos;
+	Color color;
 	
-	Cdef(String name, String rpn) {
-		super(name);
-		StringTokenizer st = new StringTokenizer(rpn, ",");
-		int count = st.countTokens();
-		rpnTokens = new String[count];
-		for(int i = 0; st.hasMoreTokens(); i++) {
-			rpnTokens[i] = st.nextToken().trim();
-		}
+	LegendMarker( int markerPos, Color c )
+	{
+		this.markerPos 	= markerPos;
+		this.color		= c;
 	}
-
-	void setInterval(long start, long end) {
-		// stubbed, comlpex graph sources do not require time interval
+	
+	Color getColor() {
+		return color;
 	}
-
-	double getValue(long timestamp, ValueCollection values) throws RrdException {
-		RpnCalculator evaluator = new RpnCalculator(timestamp, values, rpnTokens);
-		return evaluator.evaluate();
+	
+	int getXPosition() {
+		return markerPos;
 	}
 }

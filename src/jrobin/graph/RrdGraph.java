@@ -34,6 +34,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 
+import jrobin.core.Util;
+
 /**
  * <p>Class to represent JRobin graphs. This class is a light wrapper around
  * <a href="http://www.jfree.org/jfreechart/javadoc/org/jfree/chart/JFreeChart.html">JFreeChart
@@ -56,6 +58,7 @@ public class RrdGraph implements Serializable
 	{
 		grapher = new Grapher( graphDef );
 	}
+	
 
     /**
 	 * Creates buffered image object from the graph.
@@ -93,7 +96,12 @@ public class RrdGraph implements Serializable
 	 */
 	public void saveAsPNG(String path, int width, int height)	throws IOException 
 	{
-		ImageIO.write( (RenderedImage) getBufferedImage(width, height), "png", new File(path) );
+		Util.time();
+		RenderedImage r =(RenderedImage) getBufferedImage(width, height);
+		Util.time();
+		ImageIO.write( r, "png", new File(path) );
+		Util.time(5);
+		
 	}
 	
 	/**
@@ -175,7 +183,7 @@ public class RrdGraph implements Serializable
 	 * @param width Image width.
 	 * @param height Image height.
 	 * @param quality JPEG quality between 0 and 1.
-	 * @return Array of PNG bytes.
+	 * @return Array of JPEG bytes.
 	 * @throws IOException Thrown in case of I/O error.
 	 */
 	public byte[] getJPEGBytes(int width, int height, float quality) throws IOException 

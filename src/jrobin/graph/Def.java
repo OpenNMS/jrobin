@@ -72,9 +72,11 @@ class Def extends Source {
 		
 		RrdDb rrd = new RrdDb(rrdPath);
 		long rrdStep = rrd.getRrdDef().getStep();
+		
 		FetchRequest request = rrd.createFetchRequest(consolFun, start, end + rrdStep);
 		FetchPoint[] fetchPoints = request.fetch();
 		int numPoints = fetchPoints.length;
+		
 		DataPoint[] points = new DataPoint[numPoints];
 		int dsIndex = rrd.getDsIndex(dsName);
 		

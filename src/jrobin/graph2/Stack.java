@@ -2,8 +2,11 @@
  * JRobin : Pure java implementation of RRDTool's functionality
  * ============================================================
  *
- * Project Info:  http://www.sourceforge.net/projects/jrobin
- * Project Lead:  Sasa Markovic (saxon@eunet.yu);
+ * Project Info:  http://www.jrobin.org
+ * Project Lead:  Sasa Markovic (saxon@jrobin.org)
+ * 
+ * Developers:    Sasa Markovic (saxon@jrobin.org)
+ *                Arne Vandamme (cobralord@jrobin.org)
  *
  * (C) Copyright 2003, by Sasa Markovic.
  *
@@ -19,35 +22,42 @@
  * library; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+package jrobin.graph2;
 
-package jrobin.graph;
+import java.awt.Color;
 
 import jrobin.core.RrdException;
 
-import java.util.StringTokenizer;
-
 /**
- *
+ * <p>description</p>
+ * 
+ * @author Arne Vandamme (arne.vandamme@jrobin.org)
  */
-class Cdef extends Source {
-	private String[] rpnTokens;
+class Stack extends PlotDef
+{
+	Stack( String sourceName, Color c )
+	{
+		super( sourceName, c );
+		this.plotType	= PlotDef.PLOT_STACK;
+	}
+
+	void draw( ChartGraphics g, int[] xValues, int[] stackValues, int lastPlotType ) throws RrdException
+	{
+		PlotDef stack = null;
+		
+		try
+		{
+			if ( lastPlotType == PlotDef.PLOT_LINE )
+				stack = new PlotDef( source, color, true );	
+			else if ( lastPlotType == PlotDef.PLOT_AREA )
+				stack = new Area( source, color, true );
 	
-	Cdef(String name, String rpn) {
-		super(name);
-		StringTokenizer st = new StringTokenizer(rpn, ",");
-		int count = st.countTokens();
-		rpnTokens = new String[count];
-		for(int i = 0; st.hasMoreTokens(); i++) {
-			rpnTokens[i] = st.nextToken().trim();
+			stack.draw( g, xValues, stackValues, lastPlotType );
 		}
-	}
-
-	void setInterval(long start, long end) {
-		// stubbed, comlpex graph sources do not require time interval
-	}
-
-	double getValue(long timestamp, ValueCollection values) throws RrdException {
-		RpnCalculator evaluator = new RpnCalculator(timestamp, values, rpnTokens);
-		return evaluator.evaluate();
+		catch (Exception e) 
+		{
+			throw new RrdException( "Could not stack source: " + sourceName );
+		}
+	
 	}
 }

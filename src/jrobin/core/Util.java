@@ -28,12 +28,19 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.GregorianCalendar;
 
+import java.util.LinkedList;
+
 /**
  * Class defines various utility functions used in JRobin. 
  *
  * @author <a href="mailto:saxon@eunet.yu">Sasa Markovic</a>
  */
 public class Util {
+	
+	static long s1 = System.currentTimeMillis();
+	static long s2;
+	public static LinkedList timeList = new LinkedList();
+	
 	// pattern RRDTool uses to format doubles in XML files
 	static final String PATTERN = "0.0000000000E00";
 	static final DecimalFormat df;
@@ -165,5 +172,22 @@ public class Util {
 		}
 		return value;
 	}
+	
+	// Arne - timing of methods
+	public static void time()
+	{
+		time(-10);
+	}
+	
+	public static void time( int str )
+	{
+		s2 = System.currentTimeMillis();
+		if ( str >= 0 )
+			timeList.addLast( str + "_" + (s2 - s1));
+			//System.err.println( "[" + str + "] --- " + (s2 - s1) + " ms");
+		s1 = s2;
+	}
+
 }
+
 
