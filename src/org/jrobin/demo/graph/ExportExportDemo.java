@@ -52,6 +52,7 @@ public class ExportExportDemo
 
 	private static void prepare( String[] args )
 	{
+		/*
 		if ( args.length != 1 )
 		{
 			println( "Usage: ExportExportDemo <path_to_demo_resources>" );
@@ -63,6 +64,8 @@ public class ExportExportDemo
 		}
 
 		demoResources = new File(args[0]).getAbsolutePath() + "/";
+		*/
+		demoResources = Util.getJRobinHomeDirectory() + "/res/demo/";
 	}
 
 	public static void main( String[] args ) throws RrdException, IOException

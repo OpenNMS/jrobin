@@ -495,5 +495,42 @@ public class Util {
 		lastLap = newLap;
 		return "[" + seconds + " sec]";
 	}
-	
+
+	/**
+	 * Returns the root directory of the JRobin distribution. Useful in some demo applications,
+	 * probably of no use anywhere else.<p>
+	 *
+	 * The function assumes that all JRobin .class files are placed under
+	 * the &lt;root&gt;/classes subdirectory and that all jars (libraries) are placed in the
+	 * &lt;root&gt;/lib subdirectory (the original JRobin directory structure).<p>
+	 *
+	 * @return absolute path to JRobin's home directory
+	 */
+	public static String getJRobinHomeDirectory() {
+		String className = Util.class.getName().replace('.', '/');
+		String uri = Util.class.getResource("/" + className + ".class").toString();
+		if(uri.startsWith("file:/")) {
+			uri = uri.substring(6);
+			File file = new File(uri);
+			// let's go 5 steps backwards
+			for(int i = 0; i < 5; i++) {
+				file = file.getParentFile();
+			}
+			uri = file.getAbsolutePath();
+		}
+		else if(uri.startsWith("jar:file:/")) {
+			uri = uri.substring(10, uri.lastIndexOf('!'));
+			File file = new File(uri);
+			// let's go 2 steps backwards
+			for(int i = 0; i < 2; i++) {
+				file = file.getParentFile();
+			}
+			uri = file.getAbsolutePath();
+		}
+		else {
+			uri = null;
+		}
+		return uri;
+	}
+
 }

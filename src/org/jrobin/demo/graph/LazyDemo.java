@@ -82,6 +82,7 @@ public class LazyDemo
 
 	private static void prepare( String[] args )
 	{
+		/*
 		if ( args.length != 1 )
 		{
 			println( "Usage: LazyDemo <path_to_demo_resources>" );
@@ -93,6 +94,8 @@ public class LazyDemo
 		}
 
 		demoResources 	= new File(args[0]).getAbsolutePath() + "/";
+		*/
+		demoResources = Util.getJRobinHomeDirectory() + "/res/demo/";
 		rrd1			= demoResources + rrd1;
 		rrd2			= demoResources + rrd2;
 	}

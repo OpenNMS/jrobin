@@ -987,6 +987,7 @@ public class RrdDb implements RrdUpdater {
 	}
 
 	public static void main(String[] args) {
+		System.out.println("JRobin base directory: " + Util.getJRobinHomeDirectory());
 		System.out.println("JRobin Java Library :: RRDTool choice for the Java world");
 		System.out.println("http://www.jrobin.org");
 		System.out.println("(C) 2004 Sasa Markovic & Arne Vandamme");
