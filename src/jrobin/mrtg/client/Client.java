@@ -281,6 +281,11 @@ class Client extends JFrame {
 		});
         linksPopupMenu.add(linksPopupYearlyGraphMenuItem);
 		linksPopupMenu.addSeparator();
+		linksPopupCustomGraphMenuItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) { graph(GraphFrame.TYPE_CUSTOM); }
+		});
+		linksPopupMenu.add(linksPopupCustomGraphMenuItem);
+		linksPopupMenu.addSeparator();
 		linksPopupRemoveLinkMenuItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) { removeLink(); }
 		});
