@@ -189,23 +189,25 @@ public class JRobinDemo {
 			",/,2,PI,*,*,SIN,1000,*");
 		gDef.line("sun", Color.GREEN, "sun temp");
 		gDef.line("shade", Color.BLUE, "shade temp");
-		gDef.line("median", Color.DARK_GRAY, "median value");
+		gDef.line("median", Color.MAGENTA, "median value");
 		gDef.area("diff", Color.RED, "difference");
 		// gradient color areas
 		for(int i = GRADIENT_COLOR_STEPS - 1; i >= 1; i--) {
-			gDef.area("diff" + i, new Color(255 * i / GRADIENT_COLOR_STEPS, 0, 0), null);
+			gDef.area("diff" + i, new Color(255, 255 - 255 * i / GRADIENT_COLOR_STEPS, 0), null);
 		}
-		gDef.line("sine", Color.CYAN, "sine function demo");
+		gDef.line("sine", Color.CYAN, "sine");
 		gDef.gprint("sun", "MAX", "\nmaxSun = @3@s");
 		gDef.gprint("sun", "AVERAGE", "avgSun = @3@S@r");
 		gDef.gprint("shade", "MAX", "maxShade = @3@s");
 		gDef.gprint("shade", "AVERAGE", "avgShade = @3@S@r");
+		// create graph finally
+//		gDef.setValueRange(-1000, 1000);
 		RrdGraph graph = new RrdGraph(gDef);
 		println("==Graph created");
 		println("==Saving graph as PNG file " + pngPath);
-		graph.saveAsPNG(pngPath, 600, 400);
+		graph.saveAsPNG(pngPath, 400, 250);
 		println("==Saving graph as JPEG file " + jpegPath);
-		graph.saveAsJPEG(jpegPath, 600, 400, 0.5F);
+		graph.saveAsJPEG(jpegPath, 400, 250, 0.5F);
 
 		// demo ends
 		pw.close();
