@@ -40,7 +40,7 @@ class SplashWindow extends JWindow {
 	SplashWindow() {
 		JLabel imageLabel = new JLabel();
 		try {
-			imageLabel.setIcon(Resources.getImageIcon("mrtg-res/logo.png"));
+			imageLabel.setIcon(Resources.getImageIcon(Client.RESOURCE_PATH + "logo.png"));
 		} catch (MrtgException e) {
 			// NOP
 		}

@@ -34,7 +34,7 @@ import java.awt.event.WindowEvent;
 
 class HelpDialog extends JDialog {
 	static final String TITLE = "Help";
-	static final String HTML = "mrtg-res/help.html";
+	static final String HTML = Client.RESOURCE_PATH + "help.html";
 	static final Dimension SIZE = new Dimension(600, 300);
 
 	HelpDialog(Frame parent) {

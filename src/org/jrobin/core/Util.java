@@ -46,12 +46,12 @@ import java.util.ArrayList;
 import java.io.*;
 
 /**
- * Class defines various utility functions used in JRobin. 
+ * Class defines various utility functions used in JRobin.
  *
  * @author <a href="mailto:saxon@jrobin.org">Sasa Markovic</a>
  */
 public class Util {
-	
+
 	// pattern RRDTool uses to format doubles in XML files
 	static final String PATTERN = "0.0000000000E00";
 	// directory under $USER_HOME used for demo graphs storing
@@ -223,12 +223,27 @@ public class Util {
 			valueStr.equalsIgnoreCase("1");
 	}
 
+	/**
+	 * Returns file system separator string.
+	 * @return File system separator ("/" on Unix, "\" on Windows)
+	 */
+	public static String getFileSeparator() {
+		return System.getProperty("file.separator");
+	}
+
+	/**
+	 * Returns path to user's home directory.
+	 * @return Path to users home directory, with file separator appended.
+	 */
+	public static String getUserHomeDirectory() {
+		return System.getProperty("user.home") + getFileSeparator();
+	}
+
 	private static final File homeDirFile;
 	private static final String homeDirPath;
 
 	static {
-		String delim = System.getProperty("file.separator");
-		homeDirPath = System.getProperty("user.home") + delim + JROBIN_DIR + delim;
+		homeDirPath = getUserHomeDirectory() + JROBIN_DIR + getFileSeparator();
 		homeDirFile = new File(homeDirPath);
 	}
 
@@ -354,7 +369,7 @@ public class Util {
 		static String getChildValue( Node parentNode, String childName ) throws RrdException {
 			return getChildValue( parentNode, childName, true );
 		}
-		
+
 		static String getChildValue( Node parentNode, String childName, boolean trim ) throws RrdException {
 			NodeList children = parentNode.getChildNodes();
 			for (int i = 0; i < children.getLength(); i++) {
@@ -370,7 +385,7 @@ public class Util {
 		static String getValue(Node node) {
 			return getValue( node, true );
 		}
-		
+
 		static String getValue(Node node, boolean trimValue ) {
 			String value = null;
 			Node child = node.getFirstChild();

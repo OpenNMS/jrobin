@@ -93,6 +93,8 @@ class Demo {
 		rrdDb = new RrdDb(rrdPath);
 		Sample sample = rrdDb.createSample();
 		while(t <= end + 86400L) {
+			//rrdDb = new RrdDb(rrdPath);
+			//Sample sample = rrdDb.createSample();
 			sample.setTime(t);
 			sample.setValue("sun", sunSource.getValue());
 			sample.setValue("shade", shadeSource.getValue());
@@ -102,6 +104,7 @@ class Demo {
 			if(((++n) % 1000) == 0) {
 				System.out.print("*");
 			};
+			//rrdDb.close();
 		}
 		println("");
 		println("== Finished. RRD file updated " + n + " times");

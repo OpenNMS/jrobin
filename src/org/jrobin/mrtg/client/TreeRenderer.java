@@ -40,11 +40,11 @@ class TreeRenderer extends DefaultTreeCellRenderer {
 
 	static {
 		try {
-			MRTG_ICON = Resources.getImageIcon("mrtg-res/mrtg.png");
-			ROUTER_ICON = Resources.getImageIcon("mrtg-res/router.png");
-			LINK_ICON = Resources.getImageIcon("mrtg-res/link.png");
-			INACTIVE_ROUTER_ICON = Resources.getImageIcon("mrtg-res/router_inactive.png");
-			INACTIVE_LINK_ICON = Resources.getImageIcon("mrtg-res/link_inactive.png");
+			MRTG_ICON = Resources.getImageIcon(Client.RESOURCE_PATH + "mrtg.png");
+			ROUTER_ICON = Resources.getImageIcon(Client.RESOURCE_PATH + "router.png");
+			LINK_ICON = Resources.getImageIcon(Client.RESOURCE_PATH + "link.png");
+			INACTIVE_ROUTER_ICON = Resources.getImageIcon(Client.RESOURCE_PATH + "router_inactive.png");
+			INACTIVE_LINK_ICON = Resources.getImageIcon(Client.RESOURCE_PATH + "link_inactive.png");
 		} catch (MrtgException e) {
 			e.printStackTrace();
 		}

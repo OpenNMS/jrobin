@@ -35,7 +35,7 @@ import java.awt.event.WindowEvent;
 class AboutDialog extends JDialog {
 	static final String TITLE = "About JRobin";
 	static final String EMAIL = "saxon@eunet.yu";
-	static final String LOGO = "mrtg-res/logo.png";
+	static final String LOGO = Client.RESOURCE_PATH + "logo.png";
 	private static final int GAP = 3;
 
 	AboutDialog(Frame parent) {

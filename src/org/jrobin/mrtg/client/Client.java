@@ -37,10 +37,11 @@ import java.awt.event.*;
 import java.io.IOException;
 
 class Client extends JFrame {
+	static final String RESOURCE_PATH = "res/mrtg/";
 	static final String TITLE = "JRobin-MRTG client";
 	static final String SUBTITLE = "http://www.jrobin.org";
 	static final String COPYRIGHT = "Copyright \u00A9 2004 Sasa Markovic";
-	static final String ICON = "mrtg-res/icon.png";
+	static final String ICON = RESOURCE_PATH + "icon.png";
 
 	static Dimension MAIN_TREE_SIZE = new Dimension(320, 400);
 	static Dimension INFO_PANE_SIZE = new Dimension(320, 400);
