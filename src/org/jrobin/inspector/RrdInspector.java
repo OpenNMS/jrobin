@@ -62,7 +62,7 @@ class RrdInspector extends JFrame {
 		super(TITLE);
 		constructUI();
 		showCentered();
-		selectFile();
+		//selectFile();
 	}
 
 	private void showCentered() {
@@ -258,10 +258,17 @@ class RrdInspector extends JFrame {
 		if (returnVal == JFileChooser.APPROVE_OPTION) {
 			File file = chooser.getSelectedFile();
 			lastDirectory = file.getParent();
-			inspectorModel.setFile(file);
-			tabbedPane.setSelectedIndex(0);
+			//inspectorModel.setFile(file);
+			//tabbedPane.setSelectedIndex(0);
+			loadFile(file);
 		}
 	}
+
+	private void loadFile(File file) {
+		inspectorModel.setFile(file);
+		tabbedPane.setSelectedIndex(0);
+	}
+
 
 	private void addDatasource() {
 		if (!inspectorModel.isOk()) {
@@ -435,8 +442,24 @@ class RrdInspector extends JFrame {
 		}
 	}
 
-	public static void main(String[] args) {
-		new RrdInspector();
+	private static void printUsage() {
+		System.err.println("usage: " + RrdInspector.class.getName() + " [<filename>]");
+		System.exit(1);
 	}
 
+	public static void main(String[] args) {
+		new RrdInspector();
+		File file = null;
+		if (args.length > 1) {
+			printUsage();
+		} else if (args.length == 1) {
+			file = new File(args[0]);
+		}
+		RrdInspector inspector = new RrdInspector();
+		if (file == null) {
+			inspector.selectFile();
+		} else {
+			inspector.loadFile(file);
+		}
+	}
 }

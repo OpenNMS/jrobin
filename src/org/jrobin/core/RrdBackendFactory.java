@@ -72,9 +72,7 @@ public abstract class RrdBackendFactory {
 			registerFactory(nioFactory);
 
 			// Here is the default backend factory
-			//defaultFactory = fileFactory;
-			defaultFactory = nioFactory;
-			//defaultFactory = memoryFactory;
+			defaultFactory = fileFactory;
 
 		} catch (RrdException e) {
 			throw new RuntimeException("FATAL: Cannot register RRD backend factories: " + e);

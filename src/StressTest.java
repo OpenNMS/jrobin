@@ -34,10 +34,11 @@ import java.util.Date;
 import java.awt.*;
 
 class StressTest {
+	public static final String RRD_BACKEND_FACTORY = "NIO";
+
 	public static final String RRD_PATH = Util.getJRobinDemoPath("stress.rrd");
 	public static final long RRD_START = 946710000L;
 	public static final long RRD_STEP = 30;
-	public static final String BACKEND_NAME = "MEMORY";
 
 	public static final String RRD_DATASOURCE_NAME = "T";
 	public static final int RRD_DATASOURCE_COUNT = 6;
@@ -72,8 +73,9 @@ class StressTest {
 		System.out.println("* The stress test takes about one hour to complete on a 1.6GHz     *");
 		System.out.println("* computer with 256MB of RAM.                                      *");
 		System.out.println("********************************************************************");
-
 		printLapTime("Starting demo at " + new Date());
+		RrdBackendFactory.setDefaultFactory(RRD_BACKEND_FACTORY);
+		printLapTime("Backend factory set to " + RRD_BACKEND_FACTORY);
 		// create RRD database
 		printLapTime("Creating RRD definition");
 		RrdDef def = new RrdDef(RRD_PATH);
