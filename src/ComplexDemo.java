@@ -29,8 +29,8 @@ import java.util.GregorianCalendar;
 import java.text.SimpleDateFormat;
 import java.io.IOException;
 
-import jrobin.core.*;
-import jrobin.graph.*;
+import org.jrobin.core.*;
+import org.jrobin.graph.*;
 
 /**
  * <p>Extended graphing demo for JRobin.</p>

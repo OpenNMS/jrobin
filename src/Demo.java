@@ -23,9 +23,9 @@
  * Boston, MA 02111-1307, USA.
  */
 
-import jrobin.core.*;
-import jrobin.graph.RrdGraph;
-import jrobin.graph.RrdGraphDef;
+import org.jrobin.core.*;
+import org.jrobin.graph.RrdGraph;
+import org.jrobin.graph.RrdGraphDef;
 
 import java.awt.*;
 import java.io.BufferedOutputStream;
