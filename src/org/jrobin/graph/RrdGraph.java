@@ -24,7 +24,6 @@
  */
 package org.jrobin.graph;
 
-import javax.swing.JPanel;
 import java.util.Iterator;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -40,10 +39,8 @@ import java.awt.image.RenderedImage;
 import java.awt.image.BufferedImage;
 import java.awt.*;
 
-import org.jrobin.core.RrdDb;
-import org.jrobin.core.RrdDbPool;
+import org.jrobin.core.RrdOpener;
 import org.jrobin.core.RrdException;
-import org.jrobin.core.RrdBackendFactory;
 
 /**
  * <p>Class to represent JRobin graphs.  This class needs an appropriate RrdGraphDef to generate graphs.</p>

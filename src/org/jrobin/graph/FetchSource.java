@@ -52,6 +52,7 @@ class FetchSource
 	protected static final String[] cfNames	= new String[] { "AVERAGE", "MAX", "MIN", "LAST" };
 
 	private RrdDb rrd;
+	private RrdDef rrdDef;
 
 	private String rrdFile;						// Holds the name of the RRD file
 	private String backendName;
@@ -171,7 +172,7 @@ class FetchSource
 		int dsSize				= 0;
 		String[] dsNames, vNames;
 
-		long rrdStep			= rrd.getRrdDef().getStep();
+		long rrdStep			= rrdDef.getStep();
 		FetchData[] result		= new FetchData[datasources.length];
 		
 		String[] names 			= new String[numSources];
@@ -181,7 +182,8 @@ class FetchSource
 		{
 			dsSize				= datasources[i].size();
 
-			if ( dsSize > 0 ) {
+			if ( dsSize > 0 )
+			{
 				// Set the list of ds names
 				dsNames 	= new String[ dsSize ];
 				vNames		= new String[ dsSize ];
@@ -222,7 +224,7 @@ class FetchSource
 	{
 		if ( rrd == null )
 		{
-			RrdOpener opener = listReference.getRrdOpener();
+			org.jrobin.core.RrdOpener opener = listReference.getRrdOpener();
 
 			if ( opener == null )
 				throw new RrdException( "No RrdOpener specified for RRD management." );
@@ -230,6 +232,8 @@ class FetchSource
 			// Only open if not open yet
 			if ( rrd == null )
 				rrd = opener.getRrd( rrdFile, getRrdBackendFactory() );
+
+			rrdDef	= rrd.getRrdDef();
 		}
 	}
 
@@ -262,7 +266,7 @@ class FetchSource
 	{
 		if ( rrd != null )
 		{
-			RrdOpener opener = listReference.getRrdOpener();
+			org.jrobin.core.RrdOpener opener = listReference.getRrdOpener();
 
 			if ( opener == null )
 				throw new RrdException( "No RrdOpener specified for RRD management." );
@@ -279,19 +283,32 @@ class FetchSource
 	 * values, as long as the interval for it has been completed. This is not the
 	 * timestamp of the last non-unknown sample!
 	 *
+	 * @param startTime Timestamp for which the last sample time should be calculated.
 	 * @param endTime Timestamp for which the last sample time should be calculated.
+	 * @param resolution Last timestamp for this particular fetch resolution.
 	 * @return Last sample timestamp in seconds.
 	 * @throws IOException Thrown in case of fetching I/O error.
 	 * @throws RrdException Thrown in case of a JRobin specific error.
 	 */
-	protected long getLastSampleTime( long endTime ) throws RrdException, IOException
+	protected long getLastSampleTime( long startTime, long endTime, long resolution ) throws RrdException, IOException
 	{
 		if ( rrd == null )
 			openRrd();
 
-		long step 		= rrd.getRrdDef().getStep();
+		long maxSampleTime = 0, sampleTime = 0;
 
-		return endTime 	= rrd.getLastUpdateTime() - (endTime % step) - step;
+		for ( int i = 0; i < datasources.length; i++ )
+		{
+			if ( datasources[i].size() > 0 )
+			{
+				sampleTime = rrd.findStartMatchArchive( cfNames[i], startTime, resolution ).getEndTime();
+				if ( sampleTime > maxSampleTime )
+					maxSampleTime = sampleTime;
+			}
+		}
+
+		// Remove a single sample step (we'll add it again later on)
+		return maxSampleTime - rrdDef.getStep();
 	}
 
 	protected String getRrdFile() {

@@ -52,10 +52,10 @@ public class TimeAxisLabel extends Comment
 		// If there's no line end, add centered-line end
 		if ( !super.isCompleteLine() ) {
 			oList.add( "" );
-			oList.add( super.TKN_ACF );
+			oList.add( TimeAxisLabel.TKN_ACF );
 		
 			oList.add( "" );
-			oList.add( super.TKN_ALF );
+			oList.add( TimeAxisLabel.TKN_ALF );
 			
 			this.lineCount += 2;
 		}

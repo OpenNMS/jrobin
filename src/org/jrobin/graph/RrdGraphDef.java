@@ -585,7 +585,7 @@ public class RrdGraphDef implements Serializable
 	}
 
 	/**
-	 * This sets the lower limit of the grid to the specified value {@see setGridRange}.
+	 * This sets the lower limit of the grid to the specified value, see {@link RrdGraphDef#setGridRange(double, double, boolean)}.
 	 * This is the equivalent of: <code>setGridRange( lower, Double.NaN, false );</code>
 	 * @param lower Lower limit.
 	 */
@@ -703,7 +703,7 @@ public class RrdGraphDef implements Serializable
 	/**
 	 * <p>Clears the list of RRD datasources for this GraphDef and sets it to the FetchSourceList
 	 * passed as aparameter.  This does not alter any Cdef, Sdef or Pdef definitions.  The datasources
-	 * should be passed on as a FetchSourceList {@see FetchSourceList}.</p>
+	 * should be passed on as a FetchSourceList {@link FetchSourceList}.</p>
 	 * @param datasourceList FetchSourceList of the datasources to use.
 	 */
 	public void setDatasources( FetchSourceList datasourceList )
@@ -1130,15 +1130,16 @@ public class RrdGraphDef implements Serializable
 	}
 
 	/**
-	 *  Exports RrdGraphDef (graph definition) object in XML format to string.
-	 * Generated code can be parsed with {@link RrdGraphDefTemplate} class
-	 * {@see exportXmlTemplate}.
+	 * Exports RrdGraphDef (graph definition) object in XML format to string.
+	 * Generated code can be parsed with {@link RrdGraphDefTemplate} class, see
+	 * {@link RrdGraphDef#exportXmlTemplate()}.
 	 *
 	 * @return String representing graph definition in XML format
 	 */
 	public String getXmlTemplate() {
 		return exportXmlTemplate();
 	}
+	
 	/**
 	 * Exports RrdGraphDef (graph definition) object in XML format to string.
 	 * Generated code can be parsed with {@link RrdGraphDefTemplate} class.

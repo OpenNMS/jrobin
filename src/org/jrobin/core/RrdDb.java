@@ -551,6 +551,49 @@ public class RrdDb implements RrdUpdater {
 	}
 
 	/**
+	 * Finds the archive that best matches to the start time (time period being start-time until now)
+	 * and requested resolution.
+	 * @param consolFun Consolidation function of the datasource.
+	 * @param startTime Start time of the time period in seconds.
+	 * @param resolution Requested fetch resolution.
+	 * @return Reference to the best matching archive.
+	 * @throws IOException Thrown in case of I/O related error.
+	 */
+	public Archive findStartMatchArchive( String consolFun, long startTime, long resolution ) throws IOException {
+		long arcStep, diff;
+		int fallBackIndex	= 0;
+		int arcIndex		= -1;
+		long minDiff 		= Long.MAX_VALUE;
+		long fallBackDiff	= Long.MAX_VALUE;
+
+		for ( int i = 0; i < archives.length; i++ )
+		{
+			if ( archives[i].getConsolFun().equals(consolFun) )
+			{
+				arcStep = archives[i].getArcStep();
+				diff	= Math.abs( resolution - arcStep );
+
+				// Now compare start time, see if this archive encompasses the requested interval
+				if ( startTime >= archives[i].getStartTime() )
+				{
+					if ( diff == 0 )				// Best possible match either way
+						return archives[i];
+					else if ( diff < minDiff ) {
+						minDiff 	= diff;
+						arcIndex	= i;
+					}
+				}
+				else if ( diff < fallBackDiff ) {
+					fallBackDiff 	= diff;
+					fallBackIndex	= i;
+				}
+			}
+		}
+
+		return ( arcIndex >= 0 ? archives[arcIndex] : archives[fallBackIndex] );
+	}
+
+	/**
 	 * <p>Returns string representing complete internal RRD state. The returned
 	 * string can be printed to <code>stdout</code> and/or used for debugging purposes.</p>
 	 * @return String representing internal RRD state.

@@ -378,7 +378,7 @@ class Grapher
 
 				if ( changingEndTime )
 				{
-					endTime		= src.getLastSampleTime( endTime );
+					endTime		= src.getLastSampleTime( startTime, endTime, graphDef.getResolution() );
 
 					if ( endTime > finalEndTime )
 						finalEndTime = endTime;

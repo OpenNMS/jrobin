@@ -30,6 +30,7 @@ import java.io.IOException;
 
 import org.jrobin.core.RrdException;
 import org.jrobin.core.RrdDb;
+import org.jrobin.core.RrdOpener;
 
 /**
  * <p>A FetchSourceList represents a number of RRD datasources,
@@ -247,8 +248,8 @@ public class FetchSourceList
 	}
 
 	/**
-	 * Adds a datasource for graphing purposes to the list,
-	 * {@see RrdGraphDef#datasource( java.lang.String, java.lang.String,
+	 * Adds a datasource for graphing purposes to the list, see
+	 * {@link RrdGraphDef#datasource( java.lang.String, java.lang.String,
 	 * java.lang.String, java.lang.String, java.lang.String )}.
 
 	 * @param name Internal datasource name, to be used in GraphDefs.
@@ -277,8 +278,8 @@ public class FetchSourceList
 	}
 
 	/**
-	 * Adds a datasource for graphing purposes to the list,
-	 * {@see RrdGraphDef#datasource( java.lang.String, java.lang.String,
+	 * Adds a datasource for graphing purposes to the list, see 
+	 * {@link RrdGraphDef#datasource( java.lang.String, java.lang.String,
 	 * java.lang.String, java.lang.String )}.
 	 *
 	 * @param name Internal datasource name, to be used in GraphDefs.
