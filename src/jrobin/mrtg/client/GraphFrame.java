@@ -22,6 +22,8 @@
 
 package jrobin.mrtg.client;
 
+import jrobin.mrtg.MrtgException;
+
 import javax.swing.*;
 import javax.swing.border.BevelBorder;
 import javax.swing.filechooser.FileFilter;
@@ -116,6 +118,7 @@ class GraphFrame extends JFrame {
 		graphLabel.setPreferredSize(GRAPH_SIZE);
 		graphLabel.setBorder(BorderFactory.createBevelBorder(BevelBorder.LOWERED));
 		content.add(graphLabel, BorderLayout.CENTER);
+
 		// botom panel
 		JPanel bottomPanel = new JPanel();
 		bottomPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
@@ -154,6 +157,58 @@ class GraphFrame extends JFrame {
 		box.add(infoLabel);
 		mainContent.add(box, BorderLayout.EAST);
 
+		// popup menu
+		final JPopupMenu popup = new JPopupMenu();
+		JMenuItem leftMenuItem = new JMenuItem("<< Left");
+		leftMenuItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				shift(false);
+			}
+		});
+		JMenuItem rightMenuItem = new JMenuItem("Right >>");
+		rightMenuItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				shift(true);
+			}
+		});
+		JMenuItem refreshMenuItem = new JMenuItem("Refresh graph");
+		refreshMenuItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				refreshButton.doClick();
+			}
+		});
+		JMenuItem saveMenuItem = new JMenuItem("Save graph...");
+		saveMenuItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				save();
+			}
+		});
+		JMenuItem closeMenuItem = new JMenuItem("Close window");
+		closeMenuItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				close();
+			}
+		});
+		if(type != TYPE_CUSTOM) {
+			popup.add(leftMenuItem);
+			popup.add(rightMenuItem);
+		}
+		popup.add(refreshMenuItem);
+		popup.addSeparator();
+		popup.add(saveMenuItem);
+		popup.addSeparator();
+		popup.add(closeMenuItem);
+		MouseAdapter adapter = new MouseAdapter() {
+			public void mousePressed(MouseEvent e) { showPopup(e);	}
+			public void mouseReleased(MouseEvent e) { showPopup(e); }
+			private void showPopup(MouseEvent e) {
+				if (e.isPopupTrigger()) {
+					popup.show(e.getComponent(), e.getX(), e.getY());
+				}
+			}
+		};
+		graphLabel.addMouseListener(adapter);
+
 		// populate controls
         fillDays(startDay); fillDays(endDay);
 		fillMonths(startMonth); fillMonths(endMonth);
@@ -172,6 +227,11 @@ class GraphFrame extends JFrame {
         leftButton.setMnemonic(KeyEvent.VK_L);
 		rightButton.setMnemonic(KeyEvent.VK_R);
 		setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+		try {
+			setIconImage(Resources.getImage(Client.ICON));
+		} catch (MrtgException e) {
+			e.printStackTrace();
+		}
 		Util.centerOnScreen(this);
 	}
 
