@@ -37,14 +37,14 @@ public class RrdMemoryBackend extends RrdBackend {
 		super(path);
 	}
 
-	protected void write(long offset, byte[] b) throws IOException {
+	protected synchronized void write(long offset, byte[] b) throws IOException {
 		int pos = (int) offset;
 		for(int i = 0; i < b.length; i++) {
 			buffer[pos++] = b[i];
 		}
 	}
 
-	protected void read(long offset, byte[] b) throws IOException {
+	protected synchronized void read(long offset, byte[] b) throws IOException {
 		int pos = (int) offset;
 		if(pos + b.length <= buffer.length) {
 			for(int i = 0; i < b.length; i++) {
