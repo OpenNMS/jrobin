@@ -68,6 +68,7 @@ import java.io.IOException;
  */
 public abstract class RrdBackend {
 	private String path;
+	private static long count = 0;
 
 	/**
 	 * Creates backend for a RRD storage with the given path.
@@ -77,6 +78,7 @@ public abstract class RrdBackend {
 	 */
 	protected RrdBackend(String path) {
 		this.path = path;
+		count++;
 	}
 
 	/**
@@ -300,5 +302,9 @@ public abstract class RrdBackend {
 	private final static double getDouble(byte[] b) {
 		assert b.length == 8: "Invalid number of bytes for double conversion";
 		return Double.longBitsToDouble(getLong(b));
+	}
+
+	static long getCount() {
+		return count;
 	}
 }

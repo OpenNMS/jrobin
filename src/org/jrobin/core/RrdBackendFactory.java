@@ -72,7 +72,9 @@ public abstract class RrdBackendFactory {
 			registerFactory(nioFactory);
 
 			// Here is the default backend factory
-			defaultFactory = fileFactory;
+			//defaultFactory = fileFactory;
+			defaultFactory = nioFactory;
+			//defaultFactory = memoryFactory;
 
 		} catch (RrdException e) {
 			throw new RuntimeException("FATAL: Cannot register RRD backend factories: " + e);
@@ -129,6 +131,26 @@ public abstract class RrdBackendFactory {
 	 */
 	public static RrdBackendFactory getDefaultFactory() {
 		return defaultFactory;
+	}
+
+	/**
+	 * Replaces the default backend factory with a new one. This method must be called before
+	 * the first RRD gets created. <p>
+	 * @param factoryName Name of the default factory. Out of the box, JRobin supports three
+	 * different RRD backends: "FILE" (java.io.* based), "NIO" (java.nio.* based) and "MEMORY"
+	 * (byte[] based).
+	 * @throws RrdException Thrown if invalid factory name is supplied or not called before
+	 * the first RRD is created.
+	 */
+	public static void setDefaultFactory(String factoryName) throws RrdException {
+		// We will allow this only if no RRDs are created
+		if(RrdBackend.getCount() == 0) {
+			defaultFactory = getFactory(factoryName);
+		}
+		else {
+			throw new RrdException("Could not change the default backend factory. " +
+					"This method must be called before the first RRD gets created");
+		}
 	}
 
 	/**
