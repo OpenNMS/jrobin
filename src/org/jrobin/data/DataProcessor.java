@@ -75,6 +75,8 @@ public class DataProcessor implements ConsolFuns {
 	private long tEnd, timestamps[];
 	// this will be adjusted later
 	private long step = 0;
+	// resolution to be used for RRD fetch operation
+	private long fetchRequestResolution = 1;
 
 	// the order is important, ordinary HashMap is unordered
 	private Map sources = new LinkedHashMap();
@@ -200,6 +202,31 @@ public class DataProcessor implements ConsolFuns {
 	 */
 	public long getStep() {
 		return step;
+	}
+
+	/**
+	 * Returns desired RRD archive step (reslution) in seconds to be used while fetching data
+	 * from RRD files. In other words, this value will used as the last parameter of
+	 * {@link RrdDb#createFetchRequest(String, long, long, long) RrdDb.createFetchRequest()} method
+	 * when this method is called internally by this DataProcessor.
+	 *
+	 * @return Desired archive step (fetch resolution) in seconds.
+	 */
+	public long getFetchRequestResolution() {
+		return fetchRequestResolution;
+	}
+
+	/**
+	 * Sets desired RRD archive step in seconds to be used internally while fetching data
+	 * from RRD files. In other words, this value will used as the last parameter of
+	 * {@link RrdDb#createFetchRequest(String, long, long, long) RrdDb.createFetchRequest()} method
+	 * when this method is called internally by this DataProcessor. If this method is never called, fetch
+	 * request resolution defaults to 1 (smallest possible archive step will be chosen automatically).
+	 *
+	 * @param fetchRequestResolution Desired archive step (fetch resoltuion) in seconds.
+	 */
+	public void setFetchRequestResolution(long fetchRequestResolution) {
+		this.fetchRequestResolution = fetchRequestResolution;
 	}
 
 	/**
@@ -674,7 +701,8 @@ public class DataProcessor implements ConsolFuns {
 				RrdDb rrd = null;
 				try {
 					rrd = getRrd(defSources[i]);
-					FetchRequest req = rrd.createFetchRequest(defSources[i].getConsolFun(), tStart, tEndFixed);
+					FetchRequest req = rrd.createFetchRequest(defSources[i].getConsolFun(),
+							tStart, tEndFixed, fetchRequestResolution);
 					req.setFilter(dsNames);
 					FetchData data = req.fetchData();
 					defSources[i].setFetchData(data);
@@ -844,7 +872,10 @@ public class DataProcessor implements ConsolFuns {
 		DataProcessor dp = new DataProcessor(t1, t2);
 
 		// uncomment and run again
-		//dp.setStep(7300);
+		//dp.setFetchRequestResolution(86400);
+
+		// uncomment and run again
+		//dp.setStep(86500);
 
 		// datasource definitions
 		dp.addDatasource("X", rrdPath, "sun", "AVERAGE");
