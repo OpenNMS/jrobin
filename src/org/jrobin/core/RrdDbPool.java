@@ -61,8 +61,8 @@ import java.util.*;
  * pool.release(rrdDb);
  * </pre>
  * <p/>
- * It's that simple. When the reference is requested for
- * the first time, RrdDbPool will open the RRD file
+ * It's that simple. When the reference is requested for the first time,
+ * RrdDbPool will open the RRD file
  * for you and make some internal note that the RRD file is used only once. When the reference
  * to the same file (same RRD file path) is requested for the second time, the same RrdDb
  * reference will be returned, and its usage count will be increased by one. When the
@@ -73,7 +73,7 @@ import java.util.*;
  * If someone request the same RRD file again (before it gets closed), the same
  * reference will be returned again.<p>
  * <p/>
- * RrdDbPool has a 'garbage collector' which runs in a separate
+ * RrdDbPool has a 'garbage collector' which runs in a separate, low-priority
  * thread and gets activated only when the number of RRD files kept in the
  * pool is too big (greater than number returned from {@link #getCapacity getCapacity()}).
  * Only RRD files with a reference count equal to zero
@@ -81,8 +81,8 @@ import java.util.*;
  * RrdDbPool object keeps track of the time when each RRD file
  * becomes eligible for closing so that the oldest RRD file gets closed first.<p>
  * <p/>
- * Initial RrdDbPool capacity is set to {@link #INITIAL_CAPACITY}. Use {@link #setCapacity(int)} method to
- * change it at any time.<p>
+ * Initial RrdDbPool capacity is set to {@link #INITIAL_CAPACITY}. Use {@link #setCapacity(int)}
+ * method to change it at any time.<p>
  * <p/>
  * <b>WARNING:</b>Never use close() method on the reference returned from the pool.
  * When the reference is no longer needed, return it to the pool with the
@@ -93,7 +93,8 @@ import java.util.*;
  * offers serious performance improvement especially in complex applications with many
  * threads and many simultaneously open RRD files.<p>
  * <p/>
- * The pool is thread-safe.<p>
+ * The pool is thread-safe. Not that the {@link RrdDb} objects returned from the pool are
+ * also thread-safe<p>
  * <p/>
  * <b>WARNING:</b> The pool cannot be used to manipulate RrdDb objects
  * with {@link RrdBackend backends} different from default.<p>
@@ -108,6 +109,14 @@ public class RrdDbPool implements Runnable {
 	 */
 	public static final int INITIAL_CAPACITY = 500;
 	private int capacity = INITIAL_CAPACITY, maxUsedCapacity;
+
+	/**
+	 * Constant to represent the internal behaviour of the pool.
+	 * Defaults to <code>true</code> but can be changed at runtime. See
+	 * {@link #setLimitedCapacity(boolean)} for more information.
+	 */
+	public static final boolean LIMITED_CAPACITY = false;
+	private boolean limitedCapacity = LIMITED_CAPACITY;
 
 	/**
 	 * Constant to represent the priority of the background thread which closes excessive RRD files
@@ -157,20 +166,33 @@ public class RrdDbPool implements Runnable {
 	public synchronized RrdDb requestRrdDb(String path) throws IOException, RrdException {
 		poolRequestsCount++;
 		String canonicalPath = getCanonicalPath(path);
-		RrdEntry rrdEntry = (RrdEntry) rrdMap.get(canonicalPath);
-		if (rrdEntry != null) {
-			// already open
-			reportUsage(canonicalPath, rrdEntry);
-			debug("CACHED: " + rrdEntry.dump());
-			poolHitsCount++;
-		} else {
-			// not found, open it
-			RrdDb rrdDb = new RrdDb(path, getFactory());
-			rrdEntry = new RrdEntry(rrdDb);
-			addRrdEntry(canonicalPath, rrdEntry);
-			debug("ADDED: " + rrdEntry.dump());
+		for(;;) {
+			RrdEntry rrdEntry = (RrdEntry) rrdMap.get(canonicalPath);
+			if (rrdEntry != null) {
+				// already open, use it!
+				reportUsage(canonicalPath, rrdEntry);
+				poolHitsCount++;
+				debug("CACHED: " + rrdEntry.dump());
+				return rrdEntry.getRrdDb();
+			}
+			else if(!limitedCapacity || rrdMap.size() < capacity) {
+				// not found, open it
+				RrdDb rrdDb = createRrdDb(path, null);
+				rrdEntry = new RrdEntry(rrdDb);
+				addRrdEntry(canonicalPath, rrdEntry);
+				debug("ADDED: " + rrdEntry.dump());
+				return rrdDb;
+			}
+			else {
+				// we have to wait
+				try {
+					wait();
+				}
+				catch (InterruptedException e) {
+					throw new RrdException("Request for file '" + path + "' was interrupted");
+				}
+			}
 		}
-		return rrdEntry.getRrdDb();
 	}
 
 	/**
@@ -186,14 +208,7 @@ public class RrdDbPool implements Runnable {
 	 */
 	public synchronized RrdDb requestRrdDb(String path, String xmlPath)
 			throws IOException, RrdException {
-		poolRequestsCount++;
-		String canonicalPath = getCanonicalPath(path);
-		prooveInactive(canonicalPath);
-		RrdDb rrdDb = new RrdDb(path, xmlPath, getFactory());
-		RrdEntry rrdEntry = new RrdEntry(rrdDb);
-		addRrdEntry(canonicalPath, rrdEntry);
-		debug("ADDED: " + rrdEntry.dump());
-		return rrdDb;
+		return requestNewRrdDb(path, xmlPath);
 	}
 
 	/**
@@ -206,14 +221,54 @@ public class RrdDbPool implements Runnable {
 	 * @throws RrdException Thrown in case of JRobin specific error.
 	 */
 	public synchronized RrdDb requestRrdDb(RrdDef rrdDef) throws IOException, RrdException {
+		return requestNewRrdDb(rrdDef.getPath(), rrdDef);
+	}
+
+	private RrdDb requestNewRrdDb(String path, Object creationDef) throws IOException, RrdException {
 		poolRequestsCount++;
-		String canonicalPath = getCanonicalPath(rrdDef.getPath());
-		prooveInactive(canonicalPath);
-		RrdDb rrdDb = new RrdDb(rrdDef, getFactory());
-		RrdEntry rrdEntry = new RrdEntry(rrdDb);
-		addRrdEntry(canonicalPath, rrdEntry);
-		debug("ADDED: " + rrdEntry.dump());
-		return rrdDb;
+		String canonicalPath = getCanonicalPath(path);
+		for(;;) {
+			RrdEntry rrdEntry = (RrdEntry) rrdMap.get(canonicalPath);
+			if(rrdEntry != null) {
+				// already open
+				removeIfIdle(canonicalPath, rrdEntry);
+			}
+			else if(!limitedCapacity || rrdMap.size() < capacity) {
+				RrdDb rrdDb = createRrdDb(path, creationDef);
+				RrdEntry newRrdEntry = new RrdEntry(rrdDb);
+				addRrdEntry(canonicalPath, newRrdEntry);
+				debug("ADDED: " + newRrdEntry.dump());
+				return rrdDb;
+			}
+			else {
+				 // we have to wait
+				try {
+					wait();
+				}
+				catch (InterruptedException e) {
+					throw new RrdException("Request for file '" + path + "' was interrupted");
+				}
+			}
+		}
+	}
+
+	private RrdDb createRrdDb(String path, Object creationDef) throws RrdException, IOException {
+		if(creationDef == null) {
+			// existing RRD
+			return new RrdDb(path, getFactory());
+		}
+		else if(creationDef instanceof String) {
+			// XML input
+			return new RrdDb(path, (String) creationDef, getFactory());
+		}
+		else if(creationDef instanceof RrdDef) {
+			// RrdDef
+			return new RrdDb((RrdDef) creationDef, getFactory());
+		}
+		else {
+			throw new RrdException("Unexpected input object type: " +
+				creationDef.getClass().getName());
+		}
 	}
 
 	private void reportUsage(String canonicalPath, RrdEntry rrdEntry) {
@@ -233,23 +288,21 @@ public class RrdDbPool implements Runnable {
 	private void addRrdEntry(String canonicalPath, RrdEntry newRrdEntry) {
 		rrdMap.put(canonicalPath, newRrdEntry);
 		maxUsedCapacity = Math.max(rrdMap.size(), maxUsedCapacity);
-		// notify garbage collector
-		notify();
+		// notify waiting threads
+		notifyAll();
 	}
 
-	private void prooveInactive(String canonicalPath) throws RrdException, IOException {
-		if (rrdMap.containsKey(canonicalPath)) {
-			// already open, check if active (not released)
-			RrdEntry rrdEntry = (RrdEntry) rrdMap.get(canonicalPath);
-			if (rrdEntry.isInUse()) {
-				// not released, not allowed here
-				throw new RrdException("VALIDATOR: Cannot create new RrdDb file. " +
-						"File " + canonicalPath + " already active in pool");
-			} else {
-				// open but released... safe to close it
-				debug("WILL BE RECREATED: " + rrdEntry.dump());
-				removeRrdEntry(canonicalPath, rrdEntry);
-			}
+	private void removeIfIdle(String canonicalPath, RrdEntry rrdEntry)
+			throws RrdException, IOException {
+		// already open, check if active (not released)
+		if (rrdEntry.isInUse()) {
+			// not released, not allowed here
+			throw new RrdException("Cannot create new RrdDb file: " +
+					"File '" + canonicalPath + "' already in use");
+		} else {
+			// open but released... safe to close it
+			debug("WILL BE RECREATED: " + rrdEntry.dump());
+			removeRrdEntry(canonicalPath, rrdEntry);
 		}
 	}
 
@@ -286,8 +339,8 @@ public class RrdDbPool implements Runnable {
 		} else {
 			throw new RrdException("RRD file " + rrdDb.getPath() + " not in the pool");
 		}
-		// notify garbage collector
-		notify();
+		// notify waiting threads
+		notifyAll();
 	}
 
 	/**
@@ -301,7 +354,7 @@ public class RrdDbPool implements Runnable {
 		debug("GC: started");
 		for (; ;) {
 			synchronized (this) {
-				if (rrdMap.size() > capacity && rrdIdleMap.size() > 0) {
+				if (rrdMap.size() >= capacity && rrdIdleMap.size() > 0) {
 					try {
 						String canonicalPath = (String) rrdIdleMap.keySet().iterator().next();
 						RrdEntry rrdEntry = (RrdEntry) rrdIdleMap.get(canonicalPath);
@@ -310,6 +363,7 @@ public class RrdDbPool implements Runnable {
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
+					notifyAll();
 				}
 				else {
 					try {
@@ -323,7 +377,7 @@ public class RrdDbPool implements Runnable {
 					}
 				}
 			}
-			Thread.yield();
+//			Thread.yield();
 		}
 	}
 
@@ -360,22 +414,39 @@ public class RrdDbPool implements Runnable {
 	/**
 	 * Returns the internal state of the pool. Useful for debugging purposes.
 	 *
-	 * @return Internal pool state (list of open RRD files, with the number of usages for
-	 *         each one).
+	 * @param dumpFiles <code>true</code>, if dumped information should contain paths to open files
+	 * currently held in the pool, <code>false</code> otherwise
+	 * @return Internal pool state (with an optional list of open RRD files and
+	 * the current number of usages for each one).
+	 * @throws IOException Thrown in case of I/O error.
+	 */
+	public synchronized String dump(boolean dumpFiles) throws IOException {
+		StringBuffer buff = new StringBuffer();
+		buff.append("==== POOL DUMP ===========================\n");
+		buff.append("open=" + rrdMap.size() + ", idle=" + rrdIdleMap.size() + "\n");
+		buff.append("capacity=" + capacity + ", " + "maxUsedCapacity=" + maxUsedCapacity + "\n");
+		buff.append("hits=" + poolHitsCount + ", " + "requests=" + poolRequestsCount + "\n");
+		buff.append("efficiency=" + getPoolEfficency() + "\n");
+		if(dumpFiles) {
+			buff.append("---- CACHED FILES ------------------------\n");
+			Iterator it = rrdMap.values().iterator();
+			while (it.hasNext()) {
+				RrdEntry rrdEntry = (RrdEntry) it.next();
+				buff.append(rrdEntry.dump() + "\n");
+			}
+		}
+		return buff.toString();
+	}
+
+	/**
+	 * Returns the complete internal state of the pool. Useful for debugging purposes.
+	 *
+	 * @return Internal pool state (with a list of open RRD files and the current number of
+	 * usages for each one).
 	 * @throws IOException Thrown in case of I/O error.
 	 */
 	public synchronized String dump() throws IOException {
-		StringBuffer buff = new StringBuffer();
-		buff.append("POOL DUMP: " + rrdMap.size() + " open, " + rrdIdleMap.size() + " released\n");
-		buff.append("capacity=" + capacity + ", " + "maxUsedCapacity=" + maxUsedCapacity + "\n");
-		buff.append("hits=" + poolHitsCount + ", " + "requests=" + poolRequestsCount + "\n");
-		buff.append("efficiency=" + getPoolEfficency() + "\n-------\n");
-		Iterator it = rrdMap.values().iterator();
-		while (it.hasNext()) {
-			RrdEntry rrdEntry = (RrdEntry) it.next();
-			buff.append(rrdEntry.dump() + "\n");
-		}
-		return buff.toString();
+		return dump(true);
 	}
 
 	/**
@@ -504,6 +575,33 @@ public class RrdDbPool implements Runnable {
 	 */
 	public synchronized int getMaxUsedCapacity() {
 		return maxUsedCapacity;
+	}
+
+	/**
+	 * Checks the internal behaviour of the pool. See {@link #setLimitedCapacity(boolean)} for
+	 * more information.
+	 *
+	 * @return <code>true</code> if the pool is 'flexible' (by not imposing the strict
+	 * limit on the number of simultaneously open files), <code>false</code> otherwise.
+	 */
+	public boolean isLimitedCapacity() {
+		return limitedCapacity;
+	}
+
+	/**
+	 * Sets the behaviour of the pool. If <code>true</code> is passed as argument, the pool will never
+	 * open more than {@link #getCapacity()} files at any time. If set to <code>false</code>,
+	 * the pool might keep more open files, but only for a short period of time. This method might be
+	 * useful if you want avoid OS limits when it comes to the number of simultaneously open files.<p>
+	 *
+	 * By default, the pool behaviour is 'flexible' (<code>limitedCapacity</code> property defaults
+	 * to false<p>
+	 *
+	 * @param limitedCapacity <code>true</code> if the pool should be 'flexible' (not imposing the strict
+	 * limit on the number of simultaneously open files), <code>false</code> otherwise.
+	 */
+	public void setLimitedCapacity(boolean limitedCapacity) {
+		this.limitedCapacity = limitedCapacity;
 	}
 }
 

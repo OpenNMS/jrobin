@@ -64,10 +64,11 @@ public class Sample {
 		clearCurrentValues();
 	}
 
-	private void clearCurrentValues() {
+	private Sample clearCurrentValues() {
 		for(int i = 0; i < values.length; i++) {
 			values[i] = Double.NaN;
 		}
+		return this;
 	}
 
 	/**
@@ -75,12 +76,13 @@ public class Sample {
 	 * @param dsName Data source name.
 	 * @param value Data source value.
 	 * @throws RrdException Thrown if invalid data source name is supplied.
+	 * @return This <code>Sample</code> object
 	 */
-	public void setValue(String dsName, double value) throws RrdException {
+	public Sample setValue(String dsName, double value) throws RrdException {
 		for(int i = 0; i < values.length; i++) {
 			if(dsNames[i].equals(dsName)) {
 				values[i] = value;
-				return;
+				return this;
 			}
 		}
 		throw new RrdException("Datasource " + dsName + " not found");
@@ -91,14 +93,17 @@ public class Sample {
 	 * the order specified during RRD creation (zero-based).
 	 * @param i Data source index
 	 * @param value Data source values
+ 	 * @return This <code>Sample</code> object
 	 * @throws RrdException Thrown if data source index is invalid.
 	 */
-	public void setValue(int i, double value) throws RrdException {
+	public Sample setValue(int i, double value) throws RrdException {
 		if(i < values.length) {
 			values[i] = value;
-			return;
+			return this;
 		}
-		throw new RrdException("Sample datasource index " + i + " out of bounds");
+		else {
+			throw new RrdException("Sample datasource index " + i + " out of bounds");
+		}
 	}
 
 	/**
@@ -106,14 +111,16 @@ public class Sample {
 	 * assigned in the order of their definition inside the RRD.
 	 *
 	 * @param values Data source values.
+	 * @return This <code>Sample</code> object
 	 * @throws RrdException Thrown if the number of supplied values is zero or greater
 	 * than the number of data sources defined in the RRD.
 	 */
-	public void setValues(double[] values) throws RrdException {
+	public Sample setValues(double[] values) throws RrdException {
 		if(values.length <= this.values.length) {
 			for(int i = 0; i < values.length; i++) {
 				this.values[i] = values[i];
 			}
+			return this;
 		}
 		else {
 			throw new RrdException("Invalid number of values specified (found " +
@@ -140,9 +147,11 @@ public class Sample {
 	/**
 	 * Sets sample timestamp. Timestamp should be defined in seconds (without milliseconds).
 	 * @param time New sample timestamp.
+	 * @return This <code>Sample</code> object
 	 */
-	public void setTime(long time) {
+	public Sample setTime(long time) {
 		this.time = time;
+		return this;
 	}
 
 	/**
@@ -171,9 +180,10 @@ public class Sample {
 	 * 'N' stands for the current timestamp (can be replaced with 'NOW')<p>
 	 * Method will throw an exception if timestamp is invalid (cannot be parsed as Long, and is not 'N'
 	 * or 'NOW'). Datasource value which cannot be parsed as 'double' will be silently set to NaN.<p>
+	 * @return This <code>Sample</code> object
 	 * @throws RrdException Thrown if too many datasource values are supplied
 	 */
-	public void set(String timeAndValues) throws RrdException {
+	public Sample set(String timeAndValues) throws RrdException {
 		StringTokenizer tokenizer = new StringTokenizer(timeAndValues, ":", false);
 		int n = tokenizer.countTokens();
 		if(n > values.length + 1) {
@@ -200,6 +210,7 @@ public class Sample {
 				// NOP, value is already set to NaN
 			}
 		}
+		return this;
 	}
 
 	/**
