@@ -42,7 +42,7 @@ class Demo {
 
 	public static void main(String[] args) throws RrdException, IOException {
 		// setup
-		println("==Starting demo");
+		println("== Starting demo");
 		RrdDb.setLockMode(RrdDb.NO_LOCKS);
 
 		long startMillis = System.currentTimeMillis();
@@ -60,31 +60,31 @@ class Demo {
 		);
 
 		// creation
-		println("==Creating RRD file " + rrdPath);
+		println("== Creating RRD file " + rrdPath);
 		RrdDef rrdDef = new RrdDef(rrdPath, start - 1, 300);
 		rrdDef.addDatasource("sun", "GAUGE", 600, 0, Double.NaN);
 		rrdDef.addDatasource("shade", "GAUGE", 600, 0, Double.NaN);
 		rrdDef.addArchive("AVERAGE", 0.5, 1, 600);
 		rrdDef.addArchive("AVERAGE", 0.5, 6, 700);
-		rrdDef.addArchive("AVERAGE", 0.5, 24, 797);
-		rrdDef.addArchive("AVERAGE", 0.5, 288, 775);
+		rrdDef.addArchive("AVERAGE", 0.5, 24, 775);
+		rrdDef.addArchive("AVERAGE", 0.5, 288, 797);
 		rrdDef.addArchive("MAX", 0.5, 1, 600);
 		rrdDef.addArchive("MAX", 0.5, 6, 700);
-		rrdDef.addArchive("MAX", 0.5, 24, 797);
-		rrdDef.addArchive("MAX", 0.5, 288, 775);
+		rrdDef.addArchive("MAX", 0.5, 24, 775);
+		rrdDef.addArchive("MAX", 0.5, 288, 797);
 		println(rrdDef.dump());
 		pw.println(rrdDef.dump());
 		RrdDb rrdDb = new RrdDb(rrdDef);
-		println("==RRD file created.");
+		println("== RRD file created.");
 
 		// update database
 		GaugeSource sunSource = new GaugeSource(1200, 20);
 		GaugeSource shadeSource = new GaugeSource(300, 10);
-		println("==Simulating one month of RRD file updates with step not larger than " +
+		println("== Simulating one month of RRD file updates with step not larger than " +
 			MAX_STEP + " seconds (* denotes 1000 updates)");
 		long t = start; int n = 0;
 		Sample sample = rrdDb.createSample();
-		while(t <= end) {
+		while(t <= end + 86400L) {
 			sample.setTime(t);
 			sample.setValue("sun", sunSource.getValue());
 			sample.setValue("shade", shadeSource.getValue());
@@ -97,38 +97,32 @@ class Demo {
 			};
 		}
 		System.out.println("");
-		println("==Finished. RRD file updated " + n + " times");
-		println("==Last update time was: " + rrdDb.getLastUpdateTime());
+		println("== Finished. RRD file updated " + n + " times");
+		println("== Last update time was: " + rrdDb.getLastUpdateTime());
 
 		// fetch data
-		println("==Fetching data for the whole month");
+		println("== Fetching data for the whole month");
 		FetchRequest request = rrdDb.createFetchRequest("AVERAGE", start, end);
 		println(request.dump());
 		pw.println(request.dump());
 		FetchData fetchData = request.fetchData();
-		println("==Data fetched. " + fetchData.getRowCount() + " points obtained");
+		println("== Data fetched. " + fetchData.getRowCount() + " points obtained");
 		for(int i = 0; i < fetchData.getRowCount(); i++) {
 			println(fetchData.getRow(i).dump());
 		}
-		println("==Fetch completed");
-		println("==Dumping RRD file to XML file " + xmlPath + " (can be restored with RRDTool)");
+		println("== Fetch completed");
+		println("== Dumping RRD file to XML file " + xmlPath + " (can be restored with RRDTool)");
 		rrdDb.dumpXml(xmlPath);
-		println("==Creating RRD file " + rrdRestoredPath + " from XML file " + xmlPath);
+		println("== Creating RRD file " + rrdRestoredPath + " from XML file " + xmlPath);
 		RrdDb rrdRestoredDb = new RrdDb(rrdRestoredPath, xmlPath);
 
-		// dumping RRD file
-		//println("==Dumping original RRD file to stdout");
-		//println(rrdDb.dump());
-		//println("==Dumping restored RRD file to stdout");
-		//println(rrdRestoredDb.dump());
-
 		// close files
-		println("==Closing both RRD files");
+		println("== Closing both RRD files");
 		rrdDb.close();
 		rrdRestoredDb.close();
 
 		// create graph
-		println("==Creating graph from the second file");
+		println("== Creating graph from the second file");
 		RrdGraphDef gDef = new RrdGraphDef();
 		gDef.setTimePeriod(start, end);
         gDef.setTitle("Temperatures in May 2003");
@@ -151,17 +145,17 @@ class Demo {
 		gDef.gprint("shade", "AVERAGE", "avgShade = @3@S@r");
 		// create graph finally
 		RrdGraph graph = new RrdGraph(gDef);
-		println("==Graph created");
-		println("==Saving graph as PNG file " + pngPath);
+		println("== Graph created");
+		println("== Saving graph as PNG file " + pngPath);
 		graph.saveAsPNG(pngPath, 400, 250);
-		println("==Saving graph as JPEG file " + jpegPath);
+		println("== Saving graph as JPEG file " + jpegPath);
 		graph.saveAsJPEG(jpegPath, 400, 250, 0.5F);
-		println("==Saving graph as GIF file " + gifPath);
+		println("== Saving graph as GIF file " + gifPath);
 		graph.saveAsGIF(gifPath, 400, 250);
 
 		// demo ends
 		pw.close();
-		println("Demo completed in " +
+		println("== Demo completed in " +
 			((System.currentTimeMillis() - startMillis) / 1000.0) +	" sec");
 	}
 
@@ -183,7 +177,7 @@ class GaugeSource {
 		this.step = step;
 	}
 
-	double getValue() {
+	long getValue() {
 		double oldValue = value;
 		double increment = Math.random() * step;
 		if(Math.random() > 0.5) {

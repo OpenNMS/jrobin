@@ -97,4 +97,12 @@ public class FetchPoint {
 		}
 		return buffer.toString();
 	}
+
+	/**
+	 * Returns string representing timestamp and all data source values.
+	 * @return Fetch point dump.
+	 */
+	public String toString() {
+		return dump();
+	}
 }

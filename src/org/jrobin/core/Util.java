@@ -48,6 +48,7 @@ public class Util {
 	static {
 		df = (DecimalFormat) NumberFormat.getNumberInstance(Locale.ENGLISH);
 		df.applyPattern(PATTERN);
+		df.setPositivePrefix("+");
 	}
 
 	/**
