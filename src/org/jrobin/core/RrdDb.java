@@ -73,7 +73,7 @@ public class RrdDb implements RrdUpdater {
 	/** See {@link #getLockMode() getLockMode()} for explanation */
 	public static final int EXCEPTION_IF_LOCKED = 2;
 
-    static final String RRDTOOL = "rrdtool";
+    // static final String RRDTOOL = "rrdtool";
 	static final int XML_INITIAL_BUFFER_CAPACITY = 100000; // bytes
 	private static int lockMode = NO_LOCKS;
 

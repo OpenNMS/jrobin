@@ -147,8 +147,8 @@ public class FetchRequest {
 	 * @return Fetch request dump.
 	 */
 	public String dump() {
-		return RrdDb.RRDTOOL + " fetch " + parentDb.getRrdBackend().getPath() +
-			" " + consolFun + " --start " + fetchStart + " --end " + fetchEnd +
+		return "fetch \"" + parentDb.getRrdBackend().getPath() +
+			"\" " + consolFun + " --start " + fetchStart + " --end " + fetchEnd +
 			(resolution > 1? " --resolution " + resolution: "");
 	}
 

@@ -30,9 +30,6 @@ import java.util.*;
 /**
  * Class to represent the pool of open RRD files.<p>
  *
- * <b>WARNING:</b> The pool cannot be used to manipulate RrdDb objects
- * with {@link RrdBackend backends} different from default.
- *
  * To open already existing RRD file with JRobin, you have to create a
  * {@link org.jrobin.core.RrdDb RrdDb} object by specifying RRD file path
  * as constructor argument. This operation can be time consuming
@@ -97,6 +94,9 @@ import java.util.*;
  * threads and many simultaneously open RRD files.<p>
  *
  * The pool is thread-safe.<p>
+ *
+ * <b>WARNING:</b> The pool cannot be used to manipulate RrdDb objects
+ * with {@link RrdBackend backends} different from default.<p>
  */
 public class RrdDbPool implements Runnable {
 	private static RrdDbPool ourInstance;
@@ -302,7 +302,12 @@ public class RrdDbPool implements Runnable {
 				}
 
 				try {
-					debug("GC: sleeping (" + rrdMap.size() + "/" + rrdGcList.size() + ")");
+					debug("GC: waiting: " +
+							rrdMap.size() + " open, " +
+							rrdGcList.size() + " released, " +
+							"capacity = " + capacity + ", " +
+							"hits = " + poolHitsCount + ", " +
+							"requests = " + poolRequestsCount);
 					wait();
 					debug("GC: running");
 				} catch (InterruptedException e) {
@@ -375,6 +380,7 @@ public class RrdDbPool implements Runnable {
 	 */
 	public synchronized void setCapacity(int capacity) {
 		this.capacity = capacity;
+		debug("Capacity set to: " + capacity);
 	}
 
 	private RrdBackendFactory getFactory() throws RrdException {

@@ -240,8 +240,8 @@ public class Sample {
 	 * @return Sample dump.
 	 */
 	public String dump() {
-		StringBuffer buffer = new StringBuffer(RrdDb.RRDTOOL);
-		buffer.append(" update " + parentDb.getRrdBackend().getPath() + " " + time);
+		StringBuffer buffer = new StringBuffer("update \"");
+		buffer.append(parentDb.getRrdBackend().getPath() + "\" " + time);
 		for(int i = 0; i < values.length; i++) {
 			buffer.append(":");
 			buffer.append(Util.formatDouble(values[i], "U", false));

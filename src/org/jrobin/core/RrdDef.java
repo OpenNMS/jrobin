@@ -424,8 +424,8 @@ public class RrdDef {
 	 * @return Dumped content of <code>RrdDb</code> object.
 	 */
 	public String dump() {
-		StringBuffer buffer = new StringBuffer(RrdDb.RRDTOOL);
-		buffer.append(" create " + path);
+		StringBuffer buffer = new StringBuffer("create \"");
+		buffer.append(path + "\"");
 		buffer.append(" --start " + getStartTime());
 		buffer.append(" --step " + getStep() + " ");
 		for(int i = 0; i < dsDefs.size(); i++) {
