@@ -229,7 +229,7 @@ class GraphFrame extends JFrame {
 		refreshButton.setMnemonic(KeyEvent.VK_F);
         leftButton.setMnemonic(KeyEvent.VK_L);
 		rightButton.setMnemonic(KeyEvent.VK_R);
-		setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		try {
 			setIconImage(Resources.getImage(Client.ICON));
 		} catch (MrtgException e) {
