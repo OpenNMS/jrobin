@@ -58,7 +58,6 @@ class ValueFormatter
 	private boolean scale		= false;
 	
 	ValueFormatter() {
-		
 	}
 	
 	ValueFormatter( double base ) 

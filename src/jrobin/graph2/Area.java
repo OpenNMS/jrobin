@@ -39,9 +39,9 @@ class Area extends PlotDef
 		this.plotType	= PlotDef.PLOT_AREA;
 	}
 	
-	Area( Source source, Color c, boolean stacked )
+	Area( Source source, Color c, boolean stacked, boolean visible )
 	{
-		super( source, c, stacked );
+		super( source, c, stacked, visible );
 	}
 	
 	void draw( ChartGraphics g, int[] xValues, int[] stackValues, int lastPlotType )
@@ -63,18 +63,21 @@ class Area extends PlotDef
 				ny += stackValues[i];
 			}
 		
-			if (nx > ax + 1)	// More than one pixel hop, draw intermediate pixels too
+			if ( visible )
 			{
-				// For each pixel between nx and ax, calculate the y, plot the line
-				int co 	= (ny - ay) / (nx - ax);
-				int j 	= (ax > 0 ? ax : 1 );		// Skip 0 
-		
-				for (j = ax; j <= nx; j++)
-					g.drawLine( j, py, j, ( co * (j - ax) + ay) );
+				if (nx > ax + 1)	// More than one pixel hop, draw intermediate pixels too
+				{
+					// For each pixel between nx and ax, calculate the y, plot the line
+					int co 	= (ny - ay) / (nx - ax);
+					int j 	= (ax > 0 ? ax : 1 );		// Skip 0 
+			
+					for (j = ax; j <= nx; j++)
+						g.drawLine( j, py, j, ( co * (j - ax) + ay) );
+				}
+				else if ( nx != 0 && py != Integer.MIN_VALUE && ny != Integer.MIN_VALUE )
+					g.drawLine( nx, py, nx, ny );
 			}
-			else if ( nx != 0 && py != Integer.MIN_VALUE && ny != Integer.MIN_VALUE )
-				g.drawLine( nx, py, nx, ny );
-
+			
 			stackValues[i] 	= ny;
 			ax 				= nx;
 			ay 				= ny;

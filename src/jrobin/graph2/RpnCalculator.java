@@ -308,8 +308,7 @@ public class RpnCalculator
 		if ( last < 0 )
 			throw new RrdException("POP failed, stack empty");
 		
-		Double lastValue = (Double) stack.get(last);
-		stack.remove(last);
+		Double lastValue = (Double) stack.remove(last);
 	
 		return lastValue.doubleValue();
 	}

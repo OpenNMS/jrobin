@@ -33,6 +33,7 @@ import java.util.Date;
 import java.util.Vector;
 import java.util.HashMap;
 import java.util.GregorianCalendar;
+import java.text.SimpleDateFormat;
 
 import jrobin.core.Util;
 import jrobin.core.RrdException;
@@ -76,6 +77,7 @@ public class RrdGraphDef implements Serializable
 	boolean frontGrid			= true;								// show grid in front of the chart (default: yes)
 	boolean antiAliasing		= true;								// use anti-aliasing for the chart (default: yes)
 	boolean showLegend			= true;								// show legend and comments (default: yes)
+	boolean drawSignature		= true;								// show JRobin url signature (default: yes)
 		
 	Color backColor				= new Color( 245, 245, 245 );		// variation of light gray
 	Color canvasColor			= Color.WHITE;						// white
@@ -98,6 +100,12 @@ public class RrdGraphDef implements Serializable
 	
 	BasicStroke borderStroke	= null;								// defaults to standard beveled border
 	
+	TimeAxisUnit tAxis			= null;
+	boolean tAxisCentered		= false;
+	double valueGridStep		= Double.NaN;
+	double valueLabelStep		= Double.NaN;
+	double valueStep 			= 0;
+	
 	double baseValue			= 1000;
 	int scaleIndex				= -1;								// NO_SCALE
 	GridRange gridRange			= null;
@@ -105,6 +113,7 @@ public class RrdGraphDef implements Serializable
 	int numDefs					= 0;
 	int commentLines			= 0;
 	int commentLineShift		= 0;
+	
 	HashMap fetchSources		= new HashMap();
 	Vector cdefList				= new Vector();
 	Vector plotDefs				= new Vector();
@@ -413,6 +422,11 @@ public class RrdGraphDef implements Serializable
 		this.showLegend	= showLegend;
 	}
 	
+	public void setShowSignature( boolean showSignature )
+	{
+		this.drawSignature = showSignature;
+	}
+	
 	/**
 	 * Set the anti-aliasing option for the drawing area of the graph.
 	 * Default uses anti-aliasing.
@@ -522,6 +536,12 @@ public class RrdGraphDef implements Serializable
 		addLegend( legend, color );
 	}
 	
+	public void line( GregorianCalendar t1, double v1, GregorianCalendar t2, double v2, Color color, String legend, int lineWidth ) throws RrdException
+	{
+		plotDefs.add( new CustomLine( t1.getTimeInMillis() / 1000, v1, t2.getTimeInMillis() / 1000, v2, color, lineWidth ) );
+		addLegend( legend, color );
+	}
+	
 	/**
 	 * Adds area plot to the graph definition,
 	 * using the specified color and legend. This method
@@ -540,6 +560,12 @@ public class RrdGraphDef implements Serializable
 		addLegend( legend, color );
 	}
 	
+	public void area( GregorianCalendar t1, double v1, GregorianCalendar t2, double v2, Color color, String legend ) throws RrdException
+	{
+		plotDefs.add( new CustomArea( t1.getTimeInMillis() / 1000, v1, t2.getTimeInMillis() / 1000, v2, color ) );
+		addLegend( legend, color );
+	}
+	
 	/**
 	 * Adds stacked plot to the graph definition,
 	 * using the specified color and legend. This method
@@ -555,6 +581,56 @@ public class RrdGraphDef implements Serializable
 	public void stack( String sourceName, Color color, String legend ) throws RrdException 
 	{
 		plotDefs.add( new Stack(sourceName, color) );
+		addLegend( legend, color );
+	}
+	
+	/**
+	 * Adds horizontal rule to the graph definition.
+	 * @param value Rule posiotion.
+	 * @param color Rule color.
+	 * @param legend Legend to be added to the graph.
+	 * @throws RrdException Thrown in case of JRobin specific error.
+	 */
+	public void hrule(double value, Color color, String legend) throws RrdException {
+		plotDefs.add( new CustomLine( Long.MIN_VALUE, value, Long.MAX_VALUE, value, color ) );
+		addLegend( legend, color );
+	}
+
+	/**
+	 * Adds horizontal rule to the graph definition.
+	 * @param value Rule posiotion.
+	 * @param color Rule color.
+	 * @param legend Legend to be added to the graph.
+	 * @param lineWidth Width of the hrule line in pixels.
+	 * @throws RrdException Thrown in case of JRobin specific error.
+	 */
+	public void hrule(double value, Color color, String legend, int lineWidth) throws RrdException {
+		plotDefs.add( new CustomLine( Long.MIN_VALUE, value, Long.MAX_VALUE, value, color, lineWidth ) );
+		addLegend( legend, color );
+	}
+	
+	/**
+	 * Adds a vertical rule to the graph definition.
+	 * @param timestamp Rule position (specific moment in time)
+	 * @param color Rule color.
+	 * @param legend Legend to be added to the graph.
+	 */
+	public void vrule( GregorianCalendar timestamp, Color color, String legend ) throws RrdException {
+		long timeSecs = timestamp.getTimeInMillis() / 1000;
+		plotDefs.add( new CustomLine( timeSecs, Double.MIN_VALUE, timeSecs, Double.MAX_VALUE, color ) );
+		addLegend( legend, color );
+	}
+
+	/**
+	 * Adds a vertical rule to the graph definition.
+	 * @param timestamp Rule position (specific moment in time)
+	 * @param color Rule color.
+	 * @param legend Legend to be added to the graph.
+	 * @param lineWidth Width of the vrule in pixels.
+	 */
+	public void vrule( GregorianCalendar timestamp, Color color, String legend, int lineWidth ) throws RrdException {
+		long timeSecs = timestamp.getTimeInMillis() / 1000;
+		plotDefs.add( new CustomLine( timeSecs, Double.MIN_VALUE, timeSecs, Double.MAX_VALUE, color, lineWidth ) );
 		addLegend( legend, color );
 	}
 	
@@ -654,6 +730,50 @@ public class RrdGraphDef implements Serializable
 		gridRange = new GridRange( lower, upper, rigid );
 	}
 	
+	/**
+	 * Should write explanation of custom grid specs here
+	 * @param gridStep
+	 * @param labelStep
+	 */
+	public void setValueAxis( double gridStep, double labelStep ) 
+	{
+		this.valueGridStep 	= gridStep;
+		this.valueLabelStep = labelStep;
+	}
+	
+	/**
+	 * Should write explanation of custom grid specs here.
+	 * @param minGridTime
+	 * @param minGridUnits
+	 * @param majGridTime
+	 * @param majGridUnits
+	 * @param df
+	 * @param centered
+	 */
+	public void setTimeAxis( int minGridTime, 
+								int minGridUnits, 
+								int majGridTime, 
+								int majGridUnits, 
+								String df,
+								boolean centered ) 
+	{
+		this.tAxis 			= new TimeAxisUnit( minGridTime, 
+												minGridUnits, 
+												majGridTime, 
+												majGridUnits, 
+												new SimpleDateFormat( df ) 
+											);
+		this.tAxisCentered	= centered;		
+	}
+	
+	/**
+	 * Sets vertical space between value ticks. If not specified, JRobin will try to guess it.
+	 * @param valueStep Value step between value ticks.
+	 */
+	public void setValueStep(double valueStep) {
+		this.valueStep = valueStep;
+	}
+		
 	// ================================================================
 	// -- Protected (package) methods
 	// ================================================================
@@ -670,9 +790,11 @@ public class RrdGraphDef implements Serializable
 	int getCommentLineCount()
 	{
 		return ( comments.size() > 0 ? commentLines + commentLineShift : 0 ); 
-		//return ( comments.size() > 0 ? (commentLines > 0 ? commentLines : 1) : 0 );
 	}
 	
+	// ================================================================
+	// -- Private methods
+	// ================================================================
 	private void addComment( Comment cmt )
 	{
 		commentLines 		+= cmt.getLineCount();
@@ -682,7 +804,7 @@ public class RrdGraphDef implements Serializable
 	
 	private void addLegend( String legend, Color color ) throws RrdException
 	{
-		if ( legend != null )
+		if ( legend != null && color != null )
 			addComment( new Legend(legend, color) );
 	}
 }

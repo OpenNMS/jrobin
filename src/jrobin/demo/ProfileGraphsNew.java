@@ -51,7 +51,7 @@ public class ProfileGraphsNew
 	private JRobinTimeProfiler profiler;
 	
 	// Demo sake
-	private GregorianCalendar startDate = new GregorianCalendar(2003, 7, 24, 00, 00);
+	private GregorianCalendar startDate = new GregorianCalendar(2003, 7, 24, 00, 30);
 	private GregorianCalendar endDate 	= new GregorianCalendar(2003, 7, 25, 00, 00);
 	
 	private void addTimingInfo( int profileIndex, LinkedList v )
@@ -287,6 +287,8 @@ public class ProfileGraphsNew
 		def.comment("         ");
 		def.gprint("load", "AVERAGE", "Average: @5.2@s");
 		def.gprint("load", "LAST", "Current: @6.2@s\n");
+		def.hrule( 3.0, Color.YELLOW, "legende", 5);
+		def.vrule( new GregorianCalendar(2003, 7, 24, 9, 00), Color.BLUE, "9am", 2 );
 		def.comment("\n");
 		def.comment("-------------------------------------------------------------------------------@c");
 		//gl.vrule( new GregorianCalendar(2003, 7, 24, 9, 00), Color.BLUE, "9am", 2f );

@@ -52,11 +52,17 @@ class PlotDef
 	protected Source source		= null;
 	protected Color color		= Color.BLACK;	// Default color is black
 	
+	// Implicit
+	PlotDef() {
+	}
 	
 	PlotDef( String sourceName, Color color )
 	{
 		this.sourceName = sourceName;
-		this.color		= color;	
+		this.color		= color;
+		// If no color is given, we should not plot this source
+		if ( color == null ) 
+			visible = false;	
 	}
 	
 	PlotDef( String sourceName, Color color, int lineWidth )
@@ -65,11 +71,12 @@ class PlotDef
 		this.lineWidth	= lineWidth;
 	}
 	
-	PlotDef( Source source, Color color, boolean stacked )
+	PlotDef( Source source, Color color, boolean stacked, boolean visible )
 	{
 		this.source		= source;
 		this.color		= color;
 		this.stacked	= stacked;
+		this.visible	= visible;
 	}
 	
 	// ================================================================
@@ -83,6 +90,7 @@ class PlotDef
 			throw new RrdException( "Invalid DEF or CDEF: " + sourceName );
 	}
 	
+	// Default draw is a standard line
 	void draw( ChartGraphics g, int[] xValues, int[] stackValues, int lastPlotType ) throws RrdException
 	{
 		g.setColor( color );
@@ -96,18 +104,23 @@ class PlotDef
 			nx = xValues[i];
 			ny = g.getY( source.values[i] );
 			
-			if ( stacked )
+			if ( stacked && ny != Integer.MIN_VALUE )
 				ny += stackValues[i];
 			
-			if ( visible && nx != 0 && ay != Integer.MIN_VALUE && ny != Integer.MIN_VALUE )
+			if ( visible && ny != Double.NaN && nx != 0 && ay != Integer.MIN_VALUE && ny != Integer.MIN_VALUE )
 				g.drawLine( ax, ay, nx, ny );
-
+			
 			stackValues[i] 	= ny;
 			ax 				= nx;
 			ay 				= ny;
 		}
 		
 		g.setStroke( new BasicStroke() );
+	}
+	
+	double getValue( int tblPos, long[] timestamps )
+	{
+		return source.values[tblPos];	
 	}
 	
 	// ================================================================

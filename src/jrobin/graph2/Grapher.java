@@ -59,7 +59,7 @@ class Grapher
 	
 	// Border space definitions
 	private static final int UBORDER_SPACE		= 10;
-	private static final int BBORDER_SPACE		= 10;
+	private static final int BBORDER_SPACE		= 16;
 	private static final int LBORDER_SPACE		= 10;
 	private static final int RBORDER_SPACE		= 10;
 	
@@ -174,13 +174,16 @@ class Grapher
 			calculateSeries();
 						
 			plotImageBackground( graphics );
-						
+			
 			plotChart( graphics );
 			
 			if ( graphDef.showLegend )
 				plotComments( graphics );
 			
 			plotOverlay( graphics );
+			
+			if ( graphDef.drawSignature )
+				plotSignature( graphics );
 		}
 		catch (IOException e)
 		{
@@ -196,6 +199,16 @@ class Grapher
 		graphics.dispose();
 		
 		return bImg;
+	}
+	
+	private void plotSignature( Graphics2D g )
+	{
+		Font sigFont 	= new Font("Courier", Font.PLAIN, 10);
+		String sig		= "www.jrobin.org"; 
+		g.setColor( Color.GRAY );
+		g.setFont( sigFont );
+		
+		g.drawString( sig, imgWidth / 2 - (sig.length() * 5) / 2, imgHeight - 5 );	
 	}
 	
 	private void plotOverlay( Graphics2D g )
@@ -418,7 +431,7 @@ class Grapher
 		}
 		
 		veList.clear();		// Clean up the fetched datasources
-		
+
 		// DEBUG - calculate checkpoint
 		Util.time(1);
 	}
@@ -508,17 +521,20 @@ class Grapher
 			plotDefs[i].setSource( sources, sourceIndex );
 			Source src = plotDefs[i].getSource();
 			
+			if ( src == null )
+				continue;
+			
 			double min = src.getAggregate( Source.AGG_MINIMUM );
 			double max = src.getAggregate( Source.AGG_MAXIMUM );
 			
 			if ( plotDefs[i].plotType == PlotDef.PLOT_STACK && i >= 1 ) 
 			{
 				if ( plotDefs[i - 1].plotType == PlotDef.PLOT_STACK ) {		// Use this source plus stack of previous ones
-					double[] curValues	= plotDefs[i].source.values;
+					//double[] curValues	= plotDefs[i].source.values;
 					
-					for (int j = 0; j < curValues.length; j++)
+					for (int j = 0; j < tmpSeries.length; j++)
 					{
-						val = tmpSeries[j] + curValues[j];
+						val = tmpSeries[j] + plotDefs[i].getValue(j, timestamps);
 	
 						if ( val < lowerValue ) lowerValue = val;
 						if ( val > upperValue ) upperValue = val;
@@ -527,12 +543,12 @@ class Grapher
 					}
 				}
 				else {														// Use this source plus the previous one
-					double[] prevValues = plotDefs[i - 1].source.values;
-					double[] curValues	= plotDefs[i].source.values;
+					//double[] prevValues = plotDefs[i - 1].source.values;
+					//double[] curValues	= plotDefs[i].source.values;
 					
-					for (int j = 0; j < prevValues.length; j++)
+					for (int j = 0; j < tmpSeries.length; j++)
 					{
-						val = prevValues[j] + curValues[j];
+						val = plotDefs[i - 1].getValue(j, timestamps) + plotDefs[i].getValue(j, timestamps);
 						
 						if ( val < lowerValue ) lowerValue = val;
 						if ( val > upperValue ) upperValue = val;
@@ -591,42 +607,6 @@ class Grapher
 			plotDefs[i].draw( g, xValues, parentSeries, lastPlotType );
 			lastPlotType = plotDefs[i].plotType;
 		}
-		
-		/*
-		for (int i = 0; i < plotDefs.length; i++)
-		{
-			Source source = plotDefs[i].getSource();
-				
-			g.setColor( plotDefs[i].getColor() );
-					
-			switch ( plotDefs[i].getType() )
-			{
-				case PlotDef.PLOT_LINE:
-					graphics.setStroke( new BasicStroke(plotDefs[i].getLineWidth()) );
-					plotDefs[i].draw( g, xValues, parentSeries, false );
-					//drawLine( g, parentSeries, source, false );
-					
-					graphics.setStroke( new BasicStroke() );
-					break;
-				case PlotDef.PLOT_AREA:
-					drawArea( g, parentSeries, source, false );
-					lastPlotType = PlotDef.PLOT_AREA;
-					break;
-				case PlotDef.PLOT_STACK:
-					if ( lastPlotType == PlotDef.PLOT_AREA )
-						drawArea( g, parentSeries, source, true );
-					else
-						drawLine( g, parentSeries, source, true );
-					break;
-				case PlotDef.PLOT_VRULE:
-					int pos = g.getX( ((VruleSource) source).getTime() );
-					graphics.setStroke( new BasicStroke(plotDefs[i].getLineWidth()) );
-					g.drawLine( pos, 0 - chartHeight, pos, 0 + chartHeight );
-					graphics.setStroke( new BasicStroke() );
-					break;
-			}
-		}
-		*/
 
 		// Reset clipping area and origin
 		graphics.translate( -graphOriginX, -graphOriginY );
@@ -792,8 +772,8 @@ class Grapher
 		if ( graphDef.title == null )
 			return;
 			
-		// Position the cursor just below the chart area
-		int posy			= tfont_height + UBORDER_SPACE;
+		// Position the cursor just above the chart area
+		int posy			= tfont_height - 1 + UBORDER_SPACE;
 		//y_offset + chartHeight + CHART_UPADDING + CHART_BPADDING + nfont_height;
 		int posx			= LBORDER_SPACE;
 
@@ -894,8 +874,8 @@ class Grapher
 			mod		/= 10;
 		}
 	
-		double fixedGridStep 	= Double.NaN;//= graphDef.getValueGridStep();
-		double fixedLabelStep 	= Double.NaN;//= graphDef.getValueLabelStep();
+		double fixedGridStep 	= graphDef.valueGridStep;
+		double fixedLabelStep 	= graphDef.valueLabelStep;
 	
 		if ( !Double.isNaN(fixedGridStep) && !Double.isNaN(fixedLabelStep) )
 			v = new ValueAxisUnit( 1, fixedGridStep, 1, fixedLabelStep );
@@ -914,7 +894,7 @@ class Grapher
 		if ( !upperFromRange ) upperValue = v.getNiceHigher( upperValue );
 		if ( !lowerFromRange ) lowerValue = v.getNiceLower( lowerValue );
 		
-		return v.getValueMarkers( lowerValue, upperValue, 1000d, graphDef.scaleIndex);
+		return v.getValueMarkers( lowerValue, upperValue, graphDef.baseValue, graphDef.scaleIndex);
 		//return v.getValueMarkers( lowerValue, upperValue, graphDef.getBaseValue(), graphDef.getScaleIndex() );
 	}
 	
@@ -941,8 +921,8 @@ class Grapher
 		long endTime = graphDef.endTime;
 		double days = (endTime - startTime) / 86400.0;
 	
-		//t 				= graphDef.getTimeAxis();
-		//vLabelCentered 	= graphDef.getTimeAxisCentered();
+		t 				= graphDef.tAxis;
+		vLabelCentered 	= graphDef.tAxisCentered;
 	
 		if ( t == null )
 		{

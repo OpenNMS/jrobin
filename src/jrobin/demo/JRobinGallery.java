@@ -18,8 +18,8 @@ import java.io.IOException;
 public class JRobinGallery {
 	public static void graph7() throws RrdException, IOException {
 		RrdGraphDef def = new RrdGraphDef();
-        GregorianCalendar start = new GregorianCalendar(2003, 4, 1);
-		GregorianCalendar end = new GregorianCalendar(2003, 5, 1);
+        GregorianCalendar start = new GregorianCalendar(2003, 3, 25);
+		GregorianCalendar end = new GregorianCalendar(2003, 5, 5);
 		def.setTimePeriod(start, end);
 		long t0 = start.getTime().getTime() / 1000L;
 		long t1 = end.getTime().getTime() / 1000L;
@@ -35,6 +35,7 @@ public class JRobinGallery {
 			long t = t0 + (t1 - t0) * i / n;
 			def.datasource("c" + i, "TIME," + t + ",GT,v2,UNKN,IF");
 		}
+		def.area( new GregorianCalendar( 2003, 4, 1 ), Double.MIN_VALUE, new GregorianCalendar( 2003, 5, 1 ), Double.MAX_VALUE, Color.ORANGE, "april 2003\n" );
 		for(int i = 0; i < n; i++) {
             if(i==0) {
 				def.area("c"+i, new Color(255-255*Math.abs(i-n/2)/(n/2),0,0), "Output by night");
@@ -84,7 +85,7 @@ public class JRobinGallery {
 		def.area("blank1", Color.WHITE, null);
 		def.area("blank2", Color.WHITE, null);
 		def.line("v1", Color.BLUE, null, 1);
-		def.line("v2", Color.BLUE, null, 1);
+		def.line("v2", null, null, 1);
 		def.setTitle("Voltage measurement");
 		def.setVerticalLabel("[Volts]");
 		//def.setValueAxisLabel("[Volts]");

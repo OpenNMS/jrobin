@@ -110,4 +110,24 @@ public class ChartGraphics
 	{
 		g.setStroke( s );
 	}
+	
+	int getMinX()
+	{
+		return 0;
+	}
+	
+	int getMaxX()
+	{
+		return 0 + width;
+	}
+	
+	int getMinY()
+	{
+		return 0;
+	}
+	
+	int getMaxY()
+	{
+		return 0 + height;
+	}
 }

@@ -44,7 +44,7 @@ public class JRobinComplexGraph {
 
 	public static void main(String[] args) 
 	{
-		GregorianCalendar start = new GregorianCalendar(2003, 7, 24, 20, 00);
+		GregorianCalendar start = new GregorianCalendar(2003, 7, 24, 00, 00);
 		GregorianCalendar end 	= new GregorianCalendar(2003, 7, 25, 00, 00);
 		
 		try 
@@ -77,7 +77,8 @@ public class JRobinComplexGraph {
 			//gl.setUnitsExponent(3);
 			//gl.setAntiAliasing(false);
 			gl.setGridRange( 0, 1, false );
-			
+			//gl.setBackground( "/demo6.png" );
+			//gl.setOverlay( "/demo6.png" );
 			gl.datasource("load", "c:/test.rrd", "serverLoad", "AVERAGE");
 			gl.datasource("user", "c:/test.rrd", "serverCPUUser", "AVERAGE");
 			gl.datasource("nice", "c:/test.rrd", "serverCPUNice", "AVERAGE");
@@ -92,7 +93,7 @@ public class JRobinComplexGraph {
 			
 			gl.comment("CPU utilization (%)\n");
 			gl.comment("  ");
-			//gl.hrule( 7.0, Color.YELLOW, null, 10f);
+			//gl.stack("load", Color.RED, null);
 			gl.area("load", new Color(0x66,0x99,0xcc), " 0 - 25%");
 			gl.area("p25t50", new Color(0x00,0x66,0x99), "25 - 50%");
 			gl.comment("             ");
@@ -121,11 +122,16 @@ public class JRobinComplexGraph {
 			gl.comment("         ");
 			gl.gprint("load", "AVERAGE", "Average: @5.2@s");
 			gl.gprint("load", "LAST", "Current: @6.2@s\n");
-			gl.comment("\n");
-			gl.comment("-------------------------------------------------------------------------------@c");
-			//gl.vrule( new GregorianCalendar(2003, 7, 24, 9, 00), Color.BLUE, "9am", 2f );
+			//gl.hrule( 3.0, null, "legende", 1);
+			//gl.vrule( new GregorianCalendar(2003, 7, 24, 9, 00), Color.BLUE, "9am", 2 );
+			gl.area( new GregorianCalendar(2003, 7, 24, 9, 00), Double.MIN_VALUE, new GregorianCalendar(2003, 7, 24, 17, 00), Double.MAX_VALUE, Color.ORANGE, "deviation@r" );
+			gl.area( new GregorianCalendar(2003, 7, 24, 8, 00), Double.MIN_VALUE, new GregorianCalendar(2003, 7, 24, 10, 00), Double.MAX_VALUE, Color.PINK, null );
+			gl.area( new GregorianCalendar(2003, 7, 24, 16, 00), Double.MIN_VALUE, new GregorianCalendar(2003, 7, 24, 18, 00), 12, Color.PINK, null );
+			gl.stack("load", Color.BLUE, "hmm");
+			gl.comment("\n-------------------------------------------------------------------------------@c");
+			
 			//gl.vrule( new GregorianCalendar(2003, 7, 24, 17, 00), Color.BLUE, "5pm", 3f );
-			gl.comment("Generated: " + new Date() + "@R");
+			gl.comment("Generated: " + new Date() + "@L");
 			
 			// Create the actual graph
 			long s1 = Calendar.getInstance().getTimeInMillis();
@@ -157,7 +163,7 @@ public class JRobinComplexGraph {
 			
 			// Print out timing information for the new package API
 			long s2 = Calendar.getInstance().getTimeInMillis();
-			System.out.println( "New package: " + (s2 - s1) + " ms" );
+			System.err.println( "New package: " + (s2 - s1) + " ms" );
 			// --------------------------------------------------------
 
 			
@@ -272,7 +278,7 @@ public class JRobinComplexGraph {
 
 			// Print out timings for the old graph API
 			s2 = Calendar.getInstance().getTimeInMillis();
-			System.out.println( "Old package: " + (s2 - s1) + " ms" );
+			System.err.println( "Old package: " + (s2 - s1) + " ms" );
 			
 			System.exit(0);
 			
