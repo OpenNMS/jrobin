@@ -92,11 +92,12 @@ class Cdef extends Source
 	 * @param numPoints Number of points used as graph resolution (size of the value table).
 	 * @throws RrdException Thrown in case of a JRobin specific error.
 	 */	
-	void prepare( HashMap sourceIndex, int numPoints ) throws RrdException
+	void prepare( HashMap sourceIndex, int numPoints, int aggregatePoints ) throws RrdException
 	{
 		// Create values table of correct size
-		values = new double[numPoints];
-		
+		values 					= new double[numPoints];
+		this.aggregatePoints	= aggregatePoints;
+
 		// Parse rpn expression for better performance
 		String tkn;
 		

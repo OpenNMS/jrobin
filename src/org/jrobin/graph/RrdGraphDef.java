@@ -31,7 +31,6 @@ import java.awt.BasicStroke;
 import java.util.*;
 import java.text.SimpleDateFormat;
 
-import org.jrobin.core.Util;
 import org.jrobin.core.RrdException;
 import org.jrobin.core.XmlWriter;
 
@@ -55,15 +54,11 @@ import org.jrobin.core.XmlWriter;
  * @author Arne Vandamme (arne.vandamme@jrobin.org)
  * @author Sasa Markovic (saxon@jrobin.org)
  */
-public class RrdGraphDef implements Serializable
+public class RrdGraphDef extends RrdExportDef implements Serializable
 {
 	// ================================================================
 	// -- Members
 	// ================================================================
-	private long endTime					= Util.getTime();					// default time span of the last 24 hours
-	private long startTime					= Util.getTime() - 86400L;
-	private long resolution					= 1;								// resolution to fetch from the RRD databases
-
 	private Title title						= null;								// no title
 	private String valueAxisLabel			= null;								// no vertical label
 	private TimeAxisLabel timeAxisLabel 	= null;								// no horizontal label
@@ -79,7 +74,8 @@ public class RrdGraphDef implements Serializable
 	private boolean antiAliasing			= true;								// use anti-aliasing for the chart (default: yes)
 	private boolean showLegend				= true;								// show legend and comments (default: yes)
 	private boolean drawSignature			= true;								// show JRobin url signature (default: yes)
-		
+	private boolean useExportDataFlag		= false;							// use ExportData instead of normal datasources
+
 	private Color backColor					= new Color( 245, 245, 245 );		// variation of light gray
 	private Color canvasColor				= Color.WHITE;						// white
 	private Color borderColor				= Color.LIGHT_GRAY;					// light gray, only applicable with a borderStroke
@@ -108,16 +104,12 @@ public class RrdGraphDef implements Serializable
 	private TimeAxisUnit tAxis				= null;								// custom time axis grid, defaults to no custom
 	private ValueAxisUnit vAxis				= null;								// custom value axis grid, defaults to no custom
 	private GridRange gridRange				= null;								// custom value range definition, defaults to auto-scale
-	
+	private ExportData exportData			= null;								// possible export data set to use for graphing
+
 	// -- Non-settable members
-	private int numSdefs					= 0;
-	private int numDefs						= 0;								// number of Def datasources added
 	private int commentLines				= 0;								// number of complete lines in the list of comment items
 	private int commentLineShift			= 0;								// modifier to add to get minimum one complete line of comments
 	
-	private FetchSourceList fetchSources	= new FetchSourceList( 10 );		// holds the list of FetchSources
-	private ArrayList cdefList				= new ArrayList( 10 );				// holds the list of Cdef datasources
-	private ArrayList pdefList				= new ArrayList( 10 );				// holds the list of Plottable datasources
 	private ArrayList plotDefs				= new ArrayList( 10 );				// holds the list of PlotDefs
 	private ArrayList comments				= new ArrayList( 10 );				// holds the list of comment items
 	
@@ -172,44 +164,6 @@ public class RrdGraphDef implements Serializable
 	// -- Public methods
 	// ================================================================
 	/**
-	 * Sets time span to be presented on the graph using timestamps in number of seconds.
-	 * An end time of 0 means JRobin will try to use the last available update time.
-	 * @param startTime Starting timestamp in seconds.
-	 * @param endTime Ending timestamp in secons.
-	 * @throws RrdException Thrown if invalid parameters are supplied.
-	 */
-	public void setTimePeriod( long startTime, long endTime ) throws RrdException 
-	{
-		if ( startTime < 0 || ( endTime != 0 && endTime <= startTime ) )
-			throw new RrdException( "Invalid graph start/end time: " + startTime + "/" + endTime );
-		
-		this.startTime 	= startTime;
-		this.endTime 	= endTime;
-	}
-	
-	/**
-	 * Sets time span to be presented on the graph using <code>java.util.Date</code> objects.
-	 * @param start Starting time.
-	 * @param end Ending time.
-	 * @throws RrdException Thrown in case of invalid parameters.
-	 */
-	public void setTimePeriod( Date start, Date end ) throws RrdException 
-	{
-		setTimePeriod( start.getTime() / 1000L, end.getTime() / 1000L );
-	}
-
-	/**
-	 * Sets time span to be presented on the graph using <code>java.util.GregorianCalendar</code> objects.
-	 * @param start Starting time.
-	 * @param end Ending time
-	 * @throws RrdException Thrown if invalid parameters are supplied.
-	 */
-	public void setTimePeriod( GregorianCalendar start, GregorianCalendar end ) throws RrdException 
-	{
-		setTimePeriod( start.getTime(), end.getTime() );
-	}
-
-	/**
 	 * Sets the 'lazy' flag for this GraphDef.  This means that upon graph generation and saving to a file,
 	 * JRobin will first check that if that file already exists, the 'last modified' timestamp
 	 * of the file is smaller than 'last update' timestamp of the used datasources.  Only if that is indeed
@@ -222,14 +176,12 @@ public class RrdGraphDef implements Serializable
 		this.lazyGeneration = lazyGeneration;
 	}
 
-	/**
-	 * Sets the resolution with which data will be fetched from the RRD sources.
-	 * JRobin will try to match the requested resolution as closely as possible.
-	 * @param resolution Resolution (data step) in seconds.
-	 */
-	public void setResolution( long resolution )
-	{
-		this.resolution = resolution;
+	public void setExportData( ExportData dataSet ) {
+		exportData = dataSet;
+	}
+
+	public void setUseExportData( boolean flag ) {
+		useExportDataFlag = flag;
 	}
 
 	/**
@@ -650,151 +602,6 @@ public class RrdGraphDef implements Serializable
 	}
 
 	/**
-	 * <p>Adds simple graph source to graph definition. Graph source <code>name</code>
-	 * can be used:</p>
-	 * <ul>
-	 * <li>To specify sources for line, area and stack plots.</li>
-	 * <li>To define complex graph sources
-	 * (see {@link #datasource(java.lang.String, java.lang.String) complex graph
-	 * source definition}).</li>
-	 * <li>To specify graph data source for the
-	 * {@link #gprint(java.lang.String, java.lang.String, java.lang.String) gprint()} method.</li>
-	 * </ul>
-	 *
-	 * @param name Graph source name.
-	 * @param file Path to RRD file.
-	 * @param dsName Data source name defined in the RRD file.
-	 * @param consolFunc Consolidation function that will be used to extract data from the RRD
-	 * file ("AVERAGE", "MIN", "MAX" or "LAST").
-	 */
-	public void datasource( String name, String file, String dsName, String consolFunc ) throws RrdException
-	{
-		fetchSources.add( name, file, dsName, consolFunc );
-		
-		numDefs++;
-	}
-
-	/**
-	 * <p>Adds simple graph source to graph definition. Graph source <code>name</code>
-	 * can be used:</p>
-	 * <ul>
-	 * <li>To specify sources for line, area and stack plots.</li>
-	 * <li>To define complex graph sources
-	 * (see {@link #datasource(java.lang.String, java.lang.String) complex graph
-	 * source definition}).</li>
-	 * <li>To specify graph data source for the
-	 * {@link #gprint(java.lang.String, java.lang.String, java.lang.String) gprint()} method.</li>
-	 * </ul>
-	 *
-	 * @param name Graph source name.
-	 * @param file Path to RRD file.
-	 * @param dsName Data source name defined in the RRD file.
-	 * @param consolFunc Consolidation function that will be used to extract data from the RRD
-	 * file ("AVERAGE", "MIN", "MAX" or "LAST").
-	 * @param backend Name of the RrdBackendFactory that should be used for this RrdDb.
-	 */
-	public void datasource( String name, String file, String dsName, String consolFunc, String backend ) throws RrdException
-	{
-		fetchSources.add( name, file, dsName, consolFunc, backend );
-
-		numDefs++;
-	}
-
-	/**
-	 * <p>Clears the list of RRD datasources for this GraphDef and sets it to the FetchSourceList
-	 * passed as aparameter.  This does not alter any Cdef, Sdef or Pdef definitions.  The datasources
-	 * should be passed on as a FetchSourceList {@link FetchSourceList}.</p>
-	 * @param datasourceList FetchSourceList of the datasources to use.
-	 */
-	public void setDatasources( FetchSourceList datasourceList )
-	{
-		fetchSources	= datasourceList;
-
-		numDefs			= fetchSources.defCount();
-	}
-
-	/**
-	 * <p>Adds complex graph source with the given name to the graph definition.
-	 * Complex graph sources are evaluated using the supplied <code>rpn</code> expression.
-	 *
-	 * <p>Complex graph source <code>name</code> can be used:</p>
-	 * <ul>
-	 * <li>To specify sources for line, area and stack plots.
-	 * <li>To define other complex graph sources.
-	 * <li>To specify graph data source for the
-	 * {@link #gprint(java.lang.String, java.lang.String, java.lang.String) gprint()} method.
-	 *
-	 * <p>JRobin supports the following RPN functions, operators and constants: +, -, *, /,
-	 * %, SIN, COS, LOG, EXP, FLOOR, CEIL, ROUND, POW, ABS, SQRT, RANDOM, LT, LE, GT, GE, EQ,
-	 * IF, MIN, MAX, LIMIT, DUP, EXC, POP, UN, UNKN, NOW, TIME, PI and E. JRobin does not
-	 * force you to specify at least one simple graph source name as RRDTool.</p>
-	 *
-	 * <p>For more details on RPN see RRDTool's
-	 * <a href="http://people.ee.ethz.ch/~oetiker/webtools/rrdtool/manual/rrdgraph.html" target="man">rrdgraph man page</a>.</p>
-	 *
-	 * @param name Graph source name.
-	 * @param rpn RPN expression containig comma delmited simple and complex graph
-	 * source names, RPN constants, functions and operators.
-	 */
-	public void datasource( String name, String rpn ) 
-	{
-		cdefList.add( new Cdef(name, rpn) );
-	}
-
-	/**
-	 * <p>Adds static graph source with the given name to the graph definition.
-	 * Static graph sources are the result of a consolidation function applied
-	 * to *any* other graph source that has been defined previously.</p>
-	 *
-	 * @param name Graph source name.
-	 * @param defName Name of the datasource to calculate the value from.
-	 * @param consolFunc Consolidation function to use for value calculation
-	 */
-	public void datasource( String name, String defName, String consolFunc ) throws RrdException
-	{
-		cdefList.add( new Sdef(name, defName, consolFunc) );
-		numSdefs++;
-	}
-
-	/**
-	 * <p>Adds a custom graph source with the given name to the graph definition.
-	 * The datapoints should be made available by a class extending Plottable.</p>
-	 * 
-	 * @param name Graph source name.
-	 * @param plottable Class that extends Plottable class and is suited for graphing.
-	 */
-	public void datasource( String name, Plottable plottable )
-	{
-		pdefList.add( new Pdef(name, plottable) );
-	}
-	
-	/**
-	 * <p>Adds a custom graph source with the given name to the graph definition.
-	 * The datapoints should be made available by a class extending Plottable.</p>
-	 * 
-	 * @param name Graph source name.
-	 * @param plottable Class that extends Plottable class and is suited for graphing.
-	 * @param index Integer referring to the datasource in the Plottable class.
-	 */
-	public void datasource( String name, Plottable plottable, int index )
-	{
-		pdefList.add( new Pdef(name, plottable, index) );
-	}
-	
-	/**
-	 * <p>Adds a custom graph source with the given name to the graph definition.
-	 * The datapoints should be made available by a class extending Plottable.</p>
-	 * 
-	 * @param name Graph source name.
-	 * @param plottable Class that extends Plottable class and is suited for graphing.
-	 * @param sourceName String name referring to the datasource in the Plottable class.
-	 */
-	public void datasource( String name, Plottable plottable, String sourceName )
-	{
-		pdefList.add( new Pdef(name, plottable, sourceName) );
-	}
-	
-	/**
 	 * Adds line plot to the graph definition, using the specified color and legend. This method
 	 * takes exactly the same parameters as RRDTool's LINE1 directive (line width
 	 * is set to 1).  The legend allows for the same
@@ -1031,8 +838,8 @@ public class RrdGraphDef implements Serializable
 		xml.startTag("rrd_graph_def");
         // SPAN
 		xml.startTag("span");
-		xml.writeTag("start", startTime);
-		xml.writeTag("end", endTime);
+		xml.writeTag("start", getStartTime() );
+		xml.writeTag("end", getEndTime() );
 		xml.closeTag(); // span
 		// OPTIONS
 		xml.startTag("options");
@@ -1167,22 +974,18 @@ public class RrdGraphDef implements Serializable
 	// ================================================================
 	// -- Protected (package) methods
 	// ================================================================
-	protected long getStartTime() {
-		return startTime;
-	}
-	
-	protected long getEndTime() {
-		return endTime;
-	}
-
-	protected long getResolution() {
-		return resolution;
-	}
-
 	protected boolean isLazy() {
 		return lazyGeneration;
 	}
 
+	protected boolean useExportData() {
+		return useExportDataFlag;
+	}
+
+	protected ExportData getExportData() {
+		return exportData;
+	}
+	
 	protected Title getTitle() {
 		return title;
 	}
@@ -1345,33 +1148,7 @@ public class RrdGraphDef implements Serializable
 	{
 		return ( comments.size() > 0 ? commentLines + commentLineShift : 0 ); 
 	}
-	
-	protected int getNumDefs()
-	{
-		return numDefs;
-	}
-	
-	protected Cdef[] getCdefs()
-	{
-		return (Cdef[]) cdefList.toArray( new Cdef[] {} );		
-	}
-	
-	protected Pdef[] getPdefs()
-	{
-		return (Pdef[]) pdefList.toArray( new Pdef[] {} );
-	}
 
-	protected int getNumSdefs()
-	{
-		return numSdefs;
-	}
-
-	protected FetchSourceList getFetchSources()
-	{
-		return fetchSources;
-	}
-	
-	
 	// ================================================================
 	// -- Private methods
 	// ================================================================

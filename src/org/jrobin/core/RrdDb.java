@@ -502,7 +502,7 @@ public class RrdDb implements RrdUpdater {
 		return fetchData;
 	}
 
-	private Archive findMatchingArchive(FetchRequest request) throws RrdException, IOException {
+	public Archive findMatchingArchive(FetchRequest request) throws RrdException, IOException {
 		String consolFun = request.getConsolFun();
 		long fetchStart = request.getFetchStart();
 		long fetchEnd = request.getFetchEnd();
@@ -559,7 +559,8 @@ public class RrdDb implements RrdUpdater {
 	 * @return Reference to the best matching archive.
 	 * @throws IOException Thrown in case of I/O related error.
 	 */
-	public Archive findStartMatchArchive( String consolFun, long startTime, long resolution ) throws IOException {
+	public Archive findStartMatchArchive( String consolFun, long startTime, long resolution ) throws IOException
+	{
 		long arcStep, diff;
 		int fallBackIndex	= 0;
 		int arcIndex		= -1;

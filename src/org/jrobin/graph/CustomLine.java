@@ -72,7 +72,7 @@ class CustomLine extends Line
 		this.xVal2 = endTime;
 		this.yVal1 = startValue;
 		this.yVal2 = endValue;
-		
+
 		try
 		{
 			long xc	   = xVal2 - xVal1;
@@ -118,7 +118,7 @@ class CustomLine extends Line
 		g.setStroke( lineWidth != 1 ? new BasicStroke(lineWidth) : DEF_LINE_STROKE );
 		
 		int ax, ay, nx, ny;
-		
+
 		// Get X positions
 		if ( xVal1 == Long.MIN_VALUE )
 			ax = g.getMinX();
@@ -170,7 +170,7 @@ class CustomLine extends Line
 
 		g.setStroke( STROKE );
 	}
-	
+
 	/**
 	 * Retrieves the value for a specific point of the CustomLine.  The corresponding value is calculated based
 	 * on the mathematical line function with the timestamp as a X value.
@@ -204,6 +204,10 @@ class CustomLine extends Line
 	
 	// Stubbed method, irrelevant for this PlotDef
 	void setSource( Source[] sources, HashMap sourceIndex ) throws RrdException	{
+	}
+
+	// Stubbed, we don't need to set value for a Custom plotdef
+	void setValue( int tableRow, long preciseTime, long[] reducedTimestamps ) {
 	}
 
 	void exportXmlTemplate( XmlWriter xml, String legend ) {

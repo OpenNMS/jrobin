@@ -41,7 +41,6 @@ class ValueAxisUnit
 	// ================================================================
 	// -- Members
 	// ================================================================	
-	
 	private double gridStep			= 2;
 	private double labelStep		= 10;
 	
@@ -84,7 +83,7 @@ class ValueAxisUnit
 	{
 		double minPoint		= 0.0d;
 		double majPoint		= 0.0d;
-		
+
 		// Find the first visible gridpoint
 		if ( lower > 0 ) {
 			while ( minPoint < lower ) minPoint += gridStep;
@@ -150,53 +149,44 @@ class ValueAxisUnit
 		// Add some checks
 		double gridFactor	= 1.0;
 		double mGridFactor	= 1.0;
-		
+
 		double gridStep		= this.gridStep;
 		double mGridStep	= this.labelStep;
-		
-		if ( gridStep < 1.0 ) {
-			gridStep		*= 100;
-			gridFactor		= 100;
-		}
-		
-		if ( mGridStep < 1.0 ) {
-			mGridStep		*= 100;
-			mGridFactor		= 100;
-		}
-		
-		double value		= ovalue * gridFactor;
-		int valueInt		= new Double(value).intValue();
-		int roundStep		= new Double(gridStep).intValue();
-		if ( roundStep == 0 ) roundStep = 1;
-		int num 			= valueInt / roundStep; 
-		// int mod 			= valueInt % roundStep;
-		double gridValue	= (roundStep * num) * 1.0d;
-		if ( gridValue > value )
-			gridValue		-= roundStep;
-		
-		if ( num == 0 && value >= 0 )
-			gridValue		= 0.0;
-		else if ( Math.abs(gridValue - value) < (gridStep) / 16 )
-			gridValue		-= roundStep;
-		
-		value				= ovalue * mGridFactor;
-		roundStep			= new Double(mGridStep).intValue();
-		if ( roundStep == 0 ) roundStep = 1;
-		num					= valueInt / roundStep;
-		// mod					= valueInt % roundStep;
-		double mGridValue	= (roundStep * num) * 1.0d;
-		if ( mGridValue > value )
-			mGridValue		-= roundStep;
-		
-		if ( value != 0.0d )
-		{
-			if ( Math.abs(mGridValue - gridValue) < (mGridStep) / 2)
-				return mGridValue / mGridFactor;
-			else
-				return gridValue / gridFactor;
+
+		while ( gridStep < 10.0 ) {
+			gridStep		*= 10;
+			gridFactor		*= 10;
 		}
 
-		return ovalue;
+		while ( mGridStep < 10.0 ) {
+			mGridStep		*= 10;
+			mGridFactor		*= 10;
+		}
+
+		int sign			= ( ovalue > 0 ? 1 : -1 );
+
+		long lGridStep		= new Double( gridStep ).longValue();
+		long lmGridStep		= new Double( mGridStep ).longValue();
+
+		long lValue			= new Double(sign * ovalue * gridFactor).longValue();
+		long lmValue		= new Double(sign * ovalue * mGridFactor).longValue();
+
+		long lMod 			= lValue % lGridStep;
+		long lmMod			= lmValue % lmGridStep;
+
+		/*if ( ovalue < 0 )
+		{
+
+		}
+		else
+		{*/
+			if ( lmMod < ( mGridStep * 0.5 ) )
+				return ((double) (sign*lmValue - lmMod) / mGridFactor);
+			else if ( lMod > 0 )
+				return ((double) (sign*lValue - lMod) / gridFactor);
+			else
+				return ((double) (sign*lValue) / gridFactor);
+		//}
 	}
 	
 	/**
@@ -207,55 +197,43 @@ class ValueAxisUnit
 	 */
 	double getNiceHigher( double ovalue )
 	{
-		// Add some checks
 		double gridFactor	= 1.0;
 		double mGridFactor	= 1.0;
-		
+
 		double gridStep		= this.gridStep;
 		double mGridStep	= this.labelStep;
-		
-		if ( gridStep < 1.0 ) {
-			gridStep 		*= 100;
-			gridFactor		= 100;
+
+		while ( gridStep < 10.0 ) {
+			gridStep		*= 10;
+			gridFactor		*= 10;
 		}
-	
-		if ( mGridStep < 1.0 ) {
-			mGridStep	*= 100;
-			mGridFactor		= 100;
+
+		while ( mGridStep < 10.0 ) {
+			mGridStep		*= 10;
+			mGridFactor		*= 10;
 		}
-		
-		double value		= ovalue * gridFactor;
-		long valueInt		= new Double(value).longValue();
-		long roundStep		= new Double(gridStep).longValue();
-		if ( roundStep == 0 ) roundStep = 1;
-		long num 			= valueInt / roundStep; 
-		// int mod 			= valueInt % roundStep;
-		double gridValue	= (roundStep * (num + 1)) * 1.0d;
-		if ( gridValue - value < (gridStep) / 8 )
-			gridValue		+= roundStep;
-		
-		value				= ovalue * mGridFactor;
-		roundStep			= new Double(mGridStep).longValue();
-		if ( roundStep == 0 ) roundStep = 1;
-		num					= valueInt / roundStep;
-		// mod					= valueInt % roundStep;
-		double mGridValue	= (roundStep * (num + 1)) * 1.0d;
-		
-		if ( value != 0.0d )
-		{
-			if ( Math.abs(mGridValue - gridValue) < (mGridStep) / 2)
-				return mGridValue / mGridFactor;
-			else
-				return gridValue / gridFactor;
-		}
-		
-		return ovalue;
+
+		int sign			= ( ovalue > 0 ? 1 : -1 );
+
+		long lGridStep		= new Double( gridStep ).longValue();
+		long lmGridStep		= new Double( mGridStep ).longValue();
+
+		long lValue			= new Double(sign * ovalue * gridFactor).longValue();
+		long lmValue		= new Double(sign * ovalue * mGridFactor).longValue();
+
+		long lMod 			= lValue % lGridStep;
+		long lmMod			= lmValue % lmGridStep;
+
+		if ( lmMod > ( mGridStep * 0.5 ) )
+			return ((double) ( sign * lmValue - lmMod + lmGridStep) / mGridFactor);
+		else
+			return ((double) ( sign * lValue - lMod + lGridStep) / gridFactor);
 	}
-	
-		
+
+
 	// ================================================================
 	// -- Private methods
-	// ================================================================		
+	// ================================================================
 	/**
 	 * Rounds a specific double value to 14 decimals.  This is used to avoid strange double values due to the
 	 * internal double representation of the JVM.

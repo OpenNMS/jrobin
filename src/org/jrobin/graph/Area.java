@@ -26,7 +26,7 @@ package org.jrobin.graph;
 
 import org.jrobin.core.XmlWriter;
 
-import java.awt.Color;
+import java.awt.*;
 
 /**
  * <p>Class used to represent a datasource plotted as an area in a graph.</p>
@@ -58,9 +58,9 @@ class Area extends PlotDef
 	 * @param stacked True if this PlotDef is stacked on the previous one, false if not.
 	 * @param visible True if this PlotDef should be graphed, false if not.
 	 */
-	Area( Source source, Color color, boolean stacked, boolean visible )
+	Area( Source source, double[] values, Color color, boolean stacked, boolean visible )
 	{
-		super( source, color, stacked, visible );
+		super( source, values, color, stacked, visible);
 	}
 	
 	
@@ -77,19 +77,17 @@ class Area extends PlotDef
 	void draw( ChartGraphics g, int[] xValues, double[] stackValues, int lastPlotType )
 	{
 		g.setColor( color );
-		
-		double[] values = source.getValues();
-		int len			= xValues.length;
+
+		int len 	= values.length;
 
 		double value;
 		int ax = 0, ay = 0, nx = 0, ny = 0, py;
 
 		for ( int i = 0; i < len; i++ )
 		{
+			py 		= 0;
+			nx 		= xValues[i];
 			value	= values[i];
-			py = 0;
-			
-			nx = xValues[i];
 
 			if ( !Double.isNaN(value) )
 			{
@@ -116,17 +114,15 @@ class Area extends PlotDef
 					else if ( nx != 0 && py != Integer.MIN_VALUE && ny != Integer.MIN_VALUE )
 						g.drawLine( nx, py, nx, ny );
 				}
-
-
 			}
-			
+
 			// Special case with NaN doubles
 			stackValues[i] 	= value;
 			ax 				= nx;
 			ay 				= ny;
 		}
 	}
-	
+
 	void exportXmlTemplate( XmlWriter xml, String legend )
 	{
 		xml.startTag("area");

@@ -141,7 +141,7 @@ class CustomArea extends PlotDef
 				else
 					stackValues[i] = g.getInverseY(ny);
 	}
-	
+
 	/**
 	 * Retrieves the value for a specific point of the CustomArea.  The CustomArea is always a rectangle,
 	 * this means the returned double value will always be equal to the (Y) value of the second datapoint.
@@ -168,7 +168,11 @@ class CustomArea extends PlotDef
 	// Stubbed method, irrelevant for this PlotDef
 	void setSource( Source[] sources, HashMap sourceIndex ) throws RrdException {
 	}
-	
+
+	// Stubbed, we don't need to set value for a Custom plotdef
+	void setValue( int tableRow, long preciseTime, long[] reducedTimestamps ) {
+	}
+
 	void exportXmlTemplate( XmlWriter xml, String legend ) {
 		xml.startTag("area");
 		xml.writeTag("time1", xVal1);

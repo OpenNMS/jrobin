@@ -63,7 +63,7 @@ class ValueGrid
 	{
 		double grLower = Double.MAX_VALUE;
 		double grUpper = Double.MIN_VALUE;
-		
+
 		if ( gr != null )
 		{
 			this.rigid		= gr.isRigid();
@@ -90,11 +90,11 @@ class ValueGrid
 		
 		// Set an appropriate value axis it not given yet
 		setValueAxis();
-		
+
 		if ( !rigid ) {
 			this.lower		= ( lower == grLower ? grLower : this.vAxis.getNiceLower( lower ) );
 			this.upper		= ( upper == grUpper ? grUpper : this.vAxis.getNiceHigher( upper ) );
-		}	
+		}
 	}
 	
 	
@@ -125,7 +125,7 @@ class ValueGrid
 	{
 		if ( vAxis != null )
 			return;
-		
+
 		if ( Double.isNaN(upper) || upper == Double.MIN_VALUE || upper == Double.MAX_VALUE )
 			upper = 0.9;
 		if ( Double.isNaN(lower) || lower == Double.MAX_VALUE || lower == Double.MIN_VALUE )
@@ -133,18 +133,18 @@ class ValueGrid
 		
 		if ( !rigid && upper == 0 && upper == lower )
 			upper = 0.9;
-		
+
 		// Determine nice axis grid
 		double shifted = Math.abs(upper - lower);
 		if ( shifted == 0 )			// Special case, no 'range' available
 			shifted = upper;
-		
+
 		// Find the scaled unit for this range
 		double mod		= 1.0;
 		int scaleIndex 	=  scaleValues.length - 1;
 		while ( scaleIndex >= 0 && scaleValues[scaleIndex] < shifted ) 
 			scaleIndex--;
-		
+
 		// Keep the rest of division
 		shifted 		= shifted / scaleValues[++scaleIndex];
 
@@ -158,7 +158,7 @@ class ValueGrid
 			shifted *= 10;
 			mod /= 10;
 		}
-		
+
 		// Create nice grid based on 'fixed' ranges
 		if ( shifted <= 1.5 )
 			vAxis = new ValueAxisUnit( 0.1 * mod * scaleValues[scaleIndex], 0.5 * mod * scaleValues[scaleIndex] );
@@ -167,6 +167,6 @@ class ValueGrid
 		else if ( shifted <= 5 )
 			vAxis = new ValueAxisUnit( 0.5 * mod * scaleValues[scaleIndex], 1.0 * mod * scaleValues[scaleIndex] );
 		else
-			vAxis = new ValueAxisUnit( 0.5 * mod * scaleValues[scaleIndex], 2.0 * mod * scaleValues[scaleIndex] );
+			vAxis = new ValueAxisUnit( 1.0 * mod * scaleValues[scaleIndex], 2.0 * mod * scaleValues[scaleIndex] );
 	}
 }

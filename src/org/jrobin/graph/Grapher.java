@@ -36,7 +36,6 @@ import java.awt.RenderingHints;
 import java.awt.image.RenderedImage;
 import java.awt.image.BufferedImage;
 
-import org.jrobin.core.RrdDb;
 import org.jrobin.core.RrdException;
 
 /**
@@ -44,7 +43,7 @@ import org.jrobin.core.RrdException;
  * 
  * @author Arne Vandamme (cobralord@jrobin.org)
  */
-class Grapher 
+class Grapher extends RrdExporter
 {
 	// ================================================================
 	// -- Members
@@ -87,19 +86,14 @@ class Grapher
 	
 	private RrdGraphDef graphDef;
 
-	private long[] timestamps;
-	private Source[] sources;
-	private HashMap sourceIndex;
-	private FetchSourceList fetchSources;
+	private PlotDef[] plotDefs;
+	private long[] tsChart;
 
 	private ValueFormatter valueFormat;
 	private BasicStroke	defaultStroke;
 	private ValueGrid vGrid;
 	private TimeGrid tGrid;
-	
-	private long calculatedEndTime;
-	
-	
+
 	// ================================================================
 	// -- Constructors
 	// ================================================================
@@ -111,6 +105,7 @@ class Grapher
 	 */
 	Grapher( RrdGraphDef graphDef, RrdGraph rrdGraph )
 	{
+		super( graphDef, rrdGraph );
 		this.graphDef = graphDef;
 		
 		// Set font dimension specifics
@@ -133,9 +128,8 @@ class Grapher
 		// Set default graph stroke
 		defaultStroke	= new BasicStroke();
 
-		// Get the fetch sources list
-		fetchSources	= graphDef.getFetchSources();
-		fetchSources.setRrdOpener( rrdGraph );				// Set the RrdOpener
+		startTime		= graphDef.getStartTime();
+		endTime			= graphDef.getStartTime();
 	}
 	
 	
@@ -315,7 +309,10 @@ class Grapher
 	private void render( Graphics2D graphics ) throws RrdException, IOException
 	{
 		// Do the actual graphing
-		calculateSeries();							// calculate all datasources
+		if ( graphDef.useExportData() )
+			calculateSeries( graphDef.getExportData() );
+		else
+			calculateSeries();						// calculate all datasources
 
 		plotImageBackground( graphics );			// draw the image background
 
@@ -333,208 +330,82 @@ class Grapher
 
 	/**
 	 * Fetches and calculates all datasources used in the graph.
+	 *
 	 * @throws RrdException Thrown in case of a JRobin specific error.
 	 * @throws IOException Thrown in case of a I/O related error.
 	 */
 	private void calculateSeries() throws RrdException, IOException
 	{
-		ValueExtractor ve;
-		FetchSource src;
-		RrdDb rrd;
-		String[] varList;
+		// Calculate the reduced set of datasources
+		super.calculateSeries( chartWidth );
 
-		long finalEndTime 		= 0;
-		boolean changingEndTime = false;
+		numPoints			= numRows;
 
-		long startTime 			= graphDef.getStartTime();
-		long endTime			= graphDef.getEndTime();
-		changingEndTime			= (endTime == 0);
+		/**
+		 * Expand the reduced set back to a set matching the chart width,
+		 * this allows for much nicer graphing.
+		 */
+		tsChart 	= new long[ chartWidth ];
+		plotDefs 	= graphDef.getPlotDefs();
 
-		int numDefs				= graphDef.getNumDefs();
-		int numSdefs			= graphDef.getNumSdefs();
-
-		Cdef[] cdefList			= graphDef.getCdefs();
-		int numCdefs			= cdefList.length;
-
-		Pdef[] pdefList			= graphDef.getPdefs();
-		int numPdefs			= pdefList.length;
-
-		// Set up the array with all datasources (both Def, Cdef and Pdef)
-		sources 				= new Source[ numDefs + numCdefs + numPdefs ];
-		sourceIndex 			= new HashMap( numDefs + numCdefs + numPdefs );
-		int tblPos				= 0;
-		int vePos				= 0;
-
-		ValueExtractor[] veList	= new ValueExtractor[ fetchSources.size() ];
-
-		// Open all datasources
-		try
+		for ( int i = 0; i < plotDefs.length; i++ )
 		{
-			fetchSources.openAll();
-
-			for ( int i = 0; i < fetchSources.size(); i++ )
-			{
-				src	= fetchSources.get( i );
-
-				if ( changingEndTime )
-				{
-					endTime		= src.getLastSampleTime( startTime, endTime, graphDef.getResolution() );
-
-					if ( endTime > finalEndTime )
-						finalEndTime = endTime;
-				}
-
-				// Fetch all required datasources
-				ve 		= src.fetch( startTime, endTime, graphDef.getResolution() );
-				varList = ve.getNames();
-
-				for (int j= 0; j < varList.length; j++) {
-					sources[tblPos]	= new Def(varList[j], numPoints);
-					sourceIndex.put( varList[j], new Integer(tblPos++) );
-				}
-
-				veList[ vePos++ ] = ve;
-			}
+			plotDefs[i].setSource( sources, sourceIndex );
+			plotDefs[i].prepareValues( chartWidth );
 		}
-		finally
+
+		for ( int i = 0; i < chartWidth; i++ )
 		{
-			// Release all datasources again
-			fetchSources.releaseAll();
-		}
+			long t 		= (long) (startTime + i * ((endTime - startTime) / (double) (chartWidth - 1)));
 
-		// Add all Pdefs to the source table
-		for ( int i = 0; i < pdefList.length; i++ )
+			for ( int j = 0; j < plotDefs.length; j++ )
+				plotDefs[j].setValue( i, t, timestamps );
+
+			tsChart[i]	= t;
+		}
+	}
+
+	/**
+	 * Calculates graphing values based on a ExportData object.
+	 *
+	 * @param dataSet ExportData holding the values.
+	 * @throws RrdException Thrown in case of a JRobin specific error.
+	 * @throws IOException Thrown in case of a I/O related error.
+	 */
+	private void calculateSeries( ExportData dataSet ) throws RrdException, IOException
+	{
+		numPoints	= dataSet.getRowCount();
+
+		startTime	= graphDef.getStartTime();
+		endTime		= graphDef.getEndTime();
+
+		tsChart		= new long[ chartWidth ];
+		plotDefs 	= graphDef.getPlotDefs();
+
+		timestamps	= dataSet.getTimestamps();
+		sources		= dataSet.getSources();
+		sourceIndex	= new HashMap( sources.length );
+
+		for ( int i = 0; i < sources.length; i++ )
+			sourceIndex.put( sources[i].getName(), new Integer(i) );
+
+		for ( int i = 0; i < plotDefs.length; i++ )
 		{
-			pdefList[i].prepare( numPoints );
-
-			sources[tblPos] = pdefList[i];
-			sourceIndex.put( pdefList[i].getName(), new Integer(tblPos++) );
+			plotDefs[i].setSource( sources, sourceIndex );
+			plotDefs[i].prepareValues( chartWidth );
 		}
 
-		int cdefStart = tblPos;		// First Cdef element, necessary for tree descend calculation
-
-		// Add all Cdefs to the source table
-		// Reparse all RPN datasources to use indices of the correct variables
-		for ( int i = 0; i < cdefList.length; i++ )
+		for ( int i = 0; i < chartWidth; i++ )
 		{
-			cdefList[i].prepare( sourceIndex, numPoints );
+			long t 		= (long) (startTime + i * ((endTime - startTime) / (double) (chartWidth - 1)));
 
-			sources[tblPos]	= cdefList[i];
-			sourceIndex.put( cdefList[i].getName(), new Integer(tblPos++) );
+			for ( int j = 0; j < plotDefs.length; j++ )
+				plotDefs[j].setValue( i, t, timestamps );
+
+			tsChart[i]	= t;
 		}
 
-		// Fill the array for all datasources
-		timestamps 				= new long[numPoints];
 
-		if ( changingEndTime ) {
-			endTime 			= finalEndTime;
-			calculatedEndTime 	= endTime;
-		}
-
-		// RPN calculator for the Cdefs
-		RpnCalculator rpnCalc 	= new RpnCalculator( sources, (endTime - startTime) / (double) numPoints );
-
-		// **************************************************************************************** //
-		// If there are Sdefs, we should determine a tree-descend order for calculation.			//
-		// An Sdef is completely dependant on another datasource and can only be calculated			//
-		// after the datasource it depends on has been calculated itself entirely.					//
-		//  e.g. The Sdef giving the AVG of a Def should be one lower in the calculation tree		//
-		//		 than the corresponding Def.  Lower = higher level.									//
-		// Since Sdefs can be nested and combined into new Cdefs and possibly resulting in new		//
-		// Sdefs, the worst case calculation could result in every datasource being calculated		//
-		// separately, resulting in more overhead.  However the impact of this should remain fairly	//
-		// small in CPU time.																		//
-		// **************************************************************************************** //
-		if ( numSdefs > 0 )
-		{
-			// Initalize level for each def on 0
-			int treeDepth	= 0;
-			int[] treeLevel = new int[ sources.length ];
-
-			// First level contains all fetched datasources, custom datasources and combined datasources that use other first levels
-			for ( int i = cdefStart; i < sources.length; i++ )
-			{
-				// Get the level of all defs needed, take the maximum level
-				int level 		= ((Cdef) sources[i]).calculateLevel( treeLevel );
-				treeDepth		= (level > treeDepth ? level : treeDepth);
-
-				treeLevel[i]	= level;
-			}
-
-			// Run through each level of the tree
-			long t;
-			int pos;
-
-			for ( int l = 0; l <= treeDepth; l++ )
-			{
-				for (int i = 0; i < numPoints; i++)
-				{
-					pos = cdefStart;
-
-					// First level of the tree includes fetched datasources and pdefs,
-					// since these values can never depend on others in the list.
-					if ( l == 0 )
-					{
-						// Calculate new timestamp
-						pos	= 0;
-						t 	= (long) (startTime + i * ((endTime - startTime) / (double) (numPoints - 1)));
-
-						// Get all fetched datasources
-						for (int j = 0; j < veList.length; j++)
-							pos = veList[j].extract( t, sources, i, pos );
-
-						// Get all custom datasources
-						for (int j = pos; j < pos + numPdefs; j++)
-							((Pdef) sources[j]).set( i, t );
-						pos += numPdefs;
-
-						timestamps[i] = t;
-					}
-					else
-						t = timestamps[i];
-
-					// Calculate the cdefs of this level
-					for ( int j = pos; j < sources.length; j++ )
-					{
-						if ( treeLevel[j] == l )
-						{
-							// This Cdef/Sdef can be calculated
-							if ( sources[j] instanceof Sdef )
-								((Sdef) sources[j]).set( sources );
-							else
-								sources[j].set( i, t, rpnCalc.evaluate( (Cdef) sources[j], i, t ) );
-						}
-					}
-				}
-			}
-		}
-		else
-		{
-			// Traditional way of calculating all datasources, slightly faster
-			for (int i = 0; i < numPoints; i++)
-			{
-				long t 	= (long) (startTime + i * ((endTime - startTime) / (double) (numPoints - 1)));
-				int pos = 0;
-
-				// Get all fetched datasources
-				for (int j = 0; j < veList.length; j++)
-					pos = veList[j].extract( t, sources, i, pos );
-
-				// Get all custom datasources
-				for (int j = pos; j < pos + numPdefs; j++)
-					((Pdef) sources[j]).set( i, t );
-				pos += numPdefs;
-
-				// Get all combined datasources
-				for (int j = pos; j < sources.length; j++)
-					sources[j].set(i, t, rpnCalc.evaluate( (Cdef) sources[j], i, t ) );
-
-				timestamps[i] = t;
-			}
-		}
-
-		// Clean up the fetched datasources forcibly
-		veList = null;
 	}
 
 	/**
@@ -629,10 +500,8 @@ class Grapher
 		}
 
 		// For autoscale, detect lower and upper limit of values
-		PlotDef[] plotDefs 	= graphDef.getPlotDefs();
 		for ( int i = 0; i < plotDefs.length; i++ )
 		{
-			plotDefs[i].setSource( sources, sourceIndex );
 			Source src = plotDefs[i].getSource();
 		
 			// Only try autoscale when we do not have a rigid grid
@@ -640,7 +509,7 @@ class Grapher
 			{
 				double min = src.getAggregate( Source.AGG_MINIMUM );
 				double max = src.getAggregate( Source.AGG_MAXIMUM );
-				
+
 				// If the plotdef is a stack, evaluate ALL previous values to find a possible max
 				if ( plotDefs[i].plotType == PlotDef.PLOT_STACK && i >= 1 ) 
 				{
@@ -680,7 +549,7 @@ class Grapher
 		}
 
 		vGrid 			= new ValueGrid( range, lowerValue, upperValue, graphDef.getValueAxis(), graphDef.getBaseValue() );
-		tGrid			= new TimeGrid( graphDef.getStartTime(), ( graphDef.getEndTime() != 0 ? graphDef.getEndTime() : calculatedEndTime ), graphDef.getTimeAxis(), graphDef.getFirstDayOfWeek() );
+		tGrid			= new TimeGrid( startTime, endTime, graphDef.getTimeAxis(), graphDef.getFirstDayOfWeek() );
 		
 		lowerValue		= vGrid.getLowerValue();
 		upperValue		= vGrid.getUpperValue();
@@ -690,7 +559,7 @@ class Grapher
 		g.setDimensions( chartWidth, chartHeight );
 		g.setXRange( tGrid.getStartTime(), tGrid.getEndTime() );
 		g.setYRange( lowerValue, upperValue );
-		
+
 		// Set the chart origin point
 		double diff = 1.0d;
 		if ( lowerValue < 0 )
@@ -710,12 +579,12 @@ class Grapher
 		graphics.translate( graphOriginX, graphOriginY );
  
 		int lastPlotType 		= PlotDef.PLOT_LINE;
-		double[] parentSeries 	= new double[numPoints];
+		double[] parentSeries 	= new double[chartWidth];
 
 		// Pre calculate x positions of the corresponding timestamps
-		int[] xValues		= new int[timestamps.length];
-		for (int i = 0; i < timestamps.length; i++)
-			xValues[i]		= g.getX(timestamps[i]);
+		int[] xValues		= new int[tsChart.length];
+		for (int i = 0; i < tsChart.length; i++)
+			xValues[i]		= g.getX(tsChart[i]);
 
 		// Draw all graphed values
 		for ( int i = 0; i < plotDefs.length; i++ )

@@ -40,10 +40,11 @@ class Def extends Source
 	 * @param name Name of the datasource in the graph definition.
 	 * @param numPoints Number of points used as graph resolution (size of the value table).
 	 */
-	Def( String name, int numPoints )
+	Def( String name, int numPoints, int aggregatePoints )
 	{
 		super(name);
-		values = new double[ numPoints ];
+		values					= new double[ numPoints ];
+		this.aggregatePoints	= aggregatePoints;
 	}
 	
 	

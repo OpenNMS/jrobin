@@ -99,10 +99,13 @@ class Pdef extends Source
 	 * Prepares the array that will hold the values.
 	 * @param numPoints Number of datapoints that will be used.
 	 */
-	void prepare( int numPoints )
+	void prepare( int numPoints, int aggregatePoints )
 	{
 		// Create values table of correct size
-		values = new double[numPoints];
+		values 					= new double[numPoints];
+
+		// Set the number of points that should be used for aggregate calculation
+		this.aggregatePoints	= aggregatePoints;
 	}
 	
 	/**

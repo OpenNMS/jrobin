@@ -26,6 +26,7 @@ package org.jrobin.graph;
 
 import org.jrobin.core.FetchData;
 import org.jrobin.core.RrdException;
+import org.jrobin.core.Util;
 
 /**
  * <p>Class used to extract specific time-based values out of a number of fetched datasources.</p>
@@ -39,11 +40,15 @@ class ValueExtractor
 	// ================================================================	
 	private String[] varNames;			// Name of the variable, NOT it's dsName in the file
 
+	private int reduceFactor = 1;
+
 	private int[] tPos;
+	private long[] steps;
 	private long[][] timestamps;
+
 	private double[][][] dsValues;
-	
-	
+
+
 	// ================================================================
 	// -- Constructors
 	// ================================================================	
@@ -52,19 +57,27 @@ class ValueExtractor
 	 * @param names Array containing the datasource names in the graph definition.
 	 * @param values Array of FetchData objects holding all fetched datasources for a specific RRD file.
 	 */
-	ValueExtractor( String[] names, FetchData[] values )
+	ValueExtractor( String[] names, FetchData[] values, int reduceFactor )
 	{
-		this.varNames	= names;
-		
+		this.varNames		= names;
+		this.reduceFactor	= reduceFactor;
+
 		// Set timestamps
-		tPos			= new int[values.length];
-		timestamps 		= new long[values.length][];
-		dsValues		= new double[values.length][][];
-		
-		for (int i = 0; i < timestamps.length; i++) {
-			if ( values[i] != null ) {
+		tPos				= new int[values.length];
+		steps				= new long[values.length];
+		timestamps 			= new long[values.length][];
+
+		dsValues			= new double[values.length][][];
+
+		for (int i = 0; i < timestamps.length; i++)
+		{
+			if ( values[i] != null )
+			{
 				timestamps[i] 	= values[i].getTimestamps();
 				dsValues[i]		= values[i].getValues();
+
+				if ( timestamps[i].length > 2 )
+					steps[i] = (timestamps[i][1] - timestamps[i][0]);
 			}
 		}
 	}
@@ -72,7 +85,23 @@ class ValueExtractor
 
 	// ================================================================
 	// -- Protected methods
-	// ================================================================	
+	// ================================================================
+	int prepareSources( Source[] sources, int offset )
+	{
+		int tblPos 	= offset;
+
+		for ( int i = 0; i < dsValues.length; i++ )
+		{
+			if ( dsValues[i] != null )
+			{
+				for (int x = 0; x < dsValues[i].length; x++)
+					sources[tblPos++].setFetchedStep( steps[i] );
+			}
+		}
+
+		return tblPos;
+	}
+
 	/**
 	 * Extracts a number of values out of the fetched values, and approximates them
 	 * to a specific timestamp, to store them in the complete Source array for the graph definition.
@@ -86,35 +115,80 @@ class ValueExtractor
 	int extract( long timestamp, Source[] sources, int row, int offset ) throws RrdException
 	{
 		int tblPos 	= offset;
-			
-		for ( int i = 0; i < dsValues.length; i++ ) 
+
+		for ( int i = 0; i < dsValues.length; i++ )
 		{
 			if ( dsValues[i] == null )
 				continue;
-			
-			int tIndex	= tPos[i];
-			
-			if ( timestamp < timestamps[i][ tIndex ] )
-				throw new RrdException("Backward reading not allowed");
-			
-			while ( tIndex < timestamps[i].length - 1 )
+
+			int tIndex		= tPos[i];
+
+			double[] nValue	= new double[ dsValues[i].length ];
+			int[] vValue 	= new int[ nValue.length ];				// Counts the actual valid values
+
+			for ( int j = 0; j < nValue.length; j++ )
+				nValue[j] = Double.NaN;
+
+			// Combine the rows
+			int j;
+
+			for ( j = 0; j < reduceFactor && timestamps[i][tIndex] <= timestamp; j++ )
 			{
-				if ( timestamps[i][ tIndex ] <= timestamp && timestamp < timestamps[i][ tIndex + 1] ) {
-					for (int j = 0; j < dsValues[i].length; j++)
-						sources[tblPos++].set( row, timestamp, dsValues[i][j][ tIndex + 1 ] );
-					break;				
+				for (int x = 0; x < dsValues[i].length; x++)
+				{
+					if ( Double.isNaN(dsValues[i][x][tIndex]) )
+						continue;
+
+					vValue[x]++;
+
+					if ( Double.isNaN(nValue[x]) )
+						nValue[x] = dsValues[i][x][tIndex];
+					else
+					{
+						switch ( i )
+						{
+							case FetchSource.AVG:
+								nValue[x] += dsValues[i][x][tIndex];
+								break;
+							case FetchSource.MAX:
+								nValue[x] = Util.max( nValue[x], dsValues[i][x][tIndex] );
+								break;
+							case FetchSource.MIN:
+								nValue[x] = Util.min( nValue[x], dsValues[i][x][tIndex] );
+								break;
+							case FetchSource.LAST:
+								nValue[x] = dsValues[i][x][tIndex];
+								break;
+						}
+					}
 				}
-				else {
-					tIndex++;
+
+				tIndex++;
+			}
+
+			// See if we are using a stretched timespan
+			if ( j == 0 && row > 0 )
+			{
+				sources[tblPos++].set( row, timestamp, Double.POSITIVE_INFINITY );
+			}
+			else
+			{
+				// Finalize
+				for (int x = 0; x < dsValues[i].length; x++)
+				{
+					if ( i == FetchSource.AVG )
+						nValue[x] /= vValue[x];
+
+					sources[tblPos++].set( row, timestamp, nValue[x] );
 				}
 			}
-			
+
 			tPos[i] = tIndex;
 		}
-		
+
 		return tblPos;
 	}
-	
+
 	String[] getNames() {
 		return varNames;
 	}

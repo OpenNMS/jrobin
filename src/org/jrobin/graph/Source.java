@@ -45,16 +45,22 @@ class Source
 	
 	protected static final String[] aggregates = { "MINIMUM", "MAXIMUM", "AVERAGE", "FIRST", "LAST", "TOTAL" };
 	private String name;
+
+	protected int aggregatePoints;
 	protected double[] values;
 	
 	private double min						= Double.NaN;
 	private double max						= Double.NaN;
 	private double lastValue 				= Double.NaN;
 	private double totalValue				= 0;
-	
+	private double nextValue				= Double.POSITIVE_INFINITY;
+
+	private long step						= 0;
 	private long lastTime					= 0;
-	private long totalTime					= 0; 
-	
+	private long totalTime					= 0;
+
+	private int stPos						= 0;
+
 	// ================================================================
 	// -- Constructors
 	// ================================================================
@@ -80,19 +86,80 @@ class Source
 	 */
 	void set( int pos, long time, double val )
 	{
-		aggregate( time, val );		
+		// The first sample is before the time range we want, and as such
+		// should not be counted for data aggregation
+		if ( pos > 0 && pos < aggregatePoints )
+			aggregate( time, val );
 	}
-	
+
+	void setFetchedStep( long step )
+	{
+		this.step = step;
+	}
+
+	long getStep() {
+		return step;
+	}
+
 	/**
 	 * Get the double value of a datapoint.
+	 *
 	 * @param pos Index in the value table of the datapoint.
 	 * @return The double value of the requested datapoint.
 	 */
 	double get( int pos ) 
 	{
+		if ( pos < 0 ) return Double.NaN;
+
+		double val = values[pos];
+
+		if ( Double.isInfinite(val) )
+		{
+			// Return the next value if we fetched it before
+			if ( !Double.isInfinite(nextValue) )
+				return nextValue;
+
+			// Try to fetch the next value
+			for ( int i = pos + 1; i < values.length; i++ )
+			{
+				if ( !Double.isInfinite(values[i]) )
+				{
+					nextValue = values[i];
+
+					return nextValue;
+				}
+			}
+
+			// No more next value
+			nextValue = Double.NaN;
+
+			return nextValue;
+		}
+		else
+			nextValue = Double.POSITIVE_INFINITY;
+
 		return values[pos];
 	}
-	
+
+	double get( long preciseTime, long[] reducedTimestamps )
+	{
+		long t 		= Util.normalize( preciseTime, step );
+		t			= ( t < preciseTime ? t + step : t );
+
+		while ( stPos < reducedTimestamps.length - 1 )
+		{
+			if ( reducedTimestamps[ stPos + 1 ] <= t )
+				stPos++;
+			else
+				return get( stPos );
+		}
+
+		if ( stPos < reducedTimestamps.length && reducedTimestamps[stPos] <= t )
+			return get( stPos );
+
+		return Double.NaN;
+	}
+
 	/**
 	 * Gets a specific aggregate of this datasource.
 	 * Requested aggregate can be one of the following:
@@ -156,6 +223,9 @@ class Source
 	 */
 	private void aggregate( long time, double value ) 
 	{
+		if ( Double.isInfinite(value) )
+			return;
+
 		min = Util.min( min, value );
 		max = Util.max( max, value );
 		

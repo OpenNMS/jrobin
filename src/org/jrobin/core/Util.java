@@ -75,7 +75,7 @@ public class Util {
 		return (System.currentTimeMillis() + 500L) / 1000L;
 	}
 
-	static long normalize(long timestamp, long step) {
+	public static long normalize(long timestamp, long step) {
 		return timestamp - timestamp % step;
 	}
 
@@ -198,7 +198,7 @@ public class Util {
 		return Util.getTimestamp(year, month, day, 0, 0);
 	}
 
-	static double parseDouble(String valueStr) {
+	public static double parseDouble(String valueStr) {
 		double value;
 		try {
 			value = Double.parseDouble(valueStr);
@@ -209,7 +209,7 @@ public class Util {
 		return value;
 	}
 
-	static boolean parseBoolean(String valueStr) {
+	public static boolean parseBoolean(String valueStr) {
 		return valueStr.equalsIgnoreCase("true") ||
 			valueStr.equalsIgnoreCase("on") ||
 			valueStr.equalsIgnoreCase("yes") ||
@@ -329,12 +329,12 @@ public class Util {
 	/**
 	 * Various DOM utility functions
 	 */
-	static class Xml {
-		static Node[] getChildNodes(Node parentNode) {
+	public static class Xml {
+		public static Node[] getChildNodes(Node parentNode) {
 			return getChildNodes(parentNode, null);
 		}
 
-		static Node[] getChildNodes(Node parentNode, String childName) {
+		public static Node[] getChildNodes(Node parentNode, String childName) {
 			ArrayList nodes = new ArrayList();
 			NodeList nodeList = parentNode.getChildNodes();
 			for (int i = 0; i < nodeList.getLength(); i++) {
@@ -346,7 +346,7 @@ public class Util {
 			return (Node[]) nodes.toArray(new Node[0]);
 		}
 
-		static Node getFirstChildNode(Node parentNode, String childName) throws RrdException {
+		public static Node getFirstChildNode(Node parentNode, String childName) throws RrdException {
 			Node[] childs = getChildNodes(parentNode, childName);
 			if (childs.length > 0) {
 				return childs[0];
@@ -354,17 +354,17 @@ public class Util {
 			throw new RrdException("XML Error, no such child: " + childName);
 		}
 
-		static boolean hasChildNode(Node parentNode, String childName) {
+		public static boolean hasChildNode(Node parentNode, String childName) {
 			Node[] childs = getChildNodes(parentNode, childName);
 			return childs.length > 0;
 		}
 
 		// -- Wrapper around getChildValue with trim
-		static String getChildValue( Node parentNode, String childName ) throws RrdException {
+		public static String getChildValue( Node parentNode, String childName ) throws RrdException {
 			return getChildValue( parentNode, childName, true );
 		}
 
-		static String getChildValue( Node parentNode, String childName, boolean trim ) throws RrdException {
+		public static String getChildValue( Node parentNode, String childName, boolean trim ) throws RrdException {
 			NodeList children = parentNode.getChildNodes();
 			for (int i = 0; i < children.getLength(); i++) {
 				Node child = children.item(i);
@@ -376,11 +376,11 @@ public class Util {
 		}
 
 		// -- Wrapper around getValue with trim
-		static String getValue(Node node) {
+		public static String getValue(Node node) {
 			return getValue( node, true );
 		}
 
-		static String getValue(Node node, boolean trimValue ) {
+		public static String getValue(Node node, boolean trimValue ) {
 			String value = null;
 			Node child = node.getFirstChild();
 			if(child != null) {
@@ -392,47 +392,47 @@ public class Util {
 			return value;
 		}
 
-		static int getChildValueAsInt(Node parentNode, String childName) throws RrdException {
+		public static int getChildValueAsInt(Node parentNode, String childName) throws RrdException {
 			String valueStr = getChildValue(parentNode, childName);
 			return Integer.parseInt(valueStr);
 		}
 
-		static int getValueAsInt(Node node) {
+		public static int getValueAsInt(Node node) {
 			String valueStr = getValue(node);
 			return Integer.parseInt(valueStr);
 		}
 
-		static long getChildValueAsLong(Node parentNode, String childName) throws RrdException {
+		public static long getChildValueAsLong(Node parentNode, String childName) throws RrdException {
 			String valueStr = getChildValue(parentNode, childName);
 			return Long.parseLong(valueStr);
 		}
 
-		static long getValueAsLong(Node node) {
+		public static long getValueAsLong(Node node) {
 			String valueStr = getValue(node);
 			return Long.parseLong(valueStr);
 		}
 
-		static double getChildValueAsDouble(Node parentNode, String childName) throws RrdException {
+		public static double getChildValueAsDouble(Node parentNode, String childName) throws RrdException {
 			String valueStr = getChildValue(parentNode, childName);
 			return Util.parseDouble(valueStr);
 		}
 
-		static double getValueAsDouble(Node node) {
+		public static double getValueAsDouble(Node node) {
 			String valueStr = getValue(node);
 			return Util.parseDouble(valueStr);
 		}
 
-		static boolean getChildValueAsBoolean(Node parentNode, String childName) throws RrdException {
+		public static boolean getChildValueAsBoolean(Node parentNode, String childName) throws RrdException {
 			String valueStr = getChildValue(parentNode, childName);
 			return Util.parseBoolean(valueStr);
 		}
 
-		static boolean getValueAsBoolean(Node node) {
+		public static boolean getValueAsBoolean(Node node) {
 			String valueStr = getValue(node);
 			return Util.parseBoolean(valueStr);
 		}
 
-		static Element getRootElement(InputSource inputSource) throws RrdException, IOException	{
+		public static Element getRootElement(InputSource inputSource) throws RrdException, IOException	{
 			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 			factory.setValidating(false);
 			factory.setNamespaceAware(false);
@@ -447,11 +447,11 @@ public class Util {
 			}
 		}
 
-		static Element getRootElement(String xmlString)	throws RrdException, IOException {
+		public static Element getRootElement(String xmlString)	throws RrdException, IOException {
 			return getRootElement(new InputSource(new StringReader(xmlString)));
 		}
 
-		static Element getRootElement(File xmlFile)	throws RrdException, IOException {
+		public static Element getRootElement(File xmlFile)	throws RrdException, IOException {
 			Reader reader = null;
 			try {
 				reader = new FileReader(xmlFile);
@@ -479,6 +479,5 @@ public class Util {
 		lastLap = newLap;
 		return "[" + seconds + " sec]";
 	}
+	
 }
-
-

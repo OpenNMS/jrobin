@@ -399,6 +399,46 @@ public class RrdGraph extends RrdOpener implements Serializable
 			grapher.renderImage( width, height, graphics, false );
 	}
 
+	/**
+	 * This retrieves the ExportData object associated with the reduced dataset of this Graph.
+	 * This method assumes the graph or at least the dataset has already been calculated.
+	 *
+	 * @return ExportData object containing the reduced dataset.
+	 * @throws RrdException Thrown in case of JRobin specific error.
+	 */
+	public ExportData getExportData() throws RrdException {
+		return grapher.createExportData();
+	}
+
+	/**
+	 * This retrieves the ExportData object associated with the reduced dataset of this Graph,
+	 * by calculating the dataset on the spot.  Use this if you want to retrieve the associated
+	 * ExportData without generating the actual graph.
+	 *
+	 * @return ExportData object containing the reduced dataset.
+	 * @throws RrdException Thrown in case of JRobin specific error.
+	 * @throws IOException Thrown in case of I/O error
+	 */
+	public ExportData fetchExportData() throws RrdException, IOException {
+		return grapher.fetch( Grapher.DEFAULT_WIDTH );
+	}
+
+	/**
+	 * This retrieves the ExportData object associated with the reduced dataset of this Graph,
+	 * by calculating the dataset on the spot.  Use this if you want to retrieve the associated
+	 * ExportData without generating the actual graph, or if you wish to re-calculate the
+	 * associated dataset for a different number of rows.
+	 *
+	 * @param maxRows Ballpark figure 'maximum number of rows' that the dataset can contain.
+	 * 				  Note that this is not an absolute maximum and can be overruled in some cases.
+	 * @return ExportData object containing the reduced dataset.
+	 * @throws RrdException Thrown in case of JRobin specific error.
+	 * @throws IOException Thrown in case of I/O error
+	 */
+	public ExportData fetchExportData( int maxRows ) throws RrdException, IOException {
+		return grapher.fetch( maxRows );
+	}
+
 	// ================================================================
 	// -- Private methods
 	// ================================================================

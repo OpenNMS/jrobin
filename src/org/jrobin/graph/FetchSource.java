@@ -164,7 +164,7 @@ class FetchSource
 	 * @throws IOException Thrown in case of fetching I/O error.
 	 * @throws RrdException Thrown in case of a JRobin specific error.
 	 */
-	protected ValueExtractor fetch ( long startTime, long endTime, long resolution ) throws IOException, RrdException
+	protected ValueExtractor fetch ( long startTime, long endTime, long resolution, int reduceFactor ) throws IOException, RrdException
 	{
 		if ( rrd == null )
 			openRrd();
@@ -196,8 +196,10 @@ class FetchSource
 				
 				// Fetch datasources
 				FetchRequest request 		= rrd.createFetchRequest( cfNames[i], startTime, endTime + rrdStep, resolution );
+				long arcStep				= rrd.findMatchingArchive( request ).getArcStep();
+				request						= rrd.createFetchRequest( cfNames[i], startTime, endTime + arcStep, resolution );
 				request.setFilter( dsNames );
-				
+
 				FetchData data				= request.fetchData();
 
 				for (int j = 0; j < dsSize; j++)
@@ -208,7 +210,7 @@ class FetchSource
 			}
 		}
 		
-		return new ValueExtractor( names, result );
+		return new ValueExtractor( names, result, reduceFactor );
 	}
 
 	/**
@@ -295,20 +297,54 @@ class FetchSource
 		if ( rrd == null )
 			openRrd();
 
-		long maxSampleTime = 0, sampleTime = 0;
+		long minSampleTime = Long.MAX_VALUE, sampleTime = 0;
 
 		for ( int i = 0; i < datasources.length; i++ )
 		{
 			if ( datasources[i].size() > 0 )
 			{
 				sampleTime = rrd.findStartMatchArchive( cfNames[i], startTime, resolution ).getEndTime();
-				if ( sampleTime > maxSampleTime )
-					maxSampleTime = sampleTime;
+
+				if ( sampleTime < minSampleTime )
+					minSampleTime = sampleTime;
 			}
 		}
 
-		// Remove a single sample step (we'll add it again later on)
-		return maxSampleTime - rrdDef.getStep();
+		return minSampleTime;
+	}
+
+	/**
+	 * Returns an array of the smallest and the largest step in the set.
+	 *
+	 * @param startTime
+	 * @param endTime
+	 * @param resolution
+	 * @return
+	 * @throws RrdException
+	 * @throws IOException
+	 */
+	protected long[] getFetchStep( long startTime, long endTime, long resolution ) throws RrdException, IOException
+	{
+		if ( rrd == null )
+			openRrd();
+
+		long maxStep = Long.MIN_VALUE, minStep = Long.MAX_VALUE, step = 0;
+
+		for ( int i = 0; i < datasources.length; i++ )
+		{
+			if ( datasources[i].size() > 0 )
+			{
+				FetchRequest request 	= rrd.createFetchRequest( cfNames[i], startTime, endTime, resolution );
+				step					= rrd.findMatchingArchive( request ).getArcStep();
+
+				if ( step < minStep )
+					minStep = step;
+				if ( step > maxStep )
+					maxStep = step;
+			}
+		}
+
+		return new long[] { minStep, maxStep };
 	}
 
 	protected String getRrdFile() {

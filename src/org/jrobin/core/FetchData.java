@@ -52,7 +52,7 @@ import java.io.ByteArrayOutputStream;
  * all values for the i-th datasource. Returned datasource values correspond to
  * the values returned with {@link #getTimestamps() getTimestamps()} method.<p>
  */
-public class FetchData {
+public class FetchData implements RrdDataSet {
 	private FetchRequest request;
 	private Archive matchingArchive;
 	private String[] dsNames;

@@ -83,9 +83,9 @@ class Line extends PlotDef
 	 * @param stacked True if this PlotDef is stacked on the previous one, false if not.
 	 * @param visible True if this PlotDef should be graphed, false if not.
 	 */
-	Line( Source source, Color color, boolean stacked, boolean visible )
+	Line( Source source, double[] values, Color color, boolean stacked, boolean visible )
 	{
-		super( source, color, stacked, visible);
+		super( source, values, color, stacked, visible);
 	}
 	
 	
@@ -105,8 +105,7 @@ class Line extends PlotDef
 		g.setStroke( lineWidth != 1 ? new BasicStroke(lineWidth) : DEF_LINE_STROKE );
 
 		Graphics2D gd 	= g.getGraphics();
-		double[] values = source.getValues();
-		int len			= xValues.length;
+		int len			= values.length;
 
 		double value;
 		int ax = 0, ay = 0, nx = 0, ny = 0;
@@ -114,7 +113,6 @@ class Line extends PlotDef
 		for ( int i = 0; i < len; i++ )
 		{
 			value	= values[i];
-
 			nx 		= xValues[i];
 
 			if ( stacked )
@@ -122,7 +120,7 @@ class Line extends PlotDef
 
 			ny 		= g.getY( value );
 
-			if ( visible && !Double.isNaN(ny) && nx != 0 && ay != Integer.MIN_VALUE && ny != Integer.MIN_VALUE )
+			if ( visible && nx != 0 && ay != Integer.MIN_VALUE && ny != Integer.MIN_VALUE )
 				gd.drawLine(ax, -ay, nx, -ny);
 
 			stackValues[i] 	= value;
