@@ -158,11 +158,15 @@ public class Archive implements RrdUpdater {
 				updateTime += step;
 			}
 		}
+
 		// update robin in bulk
-		long bulkUpdates = Math.min(numUpdates / steps.get(), (long) rows.get());
-		for(long i = 0; i < bulkUpdates; i++) {
-			robin.store(value);
-		}
+		int bulkUpdateCount = (int) Math.min(numUpdates / steps.get(), (long) rows.get());
+		//TODO: Check this
+		//for(long i = 0; i < bulkUpdates; i++) {
+		//	robin.store(value);
+		//}
+		// OLD CODE ENDS
+		robin.bulkStore(value, bulkUpdateCount);
 		// update remaining steps
 		long remainingUpdates = numUpdates % steps.get();
 		for(long i = 0; i < remainingUpdates; i++) {

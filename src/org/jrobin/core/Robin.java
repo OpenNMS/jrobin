@@ -73,10 +73,28 @@ public class Robin implements RrdUpdater {
 		return result;
 	}
 
+	// stores single value
 	void store(double newValue) throws IOException {
 		int position = pointer.get();
 		values.set(position, newValue);
 		pointer.set((position + 1) % rows);
+	}
+
+	// TODO: NOT TESTED ENOUGH
+	// stores the same value several times
+	void bulkStore(double newValue, int bulkCount) throws IOException {
+		assert bulkCount <= rows: "Invalid number of bulk updates";
+		int position = pointer.get();
+		// update tail
+		int tailUpdateCount = Math.min(rows - position, bulkCount);
+		values.set(position, newValue, tailUpdateCount);
+		pointer.set((position + tailUpdateCount) % rows);
+		// do we need to update from the start?
+		int startUpdateCount = bulkCount - tailUpdateCount;
+		if(startUpdateCount > 0) {
+			values.set(0, newValue, startUpdateCount);
+			pointer.set(startUpdateCount);
+		}
 	}
 
 	/**

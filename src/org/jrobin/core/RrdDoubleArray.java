@@ -38,24 +38,24 @@ class RrdDoubleArray extends RrdPrimitive {
 	RrdDoubleArray(RrdUpdater updater, int length, double initVal) throws IOException {
 		super(updater, length * RrdDouble.SIZE);
 		this.length = length;
-		for(int i = 0; i < length; i++) {
-			set(i, initVal);
-		}
+		set(0, initVal, length);
 	}
 
 	void set(int index, double value) throws IOException {
-		if(index >= length) {
-			throw new IOException("Invalid index supplied: " + index + ", max = " + length);
-		}
+		set(index, value, 1);
+	}
+
+	void set(int index, double value, int count) throws IOException {
+		// rollovers not allowed!
+		assert index + count <= length:	"Invalid robin index supplied: index=" + index +
+			", count=" + count + ", length=" + length;
 		RrdFile rrdFile = getRrdFile();
 		rrdFile.seek(getPointer() + index * RrdDouble.SIZE);
-		rrdFile.writeDouble(value);
+		rrdFile.writeDouble(value, count);
 	}
 
 	double get(int index) throws IOException {
-		if(index >= length) {
-			throw new IOException("Invalid index supplied: " + index + ", max = " + length);
-		}
+		assert index < length: "Invalid index supplied: " + index + ", length=" + length;
 		RrdFile rrdFile = getRrdFile();
 		rrdFile.seek(getPointer() + index * RrdDouble.SIZE);
 		return rrdFile.readDouble();
