@@ -76,11 +76,12 @@ class ValueGrid
 		this.lower	= low;
 		this.upper	= up;
 		this.vAxis	= vAxis;
-		baseValue	= base;
-		
+
 		// Fill in the scale values
 		if ( base != baseValue )
 		{
+			baseValue			= base;
+			
 			double tmp 			= 1;
 			for (int i = 1; i < 7; i++) {
 				tmp 				*= baseValue;
