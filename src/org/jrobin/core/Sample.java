@@ -231,7 +231,7 @@ public class Sample {
 		buffer.append(" update " + parentDb.getRrdFile().getFilePath() + " " + time);
 		for(int i = 0; i < values.length; i++) {
 			buffer.append(":");
-			buffer.append(Util.formatDouble(values[i], "U"));
+			buffer.append(Util.formatDouble(values[i], "U", false));
 		}
 		return buffer.toString();
 	}

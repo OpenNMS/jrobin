@@ -65,11 +65,11 @@ class XmlWriter {
 	}
 
 	void writeTag(String tag, double value, String nanString) {
-		writeTag(tag, Util.formatDouble(value, nanString));
+		writeTag(tag, Util.formatDouble(value, nanString, true));
 	}
 
 	void writeTag(String tag, double value) {
-		writeTag(tag, Util.formatDouble(value));
+		writeTag(tag, Util.formatDouble(value, true));
 	}
 
 	void finish() {

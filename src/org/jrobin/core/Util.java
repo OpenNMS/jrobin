@@ -93,15 +93,18 @@ public class Util {
 		return Double.isNaN(x)? y: Double.isNaN(y)? x: x + y;
 	}
 
-	static String formatDouble(double x, String nanString) {
+	static String formatDouble(double x, String nanString, boolean forceExponents) {
 		if(Double.isNaN(x)) {
 			return nanString;
 		}
-		return df.format(x);
+		if(forceExponents) {
+			return df.format(x);
+		}
+		return "" + x;
 	}
 
-	static String formatDouble(double x) {
-		return formatDouble(x, "" + Double.NaN);
+	static String formatDouble(double x, boolean forceExponents) {
+		return formatDouble(x, "" + Double.NaN, forceExponents);
 	}
 
 	static void debug(String message) {

@@ -92,7 +92,7 @@ public class FetchPoint {
 	public String dump() {
 		StringBuffer buffer = new StringBuffer(time + ": ");
 		for(int i = 0; i < values.length; i++) {
-			buffer.append(Util.formatDouble(values[i]));
+			buffer.append(Util.formatDouble(values[i], true));
 			buffer.append(" ");
 		}
 		return buffer.toString();

@@ -91,7 +91,7 @@ public class Robin implements RrdUpdater {
 		StringBuffer buffer = new StringBuffer("Robin " + pointer.get() + "/" + rows + ": ");
 		int startPos = pointer.get();
 		for(int i = startPos; i < startPos + rows; i++) {
-			buffer.append(Util.formatDouble(values.get(i % rows)) + " ");
+			buffer.append(Util.formatDouble(values.get(i % rows), true) + " ");
 		}
 		buffer.append("\n");
 		return buffer.toString();

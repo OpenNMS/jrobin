@@ -38,7 +38,7 @@ class Demo {
 	static final String FILE = "demo";
 	static final long START = Util.getTimestamp(2003, 4, 1);
 	static final long END = Util.getTimestamp(2003, 5, 1);
-	static final int MAX_STEP = 240;
+	static final int MAX_STEP = 300;
 
 	public static void main(String[] args) throws RrdException, IOException {
 		// setup
@@ -116,6 +116,12 @@ class Demo {
 		println("==Creating RRD file " + rrdRestoredPath + " from XML file " + xmlPath);
 		RrdDb rrdRestoredDb = new RrdDb(rrdRestoredPath, xmlPath);
 
+		// dumping RRD file
+		//println("==Dumping original RRD file to stdout");
+		//println(rrdDb.dump());
+		//println("==Dumping restored RRD file to stdout");
+		//println(rrdRestoredDb.dump());
+
 		// close files
 		println("==Closing both RRD files");
 		rrdDb.close();
@@ -187,7 +193,7 @@ class GaugeSource {
 		if(value <= 0) {
 			value = 0;
 		}
-		return oldValue;
+		return Math.round(oldValue);
 	}
 }
 
