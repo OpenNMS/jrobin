@@ -109,14 +109,15 @@ class ValueFormatter
 	 */
 	void setScaling( boolean normalScale, boolean uniformScale )
 	{
+		if ( !uniformScale ) 
+			scaleIndex = NO_SCALE;
+		
 		if ( fixedIndex >= 0 ) {
 			scale 		= true;
 			scaleIndex	= fixedIndex;
 		}
 		else {
 			scale = (normalScale || uniformScale);
-			if ( !uniformScale ) 
-				scaleIndex = NO_SCALE;
 		}
 	}
 	
@@ -155,8 +156,11 @@ class ValueFormatter
 	 */
 	String getScaledValue()
 	{
-		scaleValue( scaleIndex );
+		int tsv 	= scaleIndex;
+		scaleValue( tsv );
 		long intVal = new Double( scaledValue ).longValue();
+		
+		scaleIndex	= tsv;
 		
 		if ( intVal == scaledValue )
 			return "" + intVal;
@@ -218,6 +222,7 @@ class ValueFormatter
 					{
 						this.prefix 		= PREFIXES[i];
 						this.scaledValue 	= value / scaleValues[i];
+						this.scaleIndex		= i;
 						return;
 					}
 				}
