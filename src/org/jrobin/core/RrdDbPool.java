@@ -100,31 +100,15 @@ public class RrdDbPool implements Runnable {
 	private static RrdDbPool ourInstance;
 	private static final boolean DEBUG = false;
 
-	private static final Comparator ENTRY_COMPARATOR = new Comparator() {
-		public int compare(Object o1, Object o2) {
-			RrdEntry r1 = (RrdEntry) o1, r2 = (RrdEntry) o2;
-			if (!r1.isReleased() && !r2.isReleased()) {
-				return 0;
-			} else if (r1.isReleased() && !r2.isReleased()) {
-				return -1;
-			} else if (!r1.isReleased() && r2.isReleased()) {
-				return +1;
-			} else {
-				// both released
-				long diff = r1.getReleaseDate().getTime() -
-					r2.getReleaseDate().getTime();
-				return diff < 0L ? -1 : (diff == 0L ? 0 : +1);
-			}
-		}
-	};
 	/**
 	 * Constant to represent the maximum number of internally open RRD files
 	 * which still does not force garbage collector to run.
 	 */
 	public static final int INITIAL_CAPACITY = 50;
-	private volatile int capacity = INITIAL_CAPACITY;
+	private int capacity = INITIAL_CAPACITY;
 
-	private HashMap rrdMap = new HashMap();
+	private Map rrdMap = new HashMap();
+	private List rrdGcList = new LinkedList();
 
 	/**
 	 * Returns an instance to RrdDbPool object. Only one such object may exist in each JVM.
@@ -162,13 +146,13 @@ public class RrdDbPool implements Runnable {
 		if (rrdMap.containsKey(keypath)) {
 			// already open
 			RrdEntry rrdEntry = (RrdEntry) rrdMap.get(keypath);
-			rrdEntry.reportUsage();
+			reportUsage(rrdEntry);
 			debug("EXISTING: " + rrdEntry.dump());
 			return rrdEntry.getRrdDb();
 		} else {
 			// not found, open it
 			RrdDb rrdDb = new RrdDb(path);
-			put(keypath, rrdDb);
+			addRrdEntry(keypath, rrdDb);
 			return rrdDb;
 		}
 	}
@@ -186,9 +170,9 @@ public class RrdDbPool implements Runnable {
 	public synchronized RrdDb requestRrdDb(String path, String xmlPath)
 		throws IOException, RrdException {
 		String keypath = getCanonicalPath(path);
-		validateInactive(keypath);
+		prooveInactive(keypath);
 		RrdDb rrdDb = new RrdDb(path, xmlPath);
-		put(keypath, rrdDb);
+		addRrdEntry(keypath, rrdDb);
 		return rrdDb;
 	}
 
@@ -203,25 +187,40 @@ public class RrdDbPool implements Runnable {
 	public synchronized RrdDb requestRrdDb(RrdDef rrdDef) throws IOException, RrdException {
 		String path = rrdDef.getPath();
 		String keypath = getCanonicalPath(path);
-		validateInactive(keypath);
+		prooveInactive(keypath);
 		RrdDb rrdDb = new RrdDb(rrdDef);
-		put(keypath, rrdDb);
+		addRrdEntry(keypath, rrdDb);
 		return rrdDb;
 	}
 
-	private synchronized void put(String keypath, RrdDb rrdDb) throws IOException {
+	private void reportUsage(RrdEntry rrdEntry) {
+		if(rrdEntry.reportUsage() == 1) {
+			// must not be garbage collected
+			rrdGcList.remove(rrdEntry);
+		}
+	}
+
+	private void reportRelease(RrdEntry rrdEntry) {
+		if(rrdEntry.reportRelease() == 0) {
+			// ready to be garbage collected
+			rrdGcList.add(rrdEntry);
+		}
+	}
+
+	private void addRrdEntry(String keypath, RrdDb rrdDb) throws IOException {
 		RrdEntry newEntry = new RrdEntry(rrdDb);
+		reportUsage(newEntry);
 		debug("NEW: " + newEntry.dump());
 		rrdMap.put(keypath, newEntry);
 		// notify garbage collector
 		notify();
 	}
 
-	private void validateInactive(String keypath) throws RrdException, IOException {
+	private void prooveInactive(String keypath) throws RrdException, IOException {
 		if(rrdMap.containsKey(keypath)) {
 			// already open, check if active (not released)
 			RrdEntry rrdEntry = (RrdEntry) rrdMap.get(keypath);
-			if(!rrdEntry.isReleased()) {
+			if(rrdEntry.isInUse()) {
 				// not released, not allowed here
 				throw new RrdException("VALIDATOR: Cannot create new RrdDb file. " +
 					"File " + keypath + " already active in pool");
@@ -229,10 +228,16 @@ public class RrdDbPool implements Runnable {
 			else {
 				// open but released... safe to close it
 				debug("WILL BE RECREATED: " + rrdEntry.dump());
-				rrdEntry.close();
-				rrdMap.values().remove(rrdEntry);
+				removeRrdEntry(rrdEntry);
 			}
 		}
+	}
+
+	private void removeRrdEntry(RrdEntry rrdEntry) throws IOException {
+		rrdEntry.closeRrdDb();
+		rrdMap.values().remove(rrdEntry);
+		rrdGcList.remove(rrdEntry);
+		debug("REMOVED: " + rrdEntry.dump());
 	}
 
 	/**
@@ -257,7 +262,7 @@ public class RrdDbPool implements Runnable {
 		String keypath = getCanonicalPath(path);
 		if(rrdMap.containsKey(keypath)) {
 			RrdEntry rrdEntry = (RrdEntry) rrdMap.get(keypath);
-			rrdEntry.release();
+			reportRelease(rrdEntry);
 			debug("RELEASED: " + rrdEntry.dump());
 		}
 		else {
@@ -277,32 +282,23 @@ public class RrdDbPool implements Runnable {
 	public void run() {
 		debug("GC: started");
 		synchronized (this) {
-			for (;;) {
-				while (rrdMap.size() > capacity) {
-					debug("GC: should run: (" + rrdMap.size() + " > " + capacity + ")");
-					RrdEntry oldestEntry = (RrdEntry)
-						Collections.min(rrdMap.values(), ENTRY_COMPARATOR);
-					if (oldestEntry.isReleased()) {
-						try {
-							debug("GC: closing " + oldestEntry.dump());
-							oldestEntry.close();
-						} catch (IOException e) {
-							debug("GC error: " + e);
-							e.printStackTrace();
-						}
-						rrdMap.values().remove(oldestEntry);
-					} else {
-						// all references are used
-						debug("GC: NOP: all references are active (" + rrdMap.size() + ")");
-						break;
+			for (; ;) {
+				while (rrdMap.size() > capacity && rrdGcList.size() > 0) {
+					try {
+						RrdEntry oldestRrdEntry = (RrdEntry) rrdGcList.get(0);
+						debug("GC: closing " + oldestRrdEntry.dump());
+						removeRrdEntry(oldestRrdEntry);
+					} catch (IOException e) {
+						e.printStackTrace();
 					}
 				}
+
 				try {
-					// nothing to do
-					debug("GC: sleeping (" + rrdMap.size() + ")");
+					debug("GC: sleeping (" + rrdMap.size() + "/" + rrdGcList.size() + ")");
 					wait();
 					debug("GC: running");
-				} catch (InterruptedException e) { }
+				} catch (InterruptedException e) {
+				}
 			}
 		}
 	}
@@ -313,24 +309,24 @@ public class RrdDbPool implements Runnable {
 
 	/**
 	 * Clears the internal state of the pool entirely. All open RRD files are closed.
-	 * Use with extreme caution.
 	 * @throws IOException Thrown in case of I/O related error.
 	 */
 	public synchronized void reset() throws IOException {
 		Iterator it = rrdMap.values().iterator();
 		while(it.hasNext()) {
             RrdEntry rrdEntry = (RrdEntry) it.next();
-			rrdEntry.close();
+			rrdEntry.closeRrdDb();
 		}
 		rrdMap.clear();
+		rrdGcList.clear();
 		debug("Nothing left in the pool");
 	}
 
-	static String getCanonicalPath(String path) throws IOException {
+	private static String getCanonicalPath(String path) throws IOException {
 		return new File(path).getCanonicalPath();
 	}
 
-	static void debug(String msg) {
+	private static void debug(String msg) {
 		if(DEBUG) {
 			System.out.println("POOL: " + msg);
 		}
@@ -359,7 +355,7 @@ public class RrdDbPool implements Runnable {
 	 *
 	 * @return Desired nuber of open files held in the pool.
 	 */
-	public int getCapacity() {
+	public synchronized int getCapacity() {
 		return capacity;
 	}
 
@@ -369,56 +365,42 @@ public class RrdDbPool implements Runnable {
 	 *
 	 * @param capacity Desired number of open files to hold in the pool
 	 */
-	public void setCapacity(int capacity) {
+	public synchronized void setCapacity(int capacity) {
 		this.capacity = capacity;
 	}
 
 	private class RrdEntry {
 		private RrdDb rrdDb;
-		private Date releaseDate;
 		private int usageCount;
 
 		public RrdEntry(RrdDb rrdDb) {
 			this.rrdDb = rrdDb;
-			reportUsage();
 		}
 
 		RrdDb getRrdDb() {
 			return rrdDb;
 		}
 
-		void reportUsage() {
-			releaseDate = null;
-			usageCount++;
+		int reportUsage() {
+			assert usageCount >= 0: "Unexpected reportUsage count: " + usageCount;
+			return ++usageCount;
 		}
 
-		void release() {
-			if(usageCount > 0) {
-				usageCount--;
-				if(usageCount == 0) {
-					releaseDate = new Date();
-				}
-			}
+		int reportRelease() {
+			assert usageCount > 0: "Unexpected reportRelease count: " + usageCount;
+			return --usageCount;
 		}
 
-		boolean isReleased() {
-			return usageCount == 0;
+		boolean isInUse() {
+			return usageCount > 0;
 		}
 
-		int getUsageCount() {
-			return usageCount;
-		}
-
-		Date getReleaseDate() {
-			return releaseDate;
-		}
-
-		void close() throws IOException {
+		void closeRrdDb() throws IOException {
 			rrdDb.close();
 		}
 
 		String dump() throws IOException {
-			String keypath = getCanonicalPath(rrdDb.getRrdFile().getFilePath());
+			String keypath = getCanonicalPath(rrdDb.getCanonicalPath());
 			return keypath + " [" + usageCount + "]";
 		}
 	}

@@ -25,7 +25,6 @@
 package org.jrobin.graph;
 
 import javax.swing.JPanel;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -55,15 +54,12 @@ public class RrdGraph implements Serializable
 	// ================================================================
 	// -- Members
 	// ================================================================
-	private static int DEFAULT_POOLSIZE	= 15;
-	
+
 	private Grapher grapher;
 	private BufferedImage img;
-	private ArrayList rrdDbPool;
-	
+
 	private RrdDbPool pool;
 		
-	private int maxPoolSize				= DEFAULT_POOLSIZE;
 	private boolean useImageSize		= false;
 	
 	
@@ -90,10 +86,8 @@ public class RrdGraph implements Serializable
 	/**
 	 * Constructs a new JRobin graph object from the supplied definition.
 	 * @param graphDef Graph definition.
-	 * @throws IOException Thrown in case of I/O error.
-	 * @throws RrdException Thrown in case of JRobin specific error.
 	 */
-	public RrdGraph( RrdGraphDef graphDef ) throws IOException, RrdException
+	public RrdGraph( RrdGraphDef graphDef )
 	{
 		this( graphDef, false );
 	}
@@ -102,10 +96,8 @@ public class RrdGraph implements Serializable
 	 * Constructs a new JRobin graph from the supplied definition.
 	 * @param graphDef Graph definition.
 	 * @param usePool True if this should object should use RrdDbPool
-	 * @throws IOException Thrown in case of I/O error.
-	 * @throws RrdException Thrown in case of JRobin specific error.
 	 */
-	public RrdGraph( RrdGraphDef graphDef, boolean usePool ) throws IOException, RrdException
+	public RrdGraph( RrdGraphDef graphDef, boolean usePool )
 	{
 		if ( usePool )
 			this.pool = RrdDbPool.getInstance();
@@ -161,7 +153,8 @@ public class RrdGraph implements Serializable
 	 */
 	public void saveAsPNG( String path, int width, int height ) throws RrdException, IOException
 	{
-		ImageIO.write( (RenderedImage) getBufferedImage(width, height, BufferedImage.TYPE_INT_RGB), "png", new File(path) );
+		ImageIO.write(getBufferedImage(width, height, BufferedImage.TYPE_INT_RGB),
+			"png", new File(path) );
 	}
 	
 	/**
@@ -223,8 +216,7 @@ public class RrdGraph implements Serializable
 	{
 		// Based on http://javaalmanac.com/egs/javax.imageio/JpegWrite.html?l=rel
 		// Retrieve jpg image to be compressed
-		BufferedImage gImage 	= getBufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-		RenderedImage rndImage	= (RenderedImage) gImage;
+		RenderedImage rndImage	= getBufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 	
 		// Find a jpeg writer
 		ImageWriter writer = null;
@@ -272,7 +264,8 @@ public class RrdGraph implements Serializable
 	{
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 		
-		ImageIO.write( (RenderedImage) getBufferedImage(width, height, BufferedImage.TYPE_INT_RGB), "png", outputStream );
+		ImageIO.write(getBufferedImage(width, height, BufferedImage.TYPE_INT_RGB),
+			"png", outputStream );
 				
 		return outputStream.toByteArray();
 	}
@@ -301,8 +294,7 @@ public class RrdGraph implements Serializable
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 		
 		// Retrieve jpg image to be compressed
-		BufferedImage gImage 	= getBufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-		RenderedImage rndImage	= (RenderedImage) gImage;
+		RenderedImage rndImage	= getBufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 	
 		// Find a jpeg writer
 		ImageWriter writer = null;

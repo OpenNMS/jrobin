@@ -25,6 +25,7 @@
 package org.jrobin.mrtg.server;
 
 import org.jrobin.core.RrdDb;
+import org.jrobin.core.RrdDbPool;
 import org.jrobin.mrtg.MrtgException;
 import org.jrobin.mrtg.MrtgConstants;
 import org.w3c.dom.Document;
@@ -67,7 +68,7 @@ public class Server implements MrtgConstants {
 
 	private Server() {
 		RrdDb.setLockMode(RrdDb.NO_LOCKS);
-		//RrdDbPool.getInstance().setCapacity(500);
+		RrdDbPool.getInstance().setCapacity(POOL_CAPACITY);
 	}
 
 	public synchronized void start(String[] acceptedClients) throws MrtgException {

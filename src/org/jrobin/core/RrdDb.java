@@ -68,6 +68,7 @@ public class RrdDb implements RrdUpdater {
 	static boolean DEBUG = false;
 	static final int XML_INITIAL_BUFFER_CAPACITY = 100000; // bytes
 
+	private String canonicalPath;
 	private RrdFile file;
 	private Header header;
 	private Datasource[] datasources;
@@ -223,6 +224,7 @@ public class RrdDb implements RrdUpdater {
 			}
 		}
 		file.setMode(RrdFile.MODE_NORMAL);
+		canonicalPath = file.getCanonicalFilePath();
 	}
 
 	/**
@@ -761,4 +763,12 @@ public class RrdDb implements RrdUpdater {
 			return null;
 		}
 	}
-} 
+
+	/**
+	 * Returns canonical path to the underlying RRD file.
+	 * @return Canonical path to RRD file;
+	 */
+	public String getCanonicalPath() {
+		return canonicalPath;
+	}
+}

@@ -90,8 +90,7 @@ class Plotter implements MrtgConstants {
 				throw new MrtgException(e);
 			}
 		}
-		RrdGraph graph = new RrdGraph(true); // use pool
-		graph.setGraphDef(rrdGraphDef);
+		RrdGraph graph = new RrdGraph(rrdGraphDef, true); // use pool
 		return graph;
 	}
 }

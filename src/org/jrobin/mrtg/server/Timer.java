@@ -50,6 +50,11 @@ class Timer extends Thread implements MrtgConstants {
                     if(router.isActive() && link.isActive() &&
 						link.isDue() && !link.isSampling()) {
 						new SnmpReader(router, link).start();
+						try {
+							sleep(SCHEDULER_DELAY);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
 					}
 				}
 			}

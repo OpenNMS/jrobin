@@ -32,13 +32,19 @@ public interface MrtgConstants {
 	// XML-RPC port to listen on
 	int SERVER_PORT = 35353;
 
-	// run Scheduler each 3 seconds
-	int SCHEDULER_RESOLUTION = 3;
+	// run Scheduler each 5 seconds
+	int SCHEDULER_RESOLUTION = 5;
+
+	// pause between poller threads in milliseconds
+	int SCHEDULER_DELAY = 20;
+
+	// number of open RRD files held in the pool
+	int POOL_CAPACITY = 50;
 
 	// graph dimensions
 	int GRAPH_WIDTH = 502, GRAPH_HEIGHT = 234;
 
-	// initial temeplate for RrdDef
+	// initial template for RrdDef
 	String RRD_TEMPLATE_STR =
 		"<rrd_def>                                 \n" +
 		"    <path>${path}</path>                  \n" +
