@@ -34,16 +34,16 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.Vector;
 
-class Router {
+class Device {
 	private String host = "";
 	private String community = "";
 	private String descr = "";
 	private boolean active = true;
 	private Vector links = new Vector();
 
-	Router() { }
+	Device() { }
 
-	Router(Node routerNode) {
+	Device(Node routerNode) {
 		NodeList nodes = routerNode.getChildNodes();
 		for(int i = 0; i < nodes.getLength(); i++) {
 			Node node = nodes.item(i);
@@ -63,7 +63,7 @@ class Router {
 				setActive(new Boolean(node.getFirstChild().getNodeValue().trim()).booleanValue());
 			}
 			else if(name.equals("interface")) {
-				links.add(new Link(node));
+				links.add(new Port(node));
 			}
 		}
 	}
@@ -125,15 +125,15 @@ class Router {
 		buff += "active=" + active + "\n";
 		// dump links
 		for(int i = 0; i < links.size(); i++) {
-            Link link = (Link) links.get(i);
+            Port link = (Port) links.get(i);
 			buff += "  Link: " + link + "\n";
 		}
 		return buff;
 	}
 
-	Link getLinkByIfDescr(String ifDescr) {
+	Port getLinkByIfDescr(String ifDescr) {
 		for(int i = 0; i < links.size(); i++) {
-			Link link = (Link) links.get(i);
+			Port link = (Port) links.get(i);
             if(link.getIfDescr().equalsIgnoreCase(ifDescr)) {
 				return link;
 			}
@@ -141,11 +141,11 @@ class Router {
 		return null;
 	}
 
-	void addLink(Link link) {
+	void addLink(Port link) {
 		links.add(link);
 	}
 
-	void removeLink(Link link) {
+	void removeLink(Port link) {
 		links.remove(link);
 	}
 
@@ -154,9 +154,9 @@ class Router {
 	}
 
 	String[] getAvailableLinks() throws IOException {
-		SnmpCommunicator comm = null;
+		Poller comm = null;
 		try {
-			comm = new SnmpCommunicator(host, community);
+			comm = new Poller(host, community);
 			Map links = comm.walk("ifDescr");
 			return (String[]) links.values().toArray(new String[0]);
 		}
@@ -176,7 +176,7 @@ class Router {
 		// add link info
 		Vector linkData = new Vector();
 		for (int i = 0; i < links.size(); i++) {
-			Link link = (Link) links.get(i);
+			Port link = (Port) links.get(i);
 			linkData.add(link.getLinkInfo());
 		}
 		table.put("links", linkData);
@@ -200,7 +200,7 @@ class Router {
 		activeElem.appendChild(doc.createTextNode("" + active));
 		routerElem.appendChild(activeElem);
 		for (int i = 0; i < links.size(); i++) {
-			Link link = (Link) links.elementAt(i);
+			Port link = (Port) links.elementAt(i);
 			link.appendXml(routerElem);
 		}
 	}

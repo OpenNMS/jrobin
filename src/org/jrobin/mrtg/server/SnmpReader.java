@@ -29,15 +29,16 @@ import org.jrobin.mrtg.MrtgException;
 
 import java.io.IOException;
 
-class Collector extends Thread {
+class SnmpReader extends Thread {
 	static final int RECONFIGURE_RETRIES = 3;
 
-	private Router router;
-	private Link link;
+	private Device router;
+	private Port link;
 
-	private SnmpCommunicator comm;
+	private Poller comm;
 
-	Collector(Router router, Link link) {
+	SnmpReader(Device router, Port link) {
+		setDaemon(true);
 		link.setSampling(true);
 		this.router = router;
 		this.link = link;
@@ -45,7 +46,7 @@ class Collector extends Thread {
 
 	public void run() {
 		try {
-			comm = new SnmpCommunicator(router.getHost(), router.getCommunity());
+			comm = new Poller(router.getHost(), router.getCommunity());
 			if(link.getIfIndex() < 0) {
 				findIfIndex();
 			}

@@ -24,43 +24,51 @@
  */
 package org.jrobin.mrtg.server;
 
-import org.jrobin.mrtg.MrtgException;
+import org.jrobin.mrtg.Debug;
+import org.jrobin.mrtg.MrtgConstants;
 
 import java.util.Vector;
 
-class Scheduler extends Thread {
-	private static final int RESOLUTION = 5; // seconds
+class Timer extends Thread implements MrtgConstants {
+	private volatile boolean active = true;
 
-	public Scheduler() {
-
+	public Timer() {
+		start();
 	}
 
 	public void run() {
-		Hardware hardware;
-		try {
-			hardware = Server.getInstance().getHardware();
-		} catch (MrtgException e) {
-			e.printStackTrace();
-			return;
-		}
-		while(true) {
-			Vector routers = hardware.getRouters();
+		DeviceList deviceList;
+		deviceList = Server.getInstance().getDeviceList();
+		Debug.print("Scheduler started");
+		while(active) {
+			Vector routers = deviceList.getRouters();
 			for(int i = 0; i < routers.size(); i++) {
-				Router router = (Router) routers.get(i);
+				Device router = (Device) routers.get(i);
 				Vector links = router.getLinks();
 				for (int j = 0; j < links.size(); j++) {
-					Link link = (Link) links.get(j);
-                    if(router.isActive() && link.isActive() && link.isDue() && !link.isSampling()) {
-						new Collector(router, link).start();
+					Port link = (Port) links.get(j);
+                    if(router.isActive() && link.isActive() &&
+						link.isDue() && !link.isSampling()) {
+						new SnmpReader(router, link).start();
 					}
 				}
 			}
 			// sleep for a while
 			synchronized(this) {
 				try {
-					wait(RESOLUTION * 1000L);
-				} catch (InterruptedException e) { }
+					wait(SCHEDULER_RESOLUTION * 1000L);
+				}
+				catch (InterruptedException e) {
+				}
 			}
+		}
+		Debug.print("Scheduler ended");
+	}
+
+	void terminate() {
+    	active = false;
+		synchronized(this) {
+			notify();
 		}
 	}
 }

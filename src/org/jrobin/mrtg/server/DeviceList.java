@@ -26,10 +26,10 @@ package org.jrobin.mrtg.server;
 
 import java.util.Vector;
 
-class Hardware {
+class DeviceList {
 	private Vector routers = new Vector();
 
-	Hardware() {	}
+	DeviceList() {	}
 
 	Vector getRouters() {
 		return routers;
@@ -47,9 +47,9 @@ class Hardware {
 		return buff.toString();
 	}
 
-	Router getRouterByHost(String host) {
+	Device getRouterByHost(String host) {
         for(int i = 0; i < routers.size(); i++) {
-			Router router = (Router) routers.get(i);
+			Device router = (Device) routers.get(i);
 			if(router.getHost().equalsIgnoreCase(host)) {
 				return router;
 			}
@@ -58,10 +58,10 @@ class Hardware {
 	}
 
 	int addRouter(String host, String community, String descr, boolean active) {
-		Router router = getRouterByHost(host);
+		Device router = getRouterByHost(host);
 		if(router == null) {
 			// not found
-			Router newRouter = new Router();
+			Device newRouter = new Device();
             newRouter.setHost(host);
 			newRouter.setCommunity(community);
 			newRouter.setDescr(descr);
@@ -75,7 +75,7 @@ class Hardware {
 	}
 
     int updateRouter(String host, String community, String descr, boolean active) {
-        Router router = getRouterByHost(host);
+        Device router = getRouterByHost(host);
 		if(router != null) {
 			router.setCommunity(community);
 			router.setDescr(descr);
@@ -87,7 +87,7 @@ class Hardware {
 	}
 
 	int removeRouter(String host) {
-		Router router = getRouterByHost(host);
+		Device router = getRouterByHost(host);
 		if(router == null) {
 			// not found, cannot remove
 			return -1;
@@ -101,17 +101,17 @@ class Hardware {
 	}
 
 	int addLink(String host, String ifDescr, String descr, int samplingInterval, boolean active) {
-        Router router = getRouterByHost(host);
+        Device router = getRouterByHost(host);
 		if(router == null) {
 			// router not found, link cannot be added
             return -1;
 		}
-        Link link = router.getLinkByIfDescr(ifDescr);
+        Port link = router.getLinkByIfDescr(ifDescr);
 		if(link != null) {
 			// such link already exists, link cannot be added
 			return -2;
 		}
-        Link newLink = new Link();
+        Port newLink = new Port();
 		newLink.setDescr(descr);
 		newLink.setIfDescr(ifDescr);
 		newLink.setSamplingInterval(samplingInterval);
@@ -121,12 +121,12 @@ class Hardware {
 	}
 
 	int updateLink(String host, String ifDescr, String descr, int samplingInterval, boolean active) {
-		Router router = getRouterByHost(host);
+		Device router = getRouterByHost(host);
 		if(router == null) {
 			// router not found, link cannot be updated
             return -1;
 		}
-        Link link = router.getLinkByIfDescr(ifDescr);
+        Port link = router.getLinkByIfDescr(ifDescr);
 		if(link == null) {
 			// such link cannot be found and updated
 			return -2;
@@ -138,12 +138,12 @@ class Hardware {
 	}
 
 	int removeLink(String host, String ifDescr) {
-		Router router = getRouterByHost(host);
+		Device router = getRouterByHost(host);
 		if(router == null) {
 			// router not found, link cannot be removed
             return -1;
 		}
-        Link link = router.getLinkByIfDescr(ifDescr);
+        Port link = router.getLinkByIfDescr(ifDescr);
 		if(link == null) {
 			// such link cannot be found and removed
 			return -2;

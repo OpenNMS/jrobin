@@ -24,31 +24,62 @@
  */
 package org.jrobin.mrtg.server;
 
+import org.apache.xmlrpc.WebServer;
 import org.jrobin.mrtg.Debug;
 import org.jrobin.mrtg.MrtgConstants;
 import org.jrobin.mrtg.MrtgException;
-import org.apache.xmlrpc.WebServer;
 
 import java.io.IOException;
 import java.util.Date;
 import java.util.Hashtable;
 import java.util.Vector;
 
-class RpcServer implements MrtgConstants {
+class Listener implements MrtgConstants {
 	private WebServer webServer;
 
-	RpcServer() {
+	Listener() throws MrtgException {
+		start();
+	}
+
+	private void start() throws MrtgException {
 		try {
 			webServer = new WebServer(SERVER_PORT);
-		    webServer.addHandler("mrtg", new EventHandler());
-		    Debug.print("XmlRpcServer started on port " + SERVER_PORT);
-		} catch(IOException e) {
-			Debug.print("Cannot start XMLRPC server on port " + SERVER_PORT + ", bailing out: " + e);
-			System.exit(-1);
+			webServer.addHandler("mrtg", new EventHandler());
+			Debug.print("XmlRpcServer started on port " + SERVER_PORT);
+		} catch (IOException e) {
+			throw new MrtgException(e);
 		}
 	}
 
-    public class EventHandler {
+	void terminate() {
+		if(webServer != null) {
+			webServer.shutdown();
+			/*
+			// HACK: this takes some time - wait a few seconds before proceeding
+			try {
+				Thread.sleep(5000L);
+			} catch (InterruptedException e) {
+			}
+			*/
+			Debug.print("XmlRpcServer closed");
+			webServer = null;
+		}
+	}
+
+	protected void finalize() {
+		terminate();
+	}
+
+	void setParanoid(String[] clients) {
+		if(clients.length > 0 && webServer != null) {
+			webServer.setParanoid(true);
+			for(int i = 0; i < clients.length; i++) {
+				webServer.acceptClient(clients[i]);
+			}
+		}
+	}
+
+	public class EventHandler {
 		public int addRouter(String host, String community, String descr, boolean active) {
 			try {
 				int status = Server.getInstance().addRouter(host, community, descr, active);
@@ -58,7 +89,6 @@ class RpcServer implements MrtgConstants {
 				Debug.print("Event handler error: " + e);
 				return -10;
 			}
-
 		}
 
 		public int updateRouter(String host, String community, String descr, boolean active) {
@@ -85,7 +115,7 @@ class RpcServer implements MrtgConstants {
 
 		public int addLink(String host, String ifDescr, String descr, int samplingInterval,
 						   boolean active) {
-            try {
+			try {
 				int status =
 					Server.getInstance().addLink(host, ifDescr, descr, samplingInterval, active);
 				Debug.print("Interface " + ifDescr + "@" + host + " added [" + status + "]");
@@ -138,7 +168,7 @@ class RpcServer implements MrtgConstants {
 			Vector result = new Vector();
 			try {
 				String[] links = Server.getInstance().getAvailableLinks(host);
-				for(int i = 0; i < links.length; i++) {
+				for (int i = 0; i < links.length; i++) {
 					result.add(links[i]);
 				}
 			} catch (MrtgException e) {
@@ -150,13 +180,9 @@ class RpcServer implements MrtgConstants {
 
 		public Vector getRouters() {
 			Vector result = new Vector();
-			try {
-				Router[] routers = Server.getInstance().getRouters();
-				for(int i = 0; i < routers.length; i++) {
-					result.add(routers[i].getRouterInfo());
-				}
-			} catch (MrtgException e) {
-				Debug.print("Event handler error: " + e);
+			Device[] routers = Server.getInstance().getRouters();
+			for (int i = 0; i < routers.length; i++) {
+				result.add(routers[i].getRouterInfo());
 			}
 			Debug.print("Sending router data [" + result.size() + " routers found]");
 			return result;
@@ -164,19 +190,15 @@ class RpcServer implements MrtgConstants {
 
 		public Hashtable getServerInfo() {
 			Hashtable hash = new Hashtable();
-			try {
-				Server server = Server.getInstance();
-				hash = server.getServerInfo();
-			} catch (MrtgException e) {
-				Debug.print("Event handler error: " + e);
-			}
+			Server server = Server.getInstance();
+			hash = server.getServerInfo();
 			Debug.print("Sending MRTG server info");
 			return hash;
 		}
 
 		public Hashtable getMrtgInfo() {
 			Hashtable mrtgInfo = new Hashtable();
-            mrtgInfo.put("serverInfo", getServerInfo());
+			mrtgInfo.put("serverInfo", getServerInfo());
 			mrtgInfo.put("routers", getRouters());
 			return mrtgInfo;
 		}

@@ -35,7 +35,7 @@ import org.w3c.dom.NodeList;
 import java.util.Date;
 import java.util.Hashtable;
 
-class Link {
+class Port {
 	static final int DEFAULT_SAMPLING_INTERVAL = 300;
 
 	private int ifIndex = -1;
@@ -50,9 +50,9 @@ class Link {
 	private RawSample lastSample;
 	private boolean sampling;
 
-	Link() { }
+	Port() { }
 
-	Link(Node linkNode) {
+	Port(Node linkNode) {
 		NodeList nodes = linkNode.getChildNodes();
 		for(int i = 0; i < nodes.getLength(); i++) {
 			Node node = nodes.item(i);
@@ -189,7 +189,7 @@ class Link {
 			sample.setValid(false);
 		}
 		Debug.print("Saving sample: " + sample);
-		Server.getInstance().getArchiver().store(sample);
+		Server.getInstance().getRrdWriter().store(sample);
 		sampleCount++;
         lastSample = sample;
 		lastSampleTime = sample.getTimestamp();

@@ -25,8 +25,8 @@
 
 package org.jrobin.mrtg.client;
 
-import org.jrobin.mrtg.MrtgException;
 import org.apache.xmlrpc.XmlRpcException;
+import org.jrobin.mrtg.MrtgException;
 
 import javax.swing.*;
 import javax.swing.event.TreeSelectionEvent;

@@ -33,7 +33,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
 
-class SnmpCommunicator {
+class Poller {
 	static final int SNMP_TIMEOUT = 10; // seconds
 
 	static final String[][] OIDS = {
@@ -56,7 +56,7 @@ class SnmpCommunicator {
 	// state variables
 	private SNMPv1CommunicationInterface comm;
 
-    public SnmpCommunicator(String host, String community)
+    public Poller(String host, String community)
 		throws IOException {
 		InetAddress hostAddress = InetAddress.getByName(host);
 		comm = new SNMPv1CommunicationInterface(0, hostAddress, community);

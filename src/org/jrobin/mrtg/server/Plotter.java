@@ -27,21 +27,21 @@ package org.jrobin.mrtg.server;
 import org.jrobin.core.RrdException;
 import org.jrobin.graph.RrdGraph;
 import org.jrobin.graph.RrdGraphDef;
+import org.jrobin.mrtg.MrtgConstants;
 import org.jrobin.mrtg.MrtgException;
 
 import java.awt.*;
 import java.io.IOException;
 import java.util.Date;
 
-class Grapher {
-	static final int GRAPH_WIDTH = 502, GRAPH_HEIGHT = 234;
+class Plotter implements MrtgConstants {
 
 	private String ifDescr, host, alias;
 
-	Grapher(String host, String ifDescr) throws MrtgException {
+	Plotter(String host, String ifDescr) throws MrtgException {
 		this.host = host;
 		this.ifDescr = ifDescr;
-		this.alias = Server.getInstance().getHardware().
+		this.alias = Server.getInstance().getDeviceList().
 			getRouterByHost(host).getLinkByIfDescr(ifDescr).getIfAlias();
 	}
 
@@ -57,7 +57,7 @@ class Grapher {
 	}
 
 	RrdGraph getRrdGraph(long start, long stop) throws MrtgException {
-		String filename = Archiver.getRrdFilename(host, ifDescr);
+		String filename = RrdWriter.getRrdFilename(host, ifDescr);
 		RrdGraph graph = new RrdGraph(true);
 		RrdGraphDef graphDef = new RrdGraphDef();
 		try {

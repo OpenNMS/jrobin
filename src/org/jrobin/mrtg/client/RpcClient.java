@@ -24,9 +24,9 @@
  */
 package org.jrobin.mrtg.client;
 
-import org.jrobin.mrtg.MrtgConstants;
 import org.apache.xmlrpc.XmlRpcClient;
 import org.apache.xmlrpc.XmlRpcException;
+import org.jrobin.mrtg.MrtgConstants;
 
 import java.io.IOException;
 import java.util.Date;

@@ -26,6 +26,7 @@
 package org.jrobin.mrtg;
 
 public class MrtgException extends Exception {
+
 	public MrtgException(String cause) {
 		super(cause);
 	}

@@ -26,5 +26,11 @@
 package org.jrobin.mrtg;
 
 public interface MrtgConstants {
+	boolean DEBUG = false;
+
 	int SERVER_PORT = 35353;
+
+	int SCHEDULER_RESOLUTION = 3; // run Scheduler each 3 seconds
+
+	int GRAPH_WIDTH = 502, GRAPH_HEIGHT = 234;
 }

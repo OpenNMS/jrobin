@@ -44,25 +44,33 @@ import java.util.Date;
 import java.util.Hashtable;
 import java.util.Vector;
 
-class Server {
+public class Server {
 	private static Server instance;
 
-	private Hardware hardware = new Hardware();
-	private Scheduler scheduler = new Scheduler();
-	private Archiver archiver = new Archiver();
-	private RpcServer webServer = new RpcServer();
-	private Date startDate = new Date();
+	private DeviceList deviceList;
+	private Date startDate;
 
-	public synchronized static Server getInstance() throws MrtgException {
+	private Timer timer;
+	private RrdWriter rrdWriter;
+	private Listener listener;
+
+	private boolean active = false;
+
+	public synchronized static Server getInstance() {
 		if (instance == null) {
 			instance = new Server();
 		}
 		return instance;
 	}
 
-	private Server() throws MrtgException {
-		// set RrdDb locking mode
+	private Server() {
 		RrdDb.setLockMode(RrdDb.NO_LOCKS);
+	}
+
+	public synchronized void start() throws MrtgException {
+		if(active) {
+			throw new MrtgException("Cannot start Server, already started");
+		}
 		String hwFile = Config.getHardwareFile();
 		if(new File(hwFile).exists()) {
 			loadHardware();
@@ -70,12 +78,28 @@ class Server {
 		else {
 			saveHardware();
 		}
-		// start scheduler and archiver
-		archiver.start();
-		scheduler.start();
+		// create threads
+		rrdWriter = new RrdWriter();
+		timer = new Timer();
+		listener = new Listener();
+		startDate = new Date();
+		active = true;
+	}
+
+	public synchronized void stop() throws MrtgException {
+		if(!active) {
+			throw new MrtgException("Cannot stop Server, not started");
+		}
+		rrdWriter.terminate();
+		timer.terminate();
+		listener.terminate();
+		active = false;
 	}
 
 	void saveHardware() throws MrtgException {
+		if(deviceList == null) {
+			deviceList = new DeviceList();
+		}
 		try {
 			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 			factory.setValidating(false);
@@ -84,9 +108,9 @@ class Server {
 			Document doc = builder.newDocument();
 			Element root = doc.createElement("mrtg");
 			doc.appendChild(root);
-			Vector routers = hardware.getRouters();
+			Vector routers = deviceList.getRouters();
 			for(int i = 0; i < routers.size(); i++) {
-				Router router = (Router) routers.get(i);
+				Device router = (Device) routers.get(i);
 				router.appendXml(root);
 			}
 			TransformerFactory tFactory = TransformerFactory.newInstance();
@@ -115,10 +139,10 @@ class Server {
 			Document doc = builder.parse(new File(Config.getHardwareFile()));
 			Element root = doc.getDocumentElement();
 			NodeList nodes = root.getElementsByTagName("router");
-			hardware = new Hardware();
-			Vector routers = hardware.getRouters();
+			deviceList = new DeviceList();
+			Vector routers = deviceList.getRouters();
 			for(int i = 0; i < nodes.getLength(); i++) {
-				routers.add(new Router(nodes.item(i)));
+				routers.add(new Device(nodes.item(i)));
 			}
 		} catch (Exception e) {
 			throw new MrtgException(e);
@@ -126,25 +150,25 @@ class Server {
 	}
 
 	public String toString() {
-		return hardware.toString();
+		return deviceList.toString();
 	}
 
 	synchronized int addRouter(String host, String community, String descr, boolean active)
 		throws MrtgException {
-		int retCode = hardware.addRouter(host, community, descr, active);
+		int retCode = deviceList.addRouter(host, community, descr, active);
 		saveHardware();
 		return retCode;
 	}
 
 	synchronized int updateRouter(String host, String community, String descr, boolean active)
 		throws MrtgException {
-		int retCode = hardware.updateRouter(host, community, descr, active);
+		int retCode = deviceList.updateRouter(host, community, descr, active);
 		saveHardware();
 		return retCode;
 	}
 
 	synchronized int removeRouter(String host) throws MrtgException {
-		int retCode = hardware.removeRouter(host);
+		int retCode = deviceList.removeRouter(host);
 		saveHardware();
 		return retCode;
 	}
@@ -152,7 +176,7 @@ class Server {
 	synchronized int addLink(String host, String ifDescr, String descr, int samplingInterval,
 							 boolean active)
 		throws MrtgException {
-		int retCode = hardware.addLink(host, ifDescr, descr, samplingInterval, active);
+		int retCode = deviceList.addLink(host, ifDescr, descr, samplingInterval, active);
 		saveHardware();
 		return retCode;
 	}
@@ -160,29 +184,29 @@ class Server {
 	synchronized int updateLink(String host, String ifDescr, String descr,
 								int samplingInterval, boolean active)
 		throws MrtgException {
-		int retCode = hardware.updateLink(host, ifDescr, descr, samplingInterval, active);
+		int retCode = deviceList.updateLink(host, ifDescr, descr, samplingInterval, active);
 		saveHardware();
 		return retCode;
 	}
 
 	synchronized int removeLink(String host, String ifDescr) throws MrtgException {
-		int retCode = hardware.removeLink(host, ifDescr);
+		int retCode = deviceList.removeLink(host, ifDescr);
 		saveHardware();
 		return retCode;
 	}
 
 	synchronized byte[] getPngGraph(String host, String ifDescr, long start, long stop)
 		throws MrtgException {
-		Grapher grapher = new Grapher(host, ifDescr);
+		Plotter grapher = new Plotter(host, ifDescr);
 		return grapher.getPngGraphBytes(start, stop);
 	}
 
-	synchronized Router[] getRouters() {
-		return (Router[]) hardware.getRouters().toArray(new Router[0]);
+	synchronized Device[] getRouters() {
+		return (Device[]) deviceList.getRouters().toArray(new Device[0]);
 	}
 
 	String[] getAvailableLinks(String host) throws MrtgException {
-		Router router = hardware.getRouterByHost(host);
+		Device router = deviceList.getRouterByHost(host);
 		try {
 			if(router != null) {
 				return router.getAvailableLinks();
@@ -195,30 +219,39 @@ class Server {
 		}
 	}
 
-    Hardware getHardware() {
-		return hardware;
+    DeviceList getDeviceList() {
+		return deviceList;
 	}
 
-	Archiver getArchiver() {
-		return archiver;
+	RrdWriter getRrdWriter() {
+		return rrdWriter;
 	}
 
-	public Date getStartDate() {
+	Date getStartDate() {
 		return startDate;
 	}
 
 	Hashtable getServerInfo() {
 		Hashtable hash = new Hashtable();
-		hash.put("sampleCount", new Integer(archiver.getSampleCount()));
-		hash.put("savesCount", new Integer(archiver.getSavesCount()));
-		hash.put("goodSavesCount", new Integer(archiver.getGoodSavesCount()));
-		hash.put("badSavesCount", new Integer(archiver.getBadSavesCount()));
+		hash.put("sampleCount", new Integer(rrdWriter.getSampleCount()));
+		hash.put("savesCount", new Integer(rrdWriter.getSavesCount()));
+		hash.put("goodSavesCount", new Integer(rrdWriter.getGoodSavesCount()));
+		hash.put("badSavesCount", new Integer(rrdWriter.getBadSavesCount()));
 		hash.put("startDate", startDate);
 		return hash;
 	}
 
+	public void setParanoid(String[] clients) {
+		listener.setParanoid(clients);
+	}
+
 	public static void main(String[] args) throws Exception {
         Server s = Server.getInstance();
+		s.start();
+		s.setParanoid(args);
+		// this will end the server process
+		// System.out.println("Exiting");
+		// s.stop();
 	}
 }
 

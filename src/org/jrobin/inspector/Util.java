@@ -22,23 +22,22 @@
  * library; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+package org.jrobin.inspector;
 
-package org.jrobin.mrtg;
+import javax.swing.*;
+import java.awt.*;
 
-/**
- * Created by IntelliJ IDEA.
- * User: Administrator
- * Date: Jul 30, 2003
- * Time: 11:25:12 AM
- * To change this template use Options | File Templates.
- */
-public class Debug implements MrtgConstants {
-
-	public static void print(String msg) {
-		if(DEBUG) {
-			System.out.println(msg);
-		}
+class Util {
+	static void centerOnScreen(Window window) {
+		Toolkit t = Toolkit.getDefaultToolkit();
+		Dimension screenSize = t.getScreenSize();
+		Dimension frameSize = window.getPreferredSize();
+		double x = (screenSize.getWidth() - frameSize.getWidth()) / 2;
+		double y = (screenSize.getHeight() - frameSize.getHeight()) / 2;
+		window.setLocation((int) x, (int) y);
 	}
 
+	static void error(Component parent, String message) {
+		JOptionPane.showMessageDialog(parent, message, "Error", JOptionPane.ERROR_MESSAGE);
+	}
 }
-

@@ -29,28 +29,47 @@ import org.jrobin.mrtg.Debug;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.LinkedList;
+import java.util.List;
 
-class Archiver extends Thread {
+class RrdWriter extends Thread {
 	private int sampleCount, badSavesCount, goodSavesCount;
-	private LinkedList queue = new LinkedList();
+	private List queue = Collections.synchronizedList(new LinkedList());
+
 	private static final RrdDbPool pool = RrdDbPool.getInstance();
 
+	private volatile boolean active = true;
+
+	RrdWriter() {
+		start();
+	}
+
     public void run() {
-		while(true) {
-			RawSample rawSample = null;
-			synchronized(queue) {
-            	while(queue.size() == 0) {
-					try {
-						queue.wait();
-					}
-					catch (InterruptedException e) {
-					}
-				}
-				rawSample = (RawSample) queue.removeFirst();
+		Debug.print("Archiver started");
+		// the code is plain ugly but it should work
+		while(active) {
+           	while(active && queue.size() == 0) {
+			   synchronized(this) {
+				   try {
+					   wait();
+				   } catch (InterruptedException e) {
+					   Debug.print(e.toString());
+				   }
+			   }
 			}
-			// we have a sample for sure
-			process(rawSample);
+			if(active && queue.size() > 0) {
+				RawSample rawSample = (RawSample) queue.remove(0);
+				process(rawSample);
+			}
+		}
+		Debug.print("Archiver ended");
+	}
+
+	void terminate() {
+		active = false;
+		synchronized(this) {
+			notify();
 		}
 	}
 
@@ -67,18 +86,18 @@ class Archiver extends Thread {
 			sample.update();
 			goodSavesCount++;
 		} catch (IOException e) {
+			Debug.print(e.toString());
 			badSavesCount++;
-			e.printStackTrace();
 		} catch (RrdException e) {
+			Debug.print(e.toString());
 			badSavesCount++;
-			e.printStackTrace();
 		} finally {
 			try {
 				pool.release(rrdDb);
 			} catch (IOException e) {
-				e.printStackTrace();
+				Debug.print(e.toString());
 			} catch (RrdException e) {
-				e.printStackTrace();
+				Debug.print(e.toString());
 			}
 		}
 	}
@@ -93,11 +112,11 @@ class Archiver extends Thread {
 	}
 
 	void store(RawSample sample) {
-		synchronized(queue) {
-			queue.add(sample);
-			queue.notify();
-		}
+		queue.add(sample);
 		sampleCount++;
+		synchronized(this) {
+			notify();
+		}
 	}
 
 	private RrdDb openRrdFileFor(RawSample rawSample)
