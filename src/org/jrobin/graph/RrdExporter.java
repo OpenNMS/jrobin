@@ -291,7 +291,7 @@ class RrdExporter
 		for ( int i = 0; i < edefList.length; i++ )
 		{
 			sources[tblPos] = new Def( edefList[i].getName(), numRows, reducedNumRows );
-			sources[tblPos].setFetchedStep( edefList[i].getStep() );
+			sources[tblPos].setFetchSettings( edefList[i].getStep(), startTime, endTime );
 			sourceIndex.put( edefList[i].getName(), new Integer(tblPos++) );
 		}
 
@@ -299,7 +299,7 @@ class RrdExporter
 		for ( int i = 0; i < pdefList.length; i++ )
 		{
 			pdefList[i].prepare( numRows, reducedNumRows );
-			pdefList[i].setFetchedStep( minStep );
+			pdefList[i].setFetchSettings( minStep, startTime, endTime );
 
 			sources[tblPos] = pdefList[i];
 			sourceIndex.put( pdefList[i].getName(), new Integer(tblPos++) );
@@ -312,7 +312,7 @@ class RrdExporter
 		for ( int i = 0; i < cdefList.length; i++ )
 		{
 			cdefList[i].prepare( sourceIndex, numRows, reducedNumRows );
-			cdefList[i].setFetchedStep( minStep );
+			cdefList[i].setFetchSettings( minStep, startTime, endTime );
 
 			sources[tblPos]	= cdefList[i];
 			sourceIndex.put( cdefList[i].getName(), new Integer(tblPos++) );
@@ -499,7 +499,7 @@ class RrdExporter
 	private Def createReducedDef( Source origSrc )
 	{
 		Def src = new Def( origSrc.getName(), reducedNumRows, reducedNumRows );
-		src.setFetchedStep( reducedStep );
+		src.setFetchSettings( reducedStep, startTime, endTime );
 
 		for ( int i = 0; i < reducedNumRows; i++ )
 			src.set( i, timestamps[i], origSrc.get(i) );

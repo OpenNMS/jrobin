@@ -51,7 +51,6 @@ class Source
 	
 	private double min						= Double.NaN;
 	private double max						= Double.NaN;
-	private double lastValue 				= Double.NaN;
 	private double totalValue				= 0;
 	private double nextValue				= Double.POSITIVE_INFINITY;
 
@@ -95,14 +94,11 @@ class Source
 			aggregate( time, val );
 	}
 
-	void setTimespan( long startTime, long endTime )
+	void setFetchSettings( long step, long startTime, long endTime )
 	{
+		this.step		= step;
 		this.startTime	= startTime;
 		this.endTime	= endTime;
-	}
-
-	void setFetchedStep( long step ) {
-		this.step = step;
 	}
 
 	long getStep() {
@@ -261,6 +257,5 @@ class Source
 		}
 
 		lastTime	= ( time < startTime ? startTime : time );
-		lastValue	= value;
 	}
 }

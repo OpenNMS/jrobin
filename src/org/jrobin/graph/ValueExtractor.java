@@ -96,8 +96,7 @@ class ValueExtractor
 			{
 				for (int x = 0; x < dsValues[i].length; x++)
 				{
-					sources[tblPos].setTimespan( startTime, endTime );
-					sources[tblPos++].setFetchedStep( steps[i] );
+					sources[tblPos++].setFetchSettings( steps[i], startTime, endTime );
 				}
 			}
 		}

@@ -604,7 +604,8 @@ public class ExportData implements RrdDataSet, ConsolFuns
 		for ( int i = 0; i < sources.length; i++ )
 		{
 			sources[i] 			= new Def( dsNames[i], arraySize, arraySize );
-			sources[i].setFetchedStep( step );
+			System.err.println("jdsklfjsdkljfdss");
+			//sources[i].setFetchedStep( step );
 		}
 
 		for ( int i = 0; i < dataRows.length; i++ )
