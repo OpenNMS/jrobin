@@ -66,7 +66,7 @@ public class Util {
 
 	/**
 	 * Returns current timestamp in seconds (without milliseconds). Returned timestamp
-	 * is obtained with the following expression:
+	 * is obtained with the following expression: <p>
 	 *
 	 * <code>(System.currentTimeMillis() + 500L) / 1000L</code>
 	 * @return Current timestamp
@@ -75,6 +75,22 @@ public class Util {
 		return (System.currentTimeMillis() + 500L) / 1000L;
 	}
 
+	/**
+	 * Just an alias for {@link #getTime()} method.
+	 * @return Current timestamp (without milliseconds)
+	 */
+	public static long getTimestamp() {
+		return getTime();
+	}
+
+	/**
+	 * Rounds the given timestamp to the nearest whole "step" by evaluating
+	 * the following expression:<p>
+	 * <code>timestamp - timestamp % step;</code>
+	 * @param timestamp Timestamp in seconds
+	 * @param step Step in seconds
+	 * @return "Rounded" timestamp
+	 */
 	public static long normalize(long timestamp, long step) {
 		return timestamp - timestamp % step;
 	}

@@ -48,7 +48,7 @@ public class RrdNioBackend extends RrdFileBackend {
 		this.syncMode = syncMode;
 		FileChannel.MapMode mapMode =
 				readOnly? FileChannel.MapMode.READ_ONLY: FileChannel.MapMode.READ_WRITE;
-		this.byteBuffer = file.getChannel().map(mapMode, 0, getLength());
+		this.byteBuffer = channel.map(mapMode, 0, getLength());
 		if(syncMode == RrdNioBackendFactory.SYNC_BACKGROUND && !readOnly) {
 			createSyncTask(syncPeriod);
 		}
@@ -107,6 +107,7 @@ public class RrdNioBackend extends RrdFileBackend {
 			syncTask.cancel();
 		}
 		super.close(); // calls sync()
+		byteBuffer = null;
 	}
 
 	/**

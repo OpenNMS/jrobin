@@ -44,18 +44,17 @@ public class RrdFileBackend extends RrdBackend {
 	private static HashSet openFiles = new HashSet();
 
 	protected RandomAccessFile file;
+	protected FileChannel channel;
 	protected FileLock fileLock;
 
 	protected RrdFileBackend(String path, boolean readOnly, int lockMode) throws IOException {
 		super(path);
-		if(!readOnly) {
-			registerWriter(path);
-		}
 		file = new RandomAccessFile(path, readOnly? "r": "rw");
-		// We'll try to lock the file only in "rw" mode
-		// locks are meaningless for read-only access
+		channel = file.getChannel();
 		if(!readOnly) {
 			lockFile(lockMode);
+			// We'll try to lock the file only in "rw" mode
+			registerWriter(path);
 		}
 	}
 
@@ -72,9 +71,8 @@ public class RrdFileBackend extends RrdBackend {
 
 	private void lockFile(int lockMode) throws IOException {
 		if(lockMode == RrdDb.WAIT_IF_LOCKED || lockMode == RrdDb.EXCEPTION_IF_LOCKED) {
-			FileChannel fileChannel = file.getChannel();
 			do {
-				fileLock = fileChannel.tryLock();
+				fileLock = channel.tryLock();
 				if(fileLock == null) {
 					// could not obtain lock
 					if(lockMode == RrdDb.WAIT_IF_LOCKED) {
@@ -100,9 +98,10 @@ public class RrdFileBackend extends RrdBackend {
 	 */
 	public void close() throws IOException {
 		super.close(); // calls sync()
-		unlockFile();
-		file.close();
 		unregisterWriter(getPath());
+		unlockFile();
+		channel.close();
+		file.close();
 	}
 
 	private static synchronized void unregisterWriter(String path) throws IOException {

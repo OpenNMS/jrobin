@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.FileOutputStream;
 import java.io.ByteArrayOutputStream;
+import java.text.DecimalFormat;
 
 /**
  * Class used to represent data fetched from the RRD.
@@ -231,6 +232,43 @@ public class FetchData implements RrdDataSet {
 		for(int i = 0; i < getRowCount(); i++) {
 			System.out.println(getRow(i).dump());
 		}
+	}
+
+	/**
+	 * Returns string representing fetched data in a RRDTool-like form.
+	 * @return Fetched data as a string in a rrdfetch-like output form.
+	 */
+	public String toString() {
+		final DecimalFormat df = new DecimalFormat("+0.0000000000E00");
+		// print header row
+		StringBuffer buff = new StringBuffer();
+		buff.append(padWithBlanks("", 10));
+		buff.append(" ");
+		for(int i = 0; i < dsNames.length; i++) {
+			buff.append(padWithBlanks(dsNames[i], 18));
+		}
+		buff.append("\n \n");
+		for(int i = 0; i < timestamps.length; i++) {
+			buff.append(padWithBlanks("" + timestamps[i], 10));
+			buff.append(":");
+			for(int j = 0; j < dsNames.length; j++) {
+				double value = values[j][i];
+				String valueStr = Double.isNaN(value)? "nan": df.format(value);
+				buff.append(padWithBlanks(valueStr, 18));
+			}
+			buff.append("\n");
+		}
+		return buff.toString();
+	}
+
+	private static String padWithBlanks(String input, int width) {
+		StringBuffer buff = new StringBuffer("");
+		int diff = width - input.length();
+		while(diff-- > 0) {
+			buff.append(' ');
+		}
+		buff.append(input);
+		return buff.toString();
 	}
 
 	/**
