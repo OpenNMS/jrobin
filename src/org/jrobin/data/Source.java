@@ -29,6 +29,8 @@ import org.jrobin.core.ConsolFuns;
 import org.jrobin.core.RrdException;
 import org.jrobin.core.Util;
 
+import java.util.Arrays;
+
 abstract class Source implements ConsolFuns {
 	final private String name;
 	private double[] values;
@@ -77,6 +79,41 @@ abstract class Source implements ConsolFuns {
 		}
 	}
 
+	final double getPercentile(int percentile) throws RrdException {
+		if(values == null) {
+			throw new RrdException("Could not calculate 95th percentile for datasource [" +
+					name + "], datasource values are still not available");
+		}
+		if(percentile > 100 || percentile <= 0) {
+			throw new RrdException("Invalid percentile specified: " + percentile);
+		}
+		return getPercentile(values, percentile);
+	}
+
+	private static double getPercentile(double[] values, int percentile) {
+		int count = values.length;
+		double[] valuesCopy = new double[count];
+		for(int i = 0; i < count; i++) {
+			valuesCopy[i] = values[i];
+		}
+		Arrays.sort(valuesCopy);
+		// NaN values are at the end, eliminate them from consideration
+		while(count > 0 && Double.isNaN(valuesCopy[count - 1])) {
+			count--;
+		}
+		// skip top [percentile]% values
+		int skipCount = (int) Math.ceil(((100 - percentile) * count) / 100.0);
+		count -= skipCount;
+		// if we have anything left...
+		if(count > 0) {
+			return valuesCopy[count - 1];
+		}
+		else {
+			// not enough data available
+			return Double.NaN;
+		}
+	}
+
 	private double getTotal(double secondsPerPixel) {
 		double sum = 0;
 		for(int i = 1; i < values.length; i++) {
@@ -114,5 +151,4 @@ abstract class Source implements ConsolFuns {
 		}
 		return min;
 	}
-
 }

@@ -239,6 +239,26 @@ public class DataProcessor implements ConsolFuns {
 	}
 
 	/**
+	 * Used by ISPs which charge for bandwidth utilization on a "95th percentile" basis.<p>
+	 *
+	 * The 95th percentile is the highest source value left when the top 5% of a numerically sorted set
+	 * of source data is discarded. It is used as a measure of the peak value used when one discounts
+	 * a fair amount for transitory spikes. This makes it markedly different from the average.<p>
+	 *
+	 * Read more about this topic at
+	 * <a href="http://www.red.net/support/resourcecentre/leasedline/percentile.php">Rednet</a> or
+	 * <a href="http://www.bytemark.co.uk/support/tech/95thpercentile.html">Bytemark</a>.
+	 *
+	 * @param sourceName Datasource name
+	 * @return 95th percentile of fetched source values
+	 * @throws RrdException Thrown if invalid source name is supplied
+	 */
+	public double get95Percentile(String sourceName) throws RrdException {
+		Source source = getSource(sourceName);
+		return source.getPercentile(95);
+	}
+
+	/**
 	 * Returns array of datasource names defined in this DataProcessor.
 	 * @return array of datasource names
 	 */

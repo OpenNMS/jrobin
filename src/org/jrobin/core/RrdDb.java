@@ -555,19 +555,23 @@ public class RrdDb implements RrdUpdater {
 			throw new RrdException("RRD already closed, cannot store this  sample");
 		}
 		backend.beforeUpdate();
-		long newTime = sample.getTime();
-		long lastTime = header.getLastUpdateTime();
-		if(lastTime >= newTime) {
-			throw new RrdException("Bad sample timestamp " + newTime +
-				". Last update time was " + lastTime + ", at least one second step is required");
+		try {
+			long newTime = sample.getTime();
+			long lastTime = header.getLastUpdateTime();
+			if(lastTime >= newTime) {
+				throw new RrdException("Bad sample timestamp " + newTime +
+					". Last update time was " + lastTime + ", at least one second step is required");
+			}
+			double[] newValues = sample.getValues();
+        	for(int i = 0; i < datasources.length; i++) {
+				double newValue = newValues[i];
+				datasources[i].process(newTime, newValue);
+			}
+			header.setLastUpdateTime(newTime);
 		}
-		double[] newValues = sample.getValues();
-        for(int i = 0; i < datasources.length; i++) {
-			double newValue = newValues[i];
-			datasources[i].process(newTime, newValue);
+		finally {
+			backend.afterUpdate();
 		}
-		header.setLastUpdateTime(newTime);
-		backend.afterUpdate();
 	}
 
 	synchronized FetchPoint[] fetch(FetchRequest request) throws IOException, RrdException {
@@ -586,10 +590,14 @@ public class RrdDb implements RrdUpdater {
 			throw new RrdException("RRD already closed, cannot fetch data");
 		}
 		backend.beforeFetch();
-		Archive archive = findMatchingArchive(request);
-		FetchData fetchData = archive.fetchData(request);
-		backend.afterFetch();
-		return fetchData;
+		try {
+			Archive archive = findMatchingArchive(request);
+			FetchData fetchData = archive.fetchData(request);
+			return fetchData;
+		}
+		finally {
+			backend.afterFetch();
+		}
 	}
 
 	public Archive findMatchingArchive(FetchRequest request) throws RrdException, IOException
