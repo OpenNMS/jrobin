@@ -81,12 +81,20 @@ public abstract class RrdBackendFactory {
 			registerFactory(nioFactory);
 			RrdSafeFileBackendFactory safeFactory = new RrdSafeFileBackendFactory();
 			registerFactory(safeFactory);
-
-			// Here is the default backend factory
-			defaultFactory = nioFactory;
-
+			selectDefaultFactory();
 		} catch (RrdException e) {
 			throw new RuntimeException("FATAL: Cannot register RRD backend factories: " + e);
+		}
+	}
+
+	private static void selectDefaultFactory() throws RrdException {
+		String version = System.getProperty("java.version");
+		if(version == null || version.startsWith("1.3.") ||
+				version.startsWith("1.4.0") || version.startsWith("1.4.1")) {
+			setDefaultFactory("FILE");
+		}
+		else {
+			setDefaultFactory("NIO");
 		}
 	}
 

@@ -569,4 +569,14 @@ public class Util {
 		return (Double.isNaN(x) && Double.isNaN(y)) || (x == y);
 	}
 
+	/**
+	 * Returns canonical file path for the given file path
+	 * @param path Absolute or relative file path
+	 * @return Canonical file path
+	 * @throws IOException Thrown if canonical file path could not be resolved
+	 */
+	public static String getCanonicalPath(String path) throws IOException {
+		return new File(path).getCanonicalPath();
+	}
+
 }

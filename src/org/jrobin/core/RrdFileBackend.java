@@ -27,7 +27,6 @@ package org.jrobin.core;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.io.File;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.util.HashSet;
@@ -156,7 +155,7 @@ public class RrdFileBackend extends RrdBackend {
 	 * @throws IOException Thrown in case of I/O error
 	 */
 	public static String getCanonicalPath(String path) throws IOException {
-		return new File(path).getCanonicalPath();
+		return Util.getCanonicalPath(path);
 	}
 
 	/**

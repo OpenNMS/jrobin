@@ -465,7 +465,7 @@ public class RrdDbPool implements Runnable {
 	}
 
 	private static String getCanonicalPath(String path) throws IOException {
-		return RrdFileBackend.getCanonicalPath(path);
+		return Util.getCanonicalPath(path);
 	}
 
 	static void debug(String msg) {
