@@ -48,20 +48,22 @@ public class TimeAxisUnit
 				};
 
 	// Indices in the calendarUnit table
-	/** constant for seconds */
-	public static final int SECOND	= 0;
-	/** constant for minutes */
-	public static final int MINUTE	= 1;
-	/** constant for hours */
-	public static final int HOUR 	= 2;
-	/** constant for days */
-	public static final int DAY 	= 3;
-	/** constant for weeks */
-	public static final int WEEK 	= 4;
-	/** constant for months */
-	public static final int MONTH 	= 5;
-	/** constant for years */
-	public static final int YEAR 	= 6;
+	public static final int SECOND			= 0;				/** constant for seconds */
+	public static final int MINUTE			= 1;				/** constant for minutes */
+	public static final int HOUR 			= 2;				/** constant for hours */
+	public static final int DAY 			= 3;				/** constant for days */
+	public static final int WEEK 			= 4;				/** constant for weeks */
+	public static final int MONTH 			= 5;				/** constant for months */
+	public static final int YEAR 			= 6;				/** constant for years */
+	
+	// Days of the week
+	public static final int MONDAY			= Calendar.MONDAY;
+	public static final int TUESDAY			= Calendar.TUESDAY;
+	public static final int WEDNESDAY		= Calendar.WEDNESDAY;
+	public static final int THURSDAY		= Calendar.THURSDAY;
+	public static final int FRIDAY			= Calendar.FRIDAY;
+	public static final int SATURDAY		= Calendar.SATURDAY;
+	public static final int SUNDAY			= Calendar.SUNDAY;
 
 	private static final String[] UNIT_NAMES = {
 		"SECOND", "MINUTE", "HOUR", "DAY", "WEEK", "MONTH", "YEAR"
@@ -74,6 +76,8 @@ public class TimeAxisUnit
 	
 	private boolean centerLabels			= false; 
 	private SimpleDateFormat dateFormat 	= new SimpleDateFormat("HH:mm", Locale.ENGLISH );
+	
+	private int firstDayOfWeek				= MONDAY;		// first day of a week
  	
 	
 	// ================================================================
@@ -94,10 +98,11 @@ public class TimeAxisUnit
 	 * @param majGridUnitSteps Time unit steps for the major grid lines.
 	 * @param dateFormat Format to use to convert the specific time into a label string.
 	 * @param centerLabels True if labels (major grid) should be centered between two major grid lines.
+	 * @param firstDayOfWeek First day of a calendar week.
 	 */
 	TimeAxisUnit( int minGridTimeUnit, int minGridUnitSteps,
 				  int majGridTimeUnit, int majGridUnitSteps,
-				  SimpleDateFormat dateFormat, boolean centerLabels )
+				  SimpleDateFormat dateFormat, boolean centerLabels, int firstDayOfWeek )
 	{
 		this.minGridTimeUnit	= minGridTimeUnit;
 		this.minGridUnitSteps	= minGridUnitSteps;
@@ -105,6 +110,7 @@ public class TimeAxisUnit
 		this.majGridUnitSteps	= majGridUnitSteps;
 		this.dateFormat			= new SimpleDateFormat( dateFormat.toPattern(), Locale.ENGLISH );
 		this.centerLabels		= centerLabels;
+		this.firstDayOfWeek		= firstDayOfWeek;
 	}
 	
 	
@@ -239,8 +245,8 @@ public class TimeAxisUnit
 	private void setStartPoint( Calendar t, int unit, long exactStart )
 	{
 		t.setTimeInMillis( exactStart );
+		t.setFirstDayOfWeek( firstDayOfWeek );
 		
-		t.setFirstDayOfWeek(Calendar.MONDAY);
 		for (int i = 0; i < HOUR && i <= unit; i++)
 			t.set( calendarUnit[i], 0 );
 		

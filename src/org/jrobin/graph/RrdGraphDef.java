@@ -101,6 +101,8 @@ public class RrdGraphDef implements Serializable
 	
 	private int chart_lpadding			= Grapher.CHART_LPADDING;			// padding space on the left of the chart area
 	
+	private int firstDayOfWeek			= TimeAxisUnit.MONDAY;				// first day of a calendar week, default: monday
+	
 	private double baseValue			= ValueFormatter.DEFAULT_BASE;		// unit base value to use (default: 1000)
 	private int scaleIndex				= ValueFormatter.NO_SCALE;			// fixed units exponent value to use
 	
@@ -598,8 +600,19 @@ public class RrdGraphDef implements Serializable
 												majGridTimeUnit, 
 												majGridUnitSteps, 
 												new SimpleDateFormat( dateFormat ),
-												centerLabels 
+												centerLabels ,
+												firstDayOfWeek
 											);
+	}
+	
+	/**
+	 * Sets the first day of a calendar week, defaults to monday if not set.
+	 * 
+	 * @param day Weekday, 0 for sunday, 6 for saturday.
+	 */
+	public void setFirstDayOfWeek( int day )
+	{
+		firstDayOfWeek = day;
 	}
 
 	/**
@@ -1189,6 +1202,10 @@ public class RrdGraphDef implements Serializable
 	
 	protected TimeAxisUnit getTimeAxis() {
 		return tAxis;
+	}
+	
+	protected int getFirstDayOfWeek() {
+		return firstDayOfWeek;
 	}
 	
 	protected PlotDef[] getPlotDefs()

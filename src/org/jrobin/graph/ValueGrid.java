@@ -148,7 +148,7 @@ class ValueGrid
 		// Keep the rest of division
 		double left 	= shifted % scaleValues[scaleIndex + 1];
 		shifted 		= shifted / scaleValues[++scaleIndex];
-		
+
 		// While rest > 10, divide by 10
 		while ( shifted > 10.0 ) {
 			shifted /= 10;
@@ -161,10 +161,13 @@ class ValueGrid
 		}
 		
 		left			= left / scaleValues[scaleIndex];
-		if ( left > 0.9 || left == 0.00 ) {
+		
+		
+		if ( left == 0.00 ) {
 			scaleIndex--;
 			mod = 1.0;
 		}
+		
 		
 		// Create nice grid based on 'fixed' ranges
 		if ( shifted <= 1.5 )

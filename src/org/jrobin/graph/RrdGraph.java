@@ -368,20 +368,18 @@ public class RrdGraph implements Serializable
 	// ================================================================
 	RrdDb getRrd( String rrdFile ) throws IOException, RrdException
 	{
-		if ( pool != null ) {
+		if ( pool != null )
 			return pool.requestRrdDb( rrdFile );
-		}
 		else 
-			return new RrdDb( rrdFile );
+			return new RrdDb( rrdFile, true );
 	}
 
-	void releaseRrd(RrdDb rrdDb) throws RrdException, IOException {
-		if(pool != null) {
+	void releaseRrd(RrdDb rrdDb) throws RrdException, IOException 
+	{
+		if ( pool != null )
 			pool.release(rrdDb);
-		}
-		else {
+		else
 			rrdDb.close();
-		}
 	}
 
 	// ================================================================

@@ -303,9 +303,9 @@ class Grapher
 		while ( fetchSources.hasNext() )
 		{
 			// Get the rrdDb
-			src 	= (FetchSource) fetchSources.next();
-			String rrdFile = src.getRrdFile();
-			rrd		= rrdGraph.getRrd( rrdFile );
+			src 				= (FetchSource) fetchSources.next();
+			String rrdFile 		= src.getRrdFile();
+			rrd					= rrdGraph.getRrd( rrdFile );
 			
 			// If the endtime is 0, use the last time a database was updated
 			if ( changingEndTime ) {
@@ -519,7 +519,7 @@ class Grapher
 		}
 		
 		vGrid 			= new ValueGrid( range, lowerValue, upperValue, graphDef.getValueAxis(), graphDef.getBaseValue() );
-		tGrid			= new TimeGrid( graphDef.getStartTime(), ( graphDef.getEndTime() != 0 ? graphDef.getEndTime() : calculatedEndTime ), graphDef.getTimeAxis() );
+		tGrid			= new TimeGrid( graphDef.getStartTime(), ( graphDef.getEndTime() != 0 ? graphDef.getEndTime() : calculatedEndTime ), graphDef.getTimeAxis(), graphDef.getFirstDayOfWeek() );
 		
 		lowerValue		= vGrid.getLowerValue();
 		upperValue		= vGrid.getUpperValue();

@@ -52,15 +52,16 @@ class TimeGrid
 	 * @param endTime End time of the timespan.
 	 * @param tAxis TimeAxisUnit specified to determine the grid lines, if the given
 	 * TimeAxisUnit is null, one will be automatically determined.
+	 * @param firstDayOfWeek First day of a calendar week.
 	 */
-	TimeGrid( long startTime, long endTime, TimeAxisUnit tAxis )
+	TimeGrid( long startTime, long endTime, TimeAxisUnit tAxis, int firstDayOfWeek )
 	{
 		this.startTime 	= startTime;
 		this.endTime	= endTime;
 		this.tAxis		= tAxis;
 		
 		// Set an appropriate time axis it not given yet	
-		setTimeAxis();
+		setTimeAxis( firstDayOfWeek );
 	}
 	
 	
@@ -94,8 +95,10 @@ class TimeGrid
 	/**
 	 * Determines a good TimeAxisUnit to use for grid calculation.
 	 * A decent grid is selected based on the timespan being used in the chart.
+	 * 
+	 * @param firstDayOfWeek First day of a calendar week.
 	 */
-	private void setTimeAxis()
+	private void setTimeAxis( int firstDayOfWeek )
 	{
 		if ( tAxis != null )
 			return;
@@ -103,49 +106,49 @@ class TimeGrid
 		double days = (endTime - startTime) / 86400.0;
 
 		if ( days <= 0.75 / 24.0 ) {
-			tAxis = new TimeAxisUnit( TimeAxisUnit.MINUTE, 1, TimeAxisUnit.MINUTE, 5, new SimpleDateFormat("HH:mm"), false );
+			tAxis = new TimeAxisUnit( TimeAxisUnit.MINUTE, 1, TimeAxisUnit.MINUTE, 5, new SimpleDateFormat("HH:mm"), false, firstDayOfWeek );
 		}
 		else if ( days <= 2.0 / 24.0 ) {
-			tAxis = new TimeAxisUnit( TimeAxisUnit.MINUTE, 5, TimeAxisUnit.MINUTE, 10, new SimpleDateFormat("HH:mm"), false );
+			tAxis = new TimeAxisUnit( TimeAxisUnit.MINUTE, 5, TimeAxisUnit.MINUTE, 10, new SimpleDateFormat("HH:mm"), false, firstDayOfWeek );
 		}
 		else if ( days <= 3.0 / 24.0 ) {
-			tAxis = new TimeAxisUnit( TimeAxisUnit.MINUTE, 5, TimeAxisUnit.MINUTE, 20, new SimpleDateFormat("HH:mm"), false );
+			tAxis = new TimeAxisUnit( TimeAxisUnit.MINUTE, 5, TimeAxisUnit.MINUTE, 20, new SimpleDateFormat("HH:mm"), false, firstDayOfWeek );
 		}
 		else if ( days <= 5.0 / 24.0 ) {
-			tAxis = new TimeAxisUnit( TimeAxisUnit.MINUTE, 10, TimeAxisUnit.MINUTE, 30, new SimpleDateFormat("HH:mm"), false );
+			tAxis = new TimeAxisUnit( TimeAxisUnit.MINUTE, 10, TimeAxisUnit.MINUTE, 30, new SimpleDateFormat("HH:mm"), false, firstDayOfWeek );
 		}
 		else if ( days <= 10.0 / 24.0 ) {
-			tAxis = new TimeAxisUnit( TimeAxisUnit.MINUTE, 15, TimeAxisUnit.HOUR, 1, new SimpleDateFormat("HH:mm"), false );
+			tAxis = new TimeAxisUnit( TimeAxisUnit.MINUTE, 15, TimeAxisUnit.HOUR, 1, new SimpleDateFormat("HH:mm"), false, firstDayOfWeek );
 		}
 		else if ( days <= 15.0 / 24.0 ) {
-			tAxis = new TimeAxisUnit( TimeAxisUnit.MINUTE, 30, TimeAxisUnit.HOUR, 2, new SimpleDateFormat("HH:mm"), false );
+			tAxis = new TimeAxisUnit( TimeAxisUnit.MINUTE, 30, TimeAxisUnit.HOUR, 2, new SimpleDateFormat("HH:mm"), false, firstDayOfWeek );
 		}
 		else if ( days <= 20.0 / 24.0 ) {
-			tAxis = new TimeAxisUnit( TimeAxisUnit.HOUR, 1, TimeAxisUnit.HOUR, 1, new SimpleDateFormat("HH"), true );
+			tAxis = new TimeAxisUnit( TimeAxisUnit.HOUR, 1, TimeAxisUnit.HOUR, 1, new SimpleDateFormat("HH"), true, firstDayOfWeek );
 		}
 		else if ( days <= 36.0 / 24.0 ) {
-			tAxis = new TimeAxisUnit( TimeAxisUnit.HOUR, 1, TimeAxisUnit.HOUR, 4, new SimpleDateFormat("HH:mm"), false );
+			tAxis = new TimeAxisUnit( TimeAxisUnit.HOUR, 1, TimeAxisUnit.HOUR, 4, new SimpleDateFormat("HH:mm"), false, firstDayOfWeek );
 		}
 		else if ( days <= 2 ) {
-			tAxis = new TimeAxisUnit( TimeAxisUnit.HOUR, 2, TimeAxisUnit.HOUR, 6, new SimpleDateFormat("HH:mm"), false );
+			tAxis = new TimeAxisUnit( TimeAxisUnit.HOUR, 2, TimeAxisUnit.HOUR, 6, new SimpleDateFormat("HH:mm"), false, firstDayOfWeek );
 		}
 		else if ( days <= 3 ) {
-			tAxis = new TimeAxisUnit( TimeAxisUnit.HOUR, 3, TimeAxisUnit.HOUR, 12, new SimpleDateFormat("HH:mm"), false );
+			tAxis = new TimeAxisUnit( TimeAxisUnit.HOUR, 3, TimeAxisUnit.HOUR, 12, new SimpleDateFormat("HH:mm"), false, firstDayOfWeek );
 		}
 		else if ( days < 8 ) {
-			tAxis = new TimeAxisUnit( TimeAxisUnit.HOUR, 6, TimeAxisUnit.DAY, 1, new SimpleDateFormat("EEE dd"), true);
+			tAxis = new TimeAxisUnit( TimeAxisUnit.HOUR, 6, TimeAxisUnit.DAY, 1, new SimpleDateFormat("EEE dd"), true, firstDayOfWeek );
 		}
 		else if ( days <= 14 ) {
-			tAxis = new TimeAxisUnit( TimeAxisUnit.HOUR, 12, TimeAxisUnit.DAY, 1, new SimpleDateFormat("dd"), true );
+			tAxis = new TimeAxisUnit( TimeAxisUnit.HOUR, 12, TimeAxisUnit.DAY, 1, new SimpleDateFormat("dd"), true, firstDayOfWeek );
 		}
 		else if ( days <= 43 ) {
-			tAxis = new TimeAxisUnit( TimeAxisUnit.DAY, 1, TimeAxisUnit.WEEK, 1, new SimpleDateFormat("'week' ww"), true );
+			tAxis = new TimeAxisUnit( TimeAxisUnit.DAY, 1, TimeAxisUnit.WEEK, 1, new SimpleDateFormat("'week' ww"), true, firstDayOfWeek );
 		}
 		else if ( days <= 157 ) {
-			tAxis = new TimeAxisUnit( TimeAxisUnit.WEEK, 1, TimeAxisUnit.WEEK, 1, new SimpleDateFormat("ww"), true );
+			tAxis = new TimeAxisUnit( TimeAxisUnit.WEEK, 1, TimeAxisUnit.WEEK, 1, new SimpleDateFormat("ww"), true, firstDayOfWeek );
 		}
 		else {
-			tAxis = new TimeAxisUnit( TimeAxisUnit.MONTH, 1, TimeAxisUnit.MONTH, 1, new SimpleDateFormat("MMM"), true );
+			tAxis = new TimeAxisUnit( TimeAxisUnit.MONTH, 1, TimeAxisUnit.MONTH, 1, new SimpleDateFormat("MMM"), true, firstDayOfWeek );
 		}
 	}
 }
