@@ -28,11 +28,7 @@ import java.io.*;
 import java.awt.Font;
 import java.awt.Color;
 import java.awt.BasicStroke;
-import java.util.Date;
-import java.util.Vector;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.GregorianCalendar;
+import java.util.*;
 import java.text.SimpleDateFormat;
 
 import org.jrobin.core.Util;
@@ -112,15 +108,16 @@ public class RrdGraphDef implements Serializable
 	private GridRange gridRange			= null;								// custom value range definition, defaults to auto-scale
 	
 	// -- Non-settable members
+	private int numSdefs				= 0;
 	private int numDefs					= 0;								// number of Def datasources added
 	private int commentLines			= 0;								// number of complete lines in the list of comment items
 	private int commentLineShift		= 0;								// modifier to add to get minimum one complete line of comments
 	
-	private HashMap fetchSources		= new HashMap();					// holds the list of FetchSources
-	private Vector cdefList				= new Vector();						// holds the list of Cdef datasources
-	private Vector pdefList				= new Vector();						// holds the list of Plottable datasources
-	private Vector plotDefs				= new Vector();						// holds the list of PlotDefs
-	private Vector comments				= new Vector();						// holds the list of comment items
+	private HashMap fetchSources		= new HashMap( 10 );				// holds the list of FetchSources
+	private ArrayList cdefList			= new ArrayList( 10 );				// holds the list of Cdef datasources
+	private ArrayList pdefList			= new ArrayList( 10 );				// holds the list of Plottable datasources
+	private ArrayList plotDefs			= new ArrayList( 10 );				// holds the list of PlotDefs
+	private ArrayList comments			= new ArrayList( 10 );				// holds the list of comment items
 	
 		
 	// ================================================================
@@ -619,12 +616,14 @@ public class RrdGraphDef implements Serializable
 	 * <p>Adds simple graph source to graph definition. Graph source <code>name</code>
 	 * can be used:</p>
 	 * <ul>
-	 * <li>To specify sources for line, area and stack plots.
+	 * <li>To specify sources for line, area and stack plots.</li>
 	 * <li>To define complex graph sources
 	 * (see {@link #datasource(java.lang.String, java.lang.String) complex graph
-	 * source definition}).
+	 * source definition}).</li>
 	 * <li>To specify graph data source for the
-	 * {@link #gprint(java.lang.String, java.lang.String, java.lang.String) gprint()} method.
+	 * {@link #gprint(java.lang.String, java.lang.String, java.lang.String) gprint()} method.</li>
+	 * </ul>
+	 *
 	 * @param name Graph source name.
 	 * @param file Path to RRD file.
 	 * @param dsName Data source name defined in the RRD file.
@@ -642,7 +641,40 @@ public class RrdGraphDef implements Serializable
 		
 		numDefs++;
 	}
-	
+
+	/**
+	 * <p>Adds simple graph source to graph definition. Graph source <code>name</code>
+	 * can be used:</p>
+	 * <ul>
+	 * <li>To specify sources for line, area and stack plots.</li>
+	 * <li>To define complex graph sources
+	 * (see {@link #datasource(java.lang.String, java.lang.String) complex graph
+	 * source definition}).</li>
+	 * <li>To specify graph data source for the
+	 * {@link #gprint(java.lang.String, java.lang.String, java.lang.String) gprint()} method.</li>
+	 * </ul>
+	 *
+	 * @param name Graph source name.
+	 * @param file Path to RRD file.
+	 * @param dsName Data source name defined in the RRD file.
+	 * @param consolFunc Consolidation function that will be used to extract data from the RRD
+	 * file ("AVERAGE", "MIN", "MAX" or "LAST").
+	 * @param backend Name of the RrdBackendFactory that should be used for this RrdDb.
+	 */
+	public void datasource( String name, String file, String dsName, String consolFunc, String backend ) throws RrdException
+	{
+		if ( fetchSources.containsKey(file) )
+		{
+			FetchSource rf = (FetchSource) fetchSources.get(file);
+			rf.setBackendFactory( backend );
+			rf.addSource( consolFunc, dsName, name );
+		}
+		else
+			fetchSources.put( file, new FetchSource(file, consolFunc, dsName, name, backend ) );
+
+		numDefs++;
+	}
+
 	/**
 	 * <p>Adds complex graph source with the given name to the graph definition.
 	 * Complex graph sources are evaluated using the supplied <code>rpn</code> expression.
@@ -661,6 +693,7 @@ public class RrdGraphDef implements Serializable
 	 *
 	 * <p>For more details on RPN see RRDTool's
 	 * <a href="http://people.ee.ethz.ch/~oetiker/webtools/rrdtool/manual/rrdgraph.html" target="man">rrdgraph man page</a>.</p>
+	 *
 	 * @param name Graph source name.
 	 * @param rpn RPN expression containig comma delmited simple and complex graph
 	 * source names, RPN constants, functions and operators.
@@ -669,7 +702,22 @@ public class RrdGraphDef implements Serializable
 	{
 		cdefList.add( new Cdef(name, rpn) );
 	}
-	
+
+	/**
+	 * <p>Adds static graph source with the given name to the graph definition.
+	 * Static graph sources are the result of a consolidation function applied
+	 * to *any* other graph source that has been defined previously.</p>
+	 *
+	 * @param name Graph source name.
+	 * @param defName Name of the datasource to calculate the value from.
+	 * @param consolFunc Consolidation function to use for value calculation
+	 */
+	public void datasource( String name, String defName, String consolFunc ) throws RrdException
+	{
+		cdefList.add( new Sdef(name, defName, consolFunc) );
+		numSdefs++;
+	}
+
 	/**
 	 * <p>Adds a custom graph source with the given name to the graph definition.
 	 * The datapoints should be made available by a class extending Plottable.</p>
@@ -1019,19 +1067,19 @@ public class RrdGraphDef implements Serializable
 			FetchSource fs = (FetchSource) fsIterator.next();
 			fs.exportXml(xml);
 		}
-		// cdefs
+		// cdefs and sdefs
 		for (int i = 0; i < cdefList.size(); i++ ) {
-			Cdef cdef = (Cdef) cdefList.elementAt(i);
+			Cdef cdef = (Cdef) cdefList.get(i);
 			cdef.exportXml(xml);
 		}
 		xml.closeTag(); // datasources
 		xml.startTag("graph");
 		for ( int i = 0; i < comments.size(); i++ )
 		{
-			Comment cmt = (Comment) comments.elementAt(i);
+			Comment cmt = (Comment) comments.get(i);
 			if ( cmt.commentType == Comment.CMT_LEGEND || cmt.commentType == Comment.CMT_NOLEGEND)
 			{
-				PlotDef pDef = (PlotDef) plotDefs.elementAt( ((Legend) cmt).getPlofDefIndex() );
+				PlotDef pDef = (PlotDef) plotDefs.get( ((Legend) cmt).getPlofDefIndex() );
 				pDef.exportXmlTemplate(xml, cmt.text);
 			}
 			else if(cmt instanceof TimeAxisLabel) {
@@ -1047,8 +1095,19 @@ public class RrdGraphDef implements Serializable
 	}
 
 	/**
+	 *  Exports RrdGraphDef (graph definition) object in XML format to string.
+	 * Generated code can be parsed with {@link RrdGraphDefTemplate} class
+	 * {@see exportXmlTemplate).
+	 *
+	 * @return String representing graph definition in XML format
+	 */
+	public String getXmlTemplate() {
+		return exportXmlTemplate();
+	}
+	/**
 	 * Exports RrdGraphDef (graph definition) object in XML format to string.
 	 * Generated code can be parsed with {@link RrdGraphDefTemplate} class.
+	 *
 	 * @return String representing graph definition in XML format
 	 */
 	public String exportXmlTemplate() {
@@ -1060,6 +1119,7 @@ public class RrdGraphDef implements Serializable
 	/**
 	 * Exports RrdGraphDef (graph definition) object in XML format to file.
 	 * Generated code can be parsed with {@link RrdGraphDefTemplate} class.
+	 * 
 	 * @param filePath destination file
 	 */
 	public void exportXmlTemplate(String filePath) throws IOException {
@@ -1256,7 +1316,12 @@ public class RrdGraphDef implements Serializable
 	{
 		return (Pdef[]) pdefList.toArray( new Pdef[] {} );
 	}
-	
+
+	protected int getNumSdefs()
+	{
+		return numSdefs;
+	}
+
 	protected HashMap getFetchSources()
 	{
 		return fetchSources;

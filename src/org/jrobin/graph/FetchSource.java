@@ -25,6 +25,7 @@
 package org.jrobin.graph;
 
 import java.util.Vector;
+import java.util.ArrayList;
 import java.io.IOException;
 
 import org.jrobin.core.*;
@@ -52,9 +53,10 @@ class FetchSource
 	protected static final String[] cfNames	= new String[] { "AVERAGE", "MAX", "MIN", "LAST" };
 	
 	private String rrdFile;						// Holds the name of the RRD file
-	
+	private String backendName;
+
 	private int numSources					= 0;
-	private Vector[] datasources			= new Vector[MAX_CF];
+	private ArrayList[] datasources			= new ArrayList[MAX_CF];
 	
 	
 	// ================================================================
@@ -70,7 +72,7 @@ class FetchSource
 		
 		// Initialization of datasource lists per CF
 		for (int i = 0; i < datasources.length; i++)
-			datasources[i] = new Vector();	
+			datasources[i] = new ArrayList( 10 );
 	}
 	
 	/**
@@ -85,9 +87,25 @@ class FetchSource
 	FetchSource( String rrdFile, String consolFunc, String dsName, String name ) throws RrdException
 	{
 		this( rrdFile );
-		addSource( consolFunc, dsName, name );	
+		addSource( consolFunc, dsName, name );
 	}
-	
+
+	/**
+	 * Constructs a FetchSource object based on a RRD file name, and
+	 * adds a given datasource to the datasources list.
+	 * @param rrdFile Name of the RRD file holding all datasources.
+	 * @param consolFunc Consolidation function of the datasource to fetch.
+	 * @param dsName Internal name of the datasource in the RRD file.
+	 * @param name Variable name of the datasource in the graph definition.
+	 * @param backendName Name of the RrdBackendFactory to use for this RrdDb.
+	 * @throws RrdException Thrown in case of a JRobin specific error.
+	 */
+	FetchSource( String rrdFile, String consolFunc, String dsName, String name, String backendName ) throws RrdException
+	{
+		this( rrdFile, consolFunc, dsName, name );
+		setBackendFactory( backendName );
+	}
+
 	// ================================================================
 	// -- Protected methods
 	// ================================================================
@@ -113,7 +131,16 @@ class FetchSource
 		
 		numSources++;				
 	}
-	
+
+	/**
+	 * Sets the name of the RrdBackendFactory that should be used for this FetchSource.
+	 * The factory should be registered with RrdBackendFactory static.
+	 * @param backendName Name of the RrdBackendFactory to use for this RrdDb.
+	 */
+	protected void setBackendFactory( String backendName ) {
+		this.backendName = backendName;
+	}
+
 	/**
 	 * Fetches all datavalues for a given timespan out of the provided RRD file.
 	 * @param rrd An open <code>RrdDb</code> object holding the necessary datasources.
@@ -125,6 +152,9 @@ class FetchSource
 	 */
 	protected ValueExtractor fetch ( RrdDb rrd, long startTime, long endTime ) throws IOException, RrdException
 	{
+		int dsSize				= 0;
+		String[] dsNames, vNames;
+
 		long rrdStep			= rrd.getRrdDef().getStep();
 		FetchData[] result		= new FetchData[datasources.length];
 		
@@ -133,13 +163,15 @@ class FetchSource
 		
 		for (int i = 0; i < datasources.length; i++)
 		{
-			if ( datasources[i].size() > 0 ) {
+			dsSize				= datasources[i].size();
+
+			if ( dsSize > 0 ) {
 				// Set the list of ds names
-				String[] dsNames 	= new String[ datasources[i].size() ];
-				String[] vNames		= new String[ datasources[i].size() ];
+				dsNames 	= new String[ dsSize ];
+				vNames		= new String[ dsSize ];
 				
-				for (int j = 0; j < dsNames.length; j++ ) {
-					String[] spair	= (String[]) datasources[i].elementAt(j);
+				for (int j = 0; j < dsSize; j++ ) {
+					String[] spair	= (String[]) datasources[i].get(j);
 					dsNames[j]	 	= spair[0];
 					vNames[j]		= spair[1];
 				}
@@ -150,9 +182,9 @@ class FetchSource
 				
 				FetchData data				= request.fetchData();
 				
-				for (int j = 0; j < vNames.length; j++)
+				for (int j = 0; j < dsSize; j++)
 					names[ data.getDsIndex(dsNames[j]) + tblPos ] = vNames[j];
-				tblPos				+= dsNames.length; 
+				tblPos						+= dsSize; 
 				
 				result[i]					= data;
 			}
@@ -165,10 +197,18 @@ class FetchSource
 		return rrdFile;
 	}
 
+	protected RrdBackendFactory getRrdBackendFactory() throws RrdException
+	{
+		if ( backendName != null )
+			return RrdBackendFactory.getFactory( backendName );
+
+		return RrdBackendFactory.getDefaultFactory();
+	}
+
 	public void exportXml(XmlWriter xml) {
 		for ( int i = 0; i < datasources.length; i++ ) {
 			for ( int j = 0; j < datasources[i].size(); j++ ) {
-				String[] pair = (String[]) datasources[i].elementAt(j);
+				String[] pair = (String[]) datasources[i].get(j);
 				xml.startTag("def");
 				xml.writeTag("name", pair[1]);
 				xml.writeTag("rrd", rrdFile);

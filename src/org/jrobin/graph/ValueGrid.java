@@ -126,9 +126,9 @@ class ValueGrid
 		if ( vAxis != null )
 			return;
 		
-		if ( upper == Double.NaN  || upper == Double.MIN_VALUE || upper == Double.MAX_VALUE )
+		if ( Double.isNaN(upper) || upper == Double.MIN_VALUE || upper == Double.MAX_VALUE )
 			upper = 0.9;
-		if ( lower == Double.NaN || lower == Double.MAX_VALUE || lower == Double.MIN_VALUE )
+		if ( Double.isNaN(lower) || lower == Double.MAX_VALUE || lower == Double.MIN_VALUE )
 			lower = 0;
 		
 		if ( !rigid && upper == 0 && upper == lower )

@@ -102,7 +102,7 @@ class ValueExtractor
 				if ( timestamps[i][ tIndex ] <= timestamp && timestamp < timestamps[i][ tIndex + 1] ) {
 					for (int j = 0; j < dsValues[i].length; j++)
 						sources[tblPos++].set( row, timestamp, dsValues[i][j][ tIndex + 1 ] );
-						break;				
+					break;				
 				}
 				else {
 					tIndex++;

@@ -50,7 +50,19 @@ class Cdef extends Source
 	
 	// ================================================================
 	// -- Constructors
-	// ================================================================	
+	// ================================================================
+	/**
+	 * Constructs a new simple Cdef object based on an empty RPN expression,.
+	 *
+	 * @param name Name of the datasource in the graph definition.
+	 */
+	Cdef( String name )
+	{
+		super( name );
+
+		strTokens	= new String[0];
+	}
+
 	/**
 	 * Constructs a new Cdef object holding a number of datapoints for a graph.
 	 * A Cdef is always based on a RPN expression holding the calculation algorithm.
@@ -184,9 +196,28 @@ class Cdef extends Source
 			else if ( tkn.equals("STEP") )
 				tokens[i]		= RpnCalculator.TKN_STEP;
 			else
-				throw new RrdException("Unknown token enocuntered: " + tkn);	
+				throw new RrdException("Unknown token encountered: " + tkn);	
 			
 		}
+	}
+
+	/**
+	 * Returns the level this Cdef would have in the calculation tree.  The level defines when
+	 * the Cdef can be calculated.  The level depends on the number of Sdefs this Cdef is depending
+	 * on, and their corresponding calculation levels.
+	 *
+	 * @param levels Array containing the previously calculated calculation levels.
+	 * @return Level of this Sdef in the calculation tree.
+	 */
+	int calculateLevel( int[] levels )
+	{
+		int level 	= 0;
+
+		for ( int i = 0; i < dsIndices.length; i++ )
+			if ( levels[ dsIndices[i] ] > level )
+				level = levels[ dsIndices[i] ];
+
+		return level;
 	}
 
 	/**

@@ -494,8 +494,16 @@ public class RrdGraphDefTemplate extends XmlTemplate {
 				// RPN datasource
 				validateTagsOnlyOnce(nodes[i], new String[] {"name", "rpn"});
 				String name = getChildValue(nodes[i], "name");
-				String rpn = getChildValue(nodes[i], "rpn");
+				String rpn 	= getChildValue(nodes[i], "rpn");
 				rrdGraphDef.datasource(name, rpn);
+			}
+			else if ( hasChildNode( nodes[i], "cf" ) || hasChildNode( nodes[i], "datasource" ) ) {
+				// STATIC AGGREGATED DATASOURCE
+				validateTagsOnlyOnce( nodes[i], new String[] {"name", "datasource", "cf"} );
+				String name	= getChildValue(nodes[i], "name");
+				String ds	= getChildValue(nodes[i], "datasource");
+				String cf	= getChildValue(nodes[i], "cf");
+				rrdGraphDef.datasource( name, ds, cf );
 			}
 			else {
 				throw new RrdException("Unrecognized <def> format");

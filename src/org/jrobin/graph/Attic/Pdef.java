@@ -35,13 +35,20 @@ package org.jrobin.graph;
  */
 class Pdef extends Source
 {
+	// ================================================================
+	// -- Members
+	// ================================================================
 	private Plottable plottable;
 	
 	private int index 				= 0;
 	private String sourceName		= null;
 	private boolean indexed 		= false;
 	private boolean named			= false;
-		
+
+
+	// ================================================================
+	// -- Constructors
+	// ================================================================
 	/**
 	 * Constructs a new Plottable Def: a custom external datasource 
 	 * (represented as a Plottable class) that can be graphed by JRobin.
@@ -84,6 +91,10 @@ class Pdef extends Source
 		named			= true;
 	}
 
+
+	// ================================================================
+	// -- Protected methods
+	// ================================================================
 	/**
 	 * Prepares the array that will hold the values.
 	 * @param numPoints Number of datapoints that will be used.

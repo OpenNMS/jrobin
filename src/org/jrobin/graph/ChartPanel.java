@@ -24,7 +24,7 @@
  */
 package org.jrobin.graph;
 
-import java.awt.Graphics;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import javax.swing.JPanel;
 
@@ -37,7 +37,7 @@ public class ChartPanel extends JPanel
 {
 	private BufferedImage chart;
 	
-	void setChart( BufferedImage chart ) {
+	public void setChart( BufferedImage chart ) {
 		this.chart = chart;
 	}
 

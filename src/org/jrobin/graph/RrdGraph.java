@@ -38,10 +38,12 @@ import javax.imageio.ImageWriteParam;
 import javax.imageio.stream.ImageOutputStream;
 import java.awt.image.RenderedImage;
 import java.awt.image.BufferedImage;
+import java.awt.*;
 
 import org.jrobin.core.RrdDb;
 import org.jrobin.core.RrdDbPool;
 import org.jrobin.core.RrdException;
+import org.jrobin.core.RrdBackendFactory;
 
 /**
  * <p>Class to represent JRobin graphs.  This class needs an appropriate RrdGraphDef to generate graphs.</p>
@@ -153,8 +155,7 @@ public class RrdGraph implements Serializable
 	 */
 	public void saveAsPNG( String path, int width, int height ) throws RrdException, IOException
 	{
-		ImageIO.write(getBufferedImage(width, height, BufferedImage.TYPE_INT_RGB),
-			"png", new File(path) );
+		ImageIO.write( getBufferedImage(width, height, BufferedImage.TYPE_INT_RGB), "png", new File(path) );
 	}
 	
 	/**
@@ -187,7 +188,6 @@ public class RrdGraph implements Serializable
 		gifEncoder.encode(stream);
 		
 		stream.close();
-
 	}
 
 	/**
@@ -269,7 +269,7 @@ public class RrdGraph implements Serializable
 				
 		return outputStream.toByteArray();
 	}
-	
+
 	/**
 	 * Returns graph with default chart dimensions (400 by 100) as an array of JPEG bytes.
 	 * @param quality JPEG quality, between 0 (= low) and 1.0f (= high).
@@ -350,28 +350,59 @@ public class RrdGraph implements Serializable
 		
 		return bStream.toByteArray();
 	}
-		
+
+	/**
+	 * Returns the underlying BufferedImage of a graph with custom dimensions.
+	 * Specifying 0 for both width and height will result in a auto-sized graph.
+	 * @param width Width of the chart area in pixels.
+	 * @param height Height of the chart area in pixels.
+	 * @return BufferedImage containing the graph.
+	 * @throws IOException Thrown in case of I/O error.
+	 * @throws RrdException Thrown in case of JRobin specific error.
+	 */
+	public BufferedImage getBufferedImage( int width, int height ) throws IOException, RrdException
+	{
+		return getBufferedImage( width, height, BufferedImage.TYPE_INT_RGB );
+	}
+
 	/**
 	 * Returns panel object so that graph can be easily embedded in swing applications.
 	 * @return Swing JPanel object with graph embedded in panel.
 	 */
-	public JPanel getChartPanel() throws RrdException, IOException
+	public ChartPanel getChartPanel() throws RrdException, IOException
 	{
 		ChartPanel p = new ChartPanel();
 		p.setChart( getBufferedImage(0, 0, BufferedImage.TYPE_INT_RGB) );
 		
 		return p;
 	}
-	
+
+	/**
+	 * Renders the graph onto a specified Graphics2D object.
+	 * Specifying 0 for both width and height will result in a auto-sized graph.
+	 * @param graphics Handle to a Graphics2D object to render the graph on.
+	 * @param width Width of the chart area in pixels.
+	 * @param height Height of the chart area in pixels.
+	 * @throws RrdException Thrown in case of JRobin specific error.
+	 * @throws IOException Thrown in case of I/O error
+	 */
+	public void renderImage( Graphics2D graphics, int width, int height ) throws RrdException, IOException
+	{
+		if ( useImageSize )
+			grapher.renderImage( width, height, graphics, true );
+		else
+			grapher.renderImage( width, height, graphics, false );
+	}
+
 	// ================================================================
 	// -- Protected (package) methods
 	// ================================================================
-	RrdDb getRrd( String rrdFile ) throws IOException, RrdException
+	RrdDb getRrd( String rrdFile, RrdBackendFactory backendFactory  ) throws IOException, RrdException
 	{
 		if ( pool != null )
 			return pool.requestRrdDb( rrdFile );
-		else 
-			return new RrdDb( rrdFile, true );
+		else
+			return new RrdDb( rrdFile, true, backendFactory );
 	}
 
 	void releaseRrd(RrdDb rrdDb) throws RrdException, IOException 
