@@ -318,4 +318,15 @@ public class RrdDef {
 		}
 		throw new RrdException("Could not find datasource named '" + dsName + "'");
 	}
+
+	void removeArchive(String consolFun, int steps) throws RrdException {
+		for(int i = 0; i < arcDefs.size(); i++) {
+			ArcDef arcDef = (ArcDef) arcDefs.get(i);
+			if(arcDef.getConsolFun().equals(consolFun) && arcDef.getSteps() == steps) {
+				arcDefs.remove(i);
+				return;
+			}
+		}
+		throw new RrdException("Could not find archive " + consolFun + "/" + steps);
+	}
 }

@@ -659,19 +659,18 @@ public class RrdDb implements RrdUpdater {
 			throw new RrdException(
 				"Cannot copy RrdDb object to " + other.getClass().getName());
 		}
-		RrdDb rrd = (RrdDb) other;
-		header.copyStateTo(rrd.header);
+		RrdDb otherRrd = (RrdDb) other;
+		header.copyStateTo(otherRrd.header);
 		for(int i = 0; i < datasources.length; i++) {
-			Datasource matchingDatasource = rrd.getDatasource(datasources[i].getDsName());
-			if(matchingDatasource != null) {
-				datasources[i].copyStateTo(matchingDatasource);
+			int j = Util.getMatchingDatasourceIndex(this, i, otherRrd);
+			if(j >= 0) {
+				datasources[i].copyStateTo(otherRrd.datasources[j]);
 			}
 		}
 		for(int i = 0; i < archives.length; i++) {
-			Archive matchingArchive = rrd.getArchive(
-				archives[i].getConsolFun(), archives[i].getSteps());
-			if(matchingArchive != null) {
-				archives[i].copyStateTo(matchingArchive);
+			int j = Util.getMatchingArchiveIndex(this, i, otherRrd);
+			if(j >= 0) {
+				archives[i].copyStateTo(otherRrd.archives[j]);
 			}
 		}
 	}

@@ -409,9 +409,8 @@ public class Archive implements RrdUpdater {
 		}
 		int count = parentDb.getHeader().getDsCount();
 		for(int i = 0; i < count; i++) {
-			String dsName = parentDb.getDatasource(i).getDsName();
-			if(arc.getParentDb().getDatasource(dsName) != null) {
-				int j = arc.getParentDb().getDsIndex(dsName);
+			int j = Util.getMatchingDatasourceIndex(parentDb, i, arc.parentDb);
+			if(j >= 0) {
 				states[i].copyStateTo(arc.states[j]);
 				robins[i].copyStateTo(arc.robins[j]);
 			}

@@ -204,6 +204,31 @@ public class Util {
 		return file1.getCanonicalPath().equals(file2.getCanonicalPath());
 	}
 
+	static int getMatchingDatasourceIndex(RrdDb rrd1, int dsIndex, RrdDb rrd2)
+		throws IOException {
+		String dsName = rrd1.getDatasource(dsIndex).getDsName();
+		try {
+			return rrd2.getDsIndex(dsName);
+		} catch (RrdException e) {
+			return -1;
+		}
+	}
+
+	static int getMatchingArchiveIndex(RrdDb rrd1, int arcIndex, RrdDb rrd2)
+		throws IOException {
+		Archive archive = rrd1.getArchive(arcIndex);
+		String consolFun = archive.getConsolFun();
+		int steps = archive.getSteps();
+		try {
+			return rrd2.getArcIndex(consolFun, steps);
+		} catch (RrdException e) {
+			return -1;
+		}
+	}
+
+	static String getTmpFilename() throws IOException {
+		return File.createTempFile("JROBIN_", ".tmp").getCanonicalPath();
+	}
 }
 
 
