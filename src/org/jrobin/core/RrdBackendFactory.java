@@ -156,8 +156,8 @@ public abstract class RrdBackendFactory {
 	 * @param path Storage path
 	 * @param readOnly True, if the storage should be accessed in read/only mode.
 	 * False otherwise.
-	 * @param lockMode One of the following constants: {@link RrdDb.NO_LOCKS},
-	 * {@link RrdDb.EXCEPTION_IF_LOCKED} or {@link RrdDb.WAIT_IF_LOCKED}.
+	 * @param lockMode One of the following constants: {@link RrdDb#NO_LOCKS},
+	 * {@link RrdDb#EXCEPTION_IF_LOCKED} or {@link RrdDb#WAIT_IF_LOCKED}.
 	 * @return Backend object which handles all I/O operations for the given storage path
 	 * @throws IOException Thrown in case of I/O error.
 	 */

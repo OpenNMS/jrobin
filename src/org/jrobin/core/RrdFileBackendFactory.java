@@ -41,8 +41,8 @@ public class RrdFileBackendFactory extends RrdBackendFactory {
 	 * @param path File path
 	 * @param readOnly True, if the file should be accessed in read/only mode.
 	 * False otherwise.
-	 * @param lockMode One of the following constants: {@link RrdDb.NO_LOCKS},
-	 * {@link RrdDb.EXCEPTION_IF_LOCKED} or {@link RrdDb.WAIT_IF_LOCKED}.
+	 * @param lockMode One of the following constants: {@link RrdDb#NO_LOCKS},
+	 * {@link RrdDb#EXCEPTION_IF_LOCKED} or {@link RrdDb#WAIT_IF_LOCKED}.
 	 * @return RrdFileBackend object which handles all I/O operations for the given file path
 	 * @throws IOException Thrown in case of I/O error.
 	 */
