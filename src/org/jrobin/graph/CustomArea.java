@@ -87,7 +87,7 @@ class CustomArea extends PlotDef
 	 * @param stackValues Datapoint values of previous PlotDefs, used to stack on if necessary.
 	 * @param lastPlotType Type of the previous PlotDef, used to determine PlotDef type of a stack.
 	 */	
-	void draw( ChartGraphics g, int[] xValues, int[] stackValues, int lastPlotType ) throws RrdException
+	void draw( ChartGraphics g, int[] xValues, double[] stackValues, int lastPlotType ) throws RrdException
 	{
 		g.setColor( color );
 	
@@ -137,9 +137,9 @@ class CustomArea extends PlotDef
 		if ( yVal2 != Double.MAX_VALUE )
 			for (int i = 0; i < stackValues.length; i++)
 				if ( xValues[i] < ax || xValues[i] > nx ) 
-					stackValues[i] = 0;
+					stackValues[i] = g.getInverseY(0);
 				else
-					stackValues[i] = ny;
+					stackValues[i] = g.getInverseY(ny);
 	}
 	
 	/**

@@ -24,11 +24,11 @@
  */
 package org.jrobin.graph;
 
-import java.awt.Color;
-import java.awt.BasicStroke;
+import java.awt.*;
 
 import org.jrobin.core.RrdException;
 import org.jrobin.core.XmlWriter;
+import org.jrobin.core.Util;
 
 /**
  * <p>Class used to represent a datasource plotted as a line in a graph.</p>
@@ -40,7 +40,8 @@ class Line extends PlotDef
 	// ================================================================
 	// -- Members
 	// ================================================================
-	protected int lineWidth		= 1;			// Default line width of 1 pixel
+	protected static BasicStroke DEF_LINE_STROKE 	= new BasicStroke(1.0f);
+	protected int lineWidth							= 1;			// Default line width of 1 pixel
 	
 	
 	// ================================================================
@@ -98,34 +99,38 @@ class Line extends PlotDef
 	 * @param stackValues Datapoint values of previous PlotDefs, used to stack on if necessary.
 	 * @param lastPlotType Type of the previous PlotDef, used to determine PlotDef type of a stack.
 	 */
-	void draw( ChartGraphics g, int[] xValues, int[] stackValues, int lastPlotType ) throws RrdException
+	void draw( ChartGraphics g, int[] xValues, double[] stackValues, int lastPlotType ) throws RrdException
 	{
 		g.setColor( color );
-		g.setStroke( new BasicStroke(lineWidth) );
+		g.setStroke( lineWidth != 1 ? new BasicStroke(lineWidth) : DEF_LINE_STROKE );
 
+		Graphics2D gd 	= g.getGraphics();
 		double[] values = source.getValues();
-		
-		int ax = 0, ay = 0;
-		int nx = 0, ny = 0, last = -1;
-	
-		for (int i = 0; i < xValues.length; i++)
+		int len			= xValues.length;
+
+		double value;
+		int ax = 0, ay = 0, nx = 0, ny = 0;
+
+		for ( int i = 0; i < len; i++ )
 		{
-			nx = xValues[i];
-			ny = g.getY( values[i] );
-		
-			if ( stacked && ny != Integer.MIN_VALUE )
-				ny += stackValues[i];
-		
-			if ( visible && ny != Double.NaN && nx != 0 && ay != Integer.MIN_VALUE && ny != Integer.MIN_VALUE )
-				g.drawLine( ax, ay, nx, ny );
-		
-			
-			stackValues[i] 	= ny;
+			value	= values[i];
+
+			nx 		= xValues[i];
+
+			if ( stacked )
+				value += stackValues[i];
+
+			ny 		= g.getY( value );
+
+			if ( visible && !Double.isNaN(ny) && nx != 0 && ay != Integer.MIN_VALUE && ny != Integer.MIN_VALUE )
+				gd.drawLine(ax, -ay, nx, -ny);
+
+			stackValues[i] 	= value;
 			ax 				= nx;
 			ay 				= ny;
 		}
-	
-		g.setStroke( new BasicStroke() );
+
+		g.setStroke( STROKE );
 	}
 	
 	int getLineWidth() {

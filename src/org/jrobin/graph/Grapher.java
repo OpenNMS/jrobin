@@ -316,13 +316,13 @@ class Grapher
 	{
 		// Do the actual graphing
 		calculateSeries();							// calculate all datasources
-						
+
 		plotImageBackground( graphics );			// draw the image background
-			
+
 		plotChart( graphics );						// draw the actual chart
-			
+
 		plotComments( graphics );					// draw all comment lines
-			
+
 		plotOverlay( graphics );					// draw a possible image overlay
 
 		plotSignature( graphics );					// draw the JRobin signature
@@ -609,7 +609,7 @@ class Grapher
 		// Draw the chart area frame
 		graphics.setColor( graphDef.getFrameColor() );
 		graphics.drawRect( lux, luy, chartWidth, chartHeight );
-			
+
 		double val;
 		double[] tmpSeries 	= new double[numPoints];
 
@@ -678,13 +678,13 @@ class Grapher
 			}
 		
 		}
-		
+
 		vGrid 			= new ValueGrid( range, lowerValue, upperValue, graphDef.getValueAxis(), graphDef.getBaseValue() );
 		tGrid			= new TimeGrid( graphDef.getStartTime(), ( graphDef.getEndTime() != 0 ? graphDef.getEndTime() : calculatedEndTime ), graphDef.getTimeAxis(), graphDef.getFirstDayOfWeek() );
 		
 		lowerValue		= vGrid.getLowerValue();
 		upperValue		= vGrid.getUpperValue();
-		
+
 		// Use a special graph 'object' that takes care of resizing and reversing y coordinates
 		ChartGraphics g 	= new ChartGraphics( graphics );
 		g.setDimensions( chartWidth, chartHeight );
@@ -709,23 +709,22 @@ class Grapher
 		graphics.setClip( lux, luy, chartWidth, chartHeight);
 		graphics.translate( graphOriginX, graphOriginY );
  
-		int lastPlotType 	= PlotDef.PLOT_LINE;
-		int[] parentSeries 	= new int[numPoints];
+		int lastPlotType 		= PlotDef.PLOT_LINE;
+		double[] parentSeries 	= new double[numPoints];
 
 		// Pre calculate x positions of the corresponding timestamps
 		int[] xValues		= new int[timestamps.length];
 		for (int i = 0; i < timestamps.length; i++)
 			xValues[i]		= g.getX(timestamps[i]);
-	
+
 		// Draw all graphed values
-		for (int i = 0; i < plotDefs.length; i++) 
+		for ( int i = 0; i < plotDefs.length; i++ )
 		{
 			plotDefs[i].draw( g, xValues, parentSeries, lastPlotType );
-			if(plotDefs[i].plotType != PlotDef.PLOT_STACK) {
+			if( plotDefs[i].plotType != PlotDef.PLOT_STACK )
 				lastPlotType = plotDefs[i].plotType;
-			}
 		}
-		
+
 		// Reset clipping area, origin and AA settings
 		graphics.translate( -graphOriginX, -graphOriginY );
 		graphics.setClip( 0, 0, imgWidth, imgHeight);

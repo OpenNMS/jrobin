@@ -166,7 +166,7 @@ class Source
 			totalValue		+= timeDelta * ( value + lastValue ) / 2.0;
 			totalTime		+= timeDelta;
 		}
-		
+
 		lastTime	= time;
 		lastValue	= value;
 	}

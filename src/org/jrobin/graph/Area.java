@@ -74,37 +74,41 @@ class Area extends PlotDef
 	 * @param stackValues Datapoint values of previous PlotDefs, used to stack on if necessary.
 	 * @param lastPlotType Type of the previous PlotDef, used to determine PlotDef type of a stack.
 	 */
-	void draw( ChartGraphics g, int[] xValues, int[] stackValues, int lastPlotType )
+	void draw( ChartGraphics g, int[] xValues, double[] stackValues, int lastPlotType )
 	{
 		g.setColor( color );
 		
 		double[] values = source.getValues();
-		
-		int ax = 0, ay = 0, py;
-		int nx = 0, ny = 0, last = -1;
+		int len			= xValues.length;
 
-		for (int i = 0; i < xValues.length; i++)
+		double value;
+		int ax = 0, ay = 0, nx = 0, ny = 0, py;
+
+		for ( int i = 0; i < len; i++ )
 		{
+			value	= values[i];
 			py = 0;
 			
 			nx = xValues[i];
-			ny = g.getY( values[i] );
-		
-			if ( !Double.isNaN(values[i]) )
+
+			if ( !Double.isNaN(value) )
 			{
-				if ( stacked ) {
-					py 	= stackValues[i];
-					ny += ( stackValues[i] == Integer.MIN_VALUE ? Integer.MIN_VALUE : stackValues[i] );
+				if ( stacked )
+				{
+					py 		= g.getY( stackValues[i] );
+					value	+= stackValues[i];
 				}
-			
+
+				ny = g.getY( value );
+
 				if ( visible )
 				{
-					if (nx > ax + 1)	// More than one pixel hop, draw intermediate pixels too
+					if ( nx > ax + 1 )	// More than one pixel hop, draw intermediate pixels too
 					{
 						// For each pixel between nx and ax, calculate the y, plot the line
 						int co 	= (ny - ay) / (nx - ax);
-						int j 	= (ax > 0 ? ax : 1 );		// Skip 0 
-				
+						int j 	= (ax > 0 ? ax : 1 );		// Skip 0
+
 						for (j = ax; j <= nx; j++)
 							if ( ay != Integer.MIN_VALUE && ny != Integer.MIN_VALUE )
 								g.drawLine( j, py, j, ( co * (j - ax) + ay) );
@@ -112,13 +116,12 @@ class Area extends PlotDef
 					else if ( nx != 0 && py != Integer.MIN_VALUE && ny != Integer.MIN_VALUE )
 						g.drawLine( nx, py, nx, ny );
 				}
-			
-				
+
+
 			}
 			
 			// Special case with NaN doubles
-			
-			stackValues[i] 	= ny;
+			stackValues[i] 	= value;
 			ax 				= nx;
 			ay 				= ny;
 		}

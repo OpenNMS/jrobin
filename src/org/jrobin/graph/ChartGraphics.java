@@ -48,7 +48,6 @@ class ChartGraphics
 
 	private double widthDelta = 1.0d, heightDelta = 3.0d;
 
-
 	// ================================================================
 	// -- Constructors
 	// ================================================================	
@@ -145,6 +144,8 @@ class ChartGraphics
 			heightDelta = height * 1.0d / (( yEnd - yStart) * 1.0d);
 		else
 			heightDelta = 1.0d;
+
+		yStart = (yStart < 0 ? 0 : Math.abs(yStart));
 	}
 
 	/**
@@ -154,7 +155,7 @@ class ChartGraphics
 	 */
 	int getX( long timestamp )
 	{
-		return new Double((timestamp - xStart) * widthDelta).intValue();
+		return (int) ((timestamp - xStart) * widthDelta);
 	}
 
 	/**
@@ -165,12 +166,17 @@ class ChartGraphics
 	int getY( double value )
 	{
 		if ( Double.isNaN(value) ) return Integer.MIN_VALUE;
-	
-		int tmp = new Double( (value - ( yStart < 0 ? 0 : Math.abs(yStart) ) ) * heightDelta).intValue();
-		
-		return ( tmp > value * heightDelta ? tmp - 1 : tmp );
+
+		return (int) ((value - yStart ) * heightDelta);
 	}
-	
+
+	double getInverseY( int value )
+	{
+		if ( value == Integer.MIN_VALUE ) return Double.NaN;
+
+		return (value * 1.0d/heightDelta) + yStart;
+	}
+
 	/**
 	 * Sets the Stroke to use for graphing on the graphics context.
 	 * @param s Specified <code>Stroke</code> to use.

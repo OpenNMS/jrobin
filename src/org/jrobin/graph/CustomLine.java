@@ -112,10 +112,10 @@ class CustomLine extends Line
 	 * @param stackValues Datapoint values of previous PlotDefs, used to stack on if necessary.
 	 * @param lastPlotType Type of the previous PlotDef, used to determine PlotDef type of a stack.
 	 */	
-	void draw( ChartGraphics g, int[] xValues, int[] stackValues, int lastPlotType ) throws RrdException
+	void draw( ChartGraphics g, int[] xValues, double[] stackValues, int lastPlotType ) throws RrdException
 	{
 		g.setColor( color );
-		g.setStroke( new BasicStroke(lineWidth) );
+		g.setStroke( lineWidth != 1 ? new BasicStroke(lineWidth) : DEF_LINE_STROKE );
 		
 		int ax, ay, nx, ny;
 		
@@ -160,16 +160,15 @@ class CustomLine extends Line
 			double rc = ((ny - ay) * 1.0d) / rx;
 			for (int i = 0; i < xValues.length; i++) {
 				if ( xValues[i] < ax || xValues[i] > nx ) 
-					stackValues[i] = 0;
+					stackValues[i] = g.getInverseY(0);
 				else if ( ay == ny )
-					stackValues[i] = ay;
+					stackValues[i] = g.getInverseY(ay);
 				else
-					stackValues[i] = new Double(rc * (xValues[i] - ax) + ay).intValue();
+					stackValues[i] = g.getInverseY( (int) (rc * (xValues[i] - ax) + ay) );
 			}
 		}
-		
-				 
-		g.setStroke( new BasicStroke() );
+
+		g.setStroke( STROKE );
 	}
 	
 	/**

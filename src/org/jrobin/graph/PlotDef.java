@@ -24,7 +24,7 @@
  */
 package org.jrobin.graph;
 
-import java.awt.Color;
+import java.awt.*;
 import java.util.HashMap;
 
 import org.jrobin.core.RrdException;
@@ -42,17 +42,18 @@ abstract class PlotDef
 	// ================================================================
 	// -- Members
 	// ================================================================
-	protected static final int PLOT_LINE 	= 0;
-	protected static final int PLOT_AREA 	= 1;
-	protected static final int PLOT_STACK	= 2;
-	
-	protected boolean visible 				= true;
-	protected boolean stacked				= false;
-	protected int plotType					= PLOT_LINE;	// Unknown plotdef is a line
+	protected static final int PLOT_LINE 		= 0;
+	protected static final int PLOT_AREA 		= 1;
+	protected static final int PLOT_STACK		= 2;
+	protected static final BasicStroke STROKE	= new BasicStroke();
+
+	protected boolean visible 					= true;
+	protected boolean stacked					= false;
+	protected int plotType						= PLOT_LINE;	// Unknown plotdef is a line
 		
-	protected String sourceName				= "";
-	protected Source source					= null;
-	protected Color color					= Color.BLACK;	// Default color is black
+	protected String sourceName					= "";
+	protected Source source						= null;
+	protected Color color						= Color.BLACK;	// Default color is black
 	
 	
 	// ================================================================
@@ -127,7 +128,7 @@ abstract class PlotDef
 	 * Abstract draw method, must be implemented in all child classes.
 	 * This method is responsible for the actual drawing of the PlotDef.
 	 */
-	abstract void draw( ChartGraphics g, int[] xValues, int[] stackValues, int lastPlotType ) throws RrdException;
+	abstract void draw( ChartGraphics g, int[] xValues, double[] stackValues, int lastPlotType ) throws RrdException;
 	
 	Source getSource() {
 		return source;
