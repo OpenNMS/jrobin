@@ -548,4 +548,65 @@ public class RrdDef {
 		return 64L + 128L * dsCount + 56L * arcCount +
 			20L * dsCount * arcCount + 8L * dsCount * rowsCount;
 	}
+
+	/**
+	 * Compares the current RrdDef with another. RrdDefs are considered equal if:<p>
+	 *<ul>
+	 * <li>RRD steps match
+	 * <li>all datasources have exactly the same definition in both RrdDef objects (datasource names,
+	 * types, heartbeat, min and max values must match)
+	 * <li>all archives have exactly the same definition in both RrdDef objects (archive consolidation
+	 * functions, X-file factors, step and row counts must match)
+	 * </ul>
+	 * @param obj The second RrdDef object
+	 * @return true if RrdDefs match exactly, false otherwise
+	 */
+	public boolean equals(Object obj) {
+		if(obj == null || !(obj instanceof RrdDef)) {
+			return false;
+		}
+		RrdDef rrdDef2 = (RrdDef) obj;
+		// check primary RRD step
+		if(step != rrdDef2.step) {
+			return false;
+		}
+		// check datasources
+		DsDef[] dsDefs = getDsDefs(), dsDefs2 = rrdDef2.getDsDefs();
+		if(dsDefs.length != dsDefs2.length) {
+			return false;
+		}
+		for(int i = 0; i < dsDefs.length; i++) {
+			boolean matched = false;
+			for(int j = 0; j < dsDefs2.length; j++) {
+				if(dsDefs[i].exactlyEqual(dsDefs2[j])) {
+					matched = true;
+					break;
+				}
+			}
+			// this datasource could not be matched
+			if(!matched) {
+				return false;
+			}
+		}
+		// check archives
+		ArcDef[] arcDefs = getArcDefs(), arcDefs2 = rrdDef2.getArcDefs();
+		if(arcDefs.length != arcDefs2.length) {
+			return false;
+		}
+		for(int i = 0; i < arcDefs.length; i++) {
+			boolean matched = false;
+			for(int j = 0; j < arcDefs2.length; j++) {
+				if(arcDefs[i].exactlyEqual(arcDefs2[j])) {
+					matched = true;
+					break;
+				}
+			}
+			// this archive could not be matched
+			if(!matched) {
+				return false;
+			}
+		}
+		// everything matches
+		return true;
+	}
 }

@@ -533,4 +533,19 @@ public class Util {
 		return uri;
 	}
 
+	/**
+	 * Compares two doubles, but returns true if x = y = Double.NaN
+	 * @param x First double
+	 * @param y Second double
+	 * @return true, if doubles are equal, false otherwise.
+	 */
+	public static boolean equal(double x, double y) {
+		if(Double.isNaN(x) && Double.isNaN(y)) {
+			return true;
+		}
+		else {
+			return x == y;
+		}
+	}
+
 }

@@ -172,4 +172,9 @@ public class DsDef {
 		return false;
 	}
 
+	boolean exactlyEqual(DsDef def) {
+		return dsName.equals(def.dsName) && dsType.equals(def.dsType) &&
+				heartbeat == def.heartbeat && Util.equal(minValue, def.minValue) &&
+				Util.equal(maxValue, def.maxValue);
+	}
 }

@@ -161,4 +161,8 @@ public class ArcDef {
 		this.rows = rows;
 	}
 
+	boolean exactlyEqual(ArcDef def) {
+		return consolFun.equals(def.consolFun) && xff == def.xff &&
+				steps == def.steps && rows == def.rows;
+	}
 }
