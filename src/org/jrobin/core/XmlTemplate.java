@@ -188,13 +188,19 @@ public abstract class XmlTemplate {
 	}
 
 	private String resolveMappings(String templateValue) {
+		if(templateValue == null) {
+			return null;
+		}
 		Matcher matcher = PATTERN.matcher(templateValue);
 		StringBuffer result = new StringBuffer();
+		int lastMatchEnd = 0;
 		while(matcher.find()) {
 			String var = matcher.group(1);
 			if(valueMap.containsKey(var)) {
 				// mapping found
-                matcher.appendReplacement(result, valueMap.get(var).toString());
+				result.append(templateValue.substring(lastMatchEnd, matcher.start()));
+				result.append(valueMap.get(var).toString());
+				lastMatchEnd = matcher.end();
 			}
 			else {
 				// no mapping found - this is illegal
@@ -203,7 +209,7 @@ public abstract class XmlTemplate {
 					"No mapping found for template variable ${" + var + "}");
 			}
 		}
-        matcher.appendTail(result);
+		result.append(templateValue.substring(lastMatchEnd));
 		return result.toString();
 	}
 

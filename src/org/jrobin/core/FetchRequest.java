@@ -133,9 +133,9 @@ public class FetchRequest {
 		if(fetchEnd < 0) {
 			throw new RrdException("Invalid end time in fetch request: " + fetchEnd);
 		}
-		if(fetchStart >= fetchEnd) {
+		if(fetchStart > fetchEnd) {
 			throw new RrdException("Invalid start/end time in fetch request: " + fetchStart +
-				"/" + fetchEnd);
+				" > " + fetchEnd);
 		}
 		if(resolution <= 0) {
 			throw new RrdException("Invalid resolution in fetch request: " + resolution);
