@@ -26,7 +26,7 @@ import java.text.DecimalFormat;
 import java.util.Date;
 
 /**
- * Class defines various utility functions used in JRobin.
+ * Class defines various utility functions used in JRobin. 
  *
  * @author <a href="mailto:saxon@eunet.yu">Sasa Markovic</a>
  */
