@@ -99,7 +99,8 @@ public class RrdDbPool {
 	 * Constant to represent the maximum number of internally open RRD files
 	 * which still does not force garbage collector to run.
 	 */
-	public static final int OPEN_FILES_DESIRED = 50;
+	public static final int INITIAL_CAPACITY = 50;
+	private static int capacity = INITIAL_CAPACITY;
 
 	private HashMap rrdMap = new HashMap();
 
@@ -215,6 +216,10 @@ public class RrdDbPool {
 	 * @throws RrdException Thrown in case of JRobin specific error.
 	 */
 	public synchronized void release(RrdDb rrdDb) throws IOException, RrdException {
+		if(rrdDb == null) {
+			// we don't want NullPointerException
+			return;
+		}
 		RrdFile rrdFile = rrdDb.getRrdFile();
 		if(rrdFile == null) {
 			throw new RrdException("Cannot release: already closed");
@@ -234,7 +239,7 @@ public class RrdDbPool {
 
 	private void gc() throws IOException {
 		int mapSize = rrdMap.size();
-		if(mapSize <= OPEN_FILES_DESIRED) {
+		if(mapSize <= capacity) {
 			// nothing to do
 			debug("GC: no need to run");
 			return;
@@ -314,6 +319,26 @@ public class RrdDbPool {
 			buff.append("\n");
 		}
 		return buff.toString();
+	}
+
+	/**
+	 * Returns maximum number of internally open RRD files
+	 * which still does not force garbage collector to run.
+	 *
+	 * @return Desired nuber of open files held in the pool.
+	 */
+	public static int getCapacity() {
+		return capacity;
+	}
+
+	/**
+	 * Sets maximum number of internally open RRD files
+	 * which still does not force garbage collector to run.
+	 *
+	 * @param capacity Desired number of open files to hold in the pool
+	 */
+	public static void setCapacity(int capacity) {
+		RrdDbPool.capacity = capacity;
 	}
 
 	private class RrdEntry {

@@ -58,32 +58,32 @@ class Grapher {
 
 	RrdGraph getRrdGraph(long start, long stop) throws MrtgException {
 		String filename = Archiver.getRrdFilename(host, ifDescr);
-		RrdGraphDef gDef = new RrdGraphDef();
+		RrdGraph graph = new RrdGraph(true);
+		RrdGraphDef graphDef = new RrdGraphDef();
 		try {
-			gDef.setImageBorder(Color.WHITE, 0);	// Don't show border
-			gDef.setTimePeriod(start, stop);
-			gDef.setTitle(ifDescr + "@" + host);
-			gDef.setVerticalLabel("transfer speed [bits/sec]");
-			gDef.datasource("in", filename, "in", "AVERAGE");
-			gDef.datasource("out", filename, "out", "AVERAGE");
-			gDef.datasource("in8", "in,8,*");
-			gDef.datasource("out8", "out,8,*");
-			gDef.area("out8", Color.GREEN, "output traffic\n");
-			gDef.line("in8", Color.BLUE, "input traffic");
-			gDef.comment("\n");
-			gDef.gprint("in8", "AVERAGE", "Average input: @7.2 @sbits/s");
-			gDef.gprint("in8", "MAX", "Maximum input: @7.2 @Sbits/s\n");
-			gDef.gprint("out8", "AVERAGE", "Average output:@7.2 @sbits/s");
-			gDef.gprint("out8", "MAX", "Maximum output:@7.2 @Sbits/s\n");
-			gDef.comment("\n");
-			gDef.comment("Description on device: " + alias);
-			gDef.comment("\n");
-			gDef.comment("Graph from " + new Date(start * 1000L));
-			gDef.comment("to " + new Date(stop * 1000L + 1));
-			return new RrdGraph(gDef);
+			graphDef.setImageBorder(Color.WHITE, 0);	// Don't show border
+			graphDef.setTimePeriod(start, stop);
+			graphDef.setTitle(ifDescr + "@" + host);
+			graphDef.setVerticalLabel("transfer speed [bits/sec]");
+			graphDef.datasource("in", filename, "in", "AVERAGE");
+			graphDef.datasource("out", filename, "out", "AVERAGE");
+			graphDef.datasource("in8", "in,8,*");
+			graphDef.datasource("out8", "out,8,*");
+			graphDef.area("out8", Color.GREEN, "output traffic\n");
+			graphDef.line("in8", Color.BLUE, "input traffic");
+			graphDef.comment("\n");
+			graphDef.gprint("in8", "AVERAGE", "Average input: @7.2 @sbits/s");
+			graphDef.gprint("in8", "MAX", "Maximum input: @7.2 @Sbits/s\n");
+			graphDef.gprint("out8", "AVERAGE", "Average output:@7.2 @sbits/s");
+			graphDef.gprint("out8", "MAX", "Maximum output:@7.2 @Sbits/s\n");
+			graphDef.comment("\n");
+			graphDef.comment("Description on device: " + alias);
+			graphDef.comment("\n");
+			graphDef.comment("Graph from " + new Date(start * 1000L));
+			graphDef.comment("to " + new Date(stop * 1000L + 1));
+			graph.setGraphDef(graphDef);
+			return graph;
 		} catch (RrdException e) {
-			throw new MrtgException(e);
-		} catch (IOException e) {
 			throw new MrtgException(e);
 		}
 	}

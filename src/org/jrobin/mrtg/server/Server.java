@@ -62,7 +62,7 @@ class Server {
 
 	private Server() throws MrtgException {
 		// set RrdDb locking mode
-		RrdDb.setLockMode(RrdDb.WAIT_IF_LOCKED);
+		RrdDb.setLockMode(RrdDb.NO_LOCKS);
 		String hwFile = Config.getHardwareFile();
 		if(new File(hwFile).exists()) {
 			loadHardware();

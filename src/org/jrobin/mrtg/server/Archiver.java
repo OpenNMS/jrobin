@@ -24,10 +24,7 @@
  */
 package org.jrobin.mrtg.server;
 
-import org.jrobin.core.RrdDb;
-import org.jrobin.core.RrdDef;
-import org.jrobin.core.RrdException;
-import org.jrobin.core.Sample;
+import org.jrobin.core.*;
 import org.jrobin.mrtg.Debug;
 
 import java.io.File;
@@ -37,6 +34,7 @@ import java.util.LinkedList;
 class Archiver extends Thread {
 	private int sampleCount, badSavesCount, goodSavesCount;
 	private LinkedList queue = new LinkedList();
+	private static final RrdDbPool pool = RrdDbPool.getInstance();
 
     public void run() {
 		while(true) {
@@ -57,10 +55,9 @@ class Archiver extends Thread {
 	}
 
 	private void process(RawSample rawSample) {
-		String rrdFile = getRrdFilename(rawSample);
 		RrdDb rrdDb = null;
 		try {
-			rrdDb = openRrdFile(rrdFile);
+			rrdDb = openRrdFileFor(rawSample);
 			Sample sample = rrdDb.createSample();
 			sample.setTime(rawSample.getTimestamp());
 			if(rawSample.isValid()) {
@@ -68,25 +65,25 @@ class Archiver extends Thread {
 				sample.setValue("out", rawSample.getIfOutOctets());
 			}
 			sample.update();
-			rrdDb.close();
 			goodSavesCount++;
-			Debug.print("Updated: " + rrdFile);
-		} catch (Exception e) {
+		} catch (IOException e) {
 			badSavesCount++;
-			Debug.print("Error while storing sample to RRD file " + rrdFile + ": " + e);
-		}
-		finally {
-			if(rrdDb != null) {
-				try {
-					rrdDb.close();
-				} catch (IOException e) {
-
-				}
+			e.printStackTrace();
+		} catch (RrdException e) {
+			badSavesCount++;
+			e.printStackTrace();
+		} finally {
+			try {
+				pool.release(rrdDb);
+			} catch (IOException e) {
+				e.printStackTrace();
+			} catch (RrdException e) {
+				e.printStackTrace();
 			}
 		}
 	}
 
-	private String getRrdFilename(RawSample rawSample) {
+	private String getRrdFilenameFor(RawSample rawSample) {
 		return getRrdFilename(rawSample.getHost(), rawSample.getIfDescr());
 	}
 
@@ -103,13 +100,17 @@ class Archiver extends Thread {
 		sampleCount++;
 	}
 
-	private RrdDb openRrdFile(String rrdFile) throws IOException, RrdException {
+	private RrdDb openRrdFileFor(RawSample rawSample)
+		throws IOException, RrdException {
+		String rrdFile = getRrdFilenameFor(rawSample);
 		if(new File(rrdFile).exists()) {
-			return new RrdDb(rrdFile);
+			return pool.requestRrdDb(rrdFile);
 		}
 		else {
 			// create RRD file first
-			RrdDef rrdDef = new RrdDef(rrdFile);
+			final RrdDef rrdDef = new RrdDef(rrdFile);
+			rrdDef.setStep(300);
+			rrdDef.setStartTime(rawSample.getTimestamp() - 10);
 			rrdDef.addDatasource("in", "COUNTER", 600, Double.NaN, Double.NaN);
 			rrdDef.addDatasource("out", "COUNTER", 600, Double.NaN, Double.NaN);
 			rrdDef.addArchive("AVERAGE", 0.5, 1, 600);
@@ -125,7 +126,7 @@ class Archiver extends Thread {
 			rrdDef.addArchive("MIN", 0.5, 24, 775);
 			rrdDef.addArchive("MIN", 0.5, 288, 797);
 			Debug.print("Created: " + rrdFile);
-			return new RrdDb(rrdDef);
+			return pool.requestRrdDb(rrdDef);
 		}
 	}
 
