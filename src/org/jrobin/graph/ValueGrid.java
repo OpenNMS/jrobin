@@ -118,6 +118,9 @@ class ValueGrid
 		
 		// Determine nice axis grid
 		double shifted = Math.abs(upper - lower);
+		if ( shifted == 0 )			// Special case, no 'range' available
+			shifted = upper;
+		
 		double mod		= 1.0;
 		while ( shifted > 10 ) {
 			shifted /= 10;

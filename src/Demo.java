@@ -90,6 +90,7 @@ class Demo {
 			sample.setValue("shade", shadeSource.getValue());
 			pw.println(sample.dump());
 			sample.update();
+			
 			t += Math.random() * MAX_STEP + 1;
 			if(((++n) % 1000) == 0) {
 				System.out.print("*");
