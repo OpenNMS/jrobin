@@ -56,14 +56,22 @@ public class RrdNioBackend extends RrdFileBackend {
 			throws IOException {
 		super(path, readOnly, lockMode);
 		this.syncMode = syncMode;
-		mapFile();
-		if(syncMode == RrdNioBackendFactory.SYNC_BACKGROUND && !readOnly) {
-			syncTask = new TimerTask() {
-				public void run() {
-					sync();
-				}
-			};
-			fileSyncTimer.schedule(syncTask, syncPeriod * 1000L, syncPeriod * 1000L);
+		// try-catch block suggested by jroth
+		// http://www.jrobin.org/mantis/bug_view_page.php?bug_id=0000072
+		try {
+			mapFile();
+			if(syncMode == RrdNioBackendFactory.SYNC_BACKGROUND && !readOnly) {
+				syncTask = new TimerTask() {
+					public void run() {
+						sync();
+					}
+				};
+				fileSyncTimer.schedule(syncTask, syncPeriod * 1000L, syncPeriod * 1000L);
+			}
+		}
+		catch(IOException ioe) {
+			super.close();
+			throw ioe;
 		}
 	}
 
@@ -72,7 +80,7 @@ public class RrdNioBackend extends RrdFileBackend {
 		if(length > 0) {
 			FileChannel.MapMode mapMode =
 				readOnly? FileChannel.MapMode.READ_ONLY: FileChannel.MapMode.READ_WRITE;
-			byteBuffer = channel.map(mapMode, 0, length);
+			byteBuffer = file.getChannel().map(mapMode, 0, length);
 		}
 	}
 

@@ -61,7 +61,7 @@ public class RrdSafeFileBackend extends RrdFileBackend {
 			return;
 		}
 		for(int i = 0; i < LOCK_RETRY_COUNT; i++) {
-			lock = channel.tryLock();
+			lock = file.getChannel().tryLock();
 			if(lock != null) {
 				return;
 			}

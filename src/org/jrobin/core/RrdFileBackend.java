@@ -27,9 +27,9 @@ package org.jrobin.core;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * JRobin backend which is used to store RRD data to ordinary files on the disk. This was the
@@ -40,7 +40,7 @@ import java.util.HashSet;
 public class RrdFileBackend extends RrdBackend {
 	private static final long LOCK_DELAY = 100; // 0.1sec
 
-	private static HashSet openFiles = new HashSet();
+	private static Set openFiles = new HashSet();
 
 	/** read/write file status */
 	protected boolean readOnly;
@@ -49,8 +49,6 @@ public class RrdFileBackend extends RrdBackend {
 
 	/** radnom access file handle */
 	protected RandomAccessFile file;
-	/** file channel used to create locks */
-	protected FileChannel channel;
 	/** file lock */
 	protected FileLock fileLock;
 
@@ -66,15 +64,20 @@ public class RrdFileBackend extends RrdBackend {
 		this.readOnly = readOnly;
 		this.lockMode = lockMode;
 		file = new RandomAccessFile(path, readOnly ? "r" : "rw");
-		channel = file.getChannel();
-		lockFile();
-		registerWriter();
+		try {
+			lockFile();
+			registerWriter();
+		}
+		catch(IOException ioe) {
+			close();
+			throw ioe;
+		}
 	}
 
 	private void lockFile() throws IOException {
 		switch (lockMode) {
 			case RrdDb.EXCEPTION_IF_LOCKED:
-				fileLock = channel.tryLock();
+				fileLock = file.getChannel().tryLock();
 				if (fileLock == null) {
 					// could not obtain lock
 					throw new IOException("Access denied. " + "File [" + getPath() + "] already locked");
@@ -82,7 +85,7 @@ public class RrdFileBackend extends RrdBackend {
 				break;
 			case RrdDb.WAIT_IF_LOCKED:
 				while (fileLock == null) {
-					fileLock = channel.tryLock();
+					fileLock = file.getChannel().tryLock();
 					if (fileLock == null) {
 						// could not obtain lock, wait a little, than try again
 						try {
@@ -122,9 +125,12 @@ public class RrdFileBackend extends RrdBackend {
 	 */
 	public void close() throws IOException {
 		unregisterWriter();
-		unlockFile();
-		channel.close();
-		file.close();
+		try {
+			unlockFile();
+		}
+		finally {
+			file.close();
+		}
 	}
 
 	private void unlockFile() throws IOException {
@@ -138,11 +144,7 @@ public class RrdFileBackend extends RrdBackend {
 			String path = getPath();
 			String canonicalPath = getCanonicalPath(path);
 			synchronized (openFiles) {
-				boolean removed = openFiles.remove(canonicalPath);
-				if (!removed) {
-					throw new IOException("File [" + file + "] could not be removed from the list of files " +
-							"open for R/W access");
-				}
+				openFiles.remove(canonicalPath);
 			}
 		}
 	}
