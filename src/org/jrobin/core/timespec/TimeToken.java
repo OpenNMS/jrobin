@@ -23,7 +23,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-package org.jrobin.cmd;
+package org.jrobin.core.timespec;
 
 class TimeToken {
 	public static final int MIDNIGHT = 1;

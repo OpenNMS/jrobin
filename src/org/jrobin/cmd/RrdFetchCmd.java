@@ -29,6 +29,8 @@ import org.jrobin.core.RrdException;
 import org.jrobin.core.RrdDb;
 import org.jrobin.core.FetchRequest;
 import org.jrobin.core.FetchData;
+import org.jrobin.core.timespec.TimeParser;
+import org.jrobin.core.timespec.TimeSpec;
 
 import java.io.IOException;
 

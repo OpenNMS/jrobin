@@ -26,6 +26,9 @@
 package org.jrobin.cmd;
 
 import org.jrobin.core.*;
+import org.jrobin.core.timespec.TimeParser;
+import org.jrobin.core.timespec.TimeSpec;
+
 import java.io.IOException;
 
 class RrdUpdateCmd extends RrdToolCmd {

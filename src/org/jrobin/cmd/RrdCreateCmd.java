@@ -28,6 +28,8 @@ package org.jrobin.cmd;
 import org.jrobin.core.RrdException;
 import org.jrobin.core.RrdDef;
 import org.jrobin.core.RrdDb;
+import org.jrobin.core.timespec.TimeParser;
+import org.jrobin.core.timespec.TimeSpec;
 
 import java.io.IOException;
 

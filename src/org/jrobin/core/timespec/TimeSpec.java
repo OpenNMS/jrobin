@@ -23,7 +23,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-package org.jrobin.cmd;
+package org.jrobin.core.timespec;
 
 import org.jrobin.core.RrdException;
 import org.jrobin.core.Util;
@@ -34,7 +34,7 @@ import java.util.Calendar;
 
 /**
  * Simple class to represent time obtained by parsing at-style date specification (described
- * in detail on the rrdfetch man page. See javadoc {@link TimeParser} for more information.
+ * in detail on the rrdfetch man page. See javadoc {@link org.jrobin.core.timespec.TimeParser} for more information.
  */
 public class TimeSpec {
 	static final int TYPE_ABSOLUTE = 0;

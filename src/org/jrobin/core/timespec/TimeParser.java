@@ -26,7 +26,7 @@
 /*
  * Java port of Tobi's original parsetime.c routine
  */
-package org.jrobin.cmd;
+package org.jrobin.core.timespec;
 
 import org.jrobin.core.RrdException;
 import org.jrobin.core.Util;
