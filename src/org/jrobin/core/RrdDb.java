@@ -1111,6 +1111,22 @@ public class RrdDb implements RrdUpdater {
 		return datasources[dsIndex].getLastValue();
 	}
 
+	/**
+	 * Returns the number of datasources defined in the file
+	 * @return The number of datasources defined in the file
+	 */
+	public int getDsCount() {
+		return datasources.length;
+	}
+
+	/**
+	 * Returns the number of RRA arcihves defined in the file
+	 * @return The number of RRA arcihves defined in the file
+	 */
+	public int getArcCount() {
+		return archives.length;
+	}
+
 	public static void main(String[] args) {
 		System.out.println("JRobin Java Library :: RRDTool choice for the Java world");
 		System.out.println("==================================================================");

@@ -1,5 +1,3 @@
-package org.jrobin.demo;
-
 /* ============================================================
  * JRobin : Pure java implementation of RRDTool's functionality
  * ============================================================
@@ -25,6 +23,8 @@ package org.jrobin.demo;
  * Boston, MA 02111-1307, USA.
  */
 
+package org.jrobin.demo;
+
 import org.jrobin.core.*;
 import org.jrobin.graph.RrdGraph;
 import org.jrobin.graph.RrdGraphDef;
@@ -37,8 +37,6 @@ import java.io.PrintWriter;
 import java.util.Random;
 
 class Demo {
-	// static final String FACTORY_NAME = "NIO";
-
 	static final long SEED = 1909752002L;
 	static final Random RANDOM = new Random(SEED);
 	static final String FILE = "demo";
@@ -48,8 +46,6 @@ class Demo {
 	static final int MAX_STEP = 300;
 
 	public static void main(String[] args) throws RrdException, IOException {
-		// RrdDb.setDefaultFactory(FACTORY_NAME);
-		// setup
 		println("== Starting demo");
 		RrdDb.setLockMode(RrdDb.NO_LOCKS);
 		long startMillis = System.currentTimeMillis();
@@ -136,11 +132,13 @@ class Demo {
 		log.println(request.dump());
 		FetchData fetchData = request.fetchData();
 		println("== Data fetched. " + fetchData.getRowCount() + " points obtained");
-		for(int i = 0; i < fetchData.getRowCount(); i++) {
-			println(fetchData.getRow(i).dump());
-		}
-		println("== Dumping fetch data to XML format");
+		println(fetchData.toString());
+		println("== Dumping fetched data to XML format");
 		println(fetchData.exportXml());
+		println("== Dumping fetch statistics for datasource 'sun'");
+		println(fetchData.getStats("sun").dump());
+		println("== Dumping fetch statistics for datasource 'shade'");
+		println(fetchData.getStats("shade").dump());
 		println("== Fetch completed");
 
 		// dump to XML file

@@ -25,10 +25,7 @@
 
 package org.jrobin.core;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.StringTokenizer;
+import java.util.*;
 import java.io.*;
 
 /**
@@ -456,6 +453,16 @@ public class RrdDef {
 		throw new RrdException("Could not find datasource named '" + dsName + "'");
 	}
 
+	void saveSingleDatasource(String dsName) {
+		Iterator it = dsDefs.iterator();
+		while(it.hasNext()) {
+			DsDef dsDef = (DsDef) it.next();
+			if(!dsDef.getDsName().equals(dsName)) {
+				it.remove();
+			}
+		}
+	}
+
 	void removeArchive(String consolFun, int steps) throws RrdException {
         ArcDef arcDef = findArchive(consolFun, steps);
 		if(!arcDefs.remove(arcDef)) {
@@ -613,5 +620,19 @@ public class RrdDef {
 		}
 		// everything matches
 		return true;
+	}
+
+	/**
+	 * Removes all datasource definitions.
+	 */
+	public void removeDatasources() {
+		dsDefs.clear();
+	}
+
+	/**
+	 * Removes all RRA archive definitions.
+	 */
+	public void removeArchives() {
+		arcDefs.clear();
 	}
 }

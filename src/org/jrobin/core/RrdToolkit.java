@@ -38,6 +38,9 @@ import java.io.*;
  * </ul>
  * <p>All these operations can be performed on the copy of the original RRD file, or on the
  * original file itself (with possible backup file creation)</p>
+ *
+ * <p><b><u>IMPORTANT</u></b>: NEVER use methods found in this class on 'live' RRD files
+ * (files which are currently in use).</p>
  */
 public class RrdToolkit {
 	private static RrdToolkit ourInstance;
@@ -439,6 +442,28 @@ public class RrdToolkit {
 		if (file.exists() && !file.delete()) {
 			throw new IOException("Could not delete file: " + file.getCanonicalPath());
 		}
+	}
+
+	public void split(String sourcePath) throws IOException, RrdException {
+		RrdDb rrdSource = new RrdDb(sourcePath);
+		String[] dsNames = rrdSource.getDsNames();
+		for(int i = 0; i < dsNames.length; i++) {
+			RrdDef rrdDef = rrdSource.getRrdDef();
+			rrdDef.setPath(createSplitPath(dsNames[i], sourcePath));
+			rrdDef.saveSingleDatasource(dsNames[i]);
+ 			RrdDb rrdDest = new RrdDb(rrdDef);
+			rrdSource.copyStateTo(rrdDest);
+			rrdDest.close();
+		}
+		rrdSource.close();
+	}
+
+	private String createSplitPath(String dsName, String sourcePath) {
+		File file = new File(sourcePath);
+		String newName = dsName + "-" + file.getName();
+		String path = file.getAbsolutePath();
+		String parentDir = path.substring(0, 1 + path.lastIndexOf(Util.getFileSeparator()));
+		return parentDir + newName;
 	}
 }
 
