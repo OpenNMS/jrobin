@@ -42,6 +42,16 @@ class TimeAxisUnit
 					Calendar.MONTH,
 					Calendar.YEAR	
 				};
+	private static final int[] nullValue =
+				{
+					0,
+					0,
+					0,
+					1,
+					1,
+					0,
+					1970			// Should never be used, but put there to avoid index out of bounds	
+				};
 
 	// Indices in the calendarUnit table
 	static final int SECOND		= 0;
@@ -83,7 +93,9 @@ class TimeAxisUnit
 	{
 		t.setTimeInMillis( exactStart );
 		for (int i = 0; i < calendarUnit.length && i <= unit; i++)
-			t.set( calendarUnit[i], 0 );
+			t.set( calendarUnit[i], nullValue[i] );
+		if ( unit == WEEK )
+			t.set( Calendar.DAY_OF_WEEK, t.getFirstDayOfWeek() );
 	}
 	
 	private long getNextPoint( Calendar t, int unit, int unitSteps )

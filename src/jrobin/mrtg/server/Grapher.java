@@ -31,7 +31,7 @@ import java.io.IOException;
 import java.util.Date;
 
 class Grapher {
-	static final int GRAPH_WIDTH = 600, GRAPH_HEIGHT = 400;
+	static final int GRAPH_WIDTH = 502, GRAPH_HEIGHT = 234;
 
 	private String ifDescr, host, alias;
 
@@ -55,6 +55,7 @@ class Grapher {
 		String filename = Archiver.getRrdFilename(host, ifDescr);
 		RrdGraphDef gDef = new RrdGraphDef();
 		try {
+			gDef.setImageBorder(Color.WHITE, 0);	// Don't show border
 			gDef.setTimePeriod(start, stop);
 			gDef.setTitle(ifDescr + "@" + host);
 			gDef.setTimeAxisLabel("time");
@@ -63,15 +64,18 @@ class Grapher {
 			gDef.datasource("out", filename, "out", "AVERAGE");
 			gDef.datasource("in8", "in,8,*");
 			gDef.datasource("out8", "out,8,*");
-			gDef.area("out8", Color.GREEN, "output traffic");
-			gDef.line("in8", Color.BLUE, "input traffic");
-			gDef.gprint("in8", "AVERAGE", "avgIn=@2 @sbits/sec");
-			gDef.gprint("in8", "MAX", "maxIn=@2 @Sbits/sec@r");
-			gDef.gprint("out8", "AVERAGE", "avgOut=@2 @sbits/sec");
-			gDef.gprint("out8", "MAX", "maxOut=@2 @Sbits/sec@r");
-			gDef.comment("Start time: " + new Date(start * 1000L));
-			gDef.comment("End time: " + new Date(stop * 1000L + 1) + "@r");
-			gDef.comment("Description on device: " + alias + "@r");
+			gDef.area("in8", Color.GREEN, "input traffic");
+			gDef.line("out8", Color.BLUE, "output traffic\n");
+			gDef.comment("\n");
+			gDef.gprint("in8", "AVERAGE", "Average input: @7.2 @sbits/s");
+			gDef.gprint("in8", "MAX", "Maximum input: @7.2 @Sbits/s\n");
+			gDef.gprint("out8", "AVERAGE", "Average output:@7.2 @sbits/s");
+			gDef.gprint("out8", "MAX", "Maximum output:@7.2 @Sbits/s\n");
+			gDef.comment("\n");
+			gDef.comment("Description on device: " + alias);
+			gDef.comment("\n");
+			gDef.comment("Graph from " + new Date(start * 1000L));
+			gDef.comment("to " + new Date(stop * 1000L + 1));
 			return new RrdGraph(gDef);
 		} catch (RrdException e) {
 			throw new MrtgException(e);

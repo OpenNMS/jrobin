@@ -133,11 +133,27 @@ public class RrdGraphDef
 	// graph parameters
 	private int timeUnit, timeUnitCount;
 	private SimpleDateFormat timeFormat;
-	private long endTime = Util.getTime();
-	private long startTime = endTime - 86400L;
+	private long endTime 			= Util.getTime();
+	private long startTime 			= endTime - 86400L;
 	private String title 			= null;				// Default to null, to check
 	private String timeAxisLabel 	= "";
 	private String valueAxisLabel	= null;
+	
+	// Visibility of grid settings
+	private boolean gridX			= true;
+	private boolean gridY			= true;
+	private boolean minorGridX		= true;
+	private boolean minorGridY		= true;
+	private boolean majorGridX		= true;
+	private boolean majorGridY		= true;
+	private boolean rigidGrid		= false;
+	private boolean frontGrid		= true;
+	
+	private boolean showLegend		= true;
+	
+	private BasicStroke borderStroke;
+	private Color borderColor;
+	
 	private Range valueRange;
 	private boolean logarithmic = false;
 	private double valueStep = 0;
@@ -540,5 +556,137 @@ public class RrdGraphDef
 	public void setBackColor(Color backColor) {
 		this.backColor = backColor;
 	}
+	
+	/**
+	 * Determines if the minor grid for the X axis needs to be drawn.
+	 * @param visible True if minor grid needs to be drawn, false if not.
+	 */
+	public void setMinorGridX( boolean visible ) {
+		this.minorGridX = visible;
+	}
+	
+	/**
+	 * Determines if the minor grid for the X axis needs to be drawn.
+	 * @param visible True if minor grid needs to be drawn, false if not.
+	 */
+	public void setMinorGridY( boolean visible ) {
+		this.minorGridY = visible;
+	}
+	
+	public boolean getMinorGridX() {
+		return minorGridX;
+	}
+	
+	public boolean getMinorGridY() {
+		return minorGridY;
+	}
+	
+	/**
+	 * Determines if the major grid with labels for the X axis needs to be drawn.
+	 * @param visible True if major grid needs to be drawn, false if not.
+	 */
+	public void setMajorGridX( boolean visible ) {
+		this.majorGridX = visible;
+	}
 
+	/**
+	 * Determines if the major grid for the X axis needs to be drawn.
+	 * @param visible True if major grid needs to be drawn, false if not.
+	 */
+	public void setMajorGridY( boolean visible ) {
+		this.majorGridY = visible;
+	}
+
+	public boolean getMajorGridX() {
+		return majorGridX;
+	}
+
+	public boolean getMajorGridY() {
+		return majorGridY;
+	}
+
+	/**
+	 * Determines if the X axis grid should be drawn.
+	 * This will not change the left padding of the drawing area.
+	 * @param visible True if grid needs to be drawn, false if not.
+	 */
+	public void setGridX( boolean visible ) {
+		this.gridX		= visible;
+	}
+
+	/**
+	 * Determines if the Y axis grid should be drawn.
+	 * This will not change the bottom padding of the drawing area.
+	 * @param visible True if grid needs to be drawn, false if not.
+	 */
+	public void setGridY( boolean visible ) {
+		this.gridY		= visible;
+	}
+
+	public boolean getGridX() {
+		return gridX;
+	}
+
+	public boolean getGridY() {
+		return gridY;
+	}
+	
+	/**
+	 * Specifies the settings of the image border 
+	 * @param c Bordercolor of the image
+	 * @param w Pixel width of the image border
+	 */
+	public void setImageBorder( Color c, int w ) {
+		this.borderStroke	= new BasicStroke( w );
+		if ( c != null )
+			this.borderColor	= c;
+	}
+	
+	public Color getImageBorderColor() {
+		return borderColor;
+	}
+	
+	public BasicStroke getImageBorderStroke() {
+		return borderStroke;
+	}
+	
+	/**
+	 * Determines if the grid should have rigid upper and lower limits.
+	 * If so the upper and lower limit will not autoscale depending on the
+	 * graph values.
+	 * @param rigid True if the grid should have rigid limits
+	 */
+	public void setRigidGrid( boolean rigid ) {
+		this.rigidGrid = rigid;
+	}
+	
+	public boolean getRigidGrid() {
+		return this.rigidGrid;
+	}
+	
+	/**
+	 * Determine if the graph grid is in front of the graphs itself, or behind it.
+	 * Default is in front of the graph itself.
+	 * @param frontGrid True if the grid is in front of the graphs
+	 */
+	public void setFrontGrid( boolean frontGrid ) {
+		this.frontGrid = frontGrid;
+	}
+	
+	public boolean getFrontGrid() {
+		return this.frontGrid;
+	}
+	
+	/**
+	 * Determine if the legend should be visible or not, default: visible.
+	 * @param showLegend True if the legend is visible
+	 */
+	public void setShowLegend( boolean showLegend ) {
+		this.showLegend	= showLegend;
+	}
+	
+	public boolean getShowLegend() {
+		return this.showLegend;
+	}
+	
 }

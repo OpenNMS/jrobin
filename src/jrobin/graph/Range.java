@@ -24,11 +24,20 @@ package jrobin.graph;
 
 class Range 
 {
-	private double lower, upper;
+	private double lower = Double.NaN;
+	private double upper = Double.NaN;
 	
 	Range ( double lower, double upper )
 	{
 		this.lower	= lower;
 		this.upper	= upper;	
+	}
+	
+	double getLowerValue() {
+		return lower;
+	}
+	
+	double getUpperValue() {
+		return upper;
 	}
 }

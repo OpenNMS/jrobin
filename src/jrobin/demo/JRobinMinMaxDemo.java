@@ -26,6 +26,7 @@ import jrobin.core.*;
 import jrobin.graph.RrdGraph;
 import jrobin.graph.RrdGraphDef;
 
+import java.io.*;
 import java.awt.*;
 import java.io.IOException;
 
@@ -98,7 +99,14 @@ public class JRobinMinMaxDemo {
 		//gDef.setBackColor(Color.WHITE);
 		RrdGraph graph = new RrdGraph(gDef);
 		//graph.saveAsPNG(pngFile, 550, 250);
-		graph.saveAsPNG(pngFile, 0, 0);
+		//graph.saveAsPNG(pngFile, 0, 0);
+		
+		byte[] l = graph.getPNGBytes(0, 0);
+		System.out.println(l.length);
+		FileOutputStream fl = new FileOutputStream("/byte.png");
+		fl.write(l);
+		fl.close();
+		
 	}
 
 	static void p(String msg) {

@@ -47,9 +47,11 @@ class Grapher
 	private static final int RBORDER_SPACE		= 10;
 	
 	private static final int CHART_UPADDING		= 5;
-	private static final int CHART_BPADDING		= 25;
+	private static int CHART_BPADDING			= 25;
 	private static final int CHART_RPADDING		= 10;
-	private static final int CHART_LPADDING		= 50;
+	private static int CHART_LPADDING			= 50;
+	private static final int CHART_BPADDING_NM	= 10;		// No legend makers on the axis
+	private static final int CHART_LPADDING_NM	= 10;
 	
 	private static final int LINE_PADDING		= 4;
 			
@@ -70,7 +72,7 @@ class Grapher
 	private int commentBlock;						// Size in pixels of the block below the chart itself
 		
 	private int graphOriginX, graphOriginY, x_offset, y_offset;
-	private double lowerValue = 0.0d, upperValue = 0.0d;
+	private double lowerValue = Double.MAX_VALUE, upperValue = Double.MIN_VALUE;
 	
 	
 	private RrdGraphDef graphDef;
@@ -104,13 +106,17 @@ class Grapher
 		
 		if ( cWidth > GRAPH_RESOLUTION ) numPoints = cWidth;
 		
+		// Padding depends on grid visibility
+		CHART_LPADDING 	= ( graphDef.getMajorGridY() ? Grapher.CHART_LPADDING : CHART_LPADDING_NM );
+		CHART_BPADDING 	= ( graphDef.getMajorGridX() ? Grapher.CHART_BPADDING : CHART_BPADDING_NM );
+		
 		// Calculate the complete image dimensions for the creation of the bufferedimage
 		font_height 	= SUBTITLE_FONT.getSize();		// Determine font dimensions for regular comment font
 		font_width		= font_height / 2 + 1;
 		tfont_height	= TITLE_FONT.getSize() + 2;		// Bold is bigger still
 		tfont_width		= tfont_height / 2 + 1;
 		
-		commentBlock	= calculateCommentBlock();		// Size of all lines below chart
+		commentBlock	= ( graphDef.getShowLegend() ? calculateCommentBlock() : 0 );		// Size of all lines below chart
 		
 		x_offset		= LBORDER_SPACE;
 		if ( graphDef.getValueAxisLabel() != null ) x_offset += font_height + LINE_PADDING;
@@ -134,7 +140,8 @@ class Grapher
 		
 			plotChart( graphics );
 			
-			plotComments( graphics );
+			if ( graphDef.getShowLegend() )
+				plotComments( graphics );
 		}
 		catch (IOException e)
 		{
@@ -146,6 +153,8 @@ class Grapher
 			e.printStackTrace();
 		}
 		
+		System.out.println( "Graph created ok." );
+		
 		return bImg;
 	}
 	
@@ -156,6 +165,13 @@ class Grapher
 		
 		int lux = x_offset + CHART_LPADDING;
 		int luy = y_offset + CHART_UPADDING;
+		
+		boolean gridX	= graphDef.getGridX();
+		boolean gridY	= graphDef.getGridY();
+		boolean minorX	= graphDef.getMinorGridX();
+		boolean minorY	= graphDef.getMinorGridY();
+		boolean majorX	= graphDef.getMajorGridX();
+		boolean majorY	= graphDef.getMajorGridY();
 			
 		long start = graphDef.getStartTime();
 		long secTime;
@@ -175,80 +191,86 @@ class Grapher
 		g.drawLine( tmpx + 4, tmpy - 3, tmpx + 9, tmpy);
 		g.drawLine( tmpx + 4, tmpy + 3, tmpx + 9, tmpy);
 		
-		int pixWidth = 0;
-		if (vLabelCentered)
-			pixWidth = (chartGraph.getX( vLabelGridWidth ) - chartGraph.getX( 0 ));
-		
-		for (int i = 0; i < timeList.length; i++)
+		if ( gridX )
 		{
-			secTime 	= timeList[i].timestamp / 1000;
-			int posRel 	= chartGraph.getX(secTime);
-			int pos 	= lux + posRel;
-		
-			if ( posRel >= 0 ) {
-				if ( timeList[i].isLabel() )
-				{
-					g.setColor( new Color(130,30,30) );
-					g.setStroke( dStroke );
-					g.drawLine( pos, luy, pos, luy + chartHeight);
-					g.setStroke( new BasicStroke() );
-					g.drawLine( pos, luy - 2, pos, luy + 2);
-					g.drawLine( pos, luy + chartHeight - 2, pos, luy + chartHeight + 2);
-					// Only draw label itself if we are far enough from the side axis
-					// Use extra 2 pixel padding (3 pixels from border total at least)
-					int txtDistance = (timeList[i].text.length() * font_width) / 2;
-					
-					if ( vLabelCentered )
+			int pixWidth = 0;
+			if (vLabelCentered)
+				pixWidth = (chartGraph.getX( vLabelGridWidth ) - chartGraph.getX( 0 ));
+			
+			for (int i = 0; i < timeList.length; i++)
+			{
+				secTime 	= timeList[i].timestamp / 1000;
+				int posRel 	= chartGraph.getX(secTime);
+				int pos 	= lux + posRel;
+			
+				if ( posRel >= 0 ) {
+					if ( majorX && timeList[i].isLabel() )
 					{
-						if ( pos + pixWidth <= lux + chartWidth ) {
+						g.setColor( new Color(130,30,30) );
+						g.setStroke( dStroke );
+						g.drawLine( pos, luy, pos, luy + chartHeight);
+						g.setStroke( new BasicStroke() );
+						g.drawLine( pos, luy - 2, pos, luy + 2);
+						g.drawLine( pos, luy + chartHeight - 2, pos, luy + chartHeight + 2);
+						// Only draw label itself if we are far enough from the side axis
+						// Use extra 2 pixel padding (3 pixels from border total at least)
+						int txtDistance = (timeList[i].text.length() * font_width) / 2;
+						
+						if ( vLabelCentered )
+						{
+							if ( pos + pixWidth <= lux + chartWidth ) {
+								g.setColor( Color.BLACK );
+								g.drawString( timeList[i].text, pos + 2 + pixWidth/2 - txtDistance, luy + chartHeight + font_height + LINE_PADDING );
+							}
+						}
+						else if ( (pos - lux > txtDistance + 2) && (pos + txtDistance + 2 < lux + chartWidth) )	
+						{ 
 							g.setColor( Color.BLACK );
-							g.drawString( timeList[i].text, pos + 2 + pixWidth/2 - txtDistance, luy + chartHeight + font_height + LINE_PADDING );
+							g.drawString( timeList[i].text, pos - txtDistance, luy + chartHeight + font_height + LINE_PADDING );
 						}
 					}
-					else if ( (pos - lux > txtDistance + 2) && (pos + txtDistance + 2 < lux + chartWidth) )	
-					{ 
-						g.setColor( Color.BLACK );
-						g.drawString( timeList[i].text, pos - txtDistance, luy + chartHeight + font_height + LINE_PADDING );
+					else if ( minorX )
+					{	
+						g.setColor( new Color(140,140,140) );
+						g.setStroke( dStroke );
+						g.drawLine( pos, luy, pos, luy + chartHeight);
+						g.setStroke( new BasicStroke() );
+						g.drawLine( pos, luy - 1, pos, luy + 1);
+						g.drawLine( pos, luy + chartHeight - 1, pos, luy + chartHeight + 1);
+					
 					}
-				}
-				else
-				{	
-					g.setColor( new Color(140,140,140) );
-					g.setStroke( dStroke );
-					g.drawLine( pos, luy, pos, luy + chartHeight);
-					g.setStroke( new BasicStroke() );
-					g.drawLine( pos, luy - 1, pos, luy + 1);
-					g.drawLine( pos, luy + chartHeight - 1, pos, luy + chartHeight + 1);
-				
 				}
 			}
 		}
-	
-		for (int i = 0; i < valueList.length; i++)
-		{
-			int valRel = chartGraph.getY( valueList[i].value );
 		
-			if ( valueList[i].isLabel() )
+		if ( gridY )
+		{
+			for (int i = 0; i < valueList.length; i++)
 			{
-				g.setColor( new Color(130,30,30) );
-				g.setStroke( dStroke );
-				g.drawLine( graphOriginX, graphOriginY - valRel, graphOriginX + chartWidth, graphOriginY - valRel );
-				g.setStroke( new BasicStroke() );
-				g.drawLine( graphOriginX - 2, graphOriginY - valRel, graphOriginX + 2, graphOriginY - valRel);
-				g.drawLine( graphOriginX + chartWidth - 2, graphOriginY - valRel, graphOriginX + chartWidth + 2, graphOriginY - valRel );
-				g.setColor( Color.BLACK );
-				g.drawString( valueList[i].text, graphOriginX - (valueList[i].text.length() * font_width) - 7, graphOriginY - valRel + font_height/2 - 1 );
+				int valRel = chartGraph.getY( valueList[i].value );
+			
+				if ( majorY && valueList[i].isLabel() )
+				{
+					g.setColor( new Color(130,30,30) );
+					g.setStroke( dStroke );
+					g.drawLine( graphOriginX, graphOriginY - valRel, graphOriginX + chartWidth, graphOriginY - valRel );
+					g.setStroke( new BasicStroke() );
+					g.drawLine( graphOriginX - 2, graphOriginY - valRel, graphOriginX + 2, graphOriginY - valRel);
+					g.drawLine( graphOriginX + chartWidth - 2, graphOriginY - valRel, graphOriginX + chartWidth + 2, graphOriginY - valRel );
+					g.setColor( Color.BLACK );
+					g.drawString( valueList[i].text, graphOriginX - (valueList[i].text.length() * font_width) - 7, graphOriginY - valRel + font_height/2 - 1 );
+				}
+				else if ( minorY )
+				{
+					g.setColor( new Color(140,140,140) );
+					g.setStroke( dStroke );
+					g.drawLine( graphOriginX, graphOriginY - valRel, graphOriginX + chartWidth, graphOriginY - valRel );
+					g.setStroke( new BasicStroke() );
+					g.drawLine( graphOriginX - 1, graphOriginY - valRel, graphOriginX + 1, graphOriginY - valRel);
+					g.drawLine( graphOriginX + chartWidth - 1, graphOriginY - valRel, graphOriginX + chartWidth + 1, graphOriginY - valRel );
+				}
+	
 			}
-			else
-			{
-				g.setColor( new Color(140,140,140) );
-				g.setStroke( dStroke );
-				g.drawLine( graphOriginX, graphOriginY - valRel, graphOriginX + chartWidth, graphOriginY - valRel );
-				g.setStroke( new BasicStroke() );
-				g.drawLine( graphOriginX - 1, graphOriginY - valRel, graphOriginX + 1, graphOriginY - valRel);
-				g.drawLine( graphOriginX + chartWidth - 1, graphOriginY - valRel, graphOriginX + chartWidth + 1, graphOriginY - valRel );
-			}
-
 		}
 	}
 	
@@ -369,10 +391,10 @@ class Grapher
 		ChartGraphics g 	= new ChartGraphics( graphics );
 		g.setMeasurements( chartWidth, chartHeight );
 		g.setXRange( graphDef.getStartTime(), graphDef.getEndTime() );
-			
+		
 		ValueMarker[] vlist = calculateValueMarkers();
 		TimeMarker[] tlist	= calculateTimeMarkers();
-	
+		
 		// Upper and lower were set in value markers
 		double diff = 1.0d;
 		if ( lowerValue < 0 )
@@ -382,7 +404,7 @@ class Grapher
 	
 		g.setYRange( lowerValue, upperValue );
 
-		//plotChartGrid( g, tlist, vlist );
+		if ( !graphDef.getFrontGrid() ) plotChartGrid( g, tlist, vlist );
 	
 		graphics.setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON );
 	
@@ -425,7 +447,7 @@ class Grapher
 		graphics.setClip( 0, 0, imgWidth, imgHeight);
 		graphics.setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF );
 		
-		plotChartGrid( g, tlist, vlist );
+		if ( graphDef.getFrontGrid() ) plotChartGrid( g, tlist, vlist );
 	}
 	
 	/**
@@ -571,14 +593,28 @@ class Grapher
 		g.fillRect(0, 0, imgWidth, imgHeight );
 	
 		// Border
-		g.setColor( new Color( 0xdc, 0xdc, 0xdc ) );
-		g.fillRect( 0, 0, 2, imgHeight - 1 );
-		g.fillRect( 0, 0, imgWidth - 1, 2 );
-		g.setColor( Color.GRAY );
-		g.drawLine( 0, imgHeight - 1, imgWidth, imgHeight - 1 );
-		g.drawLine( imgWidth - 1, 0, imgWidth - 1, imgHeight );
-		g.drawLine( 1, imgHeight - 2, imgWidth, imgHeight - 2 );
-		g.drawLine( imgWidth - 2, 1, imgWidth - 2, imgHeight );
+		Color bc 		= graphDef.getImageBorderColor();
+		BasicStroke bs	= graphDef.getImageBorderStroke();
+		
+		if ( bc != null && bs != null )
+		{
+			g.setColor( bc );
+			g.setStroke( bs );
+			int w = new Float(bs.getLineWidth()).intValue();
+			if ( w > 0 ) g.drawRect( w / 2, w / 2, imgWidth - w, imgHeight - w);
+			g.setStroke( new BasicStroke() );
+		}
+		else
+		{
+			g.setColor( new Color( 0xdc, 0xdc, 0xdc ) );
+			g.fillRect( 0, 0, 2, imgHeight - 1 );
+			g.fillRect( 0, 0, imgWidth - 1, 2 );
+			g.setColor( Color.GRAY );
+			g.drawLine( 0, imgHeight - 1, imgWidth, imgHeight - 1 );
+			g.drawLine( imgWidth - 1, 0, imgWidth - 1, imgHeight );
+			g.drawLine( 1, imgHeight - 2, imgWidth, imgHeight - 2 );
+			g.drawLine( imgWidth - 2, 1, imgWidth - 2, imgHeight );
+		}
 		
 		plotImageTitle( g );
 		plotVerticalAxisLabels( g );
@@ -594,7 +630,7 @@ class Grapher
 		String line, newLine;
 		Comment[] list 		= graphDef.getComments();
 	
-		int commentLines 	= 1;
+		int commentLines 	= (list.length > 0 ? 1 : 0);
 	
 		for (int i = 0; i < list.length; i++)
 		{
@@ -618,31 +654,6 @@ class Grapher
 	}
 	
 	/*
-	JFreeChart createJFreeChart() throws RrdException, IOException {
-		PlotDef[] plotDefs = graphDef.getPlotDefs();
-		OverlayGraph[] graphs = graphDef.getGraphs();
-		if(plotDefs.length == 0) {
-			throw new RrdException("Nothing to plot");
-		}
-        calculateSeries();
-		OverlaidXYPlot plot = new OverlaidXYPlot(createTimeAxis(), createValueAxis());
-		for(int i = 0; i < graphs.length; i++) {
-			plot.add(graphs[i].getXYPlot());
-		}
-		JFreeChart chart = new JFreeChart("", plot);
-		chart.setTitle(new TextTitle(graphDef.getTitle(), TITLE_FONT));
-		Color backColor = graphDef.getBackColor();
-		if(backColor == null) {
-			backColor = BACK_COLOR;
-		}
-		chart.setBackgroundPaint(backColor);
-		StandardLegend legend = (StandardLegend) chart.getLegend();
-		legend.setOutlinePaint(backColor);
-		legend.setBackgroundPaint(backColor);
-		addSubtitles(chart);
-		return chart;
-	}
-
 	private void calculateSeries() throws RrdException, IOException {
 		Source[] sources = graphDef.getSources();
 		long startTime = graphDef.getStartTime();
@@ -660,14 +671,6 @@ class Grapher
 				sources[j].getValueInternal(t, valueCollection);
 			}
 		}
-	}
-
-	private ValueAxis createTimeAxis() {
-		HorizontalDateAxis axis = new HorizontalDateAxis(graphDef.getTimeAxisLabel());
-		axis.setLowerMargin(0.0);
-		axis.setUpperMargin(0.0);
-		axis.setTickUnit(calculateDateTickUnit());
-		return axis;
 	}
 
 	private DateTickUnit calculateDateTickUnit() {
@@ -751,42 +754,12 @@ class Grapher
 		axis.setNumberFormatOverride(new VerticalAxisFormat());
 		return axis;
 	}
-
-	private void addSubtitles(JFreeChart chart) throws RrdException {
-		String currentLine = "";
-		ArrayList subtitles = new ArrayList();
-		Comment[] comments = graphDef.getComments();
-		int lastScaleIndex = ValueScaler.NO_SCALE;
-		for(int i = 0; i < comments.length; i++) {
-			if(currentLine.length() > 0) {
-				currentLine += SPACER;
-			}
-			Comment comment = comments[i];
-			// uniform scaling is now supported
-			comment.setScaleIndex(lastScaleIndex);
-			currentLine += comment.getMessage();
-			lastScaleIndex = comment.getScaleIndex();
-			if(comment.isAlignSet()) {
-				// should finish current line
-				int align = comment.getAlign();
-				TextTitle subtitle = new TextTitle(currentLine, SUBTITLE_FONT, Color.BLACK,
-					TextTitle.BOTTOM, align, TextTitle.DEFAULT_VERTICAL_ALIGNMENT, SUBTITLE_SPACER);
-				subtitles.add(subtitle);
-				currentLine = "";
-			}
-		}
-		if(currentLine.length() > 0) {
-			TextTitle subtitle = new TextTitle(currentLine, SUBTITLE_FONT,
-				Color.BLACK, TextTitle.BOTTOM, DEFAULT_ALIGN,
-				TextTitle.DEFAULT_VERTICAL_ALIGNMENT, SUBTITLE_SPACER);
-			subtitles.add(subtitle);
-		}
-		for(int i = subtitles.size() - 1; i >= 0; i--) {
-			TextTitle subtitle = (TextTitle) subtitles.get(i);
-			chart.addSubtitle(subtitle);
-		}
-	}
 	*/
+	
+	/**
+	 * 
+	 * @return List of timemarkers to plot
+	 */
 	private TimeMarker[] calculateTimeMarkers()
 	{
 		TimeAxisUnit t = null;
@@ -805,34 +778,54 @@ class Grapher
 		double days = (endTime - startTime) / 86400.0;
 		
 		vLabelCentered = false;
-		if(days <= 2.0 / 24.0) {
-			t = new TimeAxisUnit( TimeAxisUnit.MINUTE, 10, new SimpleDateFormat("mm"));
+		if (days <= 2.0 / 24.0) {
+			t = new TimeAxisUnit( TimeAxisUnit.MINUTE, 5, TimeAxisUnit.MINUTE, 10, new SimpleDateFormat("HH:mm"));
 		}
-		else if (days <= 1)
-			t = new TimeAxisUnit( TimeAxisUnit.HOUR, 1, TimeAxisUnit.HOUR, 6, new SimpleDateFormat("HH:mm"));
-		else if(days <= 2) {
-			t = new TimeAxisUnit( TimeAxisUnit.HOUR, 2, new SimpleDateFormat("HH"));
+		else if (days <= 3.0 / 24.0) {
+			t = new TimeAxisUnit( TimeAxisUnit.MINUTE, 5, TimeAxisUnit.MINUTE, 20, new SimpleDateFormat("HH:mm"));
 		}
-		else if(days <= 3) {
-			t = new TimeAxisUnit( TimeAxisUnit.HOUR, 6, new SimpleDateFormat("HH:mm"));
+		else if (days <= 5.0 / 24.0) {
+			t = new TimeAxisUnit( TimeAxisUnit.MINUTE, 10, TimeAxisUnit.MINUTE, 30, new SimpleDateFormat("HH:mm"));
 		}
-		else if(days <= 8) {
-			t = new TimeAxisUnit( TimeAxisUnit.DAY, 1, new SimpleDateFormat("EEE dd MMM"));
+		else if (days <= 10.0 / 24.0) {
+			t = new TimeAxisUnit( TimeAxisUnit.MINUTE, 15, TimeAxisUnit.HOUR, 1, new SimpleDateFormat("HH:mm"));
 		}
-		else if (days <= 32) {
-			//t = new TimeAxisUnit( TimeAxisUnit.HOUR, 24, TimeAxisUnit.DAY, 1, new SimpleDateFormat("dd"));
+		else if (days <= 15.0 / 24.0) {
+			t = new TimeAxisUnit( TimeAxisUnit.MINUTE, 30, TimeAxisUnit.HOUR, 2, new SimpleDateFormat("HH:mm"));
+			//t = new TimeAxisUnit( TimeAxisUnit.HOUR, 2, TimeAxisUnit.HOUR, 6, new SimpleDateFormat("HH:mm"));
+		}
+		else if(days <= 20.0 / 24.0) {
+			t = new TimeAxisUnit( TimeAxisUnit.HOUR, 1, TimeAxisUnit.HOUR, 1, new SimpleDateFormat("HH"));
+			vLabelCentered = true;
+		}
+		else if(days <= 36.0 / 24.0) {
+			t = new TimeAxisUnit( TimeAxisUnit.HOUR, 1, TimeAxisUnit.HOUR, 4, new SimpleDateFormat("HH:mm"));
+		}
+		else if (days <= 2) {
+			t = new TimeAxisUnit( TimeAxisUnit.HOUR, 2, TimeAxisUnit.HOUR, 6, new SimpleDateFormat("HH:mm"));
+		}
+		else if (days <= 3) {
+			t = new TimeAxisUnit( TimeAxisUnit.HOUR, 3, TimeAxisUnit.HOUR, 12, new SimpleDateFormat("HH:mm"));
+		}
+		else if(days <= 7) {
+			t = new TimeAxisUnit( TimeAxisUnit.HOUR, 6, TimeAxisUnit.DAY, 1, new SimpleDateFormat("EEE dd"));
+			vLabelCentered = true;
+		}
+		else if(days <= 14) {
+			t = new TimeAxisUnit( TimeAxisUnit.HOUR, 12, TimeAxisUnit.DAY, 1, new SimpleDateFormat("dd"));
+			vLabelCentered = true;
+		}
+		else if (days <= 43) {
 			t = new TimeAxisUnit( TimeAxisUnit.DAY, 1, TimeAxisUnit.WEEK, 1, new SimpleDateFormat("'week' ww"));
 			vLabelCentered = true;
-		}	
-		else if(days <= 63) {
-			t = new TimeAxisUnit( TimeAxisUnit.DAY, 1, TimeAxisUnit.WEEK, 1, new SimpleDateFormat("'week' ww"));
-			//t = new TimeAxisUnit( TimeAxisUnit.WEEK, 2, new SimpleDateFormat("dd"));
 		}
-		else if(days <= 120) {
-			t = new TimeAxisUnit( TimeAxisUnit.WEEK, 4, new SimpleDateFormat("dd"));
+		else if(days <= 157) {
+			t = new TimeAxisUnit( TimeAxisUnit.WEEK, 1, TimeAxisUnit.WEEK, 1, new SimpleDateFormat("ww"));
+			vLabelCentered	= true;			
 		}
 		else {
-			t = new TimeAxisUnit( TimeAxisUnit.MONTH, 1, new SimpleDateFormat("MMM"));
+			t = new TimeAxisUnit( TimeAxisUnit.MONTH, 1, TimeAxisUnit.MONTH, 1, new SimpleDateFormat("MMM"));
+			vLabelCentered 	= true;
 		}
 		
 		vLabelGridWidth	= t.getMajorGridWidth();
@@ -840,12 +833,36 @@ class Grapher
 		return t.getTimeMarkers( graphDef.getStartTime(), graphDef.getEndTime() );
 	}
 	
+	/**
+	 * 
+	 * @return List of value markers to plot
+	 */
 	private ValueMarker[] calculateValueMarkers() 
 	{
-		ValueAxisUnit v = null;
-	
-		double range = upperValue - lowerValue;
+		ValueAxisUnit v 		= null;
+		boolean lowerFromRange 	= false;
+		boolean upperFromRange	= false;
+		boolean rigid			= graphDef.getRigidGrid();	
 		
+		// Exceptional case
+		if ( upperValue == 0 && upperValue == lowerValue )
+			 upperValue	= 0.9;
+				
+		Range vr		= graphDef.getValueRange();
+		if ( vr != null )
+		{
+			double rLower = vr.getLowerValue();
+			if ( !Double.isNaN(rLower) && (rigid || rLower < lowerValue) ) {
+				lowerValue 		= rLower;
+				lowerFromRange	= true; 
+			}
+			double rUpper = vr.getUpperValue();
+			if ( !Double.isNaN(rUpper) && (rigid || rUpper > upperValue) ) {
+				upperValue 		= rUpper;
+				upperFromRange	= true;
+			}
+		}
+				
 		double shifted 	= ( Math.abs(upperValue) > Math.abs(lowerValue) ? Math.abs(upperValue) : Math.abs(lowerValue) );
 		double mod		= 1.0;
 		while ( shifted > 10 ) {
@@ -860,15 +877,15 @@ class Grapher
 		if ( shifted <= 3 )
 			v = new ValueAxisUnit( 1, 0.2*mod, 1, 1.0*mod );
 		else if ( shifted <= 5 )
-		v = new ValueAxisUnit( 1, 0.5*mod, 1, 1.0*mod );
+			v = new ValueAxisUnit( 1, 0.5*mod, 1, 1.0*mod );
 		else if ( shifted <= 9 )
 			v = new ValueAxisUnit( 1, 0.5*mod, 1, 2.0*mod );
 		else
 			v = new ValueAxisUnit( 1, 1.0*mod, 1, 5.0*mod );
-
-		upperValue 		= v.getNiceHigher( upperValue );
-		lowerValue 		= v.getNiceLower( lowerValue );
 		
+		if ( !upperFromRange ) upperValue = v.getNiceHigher( upperValue );
+		if ( !lowerFromRange ) lowerValue = v.getNiceLower( lowerValue );
+				
 		return v.getValueMarkers( lowerValue, upperValue );
 	}
 }

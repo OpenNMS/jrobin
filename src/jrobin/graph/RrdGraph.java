@@ -114,6 +114,15 @@ public class RrdGraph implements Serializable
 	 */
 	public byte[] getPNGBytes(int width, int height) throws IOException {
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+		try 
+		{
+			BufferedImage gImage = grapher.createImage( width, height ); 
+			
+			ImageIO.write( (RenderedImage) gImage, "png", outputStream );
+		} 
+		catch ( RrdException e ) {
+			e.printStackTrace();
+		}    
 		//ChartUtilities.writeBufferedImageAsPNG(outputStream, getBufferedImage(width, height));
 		return outputStream.toByteArray();
 	}

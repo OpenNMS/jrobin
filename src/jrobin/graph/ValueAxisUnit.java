@@ -67,6 +67,10 @@ public class ValueAxisUnit
 		mGridStep		= mGridUnit * mGridParts;		
 	}
 	
+	private double round( double value )
+	{
+		return new java.math.BigDecimal(value).setScale(14 , java.math.BigDecimal.ROUND_HALF_EVEN).doubleValue();
+	}
 	
 	public ValueMarker[] getValueMarkers( double lower, double upper )
 	{
@@ -75,14 +79,14 @@ public class ValueAxisUnit
 		
 		// Find the first visible gridpoint
 		if ( lower > 0 ) {
-			while ( minPoint <= lower ) minPoint += gridStep;
-			while ( majPoint <= lower ) majPoint += mGridStep;
+			while ( minPoint < lower ) minPoint += gridStep;
+			while ( majPoint < lower ) majPoint += mGridStep;
 		} else {
-			while ( minPoint >= lower ) minPoint -= gridStep;
-			while ( majPoint >= lower ) majPoint -= mGridStep;
+			while ( minPoint > lower ) minPoint -= gridStep;
+			while ( majPoint > lower ) majPoint -= mGridStep;
 			// Go one up to make it visible
-			minPoint += gridStep;
-			majPoint += mGridStep;
+			if (minPoint != lower ) minPoint += gridStep;
+			if (majPoint != lower ) majPoint += mGridStep;
 		}
 		
 		// Now get all time markers.
@@ -91,10 +95,11 @@ public class ValueAxisUnit
 		
 		while ( minPoint <= upper && majPoint <= upper )
 		{
+			//System.out.println( minPoint + "||" + majPoint );
 			if ( minPoint < majPoint )
 			{
 				markerList.add( new ValueMarker(minPoint, "", false) );
-				minPoint += gridStep;	
+				minPoint = round( minPoint + gridStep );	
 			}
 			else
 			{
@@ -109,13 +114,13 @@ public class ValueAxisUnit
 				if ( minPoint == majPoint )	// Special case, but will happen most of the time
 				{
 					markerList.add( new ValueMarker(majPoint, str, true) );
-					minPoint += gridStep;
-					majPoint += mGridStep;
+					minPoint = round( minPoint + gridStep );
+					majPoint = round( majPoint + mGridStep );
 				}
 				else
 				{
 					markerList.add( new ValueMarker(majPoint, str, true) );
-					majPoint += mGridStep;
+					majPoint = round( majPoint + mGridStep );
 				}
 			}
 		}
@@ -123,7 +128,7 @@ public class ValueAxisUnit
 		while ( minPoint <= upper )
 		{
 			markerList.add( new ValueMarker(minPoint, "", false) );
-			minPoint += gridStep;
+			minPoint = round( minPoint + gridStep );
 		}
 
 		while ( majPoint <= upper )
@@ -137,59 +142,91 @@ public class ValueAxisUnit
 				str		= (vs.getScaledValue() + vs.getPrefix()).trim();
 			
 			markerList.add( new ValueMarker(majPoint, str, true) );
-			majPoint += mGridStep;
+			majPoint = round( majPoint + mGridStep );
 		}
 		
 		return (ValueMarker[]) markerList.toArray( new ValueMarker[0] );	
 	}
 	
-	public double getNiceLower( double value )
+	public double getNiceLower( double ovalue )
 	{
+		// Add some checks
+		double gridParts	= this.gridParts;
+		double mGridParts	= this.mGridParts;
+		double gridFactor	= 1.0;
+		double mGridFactor	= 1.0;
+		
+		if ( gridUnit * gridParts < 1.0 ) {
+			gridParts 		*= 100;
+			gridFactor		= 100;
+		}
+		
+		if ( mGridUnit * mGridParts < 1.0 ) {
+			mGridParts 		*= 100;
+			mGridFactor		= 100;
+		}
+		
+		double value		= ovalue * gridFactor;
 		int valueInt		= new Double(value).intValue();
 		int roundStep		= new Double(gridUnit * gridParts).intValue();
 		int num 			= valueInt / roundStep; 
 		int mod 			= valueInt % roundStep;
-		double gridValue	= (roundStep * (num - 1)) * 1.0d;
-		if ( gridValue - value < (gridParts * gridUnit) / 4 )
+		double gridValue	= (roundStep * num) * 1.0d;
+		if ( gridValue > value )
 			gridValue		-= roundStep;
 		
+		if ( num == 0 && value >= 0 )
+			gridValue		= 0.0;
+		else if ( Math.abs(gridValue - value) < (gridParts * gridUnit) / 16 )
+			gridValue		-= roundStep;
+		
+		value				= ovalue * mGridFactor;
 		roundStep			= new Double(mGridUnit * mGridParts).intValue();
 		num					= valueInt / roundStep;
 		mod					= valueInt % roundStep;
-		double mGridValue	= (roundStep * (num - 1)) * 1.0d;
-
+		double mGridValue	= (roundStep * num) * 1.0d;
+		if ( mGridValue > value )
+			mGridValue		-= roundStep;
+		
 		if ( value != 0.0d )
 		{
-			if ( mGridValue - gridValue < (mGridParts * mGridUnit) / 2)
-				return mGridValue;
+			if ( Math.abs(mGridValue - gridValue) < (mGridParts * mGridUnit) / 2)
+				return mGridValue / mGridFactor;
 			else
-				return gridValue;
+				return gridValue / gridFactor;
 		}
 
-		return value;
-		
-		/*
-		int valueInt	= new Double(value).intValue();
-		int num 		= valueInt / roundStep; 
-		int mod 		= valueInt % roundStep;
-		
-		if ( value != 0 )
-			return (roundStep * (num - 1)) * 1.0d;
-		
-		return value;
-		*/
+		return ovalue;
 	}
 	
-	public double getNiceHigher( double value )
+	public double getNiceHigher( double ovalue )
 	{
+		// Add some checks
+		double gridParts	= this.gridParts;
+		double mGridParts	= this.mGridParts;
+		double gridFactor	= 1.0;
+		double mGridFactor	= 1.0;
+	
+		if ( gridUnit * gridParts < 1.0 ) {
+			gridParts 		*= 100;
+			gridFactor		= 100;
+		}
+	
+		if ( mGridUnit * mGridParts < 1.0 ) {
+			mGridParts 		*= 100;
+			mGridFactor		= 100;
+		}
+		
+		double value		= ovalue * gridFactor;
 		int valueInt		= new Double(value).intValue();
 		int roundStep		= new Double(gridUnit * gridParts).intValue();
 		int num 			= valueInt / roundStep; 
 		int mod 			= valueInt % roundStep;
 		double gridValue	= (roundStep * (num + 1)) * 1.0d;
-		if ( gridValue - value < (gridParts * gridUnit) / 4 )
+		if ( gridValue - value < (gridParts * gridUnit) / 8 )
 			gridValue		+= roundStep;
 		
+		value				= ovalue * mGridFactor;
 		roundStep			= new Double(mGridUnit * mGridParts).intValue();
 		num					= valueInt / roundStep;
 		mod					= valueInt % roundStep;
@@ -197,12 +234,12 @@ public class ValueAxisUnit
 		
 		if ( value != 0.0d )
 		{
-			if ( mGridValue - gridValue < (mGridParts * mGridUnit) / 2)
-				return mGridValue;
+			if ( Math.abs(mGridValue - gridValue) < (mGridParts * mGridUnit) / 2)
+				return mGridValue / mGridFactor;
 			else
-				return gridValue;
+				return gridValue / gridFactor;
 		}
 		
-		return value;
+		return ovalue;
 	}
 }

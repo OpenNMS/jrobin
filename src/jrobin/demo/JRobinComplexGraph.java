@@ -42,8 +42,9 @@ public class JRobinComplexGraph {
 
 	public static void main(String[] args) 
 	{
-		GregorianCalendar start = new GregorianCalendar(2003, 7, 23, 00, 00);
-		GregorianCalendar end 	= new GregorianCalendar(2003, 7, 24, 00, 00);
+		GregorianCalendar start = new GregorianCalendar(2003, 7, 23, 0, 0);
+		GregorianCalendar end 	= new GregorianCalendar(2003, 7, 24, 0, 0);
+
 		RrdGraphDef gDef 		= new RrdGraphDef();
 		
 		try 
@@ -73,7 +74,7 @@ public class JRobinComplexGraph {
 			gDef.area("p50t75", new Color(0x66,0x66,0x00), "50 - 75%");
 			gDef.area("p75t90", new Color(0xff,0x66,0x00), "75 - 90%");
 			gDef.area("p90t100", new Color(0xcc,0x33,0x00), "90 - 100%");
-			gDef.rule(10.0, Color.YELLOW, null);
+			gDef.rule(10.0, Color.ORANGE, null);
 			gDef.gprint("busy", "AVERAGE", " Average:@5.1@s%");
 			gDef.gprint("busy", "LAST", "Current: @5.1@s%");
 			gDef.comment("\n");
@@ -95,9 +96,13 @@ public class JRobinComplexGraph {
 			gDef.comment("\n");
 			gDef.comment("-------------------------------------------------------------------------------@c");
 			gDef.comment("Generated: " + new Date() + "@r");
-			gDef.setBackColor( Color.WHITE );
+			//gDef.setBackColor( Color.ORANGE );
 			gDef.setValueAxisLabel("server load");
-			
+			//gDef.setGridX( false );
+			//gDef.setGridY( false );
+			gDef.setImageBorder( Color.DARK_GRAY, 1 );
+			gDef.setFrontGrid(false);
+			gDef.setShowLegend(true);
 			// Create actual graph
 			RrdGraph graph = new RrdGraph(gDef);
 			graph.saveAsPNG("/zzzzzz.png", 0, 0);
@@ -113,7 +118,7 @@ public class JRobinComplexGraph {
 			gd.datasource("out", "out2,8,*");
 			gd.area("in", Color.GREEN, null);
 			gd.line("out", Color.BLUE, null);
-						
+			gd.setRigidGrid(true);			
 			RrdGraph graph2 = new RrdGraph(gd);
 			graph2.saveAsPNG("/traff.png", 0, 0);
 			
@@ -139,6 +144,7 @@ public class JRobinComplexGraph {
 									
 			graph2 = new RrdGraph(gd);
 			graph2.saveAsPNG("/ftp.png", 0, 0);
+			
 						
 			//graph.saveAsPNG("c:/demo.png", 495, 200);
 		} 

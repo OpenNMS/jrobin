@@ -93,7 +93,8 @@ public class ChartGraphics
 	{
 		if ( Double.isNaN(value) ) return Integer.MIN_VALUE;
 		
-		int tmp = new Double(value * heightDelta).intValue();
+		int tmp = new Double( (value - ( yStart < 0 ? 0 : Math.abs(yStart) ) ) * heightDelta).intValue();
+		
 		return ( tmp > value * heightDelta ? tmp - 1 : tmp ); 
 	}
 	
