@@ -108,5 +108,4 @@ abstract class RrdPrimitive {
 	void writeString(String value) throws IOException {
 		backend.writeString(pointer, value);
 	}
-
 }

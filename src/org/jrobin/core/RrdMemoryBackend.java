@@ -77,7 +77,8 @@ public class RrdMemoryBackend extends RrdBackend {
 	}
 
 	/**
-	 * This method is required by the base class definition, but has no effect at all.
+	 * This method is required by the base class definition, but it does not
+	 * releases any memory resources at all.
 	 */
 	public void close() {
 		// NOP
