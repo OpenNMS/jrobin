@@ -285,6 +285,7 @@ class Grapher extends RrdExporter
 	protected boolean shouldGenerate( long prevGenTime ) throws RrdException, IOException
 	{
 		FetchSourceList fetchSources = graphDef.getFetchSources();
+		fetchSources.setRrdOpener( getRrdOpener() );
 
 		fetchSources.openAll();
 

@@ -517,4 +517,12 @@ class RrdExporter
 
 		return createExportData();
 	}
+
+	public RrdExportDef getExportDef() {
+		return def;
+	}
+
+	public RrdOpener getRrdOpener() {
+		return rrdOpener;
+	}
 }
