@@ -31,6 +31,8 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
+import org.jrobin.core.timespec.TimeSpec;
+import org.jrobin.core.timespec.TimeParser;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -247,6 +249,39 @@ public class Util {
 	 */
 	public static long getTimestamp(int year, int month, int day) {
 		return Util.getTimestamp(year, month, day, 0, 0);
+	}
+
+		/**
+	 * Parses at-style time specification and returns the corresponding timestamp. For example:<p>
+	 * <pre>
+	 * long t = Util.getTimestamp("now-1d");
+	 * </pre>
+	 * @param atStyleTimeSpec at-style time specification. For the complete explanation of the syntax
+	 * allowed see RRDTool's <code>rrdfetch</code> man page.<p>
+	 * @return timestamp in seconds since epoch.
+	 * @throws RrdException Thrown if invalid time specification is supplied.
+	 */
+	public static long getTimestamp(String atStyleTimeSpec) throws RrdException {
+		TimeSpec timeSpec = new TimeParser(atStyleTimeSpec).parse();
+		return timeSpec.getTimestamp();
+	}
+
+	/**
+	 * Parses two related at-style time specifications and returns corresponding timestamps. For example:<p>
+	 * <pre>
+	 * long[] t = Util.getTimestamps("end-1d","now");
+	 * </pre>
+	 * @param atStyleTimeSpec1 Starting at-style time specification. For the complete explanation of the syntax
+	 * allowed see RRDTool's <code>rrdfetch</code> man page.<p>
+	 * @param atStyleTimeSpec2 Ending at-style time specification. For the complete explanation of the syntax
+	 * allowed see RRDTool's <code>rrdfetch</code> man page.<p>
+	 * @return An array of two longs representing starting and ending timestamp in seconds since epoch.
+	 * @throws RrdException Thrown if any input time specification is invalid.
+	 */
+	public static long[] getTimestamps(String atStyleTimeSpec1, String atStyleTimeSpec2) throws RrdException {
+		TimeSpec timeSpec1 = new TimeParser(atStyleTimeSpec1).parse();
+		TimeSpec timeSpec2 = new TimeParser(atStyleTimeSpec2).parse();
+		return TimeSpec.getTimestamps(timeSpec1, timeSpec2);
 	}
 
 	/**
