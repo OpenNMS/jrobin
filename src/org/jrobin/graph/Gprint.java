@@ -78,8 +78,8 @@ class Gprint extends Comment
 		checkValuePlacement();		// First see if this GPRINT is valid
 		super.parseComment();
 
-		this.commentType = Comment.CMT_GPRINT;
-		this.sourceName = sourceName;
+		this.commentType 	= Comment.CMT_GPRINT;
+		this.sourceName 	= sourceName;
 		
 		if ( consolFunc.equalsIgnoreCase("AVERAGE") || consolFunc.equalsIgnoreCase("AVG") )
 			aggregate = Source.AGG_AVERAGE;
@@ -115,7 +115,6 @@ class Gprint extends Comment
 		baseValue	= base;
 	}
 	
-	
 	// ================================================================
 	// -- Protected methods
 	// ================================================================
@@ -137,7 +136,7 @@ class Gprint extends Comment
 						
 			// See if we need to use a specific value for the formatting
 			double oldBase	= vFormat.getBase();
-			if ( baseValue != -1 )
+			if ( baseValue != -1 && baseValue != vFormat.getBase() )
 				vFormat.setBase( baseValue );
 			
 			vFormat.setFormat( value, numDec, strLen );

@@ -146,6 +146,7 @@ class RrdExporter
 		ValueExtractor[] veList	= new ValueExtractor[ fetchSources.size() ];
 
 		long requestedStep		= (long) (endTime - startTime) / maxRows;
+		if ( requestedStep <= 0 ) requestedStep = 1;
 
 		// Shift start and endTime
 		int minReduceFactor 	= 1;
@@ -171,6 +172,7 @@ class RrdExporter
 							finalEndTime = endTime;
 
 						requestedStep = (long) (endTime - startTime) / maxRows;
+						if ( requestedStep <= 0 ) requestedStep = 1;
 					}
 
 					// Calculate the step for data retrieval
@@ -461,6 +463,9 @@ class RrdExporter
 	 */
 	protected ExportData createExportData() throws RrdException
 	{
+		if ( sources == null)
+			throw new RrdException( "Sources not calculated, no data to return." );
+		
 		// Now create a RrdDataSet object containing the results
 		Source[] sourceSet;
 		String[][] export 	= def.getExportDatasources();

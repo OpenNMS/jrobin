@@ -344,7 +344,7 @@ public class RrdGraphDefTemplate extends XmlTemplate {
 
 	private void resolveGraphElements(Node graphNode) throws RrdException {
 		validateTagsOnlyOnce(graphNode, new String[] {
-			"area*", "line*", "stack*", "gprint*", "hrule*", "vrule*", "comment*"
+			"area*", "line*", "stack*", "gprint*", "hrule*", "vrule*", "comment*", "time*"
 		});
 		Node[] childs = getChildNodes(graphNode);
 		for(int i = 0; i < childs.length; i++) {
@@ -377,6 +377,14 @@ public class RrdGraphDefTemplate extends XmlTemplate {
 					rrdGraphDef.gprint( datasource, consolFun, format );
 				else
 					rrdGraphDef.gprint( datasource, consolFun, format, getChildValueAsDouble(childs[i], "base") );
+			}
+			else if(nodeName.equals("time")) {
+				validateTagsOnlyOnce(childs[i], new String[] { "format", "pattern", "value" });
+				String format 		= getChildValue(childs[i], "format", false );
+				String pattern	 	= getChildValue(childs[i], "pattern");
+				String timestamp 	= getChildValue(childs[i], "value");
+
+				rrdGraphDef.time( format, pattern, Util.getGregorianCalendar(timestamp) );
 			}
 			else if(nodeName.equals("hrule")) {
 				validateTagsOnlyOnce(childs[i], new String[] { "value", "color", "legend", "width" });
@@ -481,14 +489,22 @@ public class RrdGraphDefTemplate extends XmlTemplate {
 		validateTagsOnlyOnce(datasourceNode, new String[] { "def*" });
 		Node[] nodes = getChildNodes(datasourceNode, "def");
 		for(int i = 0; i < nodes.length; i++) {
-			if(hasChildNode(nodes[i], "rrd")) {
+			if(hasChildNode(nodes[i], "rrd"))
+			{
 				// RRD datasource
-				validateTagsOnlyOnce(nodes[i], new String[] {"name", "rrd", "source", "cf"});
-				String name = getChildValue(nodes[i], "name");
-            	String rrd = getChildValue(nodes[i], "rrd");
-				String dsName = getChildValue(nodes[i], "source");
+				validateTagsOnlyOnce(nodes[i], new String[] {"name", "rrd", "source", "cf", "backend"});
+				String name 	= getChildValue(nodes[i], "name");
+            	String rrd 		= getChildValue(nodes[i], "rrd");
+				String dsName 	= getChildValue(nodes[i], "source");
 				String consolFun = getChildValue(nodes[i], "cf");
-				rrdGraphDef.datasource(name, rrd, dsName, consolFun);
+
+				if ( Util.Xml.hasChildNode(nodes[i], "backend") )
+				{
+					String backend = getChildValue( nodes[i], "backend" );
+					rrdGraphDef.datasource( name, rrd, dsName, consolFun, backend );
+				}
+				else
+					rrdGraphDef.datasource(name, rrd, dsName, consolFun);
 			}
 			else if(hasChildNode(nodes[i], "rpn")) {
 				// RPN datasource

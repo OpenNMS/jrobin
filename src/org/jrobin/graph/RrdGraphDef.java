@@ -30,6 +30,7 @@ import java.awt.Color;
 import java.awt.BasicStroke;
 import java.util.*;
 import java.text.SimpleDateFormat;
+import java.text.DateFormat;
 
 import org.jrobin.core.RrdException;
 import org.jrobin.core.XmlWriter;
@@ -74,7 +75,6 @@ public class RrdGraphDef extends RrdExportDef implements Serializable
 	private boolean antiAliasing			= true;								// use anti-aliasing for the chart (default: yes)
 	private boolean showLegend				= true;								// show legend and comments (default: yes)
 	private boolean drawSignature			= true;								// show JRobin url signature (default: yes)
-	private boolean useExportDataFlag		= false;							// use ExportData instead of normal datasources
 
 	private Color backColor					= new Color( 245, 245, 245 );		// variation of light gray
 	private Color canvasColor				= Color.WHITE;						// white
@@ -741,6 +741,7 @@ public class RrdGraphDef extends RrdExportDef implements Serializable
 	/**
 	 * Adds a vertical rule to the graph definition.  The legend allows for the same
 	 * alignment options as <code>gprint</code> or <code>comment</code>.
+	 *
 	 * @param timestamp Rule position (specific moment in time)
 	 * @param color Rule color.
 	 * @param legend Legend to be added to the graph.
@@ -760,11 +761,126 @@ public class RrdGraphDef extends RrdExportDef implements Serializable
 	 * whitespace is appended by default.  To suppress this whitespace put a <code>@G</code>
 	 * marker at the very end of the string.  By putting a <code>@g</code> marker instead all
 	 * whitespace inside the string at very beginning or end will be removed also.
+	 *
 	 * @param text Comment
 	 * @throws RrdException Thrown in case of JRobin specific error.
 	 */
 	public void comment(String text) throws RrdException {
 		addComment( new Comment(text) );
+	}
+
+	/**
+	 * Adds a comment that will contain the current time, to the graph definition.  Normal comment codes
+	 * apply, but a special marker <code>@t</code> should be present for the location of the timestamp.
+	 * The actual format of the printed timestamp is determined by the pattern parameter, for information
+	 * on possible patterns, see <em>java.text.SimpleDateFormat</em>.
+	 *
+	 * @param text Comment text (must contain @t marker).
+	 * @param pattern SimpleDateFormat pattern to format the timestamp with.
+	 * @throws RrdException Thrown in case of JRobin specific error.
+	 */
+	public void time( String text, String pattern ) throws RrdException {
+		addComment( new TimeText( text, pattern ) );
+	}
+
+	/**
+	 * Adds a comment that will contain the current time, to the graph definition.  Normal comment codes
+	 * apply, but a special marker <code>@t</code> should be present for the location of the timestamp.
+	 * The actual format of the printed timestamp is determined by the DateFormat passed as a parameter.
+	 *
+	 * @param text Comment text (must contain @t marker).
+	 * @param format DateFormat object to format the timestamp with.
+	 * @throws RrdException Thrown in case of JRobin specific error.
+	 */
+	public void time( String text, DateFormat format ) throws RrdException {
+		addComment( new TimeText( text, format ) );
+	}
+
+	/**
+	 * Adds a comment that will contain the given timestamp, to the graph definition.  Normal comment codes
+	 * apply, but a special marker <code>@t</code> should be present for the location of the timestamp.
+	 * The actual format of the printed timestamp is determined by the pattern parameter, for information
+	 * on possible patterns, see <em>java.text.SimpleDateFormat</em>.
+	 *
+	 * @param text Comment text (must contain @t marker).
+	 * @param pattern SimpleDateFormat pattern to format the timestamp with.
+	 * @param timestamp Timestamp (in seconds) that should be formatted.
+	 * @throws RrdException Thrown in case of JRobin specific error.
+	 */
+	public void time( String text, String pattern, long timestamp ) throws RrdException {
+		addComment( new TimeText( text, pattern, timestamp ) );
+	}
+
+	/**
+	 * Adds a comment that will contain the given timestamp, to the graph definition.  Normal comment codes
+	 * apply, but a special marker <code>@t</code> should be present for the location of the timestamp.
+	 * The actual format of the printed timestamp is determined by the DateFormat passed as a parameter.
+	 *
+	 * @param text Comment text (must contain @t marker).
+	 * @param format DateFormat object to format the timestamp with.
+	 * @param timestamp Timestamp (in seconds) that should be formatted.
+	 * @throws RrdException Thrown in case of JRobin specific error.
+	 */
+	public void time( String text, DateFormat format, long timestamp ) throws RrdException {
+		addComment( new TimeText( text, format, timestamp ) );
+	}
+
+	/**
+	 * Adds a comment that will contain the given timestamp, to the graph definition.  Normal comment codes
+	 * apply, but a special marker <code>@t</code> should be present for the location of the timestamp.
+	 * The actual format of the printed timestamp is determined by the pattern parameter, for information
+	 * on possible patterns, see <em>java.text.SimpleDateFormat</em>.
+	 *
+	 * @param text Comment text (must contain @t marker).
+	 * @param pattern SimpleDateFormat pattern to format the timestamp with.
+	 * @param date Timestamp (as Date object) that should be formatted.
+	 * @throws RrdException Thrown in case of JRobin specific error.
+	 */
+	public void time( String text, String pattern, Date date ) throws RrdException {
+		addComment( new TimeText( text, pattern, date ) );
+	}
+
+	/**
+	 * Adds a comment that will contain the given timestamp, to the graph definition.  Normal comment codes
+	 * apply, but a special marker <code>@t</code> should be present for the location of the timestamp.
+	 * The actual format of the printed timestamp is determined by the DateFormat passed as a parameter.
+	 *
+	 * @param text Comment text (must contain @t marker).
+	 * @param format DateFormat object to format the timestamp with.
+	 * @param date Timestamp (as Date object) that should be formatted.
+	 * @throws RrdException Thrown in case of JRobin specific error.
+	 */
+	public void time( String text, DateFormat format, Date date ) throws RrdException {
+		addComment( new TimeText( text, format, date ) );
+	}
+
+	/**
+	 * Adds a comment that will contain the given timestamp, to the graph definition.  Normal comment codes
+	 * apply, but a special marker <code>@t</code> should be present for the location of the timestamp.
+	 * The actual format of the printed timestamp is determined by the pattern parameter, for information
+	 * on possible patterns, see <em>java.text.SimpleDateFormat</em>.
+	 *
+	 * @param text Comment text (must contain @t marker).
+	 * @param pattern SimpleDateFormat pattern to format the timestamp with.
+	 * @param cal Timestamp (as Calendar) that should be formatted.
+	 * @throws RrdException Thrown in case of JRobin specific error.
+	 */
+	public void time( String text, String pattern, Calendar cal) throws RrdException {
+		addComment( new TimeText( text, pattern, cal ) );
+	}
+
+	/**
+	 * Adds a comment that will contain the given timestamp, to the graph definition.  Normal comment codes
+	 * apply, but a special marker <code>@t</code> should be present for the location of the timestamp.
+	 * The actual format of the printed timestamp is determined by the DateFormat passed as a parameter.
+	 *
+	 * @param text Comment text (must contain @t marker).
+	 * @param format DateFormat object to format the timestamp with.
+	 * @param cal Timestamp (as Calendar) that should be formatted.
+	 * @throws RrdException Thrown in case of JRobin specific error.
+	 */
+	public void time( String text, DateFormat format, Calendar cal) throws RrdException {
+		addComment( new TimeText( text, format, cal ) );
 	}
 	
 	/**
@@ -925,41 +1041,6 @@ public class RrdGraphDef extends RrdExportDef implements Serializable
 		xml.closeTag(); // graph
 		xml.closeTag(); // rrd_graph_def
 		xml.flush();
-	}
-
-	/**
-	 * Exports RrdGraphDef (graph definition) object in XML format to string.
-	 * Generated code can be parsed with {@link RrdGraphDefTemplate} class, see
-	 * {@link RrdGraphDef#exportXmlTemplate()}.
-	 *
-	 * @return String representing graph definition in XML format
-	 */
-	public String getXmlTemplate() {
-		return exportXmlTemplate();
-	}
-	
-	/**
-	 * Exports RrdGraphDef (graph definition) object in XML format to string.
-	 * Generated code can be parsed with {@link RrdGraphDefTemplate} class.
-	 *
-	 * @return String representing graph definition in XML format
-	 */
-	public String exportXmlTemplate() {
-		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-		exportXmlTemplate(outputStream);
-		return outputStream.toString();
-	}
-
-	/**
-	 * Exports RrdGraphDef (graph definition) object in XML format to file.
-	 * Generated code can be parsed with {@link RrdGraphDefTemplate} class.
-	 * 
-	 * @param filePath destination file
-	 */
-	public void exportXmlTemplate(String filePath) throws IOException {
-		FileOutputStream outputStream = new FileOutputStream(filePath, false);
-		exportXmlTemplate(outputStream);
-		outputStream.close();
 	}
 
 	// ================================================================

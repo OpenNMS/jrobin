@@ -83,6 +83,7 @@ class Sdef extends Cdef
 
 		values 					= new double[ numPoints ];
 		this.aggregatePoints	= aggregatePoints;
+		calculated				= false;
 	}
 
 	/**

@@ -49,6 +49,7 @@ public class ExportData implements RrdDataSet
 	private HashMap sourceByName, legends;
 	private Source[] sources;
 
+	private Print printer;
 
 	// ================================================================
 	// -- Constructors
@@ -295,6 +296,63 @@ public class ExportData implements RrdDataSet
 	}
 
 	/**
+	 * <p>Calculate the chosen consolidation function <code>consolFun</code> over
+	 * the <code>sourceName</code> and returns the result as a string using the
+	 * specified <code>format</code>.</p>
+	 *
+	 * <p>In the format string there should be a
+	 * <code>@n.d</code> marker (replace <code>n</code> with the total number of spaces the
+	 * value should at minimum take up, and replace <code>d</code> with the desired number of decimals)
+	 * in the place where the number should be printed. If an additional <code>@s</code> is
+	 * found in the format, the value will be scaled and an appropriate SI magnitude
+	 * unit will be printed in place of the <code>@s</code> marker. If you specify
+	 * <code>@S</code> instead of <code>@s</code>, the value will be scaled with the scale
+	 * factor used in the last gprint directive (uniform value scaling).</p>
+	 *
+	 * @param sourceName Source name
+	 * @param consolFun Consolidation function to be used for calculation ("AVERAGE",
+	 * "MIN", "MAX", "LAST" or "TOTAL" (since 1.3.1)
+	 * @param format Format string. For example: "speed is @5.2 @sbits/sec@c",
+	 * "temperature = @0 degrees"
+	 * @throws RrdException Thrown in case of JRobin specific error
+	 */
+	public String print( String sourceName, String consolFun, String format ) throws RrdException {
+		return print( sourceName, consolFun, format, ValueFormatter.DEFAULT_BASE );
+	}
+
+	/**
+	 * <p>Calculate the chosen consolidation function <code>consolFun</code> over
+	 * the <code>sourceName</code> and returns the result as a string using the
+	 * specified <code>format</code>.</p>
+	 *
+	 * <p>In the format string there should be a
+	 * <code>@n.d</code> marker (replace <code>n</code> with the total number of spaces the
+	 * value should at minimum take up, and replace <code>d</code> with the desired number of decimals)
+	 * in the place where the number should be printed. If an additional <code>@s</code> is
+	 * found in the format, the value will be scaled and an appropriate SI magnitude
+	 * unit will be printed in place of the <code>@s</code> marker. If you specify
+	 * <code>@S</code> instead of <code>@s</code>, the value will be scaled with the scale
+	 * factor used in the last gprint directive (uniform value scaling).</p>
+	 *
+	 * @param sourceName Source name
+	 * @param consolFun Consolidation function to be used for calculation ("AVERAGE",
+	 * "MIN", "MAX", "LAST" or "TOTAL" (since 1.3.1)
+	 * @param format Format string. For example: "speed is @5.2 @sbits/sec@c",
+	 * "temperature = @0 degrees"
+	 * @param base Base value used to calculate the appriopriate scaling SI magnitude.
+	 * @throws RrdException Thrown in case of JRobin specific error
+	 */
+	public String print( String sourceName, String consolFun, String format, double base ) throws RrdException
+	{
+		double value = getAggregate( sourceName, consolFun );
+
+		if ( printer == null )
+			printer = new Print( base, ValueFormatter.NO_SCALE );
+
+		return printer.getFormattedString( value, format, base );
+	}
+
+	/**
 	 * Imports a export XML string and maps it back to this ExportData object.
 	 * The XML can be from either a JRobin or RRDtool export.
 	 *
@@ -397,8 +455,6 @@ public class ExportData implements RrdDataSet
 		// -- Set the datasource - name
 		for ( int i = 0; i < sources.length; i++ )
 			sourceByName.put( sources[i].getName(), sources[i] );
-
-
 	}
 
 	/**

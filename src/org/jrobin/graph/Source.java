@@ -56,10 +56,12 @@ class Source
 	private double nextValue				= Double.POSITIVE_INFINITY;
 
 	protected long step						= 0;
+	private long lastPreciseTime			= 0;		// Last time requested
 	private long lastTime					= 0;
 	private long totalTime					= 0;
 
 	private int stPos						= 0;
+	private int lastStPos					= 0;		// Last value position requested
 
 	// ================================================================
 	// -- Constructors
@@ -119,9 +121,11 @@ class Source
 		if ( Double.isInfinite(val) )
 		{
 			// Return the next value if we fetched it before
-			if ( !Double.isInfinite(nextValue) )
+			if ( !Double.isInfinite(nextValue) && pos >= lastStPos )
 				return nextValue;
 
+			lastStPos = pos;
+			
 			// Try to fetch the next value
 			for ( int i = pos + 1; i < values.length; i++ )
 			{
@@ -141,13 +145,20 @@ class Source
 		else
 			nextValue = Double.POSITIVE_INFINITY;
 
+		lastStPos = pos;
+
 		return values[pos];
 	}
 
 	double get( long preciseTime, long[] reducedTimestamps )
 	{
-		long t 		= Util.normalize( preciseTime, step );
-		t			= ( t < preciseTime ? t + step : t );
+		long t 			= Util.normalize( preciseTime, step );
+		t				= ( t < preciseTime ? t + step : t );
+
+		if ( preciseTime < lastPreciseTime )	// Backward fetching is weird, start over, we prolly in a new iteration
+			stPos 		= 0;
+
+		lastPreciseTime	= preciseTime;
 
 		while ( stPos < reducedTimestamps.length - 1 )
 		{
