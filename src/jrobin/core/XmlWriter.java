@@ -25,11 +25,18 @@ package jrobin.core;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.Stack;
+import java.util.Locale;
 import java.text.DecimalFormat;
+import java.text.NumberFormat;
 
 class XmlWriter {
-	static final DecimalFormat df = new DecimalFormat("0.0000000000E00");
 	static final String INDENT_STR = "   ";
+	static final String PATTERN = "0.0000000000E00";
+	static final DecimalFormat df;
+	static {
+		df = (DecimalFormat) NumberFormat.getNumberInstance(Locale.ENGLISH);
+		df.applyPattern(PATTERN);
+	}
 
 	private PrintWriter writer;
 	private StringBuffer indent = new StringBuffer("");

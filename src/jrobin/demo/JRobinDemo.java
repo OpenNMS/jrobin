@@ -173,8 +173,8 @@ public class JRobinDemo {
 		gDef.setTimeAxisLabel("day in month");
         gDef.setTitle("Temperatures in May 2003");
 		gDef.setValueAxisLabel("temperature");
-		gDef.datasource("sun", rrdPath, "sun", "AVERAGE");
-		gDef.datasource("shade", rrdPath, "shade", "AVERAGE");
+		gDef.datasource("sun", rrdRestoredPath, "sun", "AVERAGE");
+		gDef.datasource("shade", rrdRestoredPath, "shade", "AVERAGE");
 		gDef.datasource("median", "sun,shade,+,2,/");
 		gDef.datasource("diff", "sun,shade,-,ABS,-1,*");
 		gDef.datasource("sine", "TIME," + start + ",-," + (end - start) +
@@ -182,7 +182,7 @@ public class JRobinDemo {
 		gDef.line("sun", Color.RED, "sun temp");
 		gDef.line("shade", Color.BLUE, "shade temp");
 		gDef.line("median", Color.GREEN, "median value");
-		gDef.area("diff", Color.ORANGE, "difference");
+		gDef.area("diff", new Color(255, 0, 0), null);
 		gDef.line("sine", Color.CYAN, "sine function demo");
 		gDef.gprint("sun", "MAX", "\nmaxSun = @3@s");
 		gDef.gprint("sun", "AVERAGE", "avgSun = @3@S@r");
