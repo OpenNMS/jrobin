@@ -51,9 +51,10 @@ public class ChartGraphics
 		g.drawLine( x1, -y1, x2, -y2 );
 	}
 
+	// Contrary to Graphics2D fillRect, this method uses boundary points
 	void fillRect(int x1, int y1, int x2, int y2)
 	{
-		g.fillRect( x1, -y1, x2 - x1, y2 - y1 );
+		g.fillRect( x1, -y2, x2 - x1, y2 - y1 );
 	}
 		
 	void setColor( Color c )

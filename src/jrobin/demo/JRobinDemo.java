@@ -173,8 +173,8 @@ public class JRobinDemo {
 		gDef.setTimeAxisLabel("day in month");
         gDef.setTitle("Temperatures in May 2003");
 		gDef.setValueAxisLabel("temperature");
-		gDef.datasource("sun", rrdRestoredPath, "sun", "AVERAGE");
-		gDef.datasource("shade", rrdRestoredPath, "shade", "AVERAGE");
+		gDef.datasource("sun", rrdPath, "sun", "AVERAGE");
+		gDef.datasource("shade", rrdPath, "shade", "AVERAGE");
 		gDef.datasource("median", "sun,shade,+,2,/");
 		gDef.datasource("diff", "sun,shade,-,ABS,-1,*");
 		gDef.datasource("sine", "TIME," + start + ",-," + (end - start) +

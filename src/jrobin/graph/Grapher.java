@@ -516,7 +516,7 @@ class Grapher
 		
 		RrdSecond[] times 	= (RrdSecond[]) s.getSeries().times.toArray( new RrdSecond[0] );
 		Double[] values 	= (Double[]) s.getSeries().values.toArray( new Double[0] );
-		
+				
 		for (int i = 0; i < times.length; i++)
 		{
 			nx = g.getX( times[i].timestamp );
@@ -524,7 +524,7 @@ class Grapher
 			if ( stack )
 				ny += p[i];
 		
-			if ( ax != 0 && ay != Integer.MIN_VALUE && ny != Integer.MIN_VALUE )
+			if ( nx != 0 && ay != Integer.MIN_VALUE && ny != Integer.MIN_VALUE )
 				g.drawLine( ax, ay, nx, ny );
 		
 			p[i] 	= ny;
@@ -546,7 +546,7 @@ class Grapher
 
 		RrdSecond[] times 	= (RrdSecond[]) s.getSeries().times.toArray( new RrdSecond[0] );
 		Double[] values 	= (Double[]) s.getSeries().values.toArray( new Double[0] );
-	
+		
 		for (int i = 0; i < times.length; i++)
 		{
 			py = 0;
@@ -559,9 +559,18 @@ class Grapher
 				ny += p[i];
 			}
 		
-			if ( ax != 0 && py != Integer.MIN_VALUE && ny != Integer.MIN_VALUE )
+			if (nx > ax + 1)	// More than one pixel hop, draw intermediate pixels too
+			{
+				// For each pixel between nx and ax, calculate the y, plot the line
+				int co 	= (ny - ay) / (nx - ax);
+				int j 	= (ax > 0 ? ax : 1 );		// Skip 0 
+				
+				for (j = ax; j <= nx; j++)
+					g.drawLine( j, py, j, ( co * (j - ax) + ay) );
+			}
+			else if ( nx != 0 && py != Integer.MIN_VALUE && ny != Integer.MIN_VALUE )
 				g.drawLine( nx, py, nx, ny );
-		
+					
 			p[i]	= ny;
 			ax 		= nx;
 			ay 		= ny;
@@ -588,7 +597,6 @@ class Grapher
 		if(endTime - startTime + 1 < numPoints)
 			numPoints = (int)(endTime - startTime + 1);
 		
-		/*
 		// -------------------------------------------------------		
 		// Experimental test code, faster fetching research
 		Iterator bla = graphDef.rrdFiles.keySet().iterator();
@@ -631,19 +639,16 @@ class Grapher
 				}
 			}
 			rrd.close();
-		
-			
-			
 		}
 		// -------------------------------------------------------
-		*/
 		
+		/*
 		// -------------------------------------------------------
 		// Old fetching code
 		for(int i = 0; i < sources.length; i++)
 			sources[i].setIntervalInternal(startTime, endTime);
 		// -------------------------------------------------------
-		
+		*/
 
 		s3 = Calendar.getInstance().getTimeInMillis();		
 		

@@ -44,6 +44,7 @@ import java.io.Serializable;
 public class RrdGraph implements Serializable 
 {
 	private Grapher grapher;
+	private BufferedImage img = null;
 
 	/**
 	 * Constructs new JRobin graph from the supplied definition.
@@ -62,12 +63,20 @@ public class RrdGraph implements Serializable
 	 * @param height Image height.
 	 * @return Graph as a buffered image.
 	 */
+   	// Check, if width/height has changed since last generation
+   	// Regenerate the graph
 	public BufferedImage getBufferedImage(int width, int height) 
 	{
-		try
+		try 
 		{
-			return grapher.createImage( width, height );
-		} 
+			if ( img != null )
+				return img;
+			else
+			{
+				img = grapher.createImage( width, height );
+				return img;
+			}
+		}
 		catch (RrdException e) {
 			e.printStackTrace();
 		}
@@ -84,14 +93,7 @@ public class RrdGraph implements Serializable
 	 */
 	public void saveAsPNG(String path, int width, int height)	throws IOException 
 	{
-		try 
-		{
-			BufferedImage gImage = grapher.createImage( width, height ); 
-			ImageIO.write( (RenderedImage) gImage, "png", new File(path) );
-		} 
-		catch ( RrdException e ) {
-			e.printStackTrace();
-		}    
+		ImageIO.write( (RenderedImage) getBufferedImage(width, height), "png", new File(path) );
 	}
 
 	/**
@@ -107,7 +109,7 @@ public class RrdGraph implements Serializable
 		// Based on http://javaalmanac.com/egs/javax.imageio/JpegWrite.html?l=rel
 		try {
 			// Retrieve jpg image to be compressed
-			BufferedImage gImage 	= grapher.createImage( width, height );
+			BufferedImage gImage 	= getBufferedImage(width, height);
 			RenderedImage rndImage	= (RenderedImage) gImage;
 			
 			// Find a jpeg writer
@@ -147,14 +149,8 @@ public class RrdGraph implements Serializable
 	public ChartPanel getChartPanel()
 	{
 		ChartPanel p = new ChartPanel();
-		try 
-		{
-			p.setChart( grapher.createImage(0,0) );
-		}
-		catch ( RrdException e ) {
-			e.printStackTrace();
-		}
-	
+		p.setChart( getBufferedImage(0, 0) );
+		
 		return p;
 	} 
 
@@ -168,16 +164,9 @@ public class RrdGraph implements Serializable
 	public byte[] getPNGBytes(int width, int height) throws IOException 
 	{
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-		try 
-		{
-			BufferedImage gImage = grapher.createImage( width, height ); 
-			
-			ImageIO.write( (RenderedImage) gImage, "png", outputStream );
-		} 
-		catch ( RrdException e ) {
-			e.printStackTrace();
-		}    
 		
+		ImageIO.write( (RenderedImage) getBufferedImage(width, height), "png", outputStream );
+				
 		return outputStream.toByteArray();
 	}
 
@@ -194,7 +183,7 @@ public class RrdGraph implements Serializable
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 		try {
 			// Retrieve jpg image to be compressed
-			BufferedImage gImage 	= grapher.createImage( width, height );
+			BufferedImage gImage 	= getBufferedImage(width, height);
 			RenderedImage rndImage	= (RenderedImage) gImage;
 			
 			// Find a jpeg writer
