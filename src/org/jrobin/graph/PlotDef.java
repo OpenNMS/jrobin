@@ -132,7 +132,7 @@ abstract class PlotDef
 	 */
 	double getValue( int tblPos, long[] timestamps )
 	{
-		return source.values[tblPos];	
+		return source.get( tblPos );	
 	}
 	
 	/**

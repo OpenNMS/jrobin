@@ -195,9 +195,7 @@ class FetchSource
 				}
 				
 				// Fetch datasources
-				FetchRequest request 		= rrd.createFetchRequest( cfNames[i], startTime, endTime + rrdStep, resolution );
-				long arcStep				= rrd.findMatchingArchive( request ).getArcStep();
-				request						= rrd.createFetchRequest( cfNames[i], startTime, endTime + arcStep, resolution );
+				FetchRequest request		= rrd.createFetchRequest( cfNames[i], startTime, endTime, resolution );
 				request.setFilter( dsNames );
 
 				FetchData data				= request.fetchData();

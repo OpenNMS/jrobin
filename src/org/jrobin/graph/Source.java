@@ -94,8 +94,7 @@ class Source
 			aggregate( time, val );
 	}
 
-	void setFetchedStep( long step )
-	{
+	void setFetchedStep( long step ) {
 		this.step = step;
 	}
 

@@ -514,52 +514,61 @@ public class RrdDb implements RrdUpdater {
 		return fetchData;
 	}
 
-	public Archive findMatchingArchive(FetchRequest request) throws RrdException, IOException {
-		String consolFun = request.getConsolFun();
-		long fetchStart = request.getFetchStart();
-		long fetchEnd = request.getFetchEnd();
-		long resolution = request.getResolution();
+	public Archive findMatchingArchive(FetchRequest request) throws RrdException, IOException
+	{
+		String consolFun	= request.getConsolFun();
+		long fetchStart 	= request.getFetchStart();
+		long fetchEnd 		= request.getFetchEnd();
+		long resolution 	= request.getResolution();
+
 		Archive bestFullMatch = null, bestPartialMatch = null;
+
 		long bestStepDiff = 0, bestMatch = 0;
-		for(int i = 0; i < archives.length; i++) {
-            if(archives[i].getConsolFun().equals(consolFun)) {
-				long arcStep = archives[i].getArcStep();
-				long arcStart = archives[i].getStartTime() - arcStep;
-                long arcEnd = archives[i].getEndTime();
-                long fullMatch = fetchEnd - fetchStart;
-                // best full match
-                if(arcEnd >= fetchEnd && arcStart <= fetchStart) {
-					long tmpStepDiff = Math.abs(archives[i].getArcStep() - resolution);
-                    if(bestFullMatch == null || tmpStepDiff < bestStepDiff) {
+
+		for ( int i = 0; i < archives.length; i++ )
+		{
+            if ( archives[i].getConsolFun().equals(consolFun) )
+			{
+				long arcStep 	= archives[i].getArcStep();
+				long arcStart 	= archives[i].getStartTime() - arcStep;
+                long arcEnd 	= archives[i].getEndTime();
+                long fullMatch 	= fetchEnd - fetchStart;
+
+                if ( arcEnd >= fetchEnd && arcStart <= fetchStart )					// best full match
+				{
+					long tmpStepDiff = Math.abs( archives[i].getArcStep() - resolution );
+
+                    if ( tmpStepDiff < bestStepDiff || bestFullMatch == null )
+					{
                         bestStepDiff = tmpStepDiff;
 						bestFullMatch = archives[i];
 					}
+
 				}
-				// best partial match
-				else {
+				else																// best partial match
+				{
                     long tmpMatch = fullMatch;
-                    if(arcStart > fetchStart) {
+					
+                    if ( arcStart > fetchStart )
                         tmpMatch -= (arcStart - fetchStart);
-					}
-					if(arcEnd < fetchEnd) {
+					if( arcEnd < fetchEnd )
 						tmpMatch -= (fetchEnd - arcEnd);
-					}
-                    if(bestPartialMatch == null || bestMatch < tmpMatch) {
-                        bestPartialMatch = archives[i];
-						bestMatch = tmpMatch;
+
+                    if ( bestPartialMatch == null || bestMatch < tmpMatch )
+					{
+                        bestPartialMatch 	= archives[i];
+						bestMatch 			= tmpMatch;
 					}
 				}
 			}
 		}
-		if(bestFullMatch != null) {
+
+		if ( bestFullMatch != null )
 			return bestFullMatch;
-		}
-		else if(bestPartialMatch != null) {
+		else if ( bestPartialMatch != null )
 			return bestPartialMatch;
-		}
-		else {
+		else
 			throw new RrdException("RRD file does not contain RRA:" + consolFun + " archive");
-		}
 	}
 
 	/**

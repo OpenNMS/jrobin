@@ -76,7 +76,7 @@ class ValueExtractor
 				timestamps[i] 	= values[i].getTimestamps();
 				dsValues[i]		= values[i].getValues();
 
-				if ( timestamps[i].length > 2 )
+				if ( timestamps[i].length >= 2 )
 					steps[i] = (timestamps[i][1] - timestamps[i][0]);
 			}
 		}
@@ -95,7 +95,9 @@ class ValueExtractor
 			if ( dsValues[i] != null )
 			{
 				for (int x = 0; x < dsValues[i].length; x++)
+				{
 					sources[tblPos++].setFetchedStep( steps[i] );
+				}
 			}
 		}
 

@@ -284,7 +284,7 @@ class RrdExporter
 			finalEndTime			= endTime;
 
 			vEndTime				+= minStep;
-			numRows					= (int) ((vEndTime - vStartTime) / minStep) + 1;
+			numRows					= reducedNumRows; //(int) ((vEndTime - vStartTime) / minStep) + 1;
 		}
 
 		// -- Add all Export datasources to the source table

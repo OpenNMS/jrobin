@@ -81,7 +81,7 @@ class ValueGrid
 		if ( base != baseValue )
 		{
 			baseValue			= base;
-			
+
 			double tmp 			= 1;
 			for (int i = 1; i < 7; i++) {
 				tmp 				*= baseValue;
