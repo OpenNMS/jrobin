@@ -2,8 +2,11 @@
  * JRobin : Pure java implementation of RRDTool's functionality
  * ============================================================
  *
- * Project Info:  http://www.sourceforge.net/projects/jrobin
- * Project Lead:  Sasa Markovic (saxon@eunet.yu);
+ * Project Info:  http://www.jrobin.org
+ * Project Lead:  Sasa Markovic (saxon@jrobin.org)
+ * 
+ * Developers:    Sasa Markovic (saxon@jrobin.org)
+ *                Arne Vandamme (cobralord@jrobin.org)
  *
  * (C) Copyright 2003, by Sasa Markovic.
  *
@@ -19,463 +22,549 @@
  * library; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-
 package jrobin.graph;
+
+import java.io.File;
+import java.io.Serializable;
+import java.awt.Font;
+import java.awt.Color;
+import java.awt.BasicStroke;
+import java.util.Date;
+import java.util.Vector;
+import java.util.HashMap;
+import java.util.GregorianCalendar;
+import java.text.SimpleDateFormat;
 
 import jrobin.core.Util;
 import jrobin.core.RrdException;
 
-import java.io.*;
-import java.awt.*;
-import java.text.SimpleDateFormat;
-import java.util.*;
-
 /**
- * <p>Class used to collect information for the new JRobin graph. JRobin graphs have many
+ * <p>Class used to collect information for a JRobin graph. JRobin graphs have many
  * options and this class has methods and properties to set them.</p>
  *
- * <p>At this moment, JRobin graphs are quite good looking, but RRDTool is still better.
- * However, JRobin graphs have almost the same potential as RRDTool's graph command. To learn
- * more about RRDTool's graphs see RRDTool's
- * <a href="../../../man/rrdgraph.html" target="man">rrdgraph man page</a>.</p> This man page
+ * <p>The JRobin graph package was designed to create graphs that have the same look as the 
+ * RRDTool counter parts.  Almost all the same graphing options are available, with some extra's
+ * like more advanced text alignment and custom point-to-point lines and area's.</p>
+ * 
+ * <p>To learn more about RDTool's graphs see RRDTool's
+ * <a href="http://people.ee.ethz.ch/~oetiker/webtools/rrdtool/manual/rrdgraph.html" target="man">rrdgraph man page</a>.  This man page
  * is important: JRobin uses the same concept of graph sources definition (DEF directives)
  * and supports RPN extensions in complex datasource definitions (RRDTool's CDEF directives).</p>
- *
- * <p>If you are familiar with RRDTool's graphing options, you will be able to create
- * JRobin graphs in no time. It is quite simple to translate complex RRDTool graph
- * definitions into JRobin java code. For example: </p>
- *
- * <pre>
- * rrdtool graph traffic.png
- * --start "05/21/2003 00:00" --end "05/22/2003 00:00"
- * -w 550 -h 325 -v "link speed [bytes/sec]"
- * -a PNG -t "Leased Line Traffic"
- * DEF:in=traffic.rrd:input:AVERAGE
- * DEF:out=traffic.rrd:output:AVERAGE
- * CDEF:in8=in,8,*
- * CDEF:out8=out,8,*
- * CDEF:total=in8,out8,+
- * CDEF:totalNeg=total,-1,*
- * AREA:out8#00FF00:"output traffic"
- * STACK:in8#0000FF:"input traffic (stacked)"
- * AREA:totalNeg#FF0000:"total traffic\r"
- * GPRINT:in8:AVERAGE:"avgIn=%.2lf %sbits/sec"
- * GPRINT:in8:MAX:"maxIn=%.2lf %sbits/sec\r"
- * GPRINT:out8:AVERAGE:"avgOut=%.2lf %sbits/sec"
- * GPRINT:out8:MAX:"maxOut=%.2lf %sbits/sec\r"
- * GPRINT:total:AVERAGE:"avgTotal=%.2lf %sbits/sec"
- * GPRINT:total:MAX:"maxTotal=%.2lf %sbits/sec\r" </pre>
- *
- * <p>...would look like this in your java code:</p>
- *
- * <pre>
- * GregorianCalendar start = new GregorianCalendar(2003, 4, 21);
- * GregorianCalendar end = new GregorianCalendar(2003, 4, 22);
- * RrdGraphDef gDef = new RrdGraphDef();
- * gDef.setTimePeriod(start, end);
- * gDef.setTitle("Leased Line Traffic");
- * gDef.setTimeAxisLabel("time");
- * gDef.setValueAxisLabel("link speed [bytes/sec]");
- * gDef.datasource("in", "traffic.rrd", "input", "AVERAGE");
- * gDef.datasource("out", "traffic.rrd", "output", "AVERAGE");
- * gDef.datasource("in8", "in,8,*");
- * gDef.datasource("out8", "out,8,*");
- * gDef.datasource("total", "in8,out8,+");
- * gDef.datasource("totalneg", "total,-1,*");
- * gDef.area("out8", Color.GREEN, "output traffic");
- * gDef.stack("in8", Color.BLUE, "input traffic (stacked)");
- * gDef.area("totalneg", Color.RED, "total traffic");
- * gDef.gprint("in8", "AVERAGE", "avgin=@2 @sbits/sec");
- * gDef.gprint("in8", "MAX", "maxin=@2 @sbits/sec@r");
- * gDef.gprint("out8", "AVERAGE", "avgout=@2 @sbits/sec");
- * gDef.gprint("out8", "MAX", "maxout=@2 @sbits/sec@r");
- * gDef.gprint("total", "AVERAGE", "avgtotal=@2 @sbits/sec");
- * gDef.gprint("total", "MAX", "maxtotal=@2 @sbits/sec@r");
- * RrdGraph graph = new RrdGraph(gDef);
- * graph.saveAsPNG(new File("traffic.png"), 645, 440); </pre>
- *
- * <p>Compare the graphs:</p>
- * <p align="center"><img src="../../../images/rrd.png" border="1"><br><b>RRDTool's graph</b></p>
- * <p align="center"><img src="../../../images/jrobin.png" border="1"><br><b>JRobin's graph</b></p>
- *
+ * 
  * <p><code>RrdGraphDef</code> class does not actually create any graph. It just collects necessary information.
- * Graph will be created when you pass <code>RrdGraphDef</code> object to the constructor
- * of {@link jrobin.graph.RrdGraph RrdGraph} object.</p>
- *
- * @author <a href="mailto:saxon@eunet.yu">Sasa Markovic</a>
+ * Graph will be created when you pass <code>RrdGraphDef</code> object to a {@link jrobin.graph.RrdGraph RrdGraph}, either
+ * by passing it to the constructor or using the <code>setGraphDef()</code> method.</p>
+ * 
+ * @author Arne Vandamme (arne.vandamme@jrobin.org)
+ * @author Sasa Markovic (saxon@jrobin.org)
  */
 public class RrdGraphDef implements Serializable
 {
-	private ArrayList sources = new ArrayList();
-	private ArrayList plotDefs = new ArrayList();
-	private ArrayList graphs = new ArrayList();
-	private ArrayList comments = new ArrayList();
-
-	// graph parameters
-	private int timeUnit, timeUnitCount;
-	private SimpleDateFormat timeFormat;
-	private long endTime 			= Util.getTime();
-	private long startTime 			= endTime - 86400L;
-	private String title 			= null;				// Default to null, to check
-	private String timeAxisLabel 	= "";
-	private String valueAxisLabel	= null;
+	// ================================================================
+	// -- Members
+	// ================================================================
+	private long endTime				= Util.getTime();					// default time spam of the last 24 hours
+	private long startTime				= Util.getTime() - 86400L;
 	
-	// Visibility of grid settings
-	private boolean gridX			= true;
-	private boolean gridY			= true;
-	private boolean minorGridX		= true;
-	private boolean minorGridY		= true;
-	private boolean majorGridX		= true;
-	private boolean majorGridY		= true;
-	private boolean rigidGrid		= false;
-	private boolean frontGrid		= true;
-	private boolean antiAliasing	= true;
-	private boolean showLegend		= true;
+	private Title title					= null;								// no title
+	private String valueAxisLabel		= null;								// no vertical label
 	
-	private File background			= null;
-	private File overlay			= null;
-	
-	private BasicStroke borderStroke;
+	private boolean gridX				= true;								// hide entire X axis grid (default: no)
+	private boolean gridY				= true;								// hide entire Y axis grid (default: no)
+	private boolean minorGridX			= true;								// hide minor X axis grid (default: no)
+	private boolean minorGridY			= true;								// hide minor Y axis grid (default: no)
+	private boolean majorGridX			= true;								// hide major X axis grid with labels (default: no)
+	private boolean majorGridY			= true;								// hide major Y axis grid with labels (default: no)
+	private boolean frontGrid			= true;								// show grid in front of the chart (default: yes)
+	private boolean antiAliasing		= true;								// use anti-aliasing for the chart (default: yes)
+	private boolean showLegend			= true;								// show legend and comments (default: yes)
+	private boolean drawSignature		= true;								// show JRobin url signature (default: yes)
 		
-	private Range valueRange;
-	private boolean logarithmic = false;
-	private double valueStep = 0;
-
-	private Color borderColor;		// null value is special here
-	private Color backColor			= new Color( 245, 245, 245 );
-	private Color canvasColor		= Color.WHITE;
-	private Color fontColor			= Color.BLACK;
-	private Color majorGridColor	= new Color(130,30,30);
-	private Color minorGridColor	= new Color(140,140,140);
-	private Color axisColor			= new Color(130,30,30);
-	private Color arrowColor		= Color.RED;
-	private Color frameColor		= Color.LIGHT_GRAY;
+	private Color backColor				= new Color( 245, 245, 245 );		// variation of light gray
+	private Color canvasColor			= Color.WHITE;						// white
+	private Color borderColor			= Color.LIGHT_GRAY;					// light gray, only applicable with a borderStroke
+	private Color normalFontColor		= Color.BLACK;						// black
+	private Color titleFontColor		= Color.BLACK;						// black
+	private Color majorGridColor		= new Color(130,30,30);				// variation of dark red
+	private Color minorGridColor		= new Color(140,140,140);			// variation of gray
+	private Color axisColor				= new Color(130,30,30);				// variation of dark red
+	private Color arrowColor			= Color.RED;						// red
+	private Color frameColor			= Color.LIGHT_GRAY;					// light gray
 	
-	private TimeAxisUnit tAxis		= null;
-	private boolean tAxisCentered	= false;
-	private double valueGridStep	= Double.NaN;
-	private double valueLabelStep	= Double.NaN;
+	private Font titleFont 				= null;								// use default 'grapher' font
+	private Font normalFont 			= null;								// use default 'grapher' font
 	
-	private double baseValue		= 1000;
-	private int scaleIndex			= -1;			// NO_SCALE
+	private File background				= null;								// no background image by default
+	private File overlay				= null;								// no overlay image by default
 	
-	private int chart_lpadding		= Grapher.CHART_LPADDING;
-
-	public HashMap rrdFiles			= new HashMap();
+	private int chart_lpadding			= Grapher.CHART_LPADDING;			// padding space on the left of the chart area
+	
+	private double baseValue			= ValueFormatter.DEFAULT_BASE;		// unit base value to use (default: 1000)
+	private int scaleIndex				= ValueFormatter.NO_SCALE;			// fixed units exponent value to use
+	
+	private BasicStroke borderStroke	= null;								// defaults to standard beveled border
+	private TimeAxisUnit tAxis			= null;								// custom time axis grid, defaults to no custom
+	private ValueAxisUnit vAxis			= null;								// custom value axis grid, defaults to no custom
+	private GridRange gridRange			= null;								// custom value range definition, defaults to auto-scale
+	
+	// -- Non-settable members
+	private int numDefs					= 0;								// number of Def datasources added
+	private int commentLines			= 0;								// number of complete lines in the list of comment items
+	private int commentLineShift		= 0;								// modifier to add to get minimum one complete line of comments
+	
+	private HashMap fetchSources		= new HashMap();					// holds the list of FetchSources
+	private Vector cdefList				= new Vector();						// holds the list of Cdef datasources
+	private Vector plotDefs				= new Vector();						// holds the list of PlotDefs
+	private Vector comments				= new Vector();						// holds the list of comment items
+	
+		
+	// ================================================================
+	// -- Constructors
+	// ================================================================
 	/**
-	 * Creates new RRD graph definition.
+	 * Constructs a new default JRobin graph object. 
 	 */
 	public RrdGraphDef() {
 	}
 
 	/**
-	 * Sets time span to be presented on the graph using timestamps.
+	 * Constructs a new JRobin graph object, with a specified time span to be presented on the graph.  
+	 * Using timestamps defined as number of seconds since the epoch.
+	 * @param startTime Starting timestamp in seconds.
+	 * @param endTime Ending timestamp in seconds.
+	 * @throws RrdException Thrown if invalid parameters are supplied.
+	 */
+	public RrdGraphDef( long startTime, long endTime ) throws RrdException 
+	{
+		setTimePeriod( startTime, endTime );
+	}
+	
+	/**
+	 * Constructs a new JRobin graph object, with a specified time span to be presented on the graph.
+	 * Time spam defined using <code>java.util.Date</code> objects.
+	 * @param start Starting time.
+	 * @param end Ending time.
+	 * @throws RrdException Thrown in case of invalid parameters.
+	 */
+	public RrdGraphDef( Date start, Date end) throws RrdException
+	{
+		setTimePeriod( start, end );
+	}
+	
+	/**
+	 * Constructs a new JRobin graph object, with a specified time span to be presented on the graph.
+	 * Time spam defined using <code>java.util.GregorianCalendar</code> objects.
+	 * @param start Starting time.
+	 * @param end Ending time.
+	 * @throws RrdException Thrown in case of invalid parameters.
+	 */
+	public RrdGraphDef( GregorianCalendar start, GregorianCalendar end ) throws RrdException
+	{
+		setTimePeriod( start, end );
+	}
+
+
+	// ================================================================
+	// -- Public methods
+	// ================================================================
+	/**
+	 * Sets time span to be presented on the graph using timestamps in number of seconds.
 	 * @param startTime Starting timestamp in seconds.
 	 * @param endTime Ending timestamp in secons.
 	 * @throws RrdException Thrown if invalid parameters are supplied.
 	 */
-	public void setTimePeriod(long startTime, long endTime) throws RrdException {
-		if(startTime < 0 || endTime <= startTime) {
-			throw new RrdException("Invalid graph start/end time: " + startTime + "/" + endTime);
-		}
-		this.startTime = startTime;
-		this.endTime = endTime;
+	public void setTimePeriod( long startTime, long endTime ) throws RrdException 
+	{
+		if ( startTime < 0 || endTime <= startTime )
+			throw new RrdException( "Invalid graph start/end time: " + startTime + "/" + endTime );
+		
+		this.startTime 	= startTime;
+		this.endTime 	= endTime;
 	}
-
+	
 	/**
 	 * Sets time span to be presented on the graph using <code>java.util.Date</code> objects.
 	 * @param start Starting time.
 	 * @param end Ending time.
 	 * @throws RrdException Thrown in case of invalid parameters.
 	 */
-	public void setTimePeriod(Date start, Date end) throws RrdException {
-		setTimePeriod(start.getTime() / 1000L, end.getTime() / 1000L);
+	public void setTimePeriod( Date start, Date end ) throws RrdException 
+	{
+		setTimePeriod( start.getTime() / 1000L, end.getTime() / 1000L );
 	}
 
 	/**
-	 * Sets time span to be presented on the graph using
-	 * <code>java.util.GregorianCalendar</code> objects.
+	 * Sets time span to be presented on the graph using <code>java.util.GregorianCalendar</code> objects.
 	 * @param start Starting time.
 	 * @param end Ending time
 	 * @throws RrdException Thrown if invalid parameters are supplied.
 	 */
-	public void setTimePeriod(GregorianCalendar start, GregorianCalendar end) throws RrdException {
-		setTimePeriod(start.getTime(), end.getTime());
+	public void setTimePeriod( GregorianCalendar start, GregorianCalendar end ) throws RrdException 
+	{
+		setTimePeriod( start.getTime(), end.getTime() );
 	}
-
+	
 	/**
 	 * Sets graph title.
 	 * @param title Graph title.
 	 */
-	public void setTitle(String title) throws RrdException {
-		this.title = title;
+	public void setTitle( String title ) throws RrdException
+	{
+		this.title = new Title( title );
 	}
 
 	/**
-	 * Sets horizontal (time) axis label.
-	 * @param timeAxisLabel Axis label.
+	 * Sets vertical (value) axis label.
+	 * @param label Vertical axis label.
 	 */
-	public void setTimeAxisLabel(String timeAxisLabel) {
-		this.timeAxisLabel = timeAxisLabel;
-	}
-
-	/**
-	 * Sets vertical (value) axis label
-	 * @param valueAxisLabel Axis label.
-	 */
-	public void setValueAxisLabel(String valueAxisLabel) {
-		this.valueAxisLabel = valueAxisLabel;
-	}
-
-	void addSource(Source def) {
-		sources.add(def);
-	}
-
-	void addPlot(PlotDef plotDef) throws RrdException {
-		plotDefs.add(plotDef);
-		graphs.add(new OverlayGraph(plotDef));
-		// Add comment line for the legend
-		if ( plotDef.getLegend() != null )
-			addComment( new Legend(plotDef.getColor(), plotDef.getLegend()) );
-	}
-
-	void addPlot(Stack plotDef) throws RrdException {
-		plotDefs.add(plotDef);
-		// Add comment line for the legend
-		if ( plotDef.getLegend() != null )
-			addComment( new Legend(plotDef.getColor(), plotDef.getLegend()) );
-		OverlayGraph lastGraph = getLastGraph();
-		if(lastGraph != null) {
-			lastGraph.addPlotDef(plotDef);
-			return;
-		}
-		throw new RrdException("You have to STACK graph onto something...");
-	}
-	
-	void addPlot(Vrule vruleDef) throws RrdException {
-		plotDefs.add(vruleDef);
-		sources.add( vruleDef.getSource() );
-		if ( vruleDef.getLegend() != null )
-			addComment( new Legend(vruleDef.getColor(), vruleDef.getLegend()) );
-	}
-
-	void addPlot(Hrule hruleDef) throws RrdException {
-		plotDefs.add(hruleDef);
-		graphs.add(new OverlayGraph(hruleDef));
-		sources.add(hruleDef.getSource());
-		if ( hruleDef.getLegend() != null )
-			addComment( new Legend(hruleDef.getColor(), hruleDef.getLegend()) );
-	}
-
-	private OverlayGraph getLastGraph() {
-		int count = graphs.size();
-		if(count == 0) {
-			return null;
-		}
-		return (OverlayGraph) graphs.get(count - 1);
-	}
-
-	void addComment(Comment comment) {
-        comments.add(comment);
-	}
-
-	Source[] getSources() {
-		return (Source[]) sources.toArray(new Source[0]);
-	}
-
-	PlotDef[] getPlotDefs() {
-		return (PlotDef[]) plotDefs.toArray(new PlotDef[0]);
-	}
-
-	OverlayGraph[] getGraphs() {
-		return (OverlayGraph[]) graphs.toArray(new OverlayGraph[0]);
-	}
-
-	Comment[] getComments() {
-		return (Comment[]) comments.toArray(new Comment[0]);
-	}
-
-	long getEndTime() {
-		return endTime;
-	}
-
-	long getStartTime() {
-		return startTime;
-	}
-
-	String getTitle() {
-		return title;
-	}
-
-	String getTimeAxisLabel() {
-		return timeAxisLabel;
-	}
-
-	String getValueAxisLabel() {
-		return valueAxisLabel;
-	}
-
-	private Source findSourceByName(String sourceName) throws RrdException {
-		for(int i = 0; i < sources.size(); i++)	{
-			Source source = (Source) sources.get(i);
-			if(source.getName().equals(sourceName)) {
-				return source;
-			}
-		}
-		throw new RrdException("Datasource not found: " + sourceName);
-	}
-
-	/**
-	 * Adds area plot to the graph definition,
-	 * using the specified color and legend. This method
-	 * takes exactly the same parameters as RRDTool's AREA directive. There is only
-	 * one limitation: so far, legends in JRobin graphs are always centered (don't
-	 * try to specify alignment in the legend string).
-	 *
-	 * @param sourceName Graph source name.
-	 * @param color Filling collor to be used for area plot.
-	 * @param legend Legend to be printed on the graph.
-	 * @throws RrdException Thrown if invalid graph source name is supplied.
-	 */
-	public void area(String sourceName, Color color, String legend) throws RrdException {
-		Source source = findSourceByName(sourceName);
-		addPlot(new Area(source, color, legend));
-	}
-
-	/**
-	 * Adds line plot to the graph definition, using the specified color and legend. This method
-	 * takes exactly the same parameters as RRDTool's LINE1 directive (line width
-	 * is set to 1). There is only
-	 * one limitation: so far, legends in JRobin graphs are always centered (don't
-	 * try to specify alignment in the legend string).
-	 *
-	 * @param sourceName Graph source name.
-	 * @param color Line collor to be used.
-	 * @param legend Legend to be printed on the graph.
-	 * @throws RrdException Thrown if invalid graph source name is supplied.
-	 */
-	public void line(String sourceName, Color color, String legend) throws RrdException {
-		Source source = findSourceByName(sourceName);
-		addPlot(new Line(source, color, legend));
-	}
-
-	/**
-	 * Adds line plot to the graph definition, using the specified color, legend and line width.
-	 * This method takes exactly the same parameters as RRDTool's LINE directive. There is only
-	 * one limitation: so far, legends in JRobin graphs are always centered (don't
-	 * try to specify alignment in the legend string).
-	 *
-	 * @param sourceName Graph source name.
-	 * @param color Line collor to be used.
-	 * @param legend Legend to be printed on the graph.
-	 * @throws RrdException Thrown if invalid graph source name is supplied.
-	 */
-	public void line(String sourceName, Color color, String legend, float lineWidth)
-		throws RrdException {
-		Source source = findSourceByName(sourceName);
-		addPlot(new Line(source, color, legend, lineWidth));
-	}
-
-	/**
-	 * Adds stacked plot to the graph definition,
-	 * using the specified color and legend. This method
-	 * takes exactly the same parameters as RRDTool's STACK directive. There is only
-	 * one limitation: so far, legends in JRobin graphs are always centered (don't
-	 * try to specify alignment in the legend string).
-	 *
-	 * @param sourceName Graph source name.
-	 * @param color Collor to be used.
-	 * @param legend Legend to be printed on the graph.
-	 * @throws RrdException Thrown if invalid graph source name is supplied.
-	 */
-	public void stack(String sourceName, Color color, String legend) throws RrdException {
-		Source source = findSourceByName(sourceName);
-		addPlot( new Stack(source, color, legend) );
-	}
-
-	/**
-	 * Adds horizontal rule to the graph definition.
-	 * @param value Rule posiotion.
-	 * @param color Rule color.
-	 * @param legend Legend to be added to the graph.
-	 * @throws RrdException Thrown in case of JRobin specific error.
-	 */
-	public void hrule(double value, Color color, String legend) throws RrdException {
-		addPlot( new Hrule(value, color, legend) );
+	public void setVerticalLabel( String label) 
+	{
+		this.valueAxisLabel = label;
 	}
 	
 	/**
-	 * Adds horizontal rule to the graph definition.
-	 * @param value Rule posiotion.
-	 * @param color Rule color.
-	 * @param legend Legend to be added to the graph.
-	 * @param lineWidth Width of the hrule line in pixels.
-	 * @throws RrdException Thrown in case of JRobin specific error.
+	 * Sets image background color. If not set, back color defaults to a very light gray.
+	 * @param backColor Graph background color.
 	 */
-	public void hrule(double value, Color color, String legend, float lineWidth) throws RrdException {
-		addPlot( new Hrule(value, color, legend, lineWidth) );
-	}
-	
-	/**
-	 * Adds a vertical rule to the graph definition.
-	 * @param timestamp Rule position (specific moment in time)
-	 * @param color Rule color.
-	 * @param legend Legend to be added to the graph.
-	 */
-	public void vrule( GregorianCalendar timestamp, Color color, String legend ) throws RrdException {
-		addPlot( new Vrule(timestamp.getTimeInMillis() / 1000, color, legend) );
-	}
-	
-	/**
-	 * Adds a vertical rule to the graph definition.
-	 * @param timestamp Rule position (specific moment in time)
-	 * @param color Rule color.
-	 * @param legend Legend to be added to the graph.
-	 * @param lineWidth Width of the vrule in pixels.
-	 */
-	public void vrule( GregorianCalendar timestamp, Color color, String legend, float lineWidth ) throws RrdException {
-		addPlot( new Vrule(timestamp.getTimeInMillis() / 1000, color, legend, lineWidth) );
+	public void setBackColor( Color backColor ) 
+	{
+		this.backColor = backColor;
 	}
 
 	/**
-	 * Adds comment to the graph definition. Comments will be left, center or right aligned
-	 * if the comment ends with <code>@l</code>, <code>@c</code> or <code>@r</code>,
-	 * respectively.
-	 * @param text Comment
-	 * @throws RrdException Thrown in case of JRobin specific error.
+	 * Sets chart area background color. If not set, canvas color defaults to white.
+	 * @param canvasColor Chart area background color.
 	 */
-	public void comment(String text) throws RrdException {
-		addComment(new Comment(text));
+	public void setCanvasColor( Color canvasColor ) 
+	{
+		this.canvasColor = canvasColor;		
+	}
+	
+	/**
+	 * Specifies the settings of the image border.
+	 * Default is sort of beveled border around the image.
+	 * To disable the image border, just specify a pixel width of 0.
+	 * @param c Bordercolor of the image.
+	 * @param w Pixel width of the image border.
+	 */
+	public void setImageBorder( Color c, int w ) 
+	{
+		this.borderStroke		= new BasicStroke( w );
+		if ( c != null )
+			this.borderColor	= c;
+	}
+	
+	/**
+	 * Sets the color of the title font used in the graph as a <code>java.awt.Color</code> object.
+	 * Default title font color is black.
+	 * @param c The color to be used.
+	 */
+	public void setTitleFontColor( Color c ) 
+	{
+		this.titleFontColor = c;
+	}
+	
+	/**
+	 * Sets the color of the default font used in the graph as a <code>java.awt.Color</code> object.
+	 * Default font color is black.
+	 * @param c The color to be used.
+	 */
+	public void setDefaultFontColor( Color c ) 
+	{
+		this.normalFontColor = c;
+	}
+	
+	/**
+	 * Sets the font to be used for the graph title as a <code>java.awt.Font</code> object.
+	 * Default title font is "Lucida Sans Typewriter", with BOLD attributes and a size of 12 points.
+	 * @param f The Font to be used.
+	 */
+	public void setTitleFont( Font f )
+	{
+		this.titleFont = f;
+	}
+	
+	/**
+	 * Sets the default font to be used in the graph as a <code>java.awt.Font</code> object.
+	 * Default font is "Lucida Sans Typewriter", with PLAIN attributes and a size of 10 points.
+	 * @param f The Font to be used.
+	 */
+	public void setDefaultFont( Font f )
+	{
+		this.normalFont = f;
+	}
+	
+	/**
+	 * Sets the color of the chart's major grid.
+	 * Grid labels have the same color as the default font.
+	 * @param c Color to use.
+	 */
+	public void setMajorGridColor( Color c ) 
+	{
+		this.majorGridColor = c;	
 	}
 
 	/**
-	 * <p>Calculate the chosen consolidation function <code>consolFun</code> over
-     * the graph <code>sourceName</code> and prints the result
-     * on the graph using the specified <code>format</code> string.</p>
-	 *
-	 * <p>In the format string there should be a
-	 * <code>@n</code> marker (replace <code>n</code> with the desired number of decimals)
-	 * in the place where the number should be printed. If an additional <code>@s</code> is
-	 * found in the format, the value will be scaled and an appropriate SI magnitude
-     * unit will be printed in place of the <code>@s</code> marker. If you specify
-	 * <code>@S</code> instead of <code>@s</code>, the value will be scaled with the scale
-	 * factor used in the last gprint directive (uniform value scaling).</p>
-	 *
-	 * <p>The text printed on the graph will be left, center or right aligned
-	 * if the format string ends with <code>@l</code>, <code>@c</code> or <code>@r</code>,
-	 * respectively.</p>
-	 *
-	 * @param sourceName Graph source name
-	 * @param consolFun Consolidation function to be used for calculation ("AVERAGE",
-	 * "MIN", "MAX" or "LAST")
-	 * @param format Format string. For example: "speed is @2 @sbits/sec@c",
-	 * "temperature = @0 degrees"
-	 * @throws RrdException Thrown in case of JRobin specific error
+	 * Determines the color of chart's the minor grid.
+	 * @param c Color to use.
 	 */
-	public void gprint(String sourceName, String consolFun, String format)
-		throws RrdException {
-		Source source = findSourceByName(sourceName);
-		addComment(new Gprint(source, consolFun, format));
+	public void setMinorGridColor( Color c ) 
+	{
+		this.minorGridColor = c;
+	}
+
+	/**
+	 * Determines the color of chart area frame.
+	 * @param c Color to use.
+	 */
+	public void setFrameColor( Color c ) 
+	{
+		this.frameColor = c;
+	}
+
+	/**
+	 * Determines the color of chart X axis.
+	 * @param c Color to use.
+	 */
+	public void setAxisColor( Color c ) 
+	{
+		this.axisColor = c;
+	}
+
+	/**
+	 * Determines the color of the small axis arrow on the chart X axis.
+	 * @param c Color to use.
+	 */
+	public void setArrowColor( Color c ) 
+	{
+		this.arrowColor = c;
+	}
+	
+	/**
+	 * Determines if the minor grid for the X axis needs to be drawn.
+	 * @param visible True if minor grid needs to be drawn, false if not.
+	 */
+	public void setMinorGridX( boolean visible ) 
+	{
+		this.minorGridX = visible;
+	}
+
+	/**
+	 * Determines if the minor grid for the Y axis needs to be drawn.
+	 * @param visible True if minor grid needs to be drawn, false if not.
+	 */
+	public void setMinorGridY( boolean visible ) 
+	{
+		this.minorGridY = visible;
+	}
+
+	/**
+	 * Determines if the major grid with labels for the X axis needs to be drawn.
+	 * @param visible True if major grid needs to be drawn, false if not.
+	 */
+	public void setMajorGridX( boolean visible ) 
+	{
+		this.majorGridX = visible;
+	}
+
+	/**
+	 * Determines if the major grid with labels for the Y axis needs to be drawn.
+	 * @param visible True if major grid needs to be drawn, false if not.
+	 */
+	public void setMajorGridY( boolean visible ) 
+	{
+		this.majorGridY = visible;
+	}
+
+	/**
+	 * Determines if the X axis grid should be drawn.
+	 * @param visible True if grid needs to be drawn, false if not.
+	 */
+	public void setGridX( boolean visible ) 
+	{
+		this.gridX		= visible;
+	}
+
+	/**
+	 * Determines if the Y axis grid should be drawn.
+	 * @param visible True if grid needs to be drawn, false if not.
+	 */
+	public void setGridY( boolean visible ) 
+	{
+		this.gridY		= visible;
+	}
+
+	/**
+	 * Determine if the graph grid is in front of the chart itself, or behind it.
+	 * Default is in front of the chart.
+	 * @param frontGrid True if the grid is in front of the chart.
+	 */
+	public void setFrontGrid( boolean frontGrid ) 
+	{
+		this.frontGrid = frontGrid;
+	}
+
+	/**
+	 * Determine if the legend should be visible or not, default: visible.
+	 * Invisible legend area means no comments will be plotted, and the graph will be smaller
+	 * in height.
+	 * @param showLegend True if the legend is visible.
+	 */
+	public void setShowLegend( boolean showLegend ) 
+	{
+		this.showLegend	= showLegend;
+	}
+	
+	/**
+	 * Determine if the default JRobin signature should be visible, default: yes.
+	 * The signature text is "www.jrobin.org" and the signature is centered at the bottom of the graph.
+	 * Unless you have a good reason not to draw the signature, please be so kind as to leave the 
+	 * signature visible.  Disabling the signature can give a minor performance boost.
+	 * @param showSignature True if the signature is visible.
+	 */
+	public void setShowSignature( boolean showSignature )
+	{
+		this.drawSignature = showSignature;
+	}
+	
+	/**
+	 * Set the anti-aliasing option for the drawing area of the graph.
+	 * Default uses anti-aliasing.
+	 * @param aa True if anti-aliasing is on, false if off
+	 */
+	public void setAntiAliasing( boolean aa ) 
+	{
+		this.antiAliasing = aa;
+	}
+	
+	/**
+	 * Set the number of pixels on the left of the chart area ( value marker space ).
+	 * @param lp Number of pixels used, defaults to 50.
+	 */
+	public void setChartLeftPadding( int lp ) 
+	{
+		this.chart_lpadding = lp;
+	}
+	
+	/**
+	 * Sets a background image to use for the graph.
+	 * The image can be any of the supported imageio formats,
+	 * default <i>.gif, .jpg or .png</i>.
+	 * 
+	 * Please note: if the provided file does not exit at graph creation time, the
+	 * corresponding graph will be created without the background image, and without
+	 * any exception being thrown.
+	 * 
+	 * @param fileName Filename of the image to use
+	 */
+	public void setBackground( String fileName )
+	{
+		File bgFile	= new File( fileName );
+		if ( bgFile.exists() )
+			this.background = bgFile;
+	}
+
+	/**
+	 * Sets a overlay image to use for the graph.
+	 * The image can be any of the supported imageio formats,
+	 * default <i>.gif, .jpg or .png</i>.  All pixels with the color white
+	 * RGB (255, 255, 255) will be treated as transparent.
+	 *
+	 * Please note: if the provided file does not exit at graph creation time, the
+	 * corresponding graph will be created without the overlay image, and without
+	 * any exception being thrown.
+	 * 
+	 * @param fileName Filename of the image to use
+	 */
+	public void setOverlay( String fileName ) 
+	{
+		File ovFile	= new File( fileName );
+		if ( ovFile.exists() )
+			this.overlay = ovFile;
+	}
+
+	/** 
+	 * Sets the base for value scaling. 
+	 * If you are graphing memory this should be set to 1024 so that one Kb is 1024 bytes.
+	 * As a default the base value is set to 1000, under the assumption you will be measuring
+	 * network traffic, in wich case 1 kb/s equals 1000 b/s. 
+	 * @param base Value to set as base for scaling.
+	 */
+	public void setBaseValue( double base ) 
+	{
+		this.baseValue = base;
+	}
+
+	/**
+	 * This sets the 10** exponent scaling of the Y-axis values. 
+	 * Normally values will be scaled to the appropriate units (k, M, etc.). 
+	 * However you may wish to display units always in k (Kilo, 10e3) even if the data is in the 
+	 * M (Mega, 10e6) range for instance. Value should be an integer which is a multiple of 3 
+	 * between -18 and 18 inclusive. It is the exponent on the units you which to use. 
+	 * For example, use 3 to display the y-axis values in k (Kilo, 10e3, thousands), 
+	 * use -6 to display the y-axis values in u (Micro, 10e-6, millionths). Use a value of 0 to 
+	 * prevent any scaling of the y-axis values.
+	 * @param e Exponent value to use
+	 */
+	public void setUnitsExponent( int e ) 
+	{
+		this.scaleIndex = (6 - e / 3);	// Index in the scale table
+	}
+
+	/**
+	 * Sets value range that will be presented in the graph. If not set, graph limits will be autoscaled.
+	 * @param lower Lower limit.
+	 * @param upper Upper limit.
+	 * @param rigid Rigid grid, won't autoscale limits.
+	 */
+
+	public void setGridRange(double lower, double upper, boolean rigid) 
+	{
+		gridRange = new GridRange( lower, upper, rigid );
+	}
+
+	/**
+	 * This sets the grid and labels on the Y axis.
+	 * Minor grid lines appear at <code>gridStep</code>, major grid lines accompanied by a label
+	 * will appear every <code>labelStep</code> value.   
+	 * @param gridStep Value step on which a minor grid line will appear.
+	 * @param labelStep Value step on which a major grid line with value label will appear.
+	 */
+	public void setValueAxis( double gridStep, double labelStep ) 
+	{
+		vAxis = new ValueAxisUnit( gridStep, labelStep );
+	}
+
+	/**
+	 * This sets the grid and labels on the X axis.
+	 * There are both minor and major grid lines, the major lines are accompanied by a time label.
+	 * 
+	 * To define a grid line you must define a specific time unit, and a number of time steps.
+	 * A grid line will appear everey steps*unit.  Possible units are defined in the 
+	 * {@link jrobin.graph.TimeAxisUnit TimeAxisUnit} class, and are <i>SECOND, MINUTE, HOUR, DAY,
+	 * WEEK, MONTH</i> and <i>YEAR</i>.
+	 * 
+	 * @param minGridTimeUnit Time unit for the minor grid lines.
+	 * @param minGridUnitSteps Time unit steps for the minor grid lines.
+	 * @param majGridTimeUnit Time unit for the major grid lines.
+	 * @param majGridUnitSteps Time unit steps for the major grid lines.
+	 * @param dateFormat Format string of the time labels, according to <code>java.text.SimpleDateFormat</code> specifications.
+	 * @param centerLabels True if the time label should be centered in the area between two major grid lines.
+	 */
+	public void setTimeAxis( int minGridTimeUnit, 
+								int minGridUnitSteps, 
+								int majGridTimeUnit, 
+								int majGridUnitSteps, 
+								String dateFormat,
+								boolean centerLabels ) 
+	{
+		this.tAxis 			= new TimeAxisUnit( minGridTimeUnit, 
+												minGridUnitSteps, 
+												majGridTimeUnit, 
+												majGridUnitSteps, 
+												new SimpleDateFormat( dateFormat ),
+												centerLabels 
+											);
 	}
 
 	/**
@@ -491,21 +580,21 @@ public class RrdGraphDef implements Serializable
 	 * @param name Graph source name.
 	 * @param file Path to RRD file.
 	 * @param dsName Data source name defined in the RRD file.
-	 * @param consolFun Consolidation function that will be used to extract data from the RRD
+	 * @param consolFunc Consolidation function that will be used to extract data from the RRD
 	 * file ("AVERAGE", "MIN", "MAX" or "LAST").
 	 */
-	public void datasource(String name, String file, String dsName, String consolFun) {
-		// Experimental fetch code
-		if ( rrdFiles.containsKey(file) ) {
-			RrdFile rf = (RrdFile) rrdFiles.get(file);
-			rf.addSource( consolFun, dsName, name );	
+	public void datasource( String name, String file, String dsName, String consolFunc ) throws RrdException
+	{
+		if ( fetchSources.containsKey(file) ) {
+			FetchSource rf = (FetchSource) fetchSources.get(file);
+			rf.addSource( consolFunc, dsName, name );	
 		}
 		else
-			rrdFiles.put( file, new RrdFile(consolFun, dsName, name) );
+			fetchSources.put( file, new FetchSource(file, consolFunc, dsName, name) );
 		
-		addSource(new Def(name, file, dsName, consolFun));
+		numDefs++;
 	}
-
+	
 	/**
 	 * <p>Adds complex graph source with the given name to the graph definition.
 	 * Complex graph sources are evaluated using the supplied <code>rpn</code> expression.
@@ -523,442 +612,424 @@ public class RrdGraphDef implements Serializable
 	 * force you to specify at least one simple graph source name as RRDTool.</p>
 	 *
 	 * <p>For more details on RPN see RRDTool's
-     * <a href="../../../man/rrdgraph.html" target="man">rrdgraph man page</a>.</p>
-     * @param name Graph source name.
+	 * <a href="http://people.ee.ethz.ch/~oetiker/webtools/rrdtool/manual/rrdgraph.html" target="man">rrdgraph man page</a>.</p>
+	 * @param name Graph source name.
 	 * @param rpn RPN expression containig comma delmited simple and complex graph
 	 * source names, RPN constants, functions and operators.
 	 */
-	public void datasource(String name, String rpn) {
-		addSource(new Cdef(name, rpn));
-	}
-
-	/**
-	 * Sets horizontal space between time ticks. If not specified, JRobin will try to
-	 * calculate it.
-	 * @param unit Time unit for tick. Use supplied constants: YEAR, MONTH, DAY,
-	 * HOUR, MINUTE, SECOND.
-	 * @param unitCount Number of time units between time ticks.
-	 * @param format Format to be used for tick label.
-	 */
-	/**
-	 * @deprecated  As of JDK 1.1, replaced by {@link #setBounds(int,int,int,int)}
-	 */
-	public void setTimeUnit(int unit, int unitCount, SimpleDateFormat format) {
-		this.timeUnit = unit;
-		this.timeUnitCount = unitCount;
-		this.timeFormat = format;
-	}
-
-	int getTimeUnit() {
-		return timeUnit;
-	}
-
-	int getTimeUnitCount() {
-		return timeUnitCount;
-	}
-
-	SimpleDateFormat getTimeFormat() {
-		return timeFormat;
-	}
-
-	/**
-	 * Sets value range that will be presented in the graph. If not set, graph will be
-	 * autoscaled.
-	 * @param lower Lower limit.
-	 * @param upper Upper limit.
-	 */
-	
-	public void setValueRange(double lower, double upper) {
-		valueRange = new Range( lower, upper);
-	}
-
-	Range getValueRange() {
-		return valueRange;
+	public void datasource( String name, String rpn ) 
+	{
+		cdefList.add( new Cdef(name, rpn) );
 	}
 	
-
-	boolean isLogarithmic() {
-		return logarithmic;
+	/**
+	 * Adds line plot to the graph definition, using the specified color and legend. This method
+	 * takes exactly the same parameters as RRDTool's LINE1 directive (line width
+	 * is set to 1).  The legend allows for the same
+	 * alignment options as <code>gprint</code> or <code>comment</code>.
+	 *
+	 * @param sourceName Graph source name.
+	 * @param color Line collor to be used.
+	 * @param legend Legend to be printed on the graph.
+	 * @throws RrdException Thrown if invalid graph source name is supplied.
+	 */
+	public void line( String sourceName, Color color, String legend ) throws RrdException 
+	{
+		plotDefs.add( new Line(sourceName, color) );
+		addLegend( legend, color );
+	}
+	
+	/**
+	 * Adds line plot to the graph definition, using the specified color, legend and line width.
+	 * This method takes exactly the same parameters as RRDTool's LINE directive. The legend allows for the same
+	 * alignment options as <code>gprint</code> or <code>comment</code>.
+	 *
+	 * @param sourceName Graph source name.
+	 * @param color Line color to be used.
+	 * @param legend Legend to be printed on the graph.
+	 * @param lineWidth Width of the line in pixels.
+	 * @throws RrdException Thrown if invalid graph source name is supplied.
+	 */
+	public void line( String sourceName, Color color, String legend, int lineWidth ) throws RrdException 
+	{
+		plotDefs.add( new Line(sourceName, color, lineWidth) );
+		addLegend( legend, color );
+	}
+	
+	/**
+	 * Adds line plot to the graph definition, based on two points.
+	 * Start and end point of the line are specified. The legend allows for the same
+	 * alignment options as <code>gprint</code> or <code>comment</code>.
+	 * @param t1 Timestamp (X axis) of the start point of the line.
+	 * @param v1 Value (Y axis) of the start point of the line.
+	 * @param t2 Timestamp (X axis) of the end point of the line.
+	 * @param v2 Value (Y axis) of the end point of the line.
+	 * @param color Line color to be used.
+	 * @param legend Legend to be printed on the graph.
+	 * @param lineWidth Width of the line in pixels.
+	 * @throws RrdException Thrown if invalid graph source name is supplied.
+	 */
+	public void line( GregorianCalendar t1, double v1, GregorianCalendar t2, double v2, Color color, String legend, int lineWidth ) throws RrdException
+	{
+		plotDefs.add( new CustomLine( t1.getTimeInMillis() / 1000, v1, t2.getTimeInMillis() / 1000, v2, color, lineWidth ) );
+		addLegend( legend, color );
+	}
+	
+	/**
+	 * Adds area plot to the graph definition,
+	 * using the specified color and legend. This method
+	 * takes exactly the same parameters as RRDTool's AREA directive. The legend allows for the same
+	 * alignment options as <code>gprint</code> or <code>comment</code>.
+	 *
+	 * @param sourceName Graph source name.
+	 * @param color Filling collor to be used for area plot.
+	 * @param legend Legend to be printed on the graph.
+	 * @throws RrdException Thrown if invalid graph source name is supplied.
+	 */
+	public void area( String sourceName, Color color, String legend ) throws RrdException 
+	{
+		plotDefs.add( new Area(sourceName, color) );
+		addLegend( legend, color );
+	}
+	
+	/**
+	 * Adds area plot to the graph definition, based on two points.
+	 * Points specified are the bottom-left corner and the upper-right corner.
+	 * When stacked onto such an area, a stack is always placed on top of the "upper border" of the
+	 * rectangle (value of the second point). The legend allows for the same
+	 * alignment options as <code>gprint</code> or <code>comment</code>.
+	 * @param t1 Timestamp (X axis) of the bottom-left corner of the area.
+	 * @param v1 Value (Y axis) of the bottom-left corner of the area.
+	 * @param t2 Timestamp (X axis) of the upper-right corner of the area.
+	 * @param v2 Value (Y axis) of the upper-right corner of the area.
+	 * @param color Filling collor to be used for area plot.
+	 * @param legend Legend to be printed on the graph.
+	 * @throws RrdException Thrown if invalid graph source name is supplied.
+	 */
+	public void area( GregorianCalendar t1, double v1, GregorianCalendar t2, double v2, Color color, String legend ) throws RrdException
+	{
+		plotDefs.add( new CustomArea( t1.getTimeInMillis() / 1000, v1, t2.getTimeInMillis() / 1000, v2, color ) );
+		addLegend( legend, color );
+	}
+	
+	/**
+	 * Adds stacked plot to the graph definition,
+	 * using the specified color and legend. This method
+	 * takes exactly the same parameters as RRDTool's STACK directive. The legend allows for the same
+	 * alignment options as <code>gprint</code> or <code>comment</code>. 
+	 * @param sourceName Graph source name.
+	 * @param color Collor to be used.
+	 * @param legend Legend to be printed on the graph.
+	 * @throws RrdException Thrown if invalid graph source name is supplied.
+	 */
+	public void stack( String sourceName, Color color, String legend ) throws RrdException 
+	{
+		plotDefs.add( new Stack(sourceName, color) );
+		addLegend( legend, color );
+	}
+	
+	/**
+	 * Adds horizontal rule to the graph definition.  The legend allows for the same
+	 * alignment options as <code>gprint</code> or <code>comment</code>.
+	 * @param value Rule posiotion.
+	 * @param color Rule color.
+	 * @param legend Legend to be added to the graph.
+	 * @throws RrdException Thrown in case of JRobin specific error.
+	 */
+	public void hrule(double value, Color color, String legend) throws RrdException {
+		plotDefs.add( new CustomLine( Long.MIN_VALUE, value, Long.MAX_VALUE, value, color ) );
+		addLegend( legend, color );
 	}
 
 	/**
-	 * Sets normal or logarithmic graph type. If not set, defaults to normal graph.
-	 * @param logarithmic
+	 * Adds horizontal rule to the graph definition.  The legend allows for the same
+	 * alignment options as <code>gprint</code> or <code>comment</code>.
+	 * @param value Rule posiotion.
+	 * @param color Rule color.
+	 * @param legend Legend to be added to the graph.
+	 * @param lineWidth Width of the hrule line in pixels.
+	 * @throws RrdException Thrown in case of JRobin specific error.
 	 */
-	public void setLogarithmic(boolean logarithmic) {
-		this.logarithmic = logarithmic;
+	public void hrule(double value, Color color, String legend, int lineWidth) throws RrdException {
+		plotDefs.add( new CustomLine( Long.MIN_VALUE, value, Long.MAX_VALUE, value, color, lineWidth ) );
+		addLegend( legend, color );
 	}
-
-	double getValueStep() {
-		return valueStep;
+	
+	/**
+	 * Adds a vertical rule to the graph definition.  The legend allows for the same
+	 * alignment options as <code>gprint</code> or <code>comment</code>.
+	 * @param timestamp Rule position (specific moment in time)
+	 * @param color Rule color.
+	 * @param legend Legend to be added to the graph.
+	 */
+	public void vrule( GregorianCalendar timestamp, Color color, String legend ) throws RrdException {
+		long timeSecs = timestamp.getTimeInMillis() / 1000;
+		plotDefs.add( new CustomLine( timeSecs, Double.MIN_VALUE, timeSecs, Double.MAX_VALUE, color ) );
+		addLegend( legend, color );
 	}
 
 	/**
-	 * Sets vertical space between value ticks. If not specified, JRobin will try to guess it.
-	 * @param valueStep Value step between value ticks.
+	 * Adds a vertical rule to the graph definition.  The legend allows for the same
+	 * alignment options as <code>gprint</code> or <code>comment</code>.
+	 * @param timestamp Rule position (specific moment in time)
+	 * @param color Rule color.
+	 * @param legend Legend to be added to the graph.
+	 * @param lineWidth Width of the vrule in pixels.
 	 */
-	public void setValueStep(double valueStep) {
-		this.valueStep = valueStep;
+	public void vrule( GregorianCalendar timestamp, Color color, String legend, int lineWidth ) throws RrdException {
+		long timeSecs = timestamp.getTimeInMillis() / 1000;
+		plotDefs.add( new CustomLine( timeSecs, Double.MIN_VALUE, timeSecs, Double.MAX_VALUE, color, lineWidth ) );
+		addLegend( legend, color );
 	}
-
-	Color getBackColor() {
+	
+	/**
+	 * Adds comment to the graph definition. A comment on the graph will be left, center or right aligned
+	 * if the format string ends with <code>@l</code>, <code>@c</code> or <code>@r</code>,
+	 * respectively. It is also possible to align text without adding a linefeed by using
+	 * <code>@L</code>, <code>@R</code> and <code>@C</code> as markers.  After a GPRINT some
+	 * whitespace is appended by default.  To suppress this whitespace put a <code>@G</code>
+	 * marker at the very end of the string.  By putting a <code>@g</code> marker instead all
+	 * whitespace inside the string at very beginning or end will be removed also.
+	 * @param text Comment
+	 * @throws RrdException Thrown in case of JRobin specific error.
+	 */
+	public void comment(String text) throws RrdException {
+		addComment( new Comment(text) );
+	}
+	
+	/**
+	 * <p>Calculate the chosen consolidation function <code>consolFun</code> over
+	 * the graph <code>sourceName</code> and prints the result
+	 * on the graph using the specified <code>format</code> string.</p>
+	 *
+	 * <p>In the format string there should be a
+	 * <code>@n</code> marker (replace <code>n</code> with the desired number of decimals)
+	 * in the place where the number should be printed. If an additional <code>@s</code> is
+	 * found in the format, the value will be scaled and an appropriate SI magnitude
+	 * unit will be printed in place of the <code>@s</code> marker. If you specify
+	 * <code>@S</code> instead of <code>@s</code>, the value will be scaled with the scale
+	 * factor used in the last gprint directive (uniform value scaling).</p>
+	 *
+	 * <p>The text printed on the graph will be left, center or right aligned
+	 * if the format string ends with <code>@l</code>, <code>@c</code> or <code>@r</code>,
+	 * respectively. It is also possible to align text without adding a linefeed by using
+	 * <code>@L</code>, <code>@R</code> and <code>@C</code> as markers.  After a GPRINT some
+	 * whitespace is appended by default.  To suppress this whitespace put a <code>@G</code>
+	 * marker at the very end of the string.  By putting a <code>@g</code> marker instead all
+	 * whitespace inside the string at very beginning or end will be removed also.</p>
+	 *
+	 * @param sourceName Graph source name
+	 * @param consolFun Consolidation function to be used for calculation ("AVERAGE",
+	 * "MIN", "MAX" or "LAST")
+	 * @param format Format string. For example: "speed is @5.2 @sbits/sec@c",
+	 * "temperature = @0 degrees"
+	 * @throws RrdException Thrown in case of JRobin specific error
+	 */
+	public void gprint(String sourceName, String consolFun, String format) throws RrdException 
+	{
+		addComment( new Gprint(sourceName, consolFun, format) );
+	}
+	
+		
+	// ================================================================
+	// -- Protected (package) methods
+	// ================================================================
+	protected long getStartTime() {
+		return startTime;
+	}
+	
+	protected long getEndTime() {
+		return endTime;
+	}
+	
+	protected Title getTitle() {
+		return title;
+	}
+	
+	protected String getVerticalLabel() {
+		return valueAxisLabel;
+	}
+	
+	protected Color getBackColor() {
 		return backColor;
 	}
-
-	Color getCanvasColor() {
-		return canvasColor;	
+	
+	protected Color getCanvasColor() {
+		return canvasColor;
 	}
 	
-	/**
-	 * Sets image background color. If not set, back color defaults to a very light gray.
-	 * @param backColor Graph background color.
-	 */
-	public void setBackColor( Color backColor ) {
-		this.backColor = backColor;
-	}
-	
-	/**
-	 * Sets graph area background color. If not set, back color defaults to white.
-	 * @param backColor Graph area background color.
-	 */
-	public void setCanvasColor( Color canvasColor ) {
-		this.canvasColor = canvasColor;		
-	}
-	
-	/**
-	 * Determines if the minor grid for the X axis needs to be drawn.
-	 * @param visible True if minor grid needs to be drawn, false if not.
-	 */
-	public void setMinorGridX( boolean visible ) {
-		this.minorGridX = visible;
-	}
-	
-	/**
-	 * Determines if the minor grid for the X axis needs to be drawn.
-	 * @param visible True if minor grid needs to be drawn, false if not.
-	 */
-	public void setMinorGridY( boolean visible ) {
-		this.minorGridY = visible;
-	}
-	
-	boolean getMinorGridX() {
-		return minorGridX;
-	}
-	
-	boolean getMinorGridY() {
-		return minorGridY;
-	}
-	
-	/**
-	 * Determines if the major grid with labels for the X axis needs to be drawn.
-	 * @param visible True if major grid needs to be drawn, false if not.
-	 */
-	public void setMajorGridX( boolean visible ) {
-		this.majorGridX = visible;
-	}
-
-	/**
-	 * Determines if the major grid for the X axis needs to be drawn.
-	 * @param visible True if major grid needs to be drawn, false if not.
-	 */
-	public void setMajorGridY( boolean visible ) {
-		this.majorGridY = visible;
-	}
-
-	boolean getMajorGridX() {
-		return majorGridX;
-	}
-
-	boolean getMajorGridY() {
-		return majorGridY;
-	}
-
-	/**
-	 * Determines if the X axis grid should be drawn.
-	 * This will not change the left padding of the drawing area.
-	 * @param visible True if grid needs to be drawn, false if not.
-	 */
-	public void setGridX( boolean visible ) {
-		this.gridX		= visible;
-	}
-
-	/**
-	 * Determines if the Y axis grid should be drawn.
-	 * This will not change the bottom padding of the drawing area.
-	 * @param visible True if grid needs to be drawn, false if not.
-	 */
-	public void setGridY( boolean visible ) {
-		this.gridY		= visible;
-	}
-
-	boolean getGridX() {
-		return gridX;
-	}
-
-	boolean getGridY() {
-		return gridY;
-	}
-	
-	/**
-	 * Specifies the settings of the image border 
-	 * @param c Bordercolor of the image
-	 * @param w Pixel width of the image border
-	 */
-	public void setImageBorder( Color c, int w ) {
-		this.borderStroke	= new BasicStroke( w );
-		if ( c != null )
-			this.borderColor	= c;
-	}
-	
-	Color getImageBorderColor() {
+	protected Color getImageBorderColor() {
 		return borderColor;
 	}
 	
-	BasicStroke getImageBorderStroke() {
+	protected BasicStroke getImageBorderStroke() {
 		return borderStroke;
 	}
 	
-	/**
-	 * Determines if the grid should have rigid upper and lower limits.
-	 * If so the upper and lower limit will not autoscale depending on the
-	 * graph values.
-	 * @param rigid True if the grid should have rigid limits
-	 */
-	public void setRigidGrid( boolean rigid ) {
-		this.rigidGrid = rigid;
+	protected Color getTitleFontColor() {
+		return titleFontColor;
+	}
+
+	protected Color getDefaultFontColor() {
+		return normalFontColor;
 	}
 	
-	boolean getRigidGrid() {
-		return this.rigidGrid;
+	protected Font getTitleFont() {
+		return titleFont;
 	}
 	
-	/**
-	 * Determine if the graph grid is in front of the graphs itself, or behind it.
-	 * Default is in front of the graph itself.
-	 * @param frontGrid True if the grid is in front of the graphs
-	 */
-	public void setFrontGrid( boolean frontGrid ) {
-		this.frontGrid = frontGrid;
+	protected Font getDefaultFont() {
+		return normalFont;
 	}
 	
-	boolean getFrontGrid() {
-		return this.frontGrid;
-	}
-	
-	/**
-	 * Determine if the legend should be visible or not, default: visible.
-	 * @param showLegend True if the legend is visible
-	 */
-	public void setShowLegend( boolean showLegend ) {
-		this.showLegend	= showLegend;
-	}
-	
-	boolean getShowLegend() {
-		return this.showLegend;
-	}
-	
-	/**
-	 * Sets the color of the font on the graph.
-	 * @param c The color to be used.
-	 */
-	public void setFontColor( Color c ) {
-		this.fontColor = c;
-	}
-	
-	Color getFontColor() {
-		return this.fontColor;
-	}
-	
-	/**
-	 * Determines the color of the major grid.
-	 * @param c Color to use
-	 */
-	public void setMajorGridColor( Color c ) {
-		this.majorGridColor = c;	
-	}
-	
-	Color getMajorGridColor() {
+	protected Color getMajorGridColor() {
 		return majorGridColor;
 	}
 	
-	/**
-	 * Determines the color of the minor grid.
-	 * @param c Color to use
-	 */
-	public void setMinorGridColor( Color c ) {
-		this.minorGridColor = c;
-	}
-	
-	Color getMinorGridColor() {
+	protected Color getMinorGridColor() {
 		return minorGridColor;
 	}
 	
-	/**
-	 * Determines the color of canvas frame.
-	 * @param c Color to use
-	 */
-	public void setFrameColor( Color c ) {
-		this.frameColor = c;
-	}
-
-	Color getFrameColor() {
+	protected Color getFrameColor() {
 		return frameColor;
 	}
 	
-	/**
-	 * Determines the color of X axis.
-	 * @param c Color to use
-	 */
-	public void setAxisColor( Color c ) {
-		this.axisColor = c;
-	}
-
-	Color getAxisColor() {
+	protected Color getAxisColor() {
 		return axisColor;
 	}
-	
-	/**
-	 * Determines the color of the small axis arrow.
-	 * @param c Color to use
-	 */
-	public void setArrowColor( Color c ) {
-		this.arrowColor = c;
-	}
 
-	Color getArrowColor() {
+	protected Color getArrowColor() {
 		return arrowColor;
 	}
 	
-	/**
-	 * Set the number of pixels on the left of the canvas area ( value marker space )
-	 * @param lp Number of pixels used, defaults to 50
-	 */
-	public void setChartLeftPadding( int lp ) {
-		this.chart_lpadding = lp;
+	protected Color getBorderColor() {
+		return borderColor;
 	}
 	
-	int getChartLeftPadding() {
-		return this.chart_lpadding;
+	protected BasicStroke getBorderStroke() {
+		return borderStroke;	
 	}
 	
-	/**
-	 * Set the anti-aliasing option for the drawing area of the graph.
-	 * Default uses anti-aliasing.
-	 * @param aa True if anti-aliasing is on, false if off
-	 */
-	public void setAntiAliasing( boolean aa ) {
-		this.antiAliasing = aa;
+	protected boolean showMinorGridX() {
+		return minorGridX;
 	}
 	
-	boolean getAntiAliasing() {
-		return this.antiAliasing;
+	protected boolean showMinorGridY() {
+		return minorGridY;
 	}
 	
-	/**
-	 * Sets a background image to use for the graph.
-	 * The image can be any of the supported imageio formats,
-	 * default <i>.gif, .jpg or .png</i>.
-	 * @param fileName Filename of the image to use
-	 */
-	public void setBackground( String fileName ) {
-		File bgFile	= new File( fileName );
-		if ( bgFile.exists() )
-			this.background = bgFile;
-	}
+	protected boolean showMajorGridX() {
+		return majorGridX;
+	} 
 	
-	File getBackground() {
-		return this.background;
-	}
-	
-	/**
-	 * Sets a overlay image to use for the graph.
-	 * The image can be any of the supported imageio formats,
-	 * default <i>.gif, .jpg or .png</i>.  All pixels with the color white
-	 * RGB (255, 255, 255) will be treated as transparent.
-	 * @param fileName Filename of the image to use
-	 */
-	public void setOverlay( String fileName ) {
-		File ovFile	= new File( fileName );
-		if ( ovFile.exists() )
-			this.overlay = ovFile;
+	protected boolean showMajorGridY() {
+		return majorGridY;
 	}
 
-	File getOverlay() {
-		return this.overlay;
+	protected boolean showGridX() {
+		return gridX;
 	}
 	
-	/**
-	 * Should write explanation of custom grid specs here.
-	 * @param minGridTime
-	 * @param minGridUnits
-	 * @param majGridTime
-	 * @param majGridUnits
-	 * @param df
-	 * @param centered
-	 */
-	public void setTimeAxis( int minGridTime, 
-								int minGridUnits, 
-								int majGridTime, 
-								int majGridUnits, 
-								String df,
-								boolean centered ) 
+	protected boolean showGridY() {
+		return gridY;
+	}
+	
+	protected boolean drawFrontGrid() {
+		return frontGrid;
+	}
+	
+	protected boolean showLegend() {
+		return showLegend;
+	}
+	
+	protected boolean showSignature() {
+		return drawSignature;
+	}
+	
+	protected boolean isFrontGrid() {
+		return frontGrid;
+	}
+	
+	protected boolean useAntiAliasing() {
+		return antiAliasing;
+	}
+	
+	protected int getChartLeftPadding() {
+		return chart_lpadding;
+	}
+	
+	protected File getBackground() {
+		return background;
+	}
+	
+	protected File getOverlay() {
+		return overlay;
+	}
+	
+	protected double getBaseValue() {
+		return baseValue;
+	}
+
+	protected int getScaleIndex() {
+		return scaleIndex;
+	}
+
+	protected GridRange getGridRange() {
+		return gridRange;
+	}
+	
+	protected ValueAxisUnit getValueAxis() {
+		return vAxis;
+	}
+	
+	protected TimeAxisUnit getTimeAxis() {
+		return tAxis;
+	}
+	
+	protected PlotDef[] getPlotDefs()
 	{
-		this.tAxis 			= new TimeAxisUnit( minGridTime, 
-												minGridUnits, 
-												majGridTime, 
-												majGridUnits, 
-												new SimpleDateFormat( df ) 
-											);
-		this.tAxisCentered	= centered;		
+		return (PlotDef[]) plotDefs.toArray( new PlotDef[] {} );
 	}
 	
-	TimeAxisUnit getTimeAxis() {
-		return this.tAxis;
+	protected Comment[] getComments()
+	{
+		return (Comment[]) comments.toArray( new Comment[] {} );
 	}
 	
-	boolean getTimeAxisCentered() {
-		return this.tAxisCentered;
+	protected int getCommentLineCount()
+	{
+		return ( comments.size() > 0 ? commentLines + commentLineShift : 0 ); 
 	}
 	
-	/**
-	 * Should write explanation of custom grid specs here
-	 * @param gridStep
-	 * @param labelStep
-	 */
-	public void setValueAxis( double gridStep, double labelStep ) {
-		this.valueGridStep 	= gridStep;
-		this.valueLabelStep = labelStep;
+	protected int getNumDefs()
+	{
+		return numDefs;
 	}
 	
-	double getValueGridStep() {
-		return this.valueGridStep;
+	protected Cdef[] getCdefs()
+	{
+		return (Cdef[]) cdefList.toArray( new Cdef[] {} );		
 	}
 	
-	double getValueLabelStep() {
-		return this.valueLabelStep;
+	protected HashMap getFetchSources()
+	{
+		return fetchSources;
 	}
 	
-	/**
-	 * 
-	 * @param base
-	 */
-	public void setBaseValue( double base ) {
-		this.baseValue = base;
+	
+	// ================================================================
+	// -- Private methods
+	// ================================================================
+	private void addComment( Comment cmt )
+	{
+		commentLines 		+= cmt.getLineCount();
+		commentLineShift	= (cmt.isCompleteLine() ? 0 : 1); 
+		comments.add( cmt );
 	}
 	
-	double getBaseValue() {
-		return this.baseValue;
-	}
-	
-	/**
-	 * 
-	 * @param e
-	 */
-	public void setUnitsExponent( int e ) {
-		this.scaleIndex = (6 - e / 3);	// Index in the scale table
-	}
-	
-	int getScaleIndex() {
-		return this.scaleIndex;
+	private void addLegend( String legend, Color color ) throws RrdException
+	{
+		if ( legend != null && color != null )
+			addComment( new Legend(legend, color) );
 	}
 }

@@ -2,8 +2,11 @@
  * JRobin : Pure java implementation of RRDTool's functionality
  * ============================================================
  *
- * Project Info:  http://www.sourceforge.net/projects/jrobin
- * Project Lead:  Sasa Markovic (saxon@eunet.yu);
+ * Project Info:  http://www.jrobin.org
+ * Project Lead:  Sasa Markovic (saxon@jrobin.org)
+ * 
+ * Developers:    Sasa Markovic (saxon@jrobin.org)
+ *                Arne Vandamme (cobralord@jrobin.org)
  *
  * (C) Copyright 2003, by Sasa Markovic.
  *
@@ -19,73 +22,125 @@
  * library; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-
 package jrobin.graph;
 
-import java.awt.*;
+import java.awt.Color;
+import java.util.HashMap;
+
+import jrobin.core.RrdException;
 
 /**
- *
+ * <p>Class used to represent a drawn datasource in the graph.
+ * This class is abstract, it can only be used by child classes with a specific
+ * implementation of the <code>draw()</code> method.</p>
+ * 
+ * @author Arne Vandamme (cobralord@jrobin.org)
  */
-class PlotDef 
+abstract class PlotDef
 {
-	public static final float DEFAULT_LINE_WIDTH = 1.0F;
+	// ================================================================
+	// -- Members
+	// ================================================================
+	protected static final int PLOT_LINE 	= 0;
+	protected static final int PLOT_AREA 	= 1;
+	protected static final int PLOT_STACK	= 2;
 	
-	static final int PLOT_LINE 	= 0;
-	static final int PLOT_AREA 	= 1;
-	static final int PLOT_STACK	= 2;
-	static final int PLOT_VRULE	= 3;
+	protected boolean visible 				= true;
+	protected boolean stacked				= false;
+	protected int plotType					= PLOT_LINE;	// Unknown plotdef is a line
+		
+	protected String sourceName				= "";
+	protected Source source					= null;
+	protected Color color					= Color.BLACK;	// Default color is black
 	
-	int plotType 				= PLOT_LINE;
 	
-	protected Source source;
-    protected Color color;
-	protected String legend;
-	protected PlotDef parent;
-	private RrdTimeSeries totalSeries;
-	private float lineWidth 	= DEFAULT_LINE_WIDTH;
+	// ================================================================
+	// -- Constructors
+	// ================================================================
+	PlotDef() {
+	}
 	
-	PlotDef(Source source, Color color, String legend) 
+	/**
+	 * Constructs a default <code>PlotDef</code> object based on a datasource name and a graph color. 
+	 * @param sourceName Name of the graph definition <code>Source</code> containing the datapoints.
+	 * @param color Color of the resulting graph for this PlotDef, if no color is specified, the PlotDef will not be drawn.
+	 */
+	PlotDef( String sourceName, Color color )
 	{
-		this.source = source;
-		this.color 	= color;
-		this.legend = legend;
-	}
-
-	int getType() {
-		return plotType;	
+		this.sourceName = sourceName;
+		this.color		= color;
+		
+		// If no color is given, we should not plot this source
+		if ( color == null ) 
+			visible = false;	
 	}
 	
-	void stack(PlotDef parent) {
-		this.parent = parent;
+	/**
+	 * Constructs a default <code>PlotDef</code> object based on a Source containing all necessary datapoints and
+	 * a color to draw the resulting graph in.  The last two parameters define if this
+	 * PlotDef should be drawn, and if it is a stack yes or no.
+	 * @param source Source containing all datapoints for this PlotDef.
+	 * @param color Color of the resulting graph for this PlotDef.
+	 * @param stacked True if this PlotDef is stacked on the previous one, false if not.
+	 * @param visible True if this PlotDef should be graphed, false if not.
+	 */
+	PlotDef( Source source, Color color, boolean stacked, boolean visible )
+	{
+		this.source		= source;
+		this.color		= color;
+		this.stacked	= stacked;
+		this.visible	= visible;
 	}
-
-	public Color getColor() {
-		return color;
+	
+	
+	// ================================================================
+	// -- Protected methods
+	// ================================================================	
+	/**
+	 * Sets the Source for this PlotDef, based on the internal datasource name.
+	 * @param sources Source table containing all datasources necessary to create the final graph.
+	 * @param sourceIndex HashMap containing the sourcename - index keypairs, to retrieve the index 
+	 * in the Source table based on the sourcename.
+	 */
+	void setSource( Source[] sources, HashMap sourceIndex ) throws RrdException
+	{
+		if ( sourceIndex.containsKey(sourceName) ) {
+			source = sources[ ((Integer) sourceIndex.get(sourceName)).intValue() ];
+		}
+		else
+			throw new RrdException( "Invalid DEF or CDEF: " + sourceName );
 	}
-
-	public String getLegend() {
-		return legend;
+	
+	/**
+	 * Retrieves the value for a specific datapoint of the PlotDef.
+	 * @param tblPos Table index of the datapoint to be retrieved.
+	 * @param timestamps Table containing the timestamps corresponding to all datapoints.
+	 * @return Double value of the datapoint.
+	 */
+	double getValue( int tblPos, long[] timestamps )
+	{
+		return source.values[tblPos];	
 	}
-
-	public Source getSource() {
+	
+	/**
+	 * Abstract draw method, must be implemented in all child classes.
+	 * This method is responsible for the actual drawing of the PlotDef.
+	 */
+	abstract void draw( ChartGraphics g, int[] xValues, int[] stackValues, int lastPlotType ) throws RrdException;
+	
+	Source getSource() {
 		return source;
 	}
-
-	public String getSourceName() {
-		return source.getName();
+	
+	String getSourceName() {
+		return sourceName;
 	}
-
-	public PlotDef getParent() {
-        return parent;
+	
+	int getType() {
+		return plotType;
 	}
-
-	void setLineWidth(float lineWidth) {
-		this.lineWidth = lineWidth;
+	
+	Color getColor() {
+		return color;
 	}
-
-	float getLineWidth() {
-		return lineWidth;
-	}
-
 }

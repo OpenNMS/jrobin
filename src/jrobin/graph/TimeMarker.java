@@ -22,17 +22,28 @@
 package jrobin.graph;
 
 /**
- * @author cbld
- *
- * To change the template for this generated type comment go to
- * Window - Preferences - Java - Code Generation - Code and Comments
+ * <p>Represents a time grid marker (grid line with or without label on the X axis).</p>
+ * 
+ * @author Arne Vandamme (cobralord@jrobin.org)
  */
-public class TimeMarker 
+class TimeMarker 
 {
-	long timestamp			= 0;
-	String text				= "";
+	// ================================================================
+	// -- Members
+	// ================================================================	
+	private long timestamp	= 0;
+	private String text		= "";
 	private boolean label	= false;
 	
+	
+	// ================================================================
+	// -- Constructors
+	// ================================================================	
+	/**
+	 * @param ts Timestamp in seconds where this line should be set.
+	 * @param v Text of a possible label for this marker.
+	 * @param l True if this marker is a major grid line and is accompanied by a label.
+	 */
 	TimeMarker( long ts, String v, boolean l )
 	{
 		this.label	= l;
@@ -40,8 +51,22 @@ public class TimeMarker
 		text 		= v;
 	}
 	
-	public boolean isLabel()
+	
+	// ================================================================
+	// -- Protected methods
+	// ================================================================		
+	boolean isLabel()
 	{
 		return label;
+	}
+	
+	long getTimestamp() 
+	{
+		return timestamp / 1000;	
+	}
+	
+	String getLabel()
+	{
+		return text;
 	}
 }

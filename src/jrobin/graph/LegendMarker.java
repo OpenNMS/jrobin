@@ -22,27 +22,47 @@
  * library; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-package jrobin.graph2;
+package jrobin.graph;
 
-import java.awt.Graphics;
-import java.awt.image.BufferedImage;
-import javax.swing.JPanel;
+import java.awt.Color;
 
 /**
- * <p>JPanel containing the graph.</p>
+ * <p>Class used to represent a legend marker (filled rectangle) with a specific color,
+ * at a specific X position in the graph.</p>
  * 
  * @author Arne Vandamme (cobralord@jrobin.org)
  */
-public class ChartPanel extends JPanel
+class LegendMarker 
 {
-	private BufferedImage chart;
+	// ================================================================
+	// -- Members
+	// ================================================================	
+	private int markerPos;
+	private Color color;
 	
-	void setChart( BufferedImage chart ) {
-		this.chart = chart;
+	
+	// ================================================================
+	// -- Constructors
+	// ================================================================		
+	/**
+	 * @param markerPos X position of where the legend marker should appear.
+	 * @param c Color of the marker rectangle.
+	 */
+	LegendMarker( int markerPos, Color c )
+	{
+		this.markerPos 	= markerPos;
+		this.color		= c;
 	}
 	
-	public void paintComponent( Graphics g )
-	{
-		if ( chart != null ) g.drawImage( chart, 0, 0, null );
+	
+	// ================================================================
+	// -- Protected methods
+	// ================================================================		
+	Color getColor() {
+		return color;
+	}
+	
+	int getXPosition() {
+		return markerPos;
 	}
 }

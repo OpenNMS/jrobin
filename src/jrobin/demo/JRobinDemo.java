@@ -174,9 +174,8 @@ public class JRobinDemo {
 		println("==Creating graph from the second file");
 		RrdGraphDef gDef = new RrdGraphDef();
 		gDef.setTimePeriod(start, end);
-		gDef.setTimeAxisLabel("day in month");
         gDef.setTitle("Temperatures in May 2003");
-		gDef.setValueAxisLabel("temperature");
+		gDef.setVerticalLabel("temperature");
 		gDef.datasource("sun", rrdRestoredPath, "sun", "AVERAGE");
 		gDef.datasource("shade", rrdRestoredPath, "shade", "AVERAGE");
 		gDef.datasource("median", "sun,shade,+,2,/");

@@ -22,48 +22,68 @@
  * library; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-package jrobin.graph2;
+package jrobin.graph;
 
 /**
- * <p>Represents a value grid marker (grid line with or without label on the Y axis).</p>
+ * <p>Represents Y grid specifications for the chart area.</p>
  * 
  * @author Arne Vandamme (cobralord@jrobin.org)
  */
-class ValueMarker 
+class GridRange 
 {
 	// ================================================================
 	// -- Members
 	// ================================================================	
-	private double value	= 0;
-	private boolean major 	= false;
-
-
+	private double lower 	= Double.NaN;
+	private double upper 	= Double.NaN;
+	private boolean rigid	= false;
+	
+	
 	// ================================================================
 	// -- Constructors
 	// ================================================================	
 	/**
-	 * Constructs a ValueMarker object by specifying the value at which the grid line
-	 * should appear, and specifying if this grid line is a major line or not.  In case of a
-	 * major grid line, the value will be shown as a label next to the line.
-	 * @param value Value as a double at which the grid line should appear.
-	 * @param major True if this marker is a major grid line (with label), false if not.
-	 */
-	ValueMarker( double value, boolean major )
+	 * Constructs a <code>GridRange</code> object based on a lower and upper value.
+	 * @param lower Lower value of the grid range.
+	 * @param upper Upper value of the grid range.
+	 */	
+	GridRange( double lower, double upper )
 	{
-		this.major	= major;
-		this.value 	= value;
+		this.lower	= lower;
+		this.upper	= upper;	
 	}
+	
+	/**
+	 * Constructs a <code>GridRange</code> object based on a lower and upper value and a rigid specification.
+	 * If a grid is specified as rigid, then the specified range of lower/upper value will be used as graph boundaries.
+	 * If a grid is not rigid, then the boundaries might be scaled to allow for the complete necessary range of values:
+	 * if the maximum Y value is higher than upper value, then upper value will be raised, reverse with the lower value.
+	 * A non-rigid grid will always at least display a range of lower/upper value, a rigid grid will always display the range
+	 * of lower and upper value, no more and no less.
+	 * @param lower Lower value of the grid range.
+	 * @param upper Upper value of the grid range.
+	 * @param rigid True if the grid is rigid, false if not (default: false).
+	 */
+	GridRange( double lower, double upper, boolean rigid )
+	{
+		this.lower	= lower;
+		this.upper	= upper;
+		this.rigid	= rigid;
+	}
+	
 	
 	// ================================================================
 	// -- Protected methods
-	// ================================================================	
-	double getValue()
-	{
-		return value;
+	// ================================================================		
+	double getLowerValue() {
+		return lower;
 	}
 	
-	boolean isMajor()
-	{
-		return major;
+	double getUpperValue() {
+		return upper;
+	}
+	
+	boolean isRigid() {
+		return rigid;
 	}
 }

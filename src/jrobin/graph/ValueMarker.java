@@ -2,8 +2,11 @@
  * JRobin : Pure java implementation of RRDTool's functionality
  * ============================================================
  *
- * Project Info:  http://www.sourceforge.net/projects/jrobin
- * Project Lead:  Sasa Markovic (saxon@eunet.yu);
+ * Project Info:  http://www.jrobin.org
+ * Project Lead:  Sasa Markovic (saxon@jrobin.org)
+ * 
+ * Developers:    Sasa Markovic (saxon@jrobin.org)
+ *                Arne Vandamme (cobralord@jrobin.org)
  *
  * (C) Copyright 2003, by Sasa Markovic.
  *
@@ -19,34 +22,48 @@
  * library; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-/*
- * Created on 29-aug-2003
- *
- * To change the template for this generated file go to
- * Window - Preferences - Java - Code Generation - Code and Comments
- */
 package jrobin.graph;
 
 /**
- * @author cbld
- *
- * To change the template for this generated type comment go to
- * Window - Preferences - Java - Code Generation - Code and Comments
+ * <p>Represents a value grid marker (grid line with or without label on the Y axis).</p>
+ * 
+ * @author Arne Vandamme (cobralord@jrobin.org)
  */
-public class ValueMarker {
-	double value			= 0;
-	String text				= "";
-	private boolean label 	= false;
+class ValueMarker 
+{
+	// ================================================================
+	// -- Members
+	// ================================================================	
+	private double value	= 0;
+	private boolean major 	= false;
 
-	ValueMarker( double value, String text, boolean label )
+
+	// ================================================================
+	// -- Constructors
+	// ================================================================	
+	/**
+	 * Constructs a ValueMarker object by specifying the value at which the grid line
+	 * should appear, and specifying if this grid line is a major line or not.  In case of a
+	 * major grid line, the value will be shown as a label next to the line.
+	 * @param value Value as a double at which the grid line should appear.
+	 * @param major True if this marker is a major grid line (with label), false if not.
+	 */
+	ValueMarker( double value, boolean major )
 	{
-		this.label	= label;
+		this.major	= major;
 		this.value 	= value;
-		this.text 	= text;
 	}
 	
-	public boolean isLabel()
+	// ================================================================
+	// -- Protected methods
+	// ================================================================	
+	double getValue()
 	{
-		return label;
+		return value;
+	}
+	
+	boolean isMajor()
+	{
+		return major;
 	}
 }

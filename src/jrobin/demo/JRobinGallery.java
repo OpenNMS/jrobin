@@ -1,7 +1,7 @@
 package jrobin.demo;
 
-import jrobin.graph2.RrdGraphDef;
-import jrobin.graph2.RrdGraph;
+import jrobin.graph.RrdGraphDef;
+import jrobin.graph.RrdGraph;
 import jrobin.core.RrdException;
 
 import java.util.GregorianCalendar;
@@ -21,6 +21,8 @@ public class JRobinGallery
 		RrdGraphDef def = new RrdGraphDef();
         GregorianCalendar start = new GregorianCalendar(2003, 3, 25);
 		GregorianCalendar end = new GregorianCalendar(2003, 5, 5);
+		//GregorianCalendar start = new GregorianCalendar(2003, 4, 1, 13, 00);
+		//GregorianCalendar end = new GregorianCalendar(2003, 4, 1, 13, 50);
 		def.setTimePeriod(start, end);
 		long t0 = start.getTime().getTime() / 1000L;
 		long t1 = end.getTime().getTime() / 1000L;

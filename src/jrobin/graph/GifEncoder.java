@@ -8,7 +8,8 @@ import java.util.Vector;
 // thanks to J. M. G. Elliott
 // http://jmge.net/java/gifenc/
 
-class Gif89Encoder {
+class GifEncoder 
+{
 	private Dimension dispDim = new Dimension(0, 0);
 	private GifColorTable colorTable;
 	private int bgIndex = 0;
@@ -16,20 +17,20 @@ class Gif89Encoder {
 	private String theComments;
 	private Vector vFrames = new Vector();
 
-	Gif89Encoder() {
+	GifEncoder() {
 		colorTable = new GifColorTable();
 	}
 
-	Gif89Encoder(Image static_image) throws IOException {
+	GifEncoder(Image static_image) throws IOException {
 		this();
 		addFrame(static_image);
 	}
 
-	Gif89Encoder(Color[] colors) {
+	GifEncoder(Color[] colors) {
 		colorTable = new GifColorTable(colors);
 	}
 
-	Gif89Encoder(Color[] colors, int width, int height, byte ci_pixels[])
+	GifEncoder(Color[] colors, int width, int height, byte ci_pixels[])
 		throws IOException {
 		this(colors);
 		addFrame(width, height, ci_pixels);

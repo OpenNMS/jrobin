@@ -2,8 +2,11 @@
  * JRobin : Pure java implementation of RRDTool's functionality
  * ============================================================
  *
- * Project Info:  http://www.sourceforge.net/projects/jrobin
- * Project Lead:  Sasa Markovic (saxon@eunet.yu);
+ * Project Info:  http://www.jrobin.org
+ * Project Lead:  Sasa Markovic (saxon@jrobin.org)
+ * 
+ * Developers:    Sasa Markovic (saxon@jrobin.org)
+ *                Arne Vandamme (cobralord@jrobin.org)
  *
  * (C) Copyright 2003, by Sasa Markovic.
  *
@@ -19,84 +22,44 @@
  * library; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-
 package jrobin.graph;
 
-import java.util.*;
-
-import jrobin.core.FetchPoint;
-import jrobin.core.FetchRequest;
-import jrobin.core.RrdDb;
-import jrobin.core.RrdException;
-
-import java.io.IOException;
-
 /**
- *
+ * <p>Represents a fetched datasource for a graph.  A Def collects all his datavalues from an existing
+ * RRD file.</p>
+ * 
+ * @author Arne Vandamme (cobralord@jrobin.org)
  */
-class Def extends Source {
-	long start, end;
-	private String rrdPath;
-	private String dsName;
-	private String consolFun;
-	private ValueExtractor valueExtractor;
-
-	Def(String name, String rrdPath, String dsName, String consolFun) {
+class Def extends Source
+{
+	// ================================================================
+	// -- Constructors
+	// ================================================================
+	/**
+	 * Constructs a new Def object holding a number of fetched datapoints for a graph.
+	 * @param name Name of the datasource in the graph definition.
+	 * @param numPoints Number of points used as graph resolution (size of the value table).
+	 */
+	Def( String name, int numPoints )
+	{
 		super(name);
-		this.rrdPath = rrdPath;
-		this.dsName = dsName;
-		this.consolFun = consolFun;
+		values = new double[ numPoints ];
 	}
 	
-	void setValues( FetchPoint[] fetchPoints, int index )
+	
+	// ================================================================
+	// -- Protected methods
+	// ================================================================	
+	/**
+	 * Sets the value of a specific datapoint for this Def.
+	 * @param pos Position (index in the value table) of the new datapoint.
+	 * @param time Timestamp of the new datapoint in number of seconds.
+	 * @param val Double value of the new datapoint.
+	 */
+	void set( int pos, long timestamp, double val )
 	{
-		try {
-			
-		int numPoints = fetchPoints.length;
-		DataPoint[] points = new DataPoint[numPoints];
-		
-		for(int i = 0; i < numPoints; i++) {
-			long time 		= fetchPoints[i].getTime();
-			double value 	= fetchPoints[i].getValue(index);
-			points[i] 		= new DataPoint(time, value);
-		}
-
-		valueExtractor = new ValueExtractor(points);
-		
-		} catch(Exception e) { e.printStackTrace(); }
+		super.set( pos, timestamp, val );
+		values[pos] = val;
 	}
 
-	void setInterval(long start, long end) throws RrdException, IOException {
-		
-		long s1 = Calendar.getInstance().getTimeInMillis();
-		
-		RrdDb rrd = new RrdDb(rrdPath);
-		long rrdStep = rrd.getRrdDef().getStep();
-		
-		FetchRequest request = rrd.createFetchRequest(consolFun, start, end + rrdStep);
-		FetchPoint[] fetchPoints = request.fetch();
-		int numPoints = fetchPoints.length;
-		
-		DataPoint[] points = new DataPoint[numPoints];
-		int dsIndex = rrd.getDsIndex(dsName);
-		
-		for(int i = 0; i < numPoints; i++) {
-			long time 		= fetchPoints[i].getTime();
-			double value 	= fetchPoints[i].getValue(dsIndex);
-			points[i] 		= new DataPoint(time, value);
-		}
-		rrd.close();
-		valueExtractor = new ValueExtractor(points);
-		
-		long s2 = Calendar.getInstance().getTimeInMillis();
-		
-		//System.err.println( "Fetched " + dsName + " in " + (s2 - s1) + " ms (source: " + rrdPath + ")" );
-	}
-
-	public double getValue(long timestamp, ValueCollection values) throws RrdException {
-		if(valueExtractor == null) {
-			throw new RrdException("Could not obtain values from graph source [" + name + "]");
-		}
-		return valueExtractor.getValue(timestamp);
-	}
 }

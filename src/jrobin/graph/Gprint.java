@@ -2,8 +2,11 @@
  * JRobin : Pure java implementation of RRDTool's functionality
  * ============================================================
  *
- * Project Info:  http://www.sourceforge.net/projects/jrobin
- * Project Lead:  Sasa Markovic (saxon@eunet.yu);
+ * Project Info:  http://www.jrobin.org
+ * Project Lead:  Sasa Markovic (saxon@jrobin.org)
+ * 
+ * Developers:    Sasa Markovic (saxon@jrobin.org)
+ *                Arne Vandamme (cobralord@jrobin.org)
  *
  * (C) Copyright 2003, by Sasa Markovic.
  *
@@ -19,123 +22,156 @@
  * library; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-
 package jrobin.graph;
 
-import jrobin.core.RrdException;
-
-import java.text.DecimalFormat;
+import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import jrobin.core.RrdException;
+
 /**
- *
+ * <p>Represents a piece of aligned text (containing a retrieved datasource value) to be drawn on the graph.</p>
+ * 
+ * @author Arne Vandamme (cobralord@jrobin.org)
+ * @author Sasa Markovic (saxon@jrobin.org)
  */
 class Gprint extends Comment 
 {
+	// ================================================================
+	// -- Members
+	// ================================================================
 	private static final String SCALE_MARKER 			= "@s";
 	private static final String UNIFORM_SCALE_MARKER 	= "@S";
 	private static final String VALUE_MARKER 			= "@([0-9]*\\.[0-9]{1}|[0-9]{1}|\\.[0-9]{1})";
 	private static final Pattern VALUE_PATTERN 			= Pattern.compile(VALUE_MARKER);
-	private Source source;
-	private String consolFun;
-
-	Gprint(Source source, String consolFun, String comment) throws RrdException {
-    	super(comment);
-		this.source = source;
-		this.consolFun = consolFun;
-	}
-
-	String getMessage( double base ) throws RrdException 
+	
+	private String sourceName;
+	private int aggregate; 
+	private int numDec									= 3;		// Show 3 decimal values by default
+	private int strLen									= -1;
+	private boolean normalScale							= false;
+	private boolean uniformScale						= false;
+	
+	
+	// ================================================================
+	// -- Constructors
+	// ================================================================
+	/**
+	 * Constructs a Gprint object based on a string of text (with a specific placement
+	 * marker in), a source from which to retrieve a value, and a consolidation function that
+	 * specifies which value to retrieve.  Possible consolidation functions are <code>AVERAGE, MAX, MIN, FIRST</code>
+	 * and <code>LAST</code>.
+	 * @param sourceName Name of the datasource from which to retrieve the consolidated value.
+	 * @param consolFunc Consolidation function to use.
+	 * @param text String of text with a placement marker for the resulting value.
+	 * @throws RrdException Thrown in case of a JRobin specific error.
+	 */
+	Gprint( String sourceName, String consolFunc, String text ) throws RrdException
 	{
-		double value = source.getAggregate(consolFun);
-		Matcher m = VALUE_PATTERN.matcher(comment);
-		if ( m.find() ) 
+		this.text = text;
+		checkValuePlacement();		// First see if this GPRINT is valid
+		super.parseComment();
+		
+		this.commentType = Comment.CMT_GPRINT;
+		this.sourceName = sourceName;
+		
+		if ( consolFunc.equalsIgnoreCase("AVERAGE") || consolFunc.equalsIgnoreCase("AVG") )
+			aggregate = Source.AGG_AVERAGE;
+		else if ( consolFunc.equalsIgnoreCase("MAX") || consolFunc.equalsIgnoreCase("MAXIMUM") )
+			aggregate = Source.AGG_MAXIMUM;
+		else if ( consolFunc.equalsIgnoreCase("MIN") || consolFunc.equalsIgnoreCase("MINIMUM") )
+			aggregate = Source.AGG_MINIMUM;
+		else if ( consolFunc.equalsIgnoreCase("LAST") )
+			aggregate = Source.AGG_LAST;
+		else if ( consolFunc.equalsIgnoreCase("FIRST") )
+			aggregate = Source.AGG_FIRST;
+		else
+			throw new RrdException( "Invalid consolidation function specified." );
+	}
+	
+	
+	// ================================================================
+	// -- Protected methods
+	// ================================================================
+	/**
+	 * Sets the consolidated value based on the internal sourceName and consolFunc, and the
+	 * provided list of datasources with lookup table.  The retrieved value will be formatted
+	 * to a string using a <code>ValueFormatter</code> object.
+	 * @param sources Source table containing all datasources necessary to create the final graph.
+	 * @param sourceIndex HashMap containing the sourcename - index keypairs, to retrieve the index 
+	 * in the Source table based on the sourcename.
+	 * @param vFormat ValueFormatter object used to retrieve a formatted string of the requested value.
+	 * @throws RrdException Thrown in case of a JRobin specific error.
+	 */
+	void setValue( Source[] sources, HashMap sourceIndex, ValueFormatter vFormat ) throws RrdException
+	{
+		try
 		{
-			String valueStr 		= "" + value;
-			String prefixStr 		= " ";
-			String uniformPrefixStr = " ";
-
-			String[] group = m.group(1).split("\\.");
-			int len = -1, numDec = 0;
+			double value 	= sources[ ((Integer) sourceIndex.get(sourceName)).intValue() ].getAggregate( aggregate );
+						
+			vFormat.setFormat( value, numDec, strLen );
+			vFormat.setScaling( normalScale, uniformScale );
+			
+			String valueStr = vFormat.getFormattedValue();
+			String prefix	= vFormat.getPrefix();
+			
+			// Replace all values
+			for (int i = 0; i < oList.size(); i += 2 )
+			{
+				String str = (String) oList.elementAt(i);
+				
+				str = str.replaceAll(VALUE_MARKER, valueStr);
+				if ( normalScale ) str = str.replaceAll(SCALE_MARKER, prefix);
+				if ( uniformScale ) str = str.replaceAll(UNIFORM_SCALE_MARKER, prefix);
+				
+				oList.set( i, str );
+			}
+		}
+		catch (Exception e) {
+			throw new RrdException( "Could not find datasource: " + sourceName );
+		}
+	}
+	
+	
+	// ================================================================
+	// -- Private methods
+	// ================================================================
+	/**
+	 * Checks value placement by finding placeholder, checks for uniform or regular scaling and 
+	 * checks for the number of decimals to allow and the complete value string length.
+	 * @throws RrdException Thrown in case of a JRobin specific error.
+	 */
+	private void checkValuePlacement() throws RrdException
+	{
+		Matcher m = VALUE_PATTERN.matcher(text);
+		
+		if ( m.find() )
+		{	
+			normalScale 	= (text.indexOf(SCALE_MARKER) >= 0);
+			uniformScale	= (text.indexOf(UNIFORM_SCALE_MARKER) >= 0);
+			
+			if ( normalScale && uniformScale )
+				throw new RrdException( "Can't specify normal scaling and uniform scaling at the same time." );
+			
+			String[] group 	= m.group(1).split("\\.");
+			strLen 			= -1;
+			numDec 			= 0;
 	
 			if ( group.length > 1 ) 
 			{
 				if ( group[0].length() > 0 ) {
-					len 	= Integer.parseInt(group[0]);
+					strLen 	= Integer.parseInt(group[0]);
 					numDec 	= Integer.parseInt(group[1]);
 				}
 				else
-					numDec = Integer.parseInt(group[1]);
+					numDec 	= Integer.parseInt(group[1]);
 			}
 			else
-				numDec 	= Integer.parseInt(group[0]);
-			
-			if( !Double.isNaN(value) ) 
-			{
-				DecimalFormat df = getDecimalFormat(numDec);
-				// TO BE DONE
-				// Treat special case here, if the value is something like 0.336985464
-				// Look at the number of decimals we want, if we lose too much precision
-				// use the scaler, otherwise just don't (it all depends also on the total
-				// length we predefined) 
-				if(shouldScale() && !shouldUniformScale()) {
-					ValueScaler scaler = new ValueScaler(value, base);
-					valueStr = df.format(scaler.getScaledValue());
-					prefixStr = scaler.getPrefix();
-					scaleIndex = scaler.getScaleIndex();
-				}
-				else if(!shouldScale() && shouldUniformScale()) {
-					
-					ValueScaler scaler = new ValueScaler(value, scaleIndex, base);
-					valueStr = df.format(scaler.getScaledValue());
-					uniformPrefixStr = scaler.getPrefix();
-					scaleIndex = scaler.getScaleIndex();
-				}
-				else if(!shouldScale() && !shouldUniformScale()) {
-					valueStr = df.format(value);
-				}
-				else if(shouldScale() && shouldUniformScale()) {
-					throw new RrdException("You cannot specify uniform and non-uniform value " +
-						"scaling at the same time");
-				}
-			}
-			
-			
-			int diff = len - valueStr.length();
-				
-			StringBuffer preSpace = new StringBuffer("");
-			for (int i = 0; i < diff; i++)
-				preSpace.append(' ');
-			valueStr = preSpace.append(valueStr).toString();
-			
-			comment = comment.replaceFirst(VALUE_MARKER, valueStr);
-			comment = comment.replaceFirst(SCALE_MARKER, prefixStr);
-			comment = comment.replaceFirst(UNIFORM_SCALE_MARKER, uniformPrefixStr);
+				numDec = Integer.parseInt(group[0]);
 		}
-		else {
-			throw new RrdException("Could not find where to place value. No @ placeholder found");
-		}
-		return super.getMessage();
+		else
+			throw new RrdException( "Could not find where to place value. No @ placeholder found." );
 	}
-
-	boolean shouldScale() {
-		return comment.indexOf(SCALE_MARKER) >= 0;
-	}
-
-	boolean shouldUniformScale() {
-		return comment.indexOf(UNIFORM_SCALE_MARKER) >= 0;
-	}
-
-	private DecimalFormat getDecimalFormat(int numDec) {
-		String formatStr = "#,##0";
-		for(int i = 0; i < numDec; i++) {
-			if(i == 0) {
-				formatStr += ".";
-			}
-			formatStr += "0";
-		}
-		return new DecimalFormat(formatStr);
-	}
-
+	
 }

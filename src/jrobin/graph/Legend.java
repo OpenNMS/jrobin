@@ -2,8 +2,11 @@
  * JRobin : Pure java implementation of RRDTool's functionality
  * ============================================================
  *
- * Project Info:  http://www.sourceforge.net/projects/jrobin
- * Project Lead:  Sasa Markovic (saxon@eunet.yu);
+ * Project Info:  http://www.jrobin.org
+ * Project Lead:  Sasa Markovic (saxon@jrobin.org)
+ * 
+ * Developers:    Sasa Markovic (saxon@jrobin.org)
+ *                Arne Vandamme (cobralord@jrobin.org)
  *
  * (C) Copyright 2003, by Sasa Markovic.
  *
@@ -21,30 +24,57 @@
  */
 package jrobin.graph;
 
+import java.awt.Color;
+
 import jrobin.core.RrdException;
 
-import java.awt.*;
-
 /**
- * @author cbld
- *
- * To change the template for this generated type comment go to
- * Window - Preferences - Java - Code Generation - Code and Comments
+ * <p>Represents a PlotDef legend string on the graph.  A Legend item is comprised out of two parts, 
+ * a text string, and a legend marker (small rectangle in the same color as the PlotDef).</p>
+ * 
+ * @author Arne Vandamme (cobralord@jrobin.org)
  */
-// AVD NEW CLASS
-public class Legend extends Comment {
-
-	private Color c;
+class Legend extends Comment 
+{
+	// ================================================================
+	// -- Members
+	// ================================================================
+	private Color color = Color.WHITE;
 	
-	Legend( Color c, String comment) throws RrdException
+	
+	// ================================================================
+	// -- Constructors
+	// ================================================================
+	/**
+	 * Constructs a Legend object based on a specified text string.
+	 * The legend marker for this Legend will be drawn in white color.
+	 * @param text Text part of the legend.
+	 * @throws RrdException Thrown in case of a JRobin specific error.
+	 */
+	Legend( String text ) throws RrdException
 	{
-		super(comment);
-		legend = true;
-		this.c = c;
+		super(text);
+		this.commentType = Comment.CMT_LEGEND;
 	}
 	
-	public Color getColor()
+	/**
+	 * Constructs a Legend object based on a specified text string and marker color.
+	 * @param text Text part of the legend.
+	 * @param color Color to use for the rectangular legend marker.
+	 * @throws RrdException Thrown in case of a JRobin specific error.
+	 */
+	Legend( String text, Color color ) throws RrdException
 	{
-		return c;
+		super(text);
+		this.commentType = Comment.CMT_LEGEND;
+		this.color = color;
+	}
+	
+	
+	// ================================================================
+	// -- Protected methods
+	// ================================================================
+	Color getColor() {
+		return color;
 	}
 }

@@ -46,6 +46,8 @@ class Grapher {
 		RrdGraph graph = getRrdGraph(start, stop);
 		try {
 			return graph.getPNGBytes(GRAPH_WIDTH, GRAPH_HEIGHT);
+		} catch (RrdException e) {
+			throw new MrtgException(e);
 		} catch (IOException e) {
 			throw new MrtgException(e);
 		}
@@ -58,8 +60,7 @@ class Grapher {
 			gDef.setImageBorder(Color.WHITE, 0);	// Don't show border
 			gDef.setTimePeriod(start, stop);
 			gDef.setTitle(ifDescr + "@" + host);
-			gDef.setTimeAxisLabel("time");
-			gDef.setValueAxisLabel("transfer speed [bits/sec]");
+			gDef.setVerticalLabel("transfer speed [bits/sec]");
 			gDef.datasource("in", filename, "in", "AVERAGE");
 			gDef.datasource("out", filename, "out", "AVERAGE");
 			gDef.datasource("in8", "in,8,*");

@@ -2,8 +2,11 @@
  * JRobin : Pure java implementation of RRDTool's functionality
  * ============================================================
  *
- * Project Info:  http://www.sourceforge.net/projects/jrobin
- * Project Lead:  Sasa Markovic (saxon@eunet.yu);
+ * Project Info:  http://www.jrobin.org
+ * Project Lead:  Sasa Markovic (saxon@jrobin.org)
+ * 
+ * Developers:    Sasa Markovic (saxon@jrobin.org)
+ *                Arne Vandamme (cobralord@jrobin.org)
  *
  * (C) Copyright 2003, by Sasa Markovic.
  *
@@ -21,31 +24,28 @@
  */
 package jrobin.graph;
 
+import jrobin.core.RrdException;
+
 /**
- * @author cbld
- *
- * To change the template for this generated type comment go to
- * Window - Preferences - Java - Code Generation - Code and Comments
+ * <p>Represents the Title used in the graph.  The title object has the same alignment
+ * possibilities as all other text/comment objects in a graph.</p>
+ * 
+ * @author Arne Vandamme (cobralord@jrobin.org)
  */
-public class VruleSource extends Source
+class Title extends Comment 
 {
-	private long timestamp = 0;
-
-	VruleSource(long timestamp) 
+	// ================================================================
+	// -- Constructors
+	// ================================================================	
+	/**
+	 * Constructs a Title object based on a text string.
+	 * @param text Text string with alignment markers representing the title.
+	 * @throws RrdException Thrown in case of a JRobin specific error.
+	 */
+	Title( String text ) throws RrdException
 	{
-		this.timestamp = timestamp;
-	}
-
-	public long getTime() 
-	{
-		return timestamp;
-	}
-	
-	// Stub
-	void setInterval(long start, long end) {
-	}
-	
-	public double getValue(long timestamp, ValueCollection values) {
-		return Double.NaN;
+		this.text 	= text;
+		lfToken		= Comment.TKN_ACF; 
+		super.parseComment();	
 	}
 }

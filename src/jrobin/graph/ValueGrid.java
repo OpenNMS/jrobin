@@ -22,7 +22,7 @@
  * library; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-package jrobin.graph2;
+package jrobin.graph;
 
 /**
  * <p>Holds specific information about the Value axis grid of the chart.</p>
@@ -54,9 +54,18 @@ class ValueGrid
 	 * @param vAxis ValueAxisUnit specified to determine the grid lines, if the given
 	 * ValueAxisUnit is null, one will be automatically determined.
 	 */
-	ValueGrid( boolean rigid, double lower, double upper, ValueAxisUnit vAxis )
+	ValueGrid( GridRange gr, double lower, double upper, ValueAxisUnit vAxis )
 	{
-		this.rigid	= rigid;
+		double grLower = Double.MAX_VALUE;
+		double grUpper = Double.MIN_VALUE;
+		
+		if ( gr != null )
+		{
+			this.rigid		= gr.isRigid();
+			grLower			= gr.getLowerValue();
+			grUpper			= gr.getUpperValue(); 	
+		}
+		
 		this.lower	= lower;
 		this.upper	= upper;
 		this.vAxis	= vAxis;
@@ -65,8 +74,8 @@ class ValueGrid
 		setValueAxis();
 		
 		if ( !rigid ) {
-			this.lower		= this.vAxis.getNiceLower( lower );
-			this.upper		= this.vAxis.getNiceHigher( upper );
+			this.lower		= ( lower == grLower ? grLower : this.vAxis.getNiceLower( lower ) );
+			this.upper		= ( upper == grUpper ? grUpper : this.vAxis.getNiceHigher( upper ) );
 		}
 	}
 	
@@ -103,7 +112,7 @@ class ValueGrid
 			upper = 0.9;
 		
 		// Determine nice axis grid
-		double shifted 	= ( Math.abs(upper) > Math.abs(lower) ? Math.abs(upper) : Math.abs(lower) );
+		double shifted = Math.abs(upper - lower);
 		double mod		= 1.0;
 		while ( shifted > 10 ) {
 			shifted /= 10;

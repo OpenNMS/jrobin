@@ -2,8 +2,11 @@
  * JRobin : Pure java implementation of RRDTool's functionality
  * ============================================================
  *
- * Project Info:  http://www.sourceforge.net/projects/jrobin
- * Project Lead:  Sasa Markovic (saxon@eunet.yu);
+ * Project Info:  http://www.jrobin.org
+ * Project Lead:  Sasa Markovic (saxon@jrobin.org)
+ * 
+ * Developers:    Sasa Markovic (saxon@jrobin.org)
+ *                Arne Vandamme (cobralord@jrobin.org)
  *
  * (C) Copyright 2003, by Sasa Markovic.
  *
@@ -19,86 +22,227 @@
  * library; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-
 package jrobin.graph;
+
+import java.util.Vector;
 
 import jrobin.core.RrdException;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
+/**
+ * <p>Represent a piece of aligned text to be drawn on the graph.</p>
+ * 
+ * @author Arne Vandamme (cobralord@jrobin.org)
+ */
 class Comment 
 {
-	// Text alignment states for 'comments'
-	static final int NO_ALIGN 					= -1;
-	static final int ALIGN_LEFT					= 0;
-	static final int ALIGN_RIGHT				= 1;
-	static final int ALIGN_CENTER				= 2;
+	// ================================================================
+	// -- Members
+	// ================================================================
+	protected static final int CMT_DEFAULT	= 0;
+	protected static final int CMT_LEGEND	= 1;
+	protected static final int CMT_GPRINT	= 2;
+	
+	protected static final Byte TKN_ALF		= new Byte( (byte) 1);		// Align left with Linefeed
+	protected static final Byte TKN_ARF		= new Byte( (byte) 2);		// Align right with linefeed
+	protected static final Byte TKN_ACF		= new Byte( (byte) 3);		// Align center with linefeed
+	protected static final Byte TKN_AL		= new Byte( (byte) 4);		// Align right no linefeed
+	protected static final Byte TKN_AR		= new Byte( (byte) 5);		// Align left no linefeed
+	protected static final Byte TKN_AC		= new Byte( (byte) 6);		// Align center no linefeed
+	protected static final Byte TKN_NULL 	= null;
+	
+	protected int lineCount 				= 0;
+	protected boolean endLf					= false;
+	protected boolean addSpacer				= true;
+	protected boolean trimString			= false;
+	protected int commentType				= CMT_DEFAULT;
+	protected Byte lfToken					= TKN_ALF;
+	
+	protected String text;
+	protected Vector oList 					= new Vector();
+
+
+	// ================================================================
+	// -- Constructors
+	// ================================================================	
+	Comment( ) {		
+	}
+	
+	/**
+	 * Constructs a <code>Comment</code> object of a given text string.
+	 * The original text string is parsed into new string/token pairs
+	 * where byte tokens are used to specify alignment markers. 
+	 * @param text Text with alignment/new-line tokens as a single string.
+	 * @throws RrdException Thrown in case of a JRobin specific error.
+	 */
+	Comment( String text ) throws RrdException
+	{
+		this.text = text;
+		parseComment();		
+	}
+
+
+	// ================================================================
+	// -- Protected methods
+	// ================================================================	
+	/**
+	 * Splits the string up in string/token pairs.
+	 * The tokens specify alignment or new-lines.
+	 * @throws RrdException Thrown in case of a JRobin specific error.
+	 */
+	void parseComment() throws RrdException
+	{
+		// Get off the last token to see for spacer suppressing
+		String text	= this.text;
 		
-	private static final String MONKEY 			= "\u8888";
-	private static final String ALIGN_REGEX 	= "(.*)@(l|r|c)";
-	private static final Pattern ALIGN_PATTERN 	= Pattern.compile(ALIGN_REGEX);
-
-	private int align 							= NO_ALIGN;
-	protected boolean legend					= false;
-
-	String comment;
-	int scaleIndex = ValueScaler.NO_SCALE;
-
-	Comment(String comment) throws RrdException {
-		comment = comment.replaceAll("@@", MONKEY);
-		Matcher matcher = ALIGN_PATTERN.matcher(comment);
-		if(matcher.matches()) {
-			// alignment specified
-			char alignChar = matcher.group(2).charAt(0);
-			switch(alignChar) {
-				case 'l':
-					align = ALIGN_LEFT;
-					break;
-				case 'r':
-					align = ALIGN_RIGHT;
-					break;
-				case 'c':
-					align = ALIGN_CENTER;
-					break;
-			}
-			comment = matcher.group(1);
+		int mpos	= text.indexOf("@g");
+		if ( mpos >= 0 && mpos == (text.length() - 2) ) {
+			addSpacer 	= false;
+			trimString	= true;
+			text 		= text.substring( 0, text.length() - 2);
 		}
-		this.comment = comment;
-	}
-
-	boolean isLegend() {
-		return legend;	
-	}
-	
-	String getMessage() throws RrdException {
-		return comment.replaceAll(MONKEY, "@");
-	}
-	
-	// Add a base value for valuescaler transforms
-	String getMessage( double base ) throws RrdException {
-		return comment.replaceAll(MONKEY, "@");
-	}
+		else {
+			mpos	= text.indexOf("@G");
+			if ( mpos >= 0 && mpos == (text.length() - 2) ) {
+				addSpacer 	= false;
+				trimString	= false;
+				text 		= text.substring( 0, text.length() - 2);
+			}
+		}
 		
-	int getAlign() {
-    	return align;
+		// @l and \n are the same
+		Byte tkn;
+		int lastPos	= 0;
+		mpos 		= text.indexOf("@");
+		int lfpos	= text.indexOf("\n");
+		if ( mpos == text.length() ) mpos = -1;
+		if ( lfpos == text.length() ) lfpos = -1;
+	
+		while ( mpos >= 0 || lfpos >= 0 )
+		{
+			if ( mpos >= 0 && lfpos >= 0 ) 
+			{
+				if ( mpos < lfpos ) 
+				{
+					tkn = getToken( text.charAt(mpos + 1) );
+					if ( tkn != TKN_NULL ) {
+						oList.add( text.substring(lastPos, mpos) );
+						oList.add( tkn );
+						lastPos = mpos + 2;
+						mpos	= text.indexOf("@", lastPos);
+					}
+					else {
+						mpos	= text.indexOf("@", mpos + 1);
+					}
+				}
+				else 
+				{
+					oList.add( text.substring(lastPos, lfpos) );
+					oList.add( lfToken );
+					endLf = true;
+					lineCount++;
+					lastPos = lfpos + 1;
+					lfpos	= text.indexOf("\n", lastPos); 
+				}
+			}
+			else if ( mpos >= 0 ) 
+			{
+				tkn = getToken( text.charAt(mpos + 1) );
+				if ( tkn != TKN_NULL ) {
+					oList.add( text.substring(lastPos, mpos) );
+					oList.add( tkn );
+					lastPos = mpos + 2;
+					mpos	= text.indexOf("@", lastPos);
+				}
+				else
+					mpos	= text.indexOf("@", mpos + 1);
+			}
+			else 
+			{
+				oList.add( text.substring(lastPos, lfpos) );
+				oList.add( lfToken );
+				endLf = true;
+				lineCount++;
+				lastPos = lfpos + 1;
+				lfpos	= text.indexOf("\n", lastPos); 
+			}
+		
+			// Check if the 'next token', isn't at end of string
+			if ( mpos == text.length() ) mpos = -1;
+			if ( lfpos == text.length() ) lfpos = -1;
+		}
+	
+		// Add last part of the string if necessary
+		if ( lastPos < text.length() )
+		{
+			oList.add( text.substring(lastPos) );
+			oList.add( TKN_NULL );
+		}
 	}
-
-	boolean isAlignSet() {
-		return align != NO_ALIGN;
+	
+	/**
+	 * Retrieves the corresponding token-byte for a given token character.
+	 * @param tokenChar Character to retrieve corresponding bytevalue of.
+	 * @return Token bytevalue for the corresponding token character.
+	 */
+	Byte getToken( char tokenChar )
+	{
+		switch ( tokenChar )
+		{
+			case 'l':
+				lineCount++;
+				endLf = true;
+				return TKN_ALF;
+			case 'L':
+				return TKN_AL;
+			case 'r':
+				lineCount++;
+				endLf = true;
+				return TKN_ARF;
+			case 'R':
+				return TKN_AR;
+			case 'c':
+				lineCount++;
+				endLf = true;
+				return TKN_ACF;
+			case 'C':
+				return TKN_AC;
+			default:
+				return TKN_NULL;
+		}
 	}
-
-	int getScaleIndex() {
-		return scaleIndex;
+	
+	/**
+	 * Used to check it a <code>Comment</code> item ends with a linefeed.
+	 * @return True if this Comment ends with a linefeed.
+	 */
+	boolean isCompleteLine()
+	{
+		return endLf;
 	}
-
-	void setScaleIndex(int scaleIndex) {
-		this.scaleIndex = scaleIndex;
+	
+	/**
+	 * Retrieves a <code>Vector</code> containing all string/token pairs in order of <code>String</code> - <code>Byte</code>.
+	 * @return Vector containing all string/token pairs of this Comment.
+	 */
+	Vector getTokens()
+	{
+		return oList;
 	}
-
-	public static void main(String[] args) throws RrdException {
-		Comment c = new Comment("@r");
-		System.out.println("Comment = [" + c.getMessage(1000.0) + "], align = " + c.getAlign());
+	
+	/**
+	 * Counts the number of complete lines (linefeed markers) in the <code>Comment</code> object.
+	 * @return Number of complete lines in this Comment.
+	 */
+	int getLineCount()
+	{
+		return lineCount;
 	}
-
+	
+	boolean addSpacer() {
+		return addSpacer;
+	}
+	
+	boolean trimString() {
+		return trimString;
+	}
 }

@@ -22,20 +22,23 @@
  * library; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-package jrobin.graph2;
+package jrobin.graph;
 
 import java.awt.Color;
-import java.awt.BasicStroke;
 import java.util.HashMap;
 
 import jrobin.core.RrdException;
 
 /**
- * <p>Class used to represent a line defined by two points in a graph.  The line is drawn between those two points.</p>
+ * <p>Class used to represent an area defined by two points in a graph.  The area is drawn as a rectangle 
+ * that has the line startpoint-endpoint as a diagonal.  Direction of plotting the CustomArea can be seen as 
+ * drawing a rectangle from the bottom-left corner to the upper-right corner.
+ * It is possible to stack another PlotDef on top of the CustomArea, in that case the stacked PlotDef will 
+ * always be stacked on top of the (Y) value of the second defined datapoint of the CustomArea.</p>
  * 
  * @author Arne Vandamme (cobralord@jrobin.org)
  */
-class CustomLine extends Line
+class CustomArea extends PlotDef
 {
 	// ================================================================
 	// -- Members
@@ -45,23 +48,22 @@ class CustomLine extends Line
 	
 	private double yVal1;
 	private double yVal2;
-	
-	private double dc;
-	
-	
+
+
 	// ================================================================
 	// -- Constructors
 	// ================================================================
 	/**
-	 * Constructs a <code>CustomLine</code> PlotDef object based on a startpoint, endpoint and a graph color.
-	 * The resulting line will have a width of 1 pixel.
+	 * Constructs a <code>CustomArea</code> PlotDef object based on a startpoint, endpoint and a graph color.
+	 * The resulting area will be graphed as a rectangle from the bottom-left corner (startpoint) to the
+	 * upper-right coner (endpoint).
 	 * @param startTime Timestamp of the first datapoint (startpoint).
 	 * @param startValue Value of the first datapoint (startpoint).
 	 * @param endTime Timestamp of the second datapoint (endpoint).
 	 * @param endValue Value of the second datapoint (endpoint).
 	 * @param color Color of the resulting line, if no color is specified, the CustomLine will not be drawn.
 	 */
-	CustomLine( long startTime, double startValue, long endTime, double endValue, Color color )
+	CustomArea( long startTime, double startValue, long endTime, double endValue, Color color )
 	{
 		this.color = color;
 		if ( color == null )
@@ -71,53 +73,25 @@ class CustomLine extends Line
 		this.xVal2 = endTime;
 		this.yVal1 = startValue;
 		this.yVal2 = endValue;
-		
-		try
-		{
-			long xc	   = xVal2 - xVal1;
-			if ( xc != 0 )
-				this.dc		= ( yVal2 - yVal1 ) / xc;
-			else
-				this.dc		= 0;
-		}
-		catch (Exception e) {
-			this.dc = 0;
-		}  
 	}
-	
-	/**
-	 * Constructs a <code>CustomLine</code> PlotDef object based on a startpoint, a endpoint, a graph color and a line width.
-	 * @param startTime Timestamp of the first datapoint (startpoint).
-	 * @param startValue Value of the first datapoint (startpoint).
-	 * @param endTime Timestamp of the second datapoint (endpoint).
-	 * @param endValue Value of the second datapoint (endpoint).
-	 * @param color Color of the resulting line, if no color is specified, the CustomLine will not be drawn.
-	 * @param lineWidth Width in pixels of the line to draw.
-	 */
-	CustomLine( long startTime, double startValue, long endTime, double endValue, Color color, int lineWidth )
-	{
-		this( startTime, startValue, endTime, endValue, color );
-		this.lineWidth = lineWidth;
-	}
-	
-	
+
+
 	// ================================================================
 	// -- Protected methods
-	// ================================================================
+	// ================================================================	
 	/**
-	 * Draws the actual CustomLine on the chart.
+	 * Draws the actual CustomArea on the chart.
 	 * @param g ChartGraphics object representing the graphing area.
-	 * @param xValues List of relative chart area X positions corresponding to the datapoints, obsolete with CustomLine.
+	 * @param xValues List of relative chart area X positions corresponding to the datapoints, obsolete with CustomArea.
 	 * @param stackValues Datapoint values of previous PlotDefs, used to stack on if necessary.
 	 * @param lastPlotType Type of the previous PlotDef, used to determine PlotDef type of a stack.
 	 */	
 	void draw( ChartGraphics g, int[] xValues, int[] stackValues, int lastPlotType ) throws RrdException
 	{
 		g.setColor( color );
-		g.setStroke( new BasicStroke(lineWidth) );
-		
+	
 		int ax, ay, nx, ny;
-		
+	
 		// Get X positions
 		if ( xVal1 == Long.MIN_VALUE )
 			ax = g.getMinX();
@@ -125,14 +99,14 @@ class CustomLine extends Line
 			ax = g.getMaxX();
 		else
 			ax = g.getX( xVal1 );
-		
+	
 		if ( xVal2 == Long.MIN_VALUE )
 			nx = g.getMinX();
 		else if ( xVal2 == Long.MAX_VALUE )
 			nx = g.getMaxX();
 		else
 			nx = g.getX( xVal2 );
-		
+	
 		// Get Y positions
 		if ( yVal1 == Double.MIN_VALUE )
 			ay = g.getMinY();
@@ -140,7 +114,7 @@ class CustomLine extends Line
 			ay = g.getMaxY();
 		else
 			ay = g.getY( yVal1 );
-		
+	
 		if ( yVal2 == Double.MIN_VALUE )
 			ny = g.getMinY();
 		else if ( yVal2 == Double.MAX_VALUE )
@@ -148,32 +122,30 @@ class CustomLine extends Line
 		else
 			ny = g.getY( yVal2 );
 
-		// Draw the line
-		if ( visible )		
-			g.drawLine( ax, ay, nx, ny );
-		 
-		// Set the stackvalues
-		int rx	= nx - ax;
-		if ( rx != 0 )
+		// Draw the area
+		if ( visible )
 		{
-			double rc = ((ny - ay) * 1.0d) / rx;
-			for (int i = 0; i < xValues.length; i++) {
-				if ( xValues[i] < ax || xValues[i] > nx ) 
-					stackValues[i] = 0;
-				else if ( ay == ny )
-					stackValues[i] = ay;
-				else
-					stackValues[i] = new Double(rc * (xValues[i] - ax) + ay).intValue();
-			}
+			if ( ny > ay )
+				g.fillRect( ax, ay, nx, ny );
+			else
+				g.fillRect( ax, ny, nx, ay );
 		}
 		
-				 
-		g.setStroke( new BasicStroke() );
+		// Set the stackvalues
+		// Always use the y value of the second specified point to stack on
+		if ( yVal2 != Double.MAX_VALUE )
+			for (int i = 0; i < stackValues.length; i++)
+				if ( xValues[i] < ax || xValues[i] > nx ) 
+					stackValues[i] = 0;
+				else
+					stackValues[i] = ny;
 	}
 	
 	/**
-	 * Retrieves the value for a specific point of the CustomLine.  The corresponding value is calculated based
-	 * on the mathematical line function with the timestamp as a X value.
+	 * Retrieves the value for a specific point of the CustomArea.  The CustomArea is always a rectangle,
+	 * this means the returned double value will always be equal to the (Y) value of the second datapoint.
+	 * In case of an unlimited CustomArea (second datapoint Y value is <code>Double.MAX_VALUE</code>)
+	 * the returned value is <code>Double.NaN</code>.
 	 * @param tblPos Table index of the datapoint to be retrieved.
 	 * @param timestamps Table containing the timestamps corresponding to all datapoints.
 	 * @return Y value of the point as a double.
@@ -181,28 +153,18 @@ class CustomLine extends Line
 	double getValue( int tblPos, long[] timestamps )
 	{
 		long time = timestamps[tblPos];
-		
+	
 		// Out of range
 		if ( time > xVal2 || time < xVal1 )
 			return Double.NaN;
-		
-		// Hrule
-		if ( yVal1 == yVal2 )
-			return yVal1;
-		
-		// Vrule
-		if ( yVal1 == Double.MIN_VALUE && yVal2 == Double.MAX_VALUE )
-			return Double.NaN;
-		
-		// No line, very rare, will usually be 'out of range' first
-		if ( xVal1 == xVal2 )
-			return Double.NaN;
-				
-		// Custom line
-		return ( dc * ( time - xVal1 ) + yVal1 );
-	}
 	
+		if ( yVal2 == Double.MAX_VALUE )
+			return Double.NaN;
+		
+		return yVal2;
+	}
+
 	// Stubbed method, irrelevant for this PlotDef
-	void setSource( Source[] sources, HashMap sourceIndex ) throws RrdException	{
+	void setSource( Source[] sources, HashMap sourceIndex ) throws RrdException {
 	}
 }
