@@ -25,10 +25,7 @@
 
 package org.jrobin.core;
 
-import java.io.ByteArrayOutputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 
 /**
  * <p>Main class used to create and manipulate round robin databases (RRDs). Use this class to perform
@@ -214,15 +211,16 @@ public class RrdDb implements RrdUpdater {
 	 * open in read-only mode (<code>readOnly</code> set to <code>true</code>),
 	 * <code>IOException</code> will be thrown.
 	 * @param factory Backend factory which will be used for this RRD.
-	 * @throws IOException Thrown in case of I/O error.
+	 * @throws FileNotFoundException Thrown if the requested file does not exist.
+	 * @throws IOException Thrown in case of general I/O error (bad RRD file, for example).
 	 * @throws RrdException Thrown in case of JRobin specific error.
 	 * @see RrdBackendFactory
 	 */
 	public RrdDb(String path, boolean readOnly, RrdBackendFactory factory)
-			throws IOException, RrdException {
+			throws FileNotFoundException, IOException, RrdException {
 		// opens existing RRD file - throw exception if the file does not exist...
 		if(!factory.exists(path)) {
-			throw new IOException("Could not open " + path + " [non existent]");
+			throw new FileNotFoundException("Could not open " + path + " [non existent]");
 		}
 		backend = factory.open(path, readOnly, lockMode);
 		// restore header
