@@ -26,67 +26,61 @@
 package org.jrobin.core;
 
 import java.io.IOException;
-import java.nio.channels.FileChannel;
 import java.nio.MappedByteBuffer;
-import java.util.TimerTask;
+import java.nio.channels.FileChannel;
+import sun.nio.ch.DirectBuffer;
 import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * JRobin backend which is used to store RRD data to ordinary disk files
  * by using fast java.nio.* package. This is the default backend engine since JRobin 1.4.0.
  */
 public class RrdNioBackend extends RrdFileBackend {
-	/**
-	 * Defines <code>System.gc()</code> usage policy for this backend.<p>
-	 *
-	 * NIO backend uses potentially large in-memory buffer to cache file data.
-	 * The buffer remains 'active' (by prohibiting file re-creation with the smaller file size)
-	 * as long as it is not garbage-collected. By forcing <code>System.gc()</code> call where
-	 * appropriate, this backend will free in-memory buffers sooner and file re-creation won't fail.<p>
-	 *
-	 * The constant is set to <b><code>true</code></b> initially and currently there is no
-	 * API to change it during runtime.
-	 *
-	 * Garbage collection will be forced only in some special circumstances.
-	 * It should not affect the speed of your application significantly.<p>
-	 */
-	public static final boolean SHOULD_GC = true;
+	private static final Timer fileSyncTimer = new Timer(true);
 
-	private static final Timer syncTimer = new Timer(true);
-
+	private MappedByteBuffer byteBuffer;
 	private int syncMode;
-	MappedByteBuffer byteBuffer;
 	private TimerTask syncTask;
 
+	/**
+	 * Creates RrdFileBackend object for the given file path, backed by java.nio.* classes.
+	 * @param path Path to a file
+	 * @param readOnly True, if file should be open in a read-only mode. False otherwise
+	 * @param lockMode Locking mode, as described in {@link RrdDb#getLockMode()}
+	 * @param syncMode See {@link RrdNioBackendFactory#setSyncMode(int)} for explanation
+	 * @param syncPeriod See {@link RrdNioBackendFactory#setSyncMode(int)} for explanation
+	 * @throws IOException Thrown in case of I/O error
+	 */
 	protected RrdNioBackend(String path, boolean readOnly, int lockMode, int syncMode, int syncPeriod)
 			throws IOException {
 		super(path, readOnly, lockMode);
-		map(readOnly);
 		this.syncMode = syncMode;
+		mapFile();
 		if(syncMode == RrdNioBackendFactory.SYNC_BACKGROUND && !readOnly) {
-			createSyncTask(syncPeriod);
+			syncTask = new TimerTask() {
+				public void run() {
+					sync();
+				}
+			};
+			fileSyncTimer.schedule(syncTask, syncPeriod * 1000L, syncPeriod * 1000L);
 		}
 	}
 
-	private void map(boolean readOnly) throws IOException {
+	private void mapFile() throws IOException {
 		long length = getLength();
 		if(length > 0) {
 			FileChannel.MapMode mapMode =
 				readOnly? FileChannel.MapMode.READ_ONLY: FileChannel.MapMode.READ_WRITE;
 			byteBuffer = channel.map(mapMode, 0, length);
 		}
-		else {
-			byteBuffer = null;
-		}
 	}
 
-	private void createSyncTask(int syncPeriod) {
-		syncTask = new TimerTask() {
-			public void run() {
-				sync();
-			}
-		};
-		syncTimer.schedule(syncTask, syncPeriod * 1000L, syncPeriod * 1000L);
+	private void unmapFile() {
+		if(byteBuffer != null) {
+			((DirectBuffer) byteBuffer).cleaner().clean();
+			byteBuffer = null;
+		}
 	}
 
 	/**
@@ -95,16 +89,10 @@ public class RrdNioBackend extends RrdFileBackend {
 	 * @param newLength Length of the RRD file
 	 * @throws IOException Thrown in case of I/O error.
 	 */
-	protected void setLength(long newLength) throws IOException {
-		if(newLength < getLength()) {
-			// the file will be truncated
-			if(SHOULD_GC) {
-				byteBuffer = null;
-				System.gc();
-			}
-		}
+	protected synchronized void setLength(long newLength) throws IOException {
+		unmapFile();
 		super.setLength(newLength);
-		map(false);
+		mapFile();
 	}
 
 	/**
@@ -112,10 +100,13 @@ public class RrdNioBackend extends RrdFileBackend {
 	 * @param offset Starting file offset
 	 * @param b Bytes to be written.
 	 */
-	protected void write(long offset, byte[] b) {
-		synchronized(byteBuffer) {
+	protected synchronized void write(long offset, byte[] b) throws IOException {
+		if(byteBuffer != null) {
 			byteBuffer.position((int)offset);
 			byteBuffer.put(b);
+		}
+		else {
+			throw new IOException("Write failed, file " + getPath() + " not mapped for I/O");
 		}
 	}
 
@@ -124,10 +115,13 @@ public class RrdNioBackend extends RrdFileBackend {
 	 * @param offset Starting file offset
 	 * @param b Buffer which receives bytes read from the file.
 	 */
-	protected void read(long offset, byte[] b) {
-		synchronized(byteBuffer) {
+	protected synchronized void read(long offset, byte[] b) throws IOException {
+		if(byteBuffer != null) {
 			byteBuffer.position((int)offset);
 			byteBuffer.get(b);
+		}
+		else {
+			throw new IOException("Read failed, file " + getPath() + " not mapped for I/O");
 		}
 	}
 
@@ -135,31 +129,22 @@ public class RrdNioBackend extends RrdFileBackend {
 	 * Closes the underlying RRD file.
 	 * @throws IOException Thrown in case of I/O error
 	 */
-	public void close() throws IOException {
+	public synchronized void close() throws IOException {
 		// cancel synchronization
 		if(syncTask != null) {
 			syncTask.cancel();
 		}
-		// synchronize with the disk for the last time
-		sync();
-		// release the buffer, make it eligible for GC as soon as possible
-		byteBuffer = null;
-		// close the underlying file		
+		unmapFile();
 		super.close();
 	}
 
 	/**
 	 * This method forces all data cached in memory but not yet stored in the file,
-	 * to be stored in it. RrdNioBackend uses (a lot of) memory to cache I/O data.
-	 * This method is automatically invoked when the {@link #close()}
-	 * method is called. In other words, you don't have to call sync() before you call close().<p>
+	 * to be stored in it.
 	 */
-	public void sync() {
+	protected synchronized void sync() {
 		if(byteBuffer != null) {
-			synchronized(byteBuffer) {
-				// System.out.println("** SYNC **");
-				byteBuffer.force();
-			}
+			byteBuffer.force();
 		}
 	}
 

@@ -420,8 +420,9 @@ public class RrdDb implements RrdUpdater {
 	 */
 	public synchronized void close() throws IOException {
 		if(!closed) {
-			backend.close();
 			closed = true;
+			backend.beforeClose();
+			backend.close();
 		}
 	}
 

@@ -106,21 +106,18 @@ public class RrdDbPool implements Runnable {
 
 	// singleton pattern
 	private static RrdDbPool ourInstance;
+	private boolean closingOnExit = true;
 
-	static {
-		Runtime.getRuntime().addShutdownHook(new Thread(CLOSING_THREAD_NAME) {
-			public void run() {
-				if(ourInstance != null) {
-					try {
-						ourInstance.close();
-					}
-					catch (IOException e) {
-						e.printStackTrace();
-					}
-				}
+	private Thread shutdownHook = new Thread(CLOSING_THREAD_NAME) {
+		public void run() {
+			try {
+				close();
 			}
-		});
-	}
+			catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	};
 
 	/**
 	 * Constant to represent the maximum number of internally open RRD files
@@ -163,7 +160,34 @@ public class RrdDbPool implements Runnable {
 	}
 
 	private RrdDbPool() {
-		// just to satisfy the singleton pattern
+		setClosingOnExit(closingOnExit);
+	}
+
+	/**
+	 * Checks the exiting behaviour of RrdDbPool.
+	 * @return <code>True</code>, if all RRD files are to be closed
+	 * when application invokes <code>System.exit()</code>.
+	 * <code>False</code> otherwise. The default behaviour is <code>true</code>
+	 * (all RRD files will be closed on exit).
+	 */
+	public synchronized boolean isClosingOnExit() {
+		return closingOnExit;
+	}
+
+	/**
+	 * Sets the exiting behaviour of RrdDbPool.
+	 * @param closingOnExit <code>True</code>, if all RRD files are to be closed
+	 * when application invokes <code>System.exit()</code>.
+	 * <code>False</code> otherwise. The default behaviour is <code>true</code>
+	 * (all RRD files will be closed on exit).
+	 */
+	public synchronized void setClosingOnExit(boolean closingOnExit) {
+		Runtime runtime = Runtime.getRuntime();
+		runtime.removeShutdownHook(shutdownHook);
+		if(closingOnExit) {
+			runtime.addShutdownHook(shutdownHook);
+		}
+		this.closingOnExit = closingOnExit;
 	}
 
 	private void startGarbageCollector() {

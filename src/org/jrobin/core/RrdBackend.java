@@ -136,45 +136,42 @@ public abstract class RrdBackend {
 	protected abstract void setLength(long length) throws IOException;
 
 	/**
-	 * Closes the underlying storage. Calls sync() implicitly.
-	 * In other words, you don't have to call sync() before close() in order to preserve
-	 * data cached in memory.
+	 * Closes the underlying backend.
 	 * @throws IOException Thrown in case of I/O error
 	 */
 	public void close() throws IOException {
-		sync();
 	}
 
 	/**
-	 * Method called by the framework immediatelly before RRD update operation starts. This method
+	 * Method called by the framework immediately before RRD update operation starts. This method
 	 * does nothing, but can be overriden in subclasses.
 	 */
 	protected void beforeUpdate() throws IOException {
 	}
 
 	/**
-	 * Method called by the framework immediatelly after RRD update operation is completed. This method
+	 * Method called by the framework immediately after RRD update operation is completed. This method
 	 * does nothing, but can be overriden in subclasses.
 	 */
 	protected void afterUpdate() throws IOException {
 	}
 
 	/**
-	 * Method called by the framework immediatelly before RRD fetch operation starts. This method
+	 * Method called by the framework immediately before RRD fetch operation starts. This method
 	 * does nothing, but can be overriden in subclasses.
 	 */
 	protected void beforeFetch() throws IOException {
 	}
 
 	/**
-	 * Method called by the framework immediatelly after RRD fetch operation is completed. This method
+	 * Method called by the framework immediately after RRD fetch operation is completed. This method
 	 * does nothing, but can be overriden in subclasses.
 	 */
 	protected void afterFetch() throws IOException {
 	}
 
 	/**
-	 * Method called by the framework immediatelly after RrdDb obejct is created. This method
+	 * Method called by the framework immediately after RrdDb obejct is created. This method
 	 * does nothing, but can be overriden in subclasses.
 	 */
 	protected void afterCreate() throws IOException {
@@ -187,7 +184,15 @@ public abstract class RrdBackend {
 	 *
 	 * @throws IOException Thrown in case of I/O error
 	 */
-	public void sync() throws IOException {
+	protected void sync() throws IOException {
+	}
+
+	/**
+	 * Method called by the framework when a RrdDb file is about to be closed. This method
+	 * calls {@link #sync()} internally.
+	 */
+	public void beforeClose() throws IOException {
+		sync();
 	}
 
 	final void writeInt(long offset, int value) throws IOException {

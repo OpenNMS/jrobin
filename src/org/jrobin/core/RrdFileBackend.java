@@ -39,18 +39,29 @@ import java.util.HashSet;
  * This backend is based on the RandomAccessFile class (java.io.* package).
  */
 public class RrdFileBackend extends RrdBackend {
-	static final long LOCK_DELAY = 100; // 0.1sec
+	private static final long LOCK_DELAY = 100; // 0.1sec
 
 	private static HashSet openFiles = new HashSet();
 
-	private boolean readOnly;
-	private int lockMode;
-	private boolean closed = false;
+	/** read/write file status */
+	protected boolean readOnly;
+	/** locking mode */
+	protected int lockMode;
 
+	/** radnom access file handle */
 	protected RandomAccessFile file;
+	/** file channel used to create locks */
 	protected FileChannel channel;
+	/** file lock */
 	protected FileLock fileLock;
 
+	/**
+	 * Creates RrdFileBackend object for the given file path, backed by RandomAccessFile object.
+	 * @param path Path to a file
+	 * @param readOnly True, if file should be open in a read-only mode. False otherwise
+	 * @param lockMode Locking mode, as described in {@link RrdDb#getLockMode()}
+	 * @throws IOException Thrown in case of I/O error
+	 */
 	protected RrdFileBackend(String path, boolean readOnly, int lockMode) throws IOException {
 		super(path);
 		this.readOnly = readOnly;
@@ -111,13 +122,10 @@ public class RrdFileBackend extends RrdBackend {
 	 * @throws IOException Thrown in case of I/O error
 	 */
 	public void close() throws IOException {
-		if (!closed) {
-			unregisterWriter();
-			unlockFile();
-			channel.close();
-			file.close();
-			closed = true;
-		}
+		unregisterWriter();
+		unlockFile();
+		channel.close();
+		file.close();
 	}
 
 	private void unlockFile() throws IOException {
@@ -138,15 +146,6 @@ public class RrdFileBackend extends RrdBackend {
 				}
 			}
 		}
-	}
-
-	/**
-	 * Closes the underlying RRD file if not already closed
-	 *
-	 * @throws IOException Thrown in case of I/O error
-	 */
-	protected void finalize() throws IOException {
-		close();
 	}
 
 	/**
