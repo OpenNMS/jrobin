@@ -291,7 +291,7 @@ public class Server implements MrtgConstants {
 		hash.put("goodSavesCount", new Integer(rrdWriter.getGoodSavesCount()));
 		hash.put("badSavesCount", new Integer(rrdWriter.getBadSavesCount()));
 		hash.put("startDate", startDate);
-		hash.put("poolEfficency", new Double(RrdDbPool.getInstance().getPoolEfficency()));
+		hash.put("poolEfficency", new Double(RrdDbPool.getInstance().getPoolEfficiency()));
 		return hash;
 	}
 

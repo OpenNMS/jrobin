@@ -515,6 +515,7 @@ public class Util {
 	public static String getJRobinHomeDirectory() {
 		String className = Util.class.getName().replace('.', '/');
 		String uri = Util.class.getResource("/" + className + ".class").toString();
+		//System.out.println(uri);
 		if(uri.startsWith("file:/")) {
 			uri = uri.substring(6);
 			File file = new File(uri);
@@ -525,7 +526,7 @@ public class Util {
 			uri = file.getAbsolutePath();
 		}
 		else if(uri.startsWith("jar:file:/")) {
-			uri = uri.substring(10, uri.lastIndexOf('!'));
+			uri = uri.substring(9, uri.lastIndexOf('!'));
 			File file = new File(uri);
 			// let's go 2 steps backwards
 			for(int i = 0; i < 2; i++) {
