@@ -73,19 +73,12 @@ public class FetchPoint {
 	 * data sources definition.
 	 * @param i Data source index.
 	 * @return Value of the i-th data source.
-	 * @throws RrdException
 	 */
-	public double getValue(int i) throws RrdException {
-		if(i >= values.length) {
-			throw new RrdException("Index [" + i + "] out of bounds [" + values.length + "]");
-		}
+	public double getValue(int i) {
 		return values[i];
 	}
 
-	void setValue(int index, double value) throws RrdException {
-		if(index >= values.length) {
-			throw new RrdException("Index [" + index + "] out of bounds [" + values.length + "]");
-		}
+	void setValue(int index, double value) {
 		values[index] = value;
 	}
 

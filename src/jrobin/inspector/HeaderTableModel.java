@@ -33,7 +33,7 @@ import java.io.File;
 
 class HeaderTableModel extends AbstractTableModel {
 	private static final Object[] DESCRIPTIONS = {"path", "signature", "step", "last timestamp",
-		"datasources", "archives"};
+		"datasources", "archives", "size"};
 	private static final String[] COLUMN_NAMES = {"description", "value"};
 
 	private File file;
@@ -80,9 +80,10 @@ class HeaderTableModel extends AbstractTableModel {
 					new Date(header.getLastUpdateTime() * 1000L) + "]";
 				String datasources = "" + header.getDsCount();
 				String archives = "" + header.getArcCount();
+				String size = rrd.getRrdFile().getFileSize() + " bytes";
 				rrd.close();
 				values = new Object[] {
-					path, signature, step, lastTimestamp, datasources, archives
+					path, signature, step, lastTimestamp, datasources, archives, size
 				};
 				fireTableDataChanged();
 			}

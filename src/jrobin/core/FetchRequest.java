@@ -118,16 +118,29 @@ public class FetchRequest {
 	}
 
 	/**
-	 * Returns data from RRD file. Returned data consists of many fetch points (see
-	 * {@link jrobin.core.FetchPoint FetchPoint}), and each fetch point represents
+	 * Returns data from the underlying RRD file as an array of
+	 * {@link jrobin.core.FetchPoint FetchPoint} objects. Each fetch point object represents
 	 * RRD datasource values for the specific timestamp. Timestamp difference between
 	 * consecutive fecth points is guaranteed to be constant.
 	 * @return Array of fetch points.
 	 * @throws RrdException Thrown in case of JRobin specific error.
 	 * @throws IOException Thrown in case of I/O error.
+	 * @deprecated As of version 1.2.0 replaced with {@link #fetchData() fetchData()}.
 	 */
 	public FetchPoint[] fetch() throws RrdException, IOException {
 		return parentDb.fetch(this);
+	}
+
+	/**
+	 * Returns data from the underlying RRD file and puts it in a single
+	 * {@link jrobin.core.FetchData FetchData} object. Use this method instead of
+	 * deprecated {@link #fetch() fetch()} method.
+	 * @return FetchPoint object filled with timestamps and datasource values.
+	 * @throws RrdException Thrown in case of JRobin specific error.
+	 * @throws IOException Thrown in case of I/O error.
+	 */
+	public FetchData fetchData() throws RrdException, IOException {
+		return parentDb.fetchData(this);
 	}
 
 }

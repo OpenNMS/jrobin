@@ -23,6 +23,7 @@
 package jrobin.core;
 
 import java.io.*;
+import java.util.GregorianCalendar;
 
 /**
  * <p>Main class used for RRD files manipulation. Use this class to perform
@@ -132,7 +133,6 @@ public class RrdDb implements RrdUpdater {
 	 * @throws IOException Thrown in case of I/O error.
 	 * @throws RrdException Thrown in case of JRobin specific error.
 	 */
-
 	public RrdDb(String path) throws IOException, RrdException {
 		// opens existing RRD file - throw exception if the file does not exist...
 		File rrdFile = new File(path);
@@ -184,7 +184,6 @@ public class RrdDb implements RrdUpdater {
 	 * @throws IOException Thrown in case of I/O error
 	 * @throws RrdException Thrown in case of JRobin specific error
 	 */
-
 	public RrdDb(String rrdPath, String xmlPath) throws IOException, RrdException {
 		initializeSetup(rrdPath);
 		XmlReader reader = new XmlReader(xmlPath);
@@ -227,7 +226,6 @@ public class RrdDb implements RrdUpdater {
 	 *
 	 * @throws IOException Thrown in case of I/O related error.
 	 */
-
 	public synchronized void close() throws IOException {
 		if(file != null) {
 			file.close();
@@ -242,7 +240,6 @@ public class RrdDb implements RrdUpdater {
 	 *
 	 * @return Underlying RrdFile object
 	 */
-
 	public RrdFile getRrdFile() {
 		return file;
 	}
@@ -385,6 +382,13 @@ public class RrdDb implements RrdUpdater {
 		FetchPoint[] points = archive.fetch(request);
 		Util.debug(request.getRrdToolCommand());
 		return points;
+	}
+
+	synchronized FetchData fetchData(FetchRequest request) throws IOException, RrdException {
+		Archive archive = findMatchingArchive(request);
+		FetchData fetchData = archive.fetchData(request);
+		Util.debug(request.getRrdToolCommand());
+		return fetchData;
 	}
 
 	private Archive findMatchingArchive(FetchRequest request) throws IOException, RrdException {
@@ -639,5 +643,4 @@ public class RrdDb implements RrdUpdater {
 	protected void finalize() throws Throwable {
 		close();
 	}
-
 }

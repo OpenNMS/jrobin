@@ -100,7 +100,6 @@ public class Robin implements RrdUpdater {
 	 * @return Value stored in the i-th position (the oldest value has zero index)
 	 */
 	public double getValue(int index) throws IOException {
-		assert(index < rows);
 		return values.get((pointer.get() + index) % rows);
 	}
 

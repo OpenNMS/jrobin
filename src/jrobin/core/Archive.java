@@ -311,6 +311,42 @@ public class Archive implements RrdUpdater {
 		return points;
 	}
 
+	FetchData fetchData(FetchRequest request) throws IOException, RrdException {
+		long arcStep = getArcStep();
+		long fetchStart = Util.normalize(request.getFetchStart(), arcStep);
+		long fetchEnd = Util.normalize(request.getFetchEnd(), arcStep);
+		if(fetchEnd < request.getFetchEnd()) {
+			fetchEnd += arcStep;
+		}
+		long startTime = getStartTime();
+		long endTime = getEndTime();
+		int dsCount = robins.length;
+		int ptsCount = (int) ((fetchEnd - fetchStart) / arcStep + 1);
+		long[] timestamps = new long[ptsCount];
+		double[][] values = new double[dsCount][ptsCount];
+		for(int ptIndex = 0; ptIndex < ptsCount; ptIndex++) {
+			long time = fetchStart + ptIndex * arcStep;
+			timestamps[ptIndex] = time;
+			if(time >= startTime && time <= endTime) {
+				// inbound time
+				int robinIndex = (int)((time - startTime) / arcStep);
+				for(int dsIndex = 0; dsIndex < dsCount; dsIndex++) {
+					values[dsIndex][ptIndex] = robins[dsIndex].getValue(robinIndex);
+				}
+			}
+			else {
+				// time out of bounds
+				for(int dsIndex = 0; dsIndex < dsCount; dsIndex++) {
+					values[dsIndex][ptIndex] = Double.NaN;
+				}
+			}
+		}
+		FetchData fetchData = new FetchData(this, request);
+		fetchData.setTimestamps(timestamps);
+		fetchData.setValues(values);
+		return fetchData;
+	}
+
     void appendXml(XmlWriter writer) throws IOException {
 		writer.startTag("rra");
 		writer.writeTag("cf", consolFun.get());
