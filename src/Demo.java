@@ -79,6 +79,7 @@ class Demo {
 		rrdDef.addArchive("MAX", 0.5, 288, 797);
 		println(rrdDef.dump());
 		log.println(rrdDef.dump());
+		println("Estimated file size: " + rrdDef.getEstimatedSize());
 		RrdDb rrdDb = new RrdDb(rrdDef);
 		println("== RRD file created.");
 		rrdDb.close();

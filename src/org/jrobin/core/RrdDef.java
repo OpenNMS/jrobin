@@ -527,4 +527,21 @@ public class RrdDef {
 		exportXmlTemplate(out);
 		out.close();
 	}
+
+	/**
+	 * Returns the number of bytes required on the disk to create RRD file from this
+	 * RrdDef object.
+	 * @return Estimated length of the new RRD file.
+	 */
+	public long getEstimatedSize() {
+		int dsCount = dsDefs.size();
+		int arcCount = arcDefs.size();
+		int rowsCount = 0;
+		for(int i = 0; i < arcDefs.size(); i++) {
+			ArcDef arcDef = (ArcDef) arcDefs.get(i);
+			rowsCount += arcDef.getRows();
+		}
+		return 64L + 128L * dsCount + 56L * arcCount +
+				20L * dsCount * arcCount + 8L * dsCount * rowsCount;
+	}
 }
