@@ -29,7 +29,7 @@ import java.awt.image.BufferedImage;
 import javax.swing.JPanel;
 
 /**
- * <p>JPanel containing the graph.</p>
+ * <p>JPanel containing a generated JRobin graph.</p>
  * 
  * @author Arne Vandamme (cobralord@jrobin.org)
  */

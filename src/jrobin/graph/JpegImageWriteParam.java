@@ -32,7 +32,7 @@ package jrobin.graph;
 import java.util.Locale;
 import javax.imageio.plugins.jpeg.JPEGImageWriteParam;;
 
-public class JpegImageWriteParam extends JPEGImageWriteParam
+class JpegImageWriteParam extends JPEGImageWriteParam
 {
 	public JpegImageWriteParam() {
 		super(Locale.getDefault());

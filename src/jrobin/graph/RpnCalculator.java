@@ -35,7 +35,7 @@ import jrobin.core.RrdException;
  * @author Arne Vandamme (cobralord@jrobin.org)
  * @author Sasa Markovic (saxon@jrobin.org)
  */
-public class RpnCalculator 
+class RpnCalculator 
 {
 	// ================================================================
 	// -- Members

@@ -35,7 +35,7 @@ import jrobin.core.RrdException;
  * 
  * @author Arne Vandamme (cobralord@jrobin.org)
  */
-public class Cdef extends Source
+class Cdef extends Source
 {
 	// ================================================================
 	// -- Members

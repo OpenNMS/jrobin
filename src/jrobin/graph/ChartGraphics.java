@@ -35,7 +35,7 @@ import java.awt.Graphics2D;
  * 
  * @author Arne Vandamme (cobralord@jrobin.org)
  */
-public class ChartGraphics 
+class ChartGraphics 
 {
 	// ================================================================
 	// -- Members
