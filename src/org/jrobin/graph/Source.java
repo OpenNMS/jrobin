@@ -55,7 +55,7 @@ class Source
 	private double totalValue				= 0;
 	private double nextValue				= Double.POSITIVE_INFINITY;
 
-	private long step						= 0;
+	protected long step						= 0;
 	private long lastTime					= 0;
 	private long totalTime					= 0;
 
@@ -109,7 +109,10 @@ class Source
 	 */
 	double get( int pos ) 
 	{
-		if ( pos < 0 ) return Double.NaN;
+		if ( pos < 0 )
+			return Double.NaN;
+		if ( pos > values.length )
+			return Double.NaN;
 
 		double val = values[pos];
 
@@ -154,7 +157,7 @@ class Source
 				return get( stPos );
 		}
 
-		if ( stPos < reducedTimestamps.length && reducedTimestamps[stPos] <= t )
+		if ( t <= reducedTimestamps[stPos] )
 			return get( stPos );
 
 		return Double.NaN;

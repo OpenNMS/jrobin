@@ -309,10 +309,7 @@ class Grapher extends RrdExporter
 	private void render( Graphics2D graphics ) throws RrdException, IOException
 	{
 		// Do the actual graphing
-		if ( graphDef.useExportData() )
-			calculateSeries( graphDef.getExportData() );
-		else
-			calculateSeries();						// calculate all datasources
+		calculateSeries();							// calculate all datasources
 
 		plotImageBackground( graphics );			// draw the image background
 
@@ -363,49 +360,6 @@ class Grapher extends RrdExporter
 
 			tsChart[i]	= t;
 		}
-	}
-
-	/**
-	 * Calculates graphing values based on a ExportData object.
-	 *
-	 * @param dataSet ExportData holding the values.
-	 * @throws RrdException Thrown in case of a JRobin specific error.
-	 * @throws IOException Thrown in case of a I/O related error.
-	 */
-	private void calculateSeries( ExportData dataSet ) throws RrdException, IOException
-	{
-		numPoints	= dataSet.getRowCount();
-
-		startTime	= graphDef.getStartTime();
-		endTime		= graphDef.getEndTime();
-
-		tsChart		= new long[ chartWidth ];
-		plotDefs 	= graphDef.getPlotDefs();
-
-		timestamps	= dataSet.getTimestamps();
-		sources		= dataSet.getSources();
-		sourceIndex	= new HashMap( sources.length );
-
-		for ( int i = 0; i < sources.length; i++ )
-			sourceIndex.put( sources[i].getName(), new Integer(i) );
-
-		for ( int i = 0; i < plotDefs.length; i++ )
-		{
-			plotDefs[i].setSource( sources, sourceIndex );
-			plotDefs[i].prepareValues( chartWidth );
-		}
-
-		for ( int i = 0; i < chartWidth; i++ )
-		{
-			long t 		= (long) (startTime + i * ((endTime - startTime) / (double) (chartWidth - 1)));
-
-			for ( int j = 0; j < plotDefs.length; j++ )
-				plotDefs[j].setValue( i, t, timestamps );
-
-			tsChart[i]	= t;
-		}
-
-
 	}
 
 	/**
@@ -579,10 +533,10 @@ class Grapher extends RrdExporter
 		graphics.translate( graphOriginX, graphOriginY );
  
 		int lastPlotType 		= PlotDef.PLOT_LINE;
-		double[] parentSeries 	= new double[chartWidth];
+		double[] parentSeries 	= new double[tsChart.length];
 
 		// Pre calculate x positions of the corresponding timestamps
-		int[] xValues		= new int[tsChart.length];
+		int[] xValues			= new int[tsChart.length];
 		for (int i = 0; i < tsChart.length; i++)
 			xValues[i]		= g.getX(tsChart[i]);
 

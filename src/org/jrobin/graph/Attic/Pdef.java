@@ -52,6 +52,7 @@ class Pdef extends Source
 	/**
 	 * Constructs a new Plottable Def: a custom external datasource 
 	 * (represented as a Plottable class) that can be graphed by JRobin.
+	 * 
 	 * @param name Name of the datasource in the graph definition.
 	 * @param plottable Reference to the class extending Plottable and providing the datapoints.
 	 */
@@ -64,6 +65,7 @@ class Pdef extends Source
 	/**
 	 * Constructs a new Plottable Def: a custom external datasource 
 	 * (represented as a Plottable class) that can be graphed by JRobin.
+	 *
 	 * @param name Name of the datasource in the graph definition.
 	 * @param plottable Reference to the class extending Plottable and providing the datapoints.
 	 * @param index Integer number used for referring to the series of datapoints to use in the Plottable class.
@@ -79,6 +81,7 @@ class Pdef extends Source
 	/**
 	 * Constructs a new Plottable Def: a custom external datasource 
 	 * (represented as a Plottable class) that can be graphed by JRobin.
+	 *
 	 * @param name Name of the datasource in the graph definition.
 	 * @param plottable Reference to the class extending Plottable and providing the datapoints.
 	 * @param sourceName String used for referring to the series of datapoints to use in the Plottable class.
@@ -97,6 +100,7 @@ class Pdef extends Source
 	// ================================================================
 	/**
 	 * Prepares the array that will hold the values.
+	 *
 	 * @param numPoints Number of datapoints that will be used.
 	 */
 	void prepare( int numPoints, int aggregatePoints )
@@ -111,20 +115,28 @@ class Pdef extends Source
 	/**
 	 * Sets the value of a specific datapoint for this Pdef.  The Pdef gets the datapoint by retrieving
 	 * the value from the Plottable interface using an appropriate getValue() method.
+	 *
 	 * @param pos Position (index in the value table) of the new datapoint.
 	 * @param timestamp Timestamp of the new datapoint in number of seconds.
 	 */
 	void set( int pos, long timestamp )
 	{
 		double val = Double.NaN;
-		
+
+		/**
+		 * With the new calculation algorithm we expect the value for a period to be defined
+		 * by the first timestamp AFTER that period.  The implementation of Pdef is different,
+		 * and works with 'point' value instead of period.  Converted to period this would mean
+		 * that the period is defined by the starting timestamp, or another timestamp IN that
+		 * period.  As a result, we shift the requested timestamp one step back in time.
+		 */
 		if ( indexed )
-			val = plottable.getValue( timestamp, index );
+			val = plottable.getValue( timestamp - step, index );
 		else if ( named )
-			val = plottable.getValue( timestamp, sourceName );
+			val = plottable.getValue( timestamp - step, sourceName );
 		else
-			val = plottable.getValue( timestamp );
-		
+			val = plottable.getValue( timestamp - step );
+
 		super.set( pos, timestamp, val );
 		
 		values[pos] = val;

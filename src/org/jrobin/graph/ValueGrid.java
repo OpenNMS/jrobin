@@ -160,11 +160,11 @@ class ValueGrid
 		}
 
 		// Create nice grid based on 'fixed' ranges
-		if ( shifted <= 1.5 )
+		if ( shifted <= 2 )
 			vAxis = new ValueAxisUnit( 0.1 * mod * scaleValues[scaleIndex], 0.5 * mod * scaleValues[scaleIndex] );
-		else if ( shifted <= 3 )
+		else if ( shifted <= 4 )
 			vAxis = new ValueAxisUnit( 0.2 * mod * scaleValues[scaleIndex], 1.0 * mod * scaleValues[scaleIndex] );
-		else if ( shifted <= 5 )
+		else if ( shifted <= 6 )
 			vAxis = new ValueAxisUnit( 0.5 * mod * scaleValues[scaleIndex], 1.0 * mod * scaleValues[scaleIndex] );
 		else
 			vAxis = new ValueAxisUnit( 1.0 * mod * scaleValues[scaleIndex], 2.0 * mod * scaleValues[scaleIndex] );

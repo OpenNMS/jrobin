@@ -71,6 +71,13 @@ public class ExportData implements RrdDataSet
 			sourceByName.put( sources[i].getName(), sources[i] );
 	}
 
+	/**
+	 * Create an ExportData object based on export XML string..
+	 *
+	 * @param xportXml File containing export xml.
+	 * @throws RrdException Thrown in case of JRobin specific exception.
+	 * @throws IOException Thrown in case of I/O related exception.
+	 */
 	public ExportData( String xportXml ) throws RrdException, IOException
 	{
 		this();
@@ -78,6 +85,14 @@ public class ExportData implements RrdDataSet
 		importXml( xportXml );
 	}
 
+	/**
+	 * Create an ExportData object based on export XML string..
+	 *
+	 * @param xportXml File containing export xml.
+	 * @param useLegendNames Map datasources to legend items in the export xml.
+	 * @throws RrdException Thrown in case of JRobin specific exception.
+	 * @throws IOException Thrown in case of I/O related exception.
+	 */
 	public ExportData( String xportXml, boolean useLegendNames ) throws RrdException, IOException
 	{
 		this();
@@ -85,6 +100,13 @@ public class ExportData implements RrdDataSet
 		importXml( xportXml, useLegendNames );
 	}
 
+	/**
+	 * Create an ExportData object based on export XML file.
+	 *
+	 * @param xmlFile File containing export xml.
+	 * @throws RrdException Thrown in case of JRobin specific exception.
+	 * @throws IOException Thrown in case of I/O related exception.
+	 */
 	public ExportData( File xmlFile ) throws RrdException, IOException
 	{
 		this();
@@ -92,6 +114,14 @@ public class ExportData implements RrdDataSet
 		importXml( xmlFile );
 	}
 
+	/**
+	 * Create an ExportData object based on export XML file.
+	 *
+	 * @param xmlFile File containing export xml.
+	 * @param useLegendNames Map datasources to legend items in the export xml.
+	 * @throws RrdException Thrown in case of JRobin specific exception.
+	 * @throws IOException Thrown in case of I/O related exception.
+	 */
 	public ExportData( File xmlFile, boolean useLegendNames ) throws RrdException, IOException
 	{
 		this();
@@ -131,6 +161,15 @@ public class ExportData implements RrdDataSet
 	public long[] getTimestamps()
 	{
 		return timestamps;
+	}
+
+	/**
+	 * Returns the step with which this data was fetched.
+	 * @return Step as long.
+	 */
+	public long getStep()
+	{
+		return timestamps[1] - timestamps[0];
 	}
 
 	/**

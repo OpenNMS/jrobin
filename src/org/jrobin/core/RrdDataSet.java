@@ -116,6 +116,13 @@ public interface RrdDataSet
 	public int getDsIndex( String dsName ) throws RrdException;
 
 	/**
+	 * Returns the step of these datasources.
+	 *
+	 * @return Step as long.
+	 */
+	public long getStep();
+
+	/**
 	 * Returns aggregated value from the dataset for a single datasource.
 	 *
 	 * @param dsName Datasource name

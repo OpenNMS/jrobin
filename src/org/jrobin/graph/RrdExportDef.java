@@ -65,7 +65,7 @@ public class RrdExportDef implements Serializable
 	protected ArrayList pdefList				= new ArrayList( 10 );				// holds the list of Plottable datasources
 	protected ArrayList cdefList				= new ArrayList( 10 );				// holds the list of Cdef datasources
 	protected ArrayList exportList				= new ArrayList( 10 );				// holds the list of datasources to export
-
+	protected ArrayList edefList				= new ArrayList( 3 );				// holds the list of export data objects
 
 	// ================================================================
 	// -- Constructors
@@ -308,6 +308,16 @@ public class RrdExportDef implements Serializable
 	}
 
 	/**
+	 * Adds a set of ExportData to the datasource list.
+	 *
+	 * @param edata ExportData to add.
+	 */
+	public void addExportData( ExportData edata )
+	{
+		edefList.add( edata );
+	}
+
+	/**
 	 * Sets a specific datasource to be exported (if export is strict).
 	 * The expor legend for this datasource will be empty. 
 	 *
@@ -384,6 +394,11 @@ public class RrdExportDef implements Serializable
 	protected Pdef[] getPdefs()
 	{
 		return (Pdef[]) pdefList.toArray( new Pdef[] {} );
+	}
+
+	protected ExportData[] getExportData()
+	{
+		return (ExportData[]) edefList.toArray( new ExportData[] {} );
 	}
 
 	protected int getNumSdefs()

@@ -121,6 +121,14 @@ public class FetchData implements RrdDataSet {
 	}
 
 	/**
+	 * Returns the step with which this data was fetched.
+	 * @return Step as long.
+	 */
+	public long getStep() {
+		return timestamps[1] - timestamps[0];
+	}
+
+	/**
 	 * Returns all archived values for a single datasource.
 	 * Returned values correspond to timestamps
 	 * returned with {@link #getTimestamps() getTimestamps()} method.

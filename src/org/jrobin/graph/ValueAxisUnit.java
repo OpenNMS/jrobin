@@ -174,19 +174,24 @@ class ValueAxisUnit
 		long lMod 			= lValue % lGridStep;
 		long lmMod			= lmValue % lmGridStep;
 
-		/*if ( ovalue < 0 )
+		if ( ovalue < 0 )
 		{
-
+			if ( lmMod > ( mGridStep * 0.5 ) )
+				return ((double) (sign*lmValue + lmMod - lmGridStep ) / mGridFactor);
+			else if ( lMod > 0 )
+				return ((double) (sign*lValue + lMod - lGridStep) / gridFactor);
+			else
+				return ((double) (sign*lValue - lGridStep) / gridFactor);
 		}
 		else
-		{*/
+		{
 			if ( lmMod < ( mGridStep * 0.5 ) )
 				return ((double) (sign*lmValue - lmMod) / mGridFactor);
 			else if ( lMod > 0 )
 				return ((double) (sign*lValue - lMod) / gridFactor);
 			else
 				return ((double) (sign*lValue) / gridFactor);
-		//}
+		}
 	}
 	
 	/**
@@ -224,10 +229,21 @@ class ValueAxisUnit
 		long lMod 			= lValue % lGridStep;
 		long lmMod			= lmValue % lmGridStep;
 
-		if ( lmMod > ( mGridStep * 0.5 ) )
-			return ((double) ( sign * lmValue - lmMod + lmGridStep) / mGridFactor);
+		if ( ovalue < 0 )
+		{
+			if ( lmMod < ( mGridStep * 0.5 ) )
+				return ((double) (sign*lmValue + lmMod ) / mGridFactor);
+			else
+				return ((double) (sign*lValue + lMod ) / gridFactor);
+		}
 		else
-			return ((double) ( sign * lValue - lMod + lGridStep) / gridFactor);
+		{
+			if ( lmMod > ( mGridStep * 0.5 ) )
+				return ((double) ( sign * lmValue - lmMod + lmGridStep) / mGridFactor);
+			else
+				return ((double) ( sign * lValue - lMod + lGridStep) / gridFactor);
+		}
+
 	}
 
 

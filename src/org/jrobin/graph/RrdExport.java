@@ -30,7 +30,11 @@ import org.jrobin.core.RrdOpener;
 import java.io.IOException;
 
 /**
- * <p>ExportData represents a reduced dataset that is the result of a JRobin rrd export.</p>
+ * <p>RrdExport can be used to export graph-like datasources to XML format,
+ * by means of the ExportData object.  More information about Export can be
+ * found in the RRDtool XPORT man page.</p>
+ *
+ * <p>RrdExport needs a RrdExportDef that holds the configuration.</p>
  *
  * @author Arne Vandamme (cobralord@jrobin.org)
  */
@@ -39,7 +43,7 @@ public class RrdExport extends RrdExporter
 	// ================================================================
 	// -- Members
 	// ================================================================
-	private int maxRows						= 400;			// Default width of a graph
+	private int maxRows						= 400;							// Default width of a graph
 
 
 	// ================================================================

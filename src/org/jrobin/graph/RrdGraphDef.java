@@ -104,7 +104,6 @@ public class RrdGraphDef extends RrdExportDef implements Serializable
 	private TimeAxisUnit tAxis				= null;								// custom time axis grid, defaults to no custom
 	private ValueAxisUnit vAxis				= null;								// custom value axis grid, defaults to no custom
 	private GridRange gridRange				= null;								// custom value range definition, defaults to auto-scale
-	private ExportData exportData			= null;								// possible export data set to use for graphing
 
 	// -- Non-settable members
 	private int commentLines				= 0;								// number of complete lines in the list of comment items
@@ -174,14 +173,6 @@ public class RrdGraphDef extends RrdExportDef implements Serializable
 	public void setLazy( boolean lazyGeneration )
 	{
 		this.lazyGeneration = lazyGeneration;
-	}
-
-	public void setExportData( ExportData dataSet ) {
-		exportData = dataSet;
-	}
-
-	public void setUseExportData( boolean flag ) {
-		useExportDataFlag = flag;
 	}
 
 	/**
@@ -976,14 +967,6 @@ public class RrdGraphDef extends RrdExportDef implements Serializable
 	// ================================================================
 	protected boolean isLazy() {
 		return lazyGeneration;
-	}
-
-	protected boolean useExportData() {
-		return useExportDataFlag;
-	}
-
-	protected ExportData getExportData() {
-		return exportData;
 	}
 	
 	protected Title getTitle() {
