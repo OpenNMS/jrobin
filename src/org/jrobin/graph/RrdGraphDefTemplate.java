@@ -95,8 +95,8 @@ import java.util.GregorianCalendar;
  *             &lt;maj_grid_unit_steps&gt;2&lt;/maj_grid_unit_steps&gt;
  *             &lt;date_format&gt;HH:mm&lt;/date_format&gt;
  *             &lt;center_labels&gt;true&lt;/center_labels&gt;
- * 			   &lt;!-- ALLOWED DAYS OF WEEK: MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY --&gt;	
- * 			   &lt;first_day_of_week&gt;MONDAY&lt;/first_day_of_week&gt;
+ *             &lt;!-- ALLOWED DAYS OF WEEK: MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY --&gt;
+ *             &lt;first_day_of_week&gt;MONDAY&lt;/first_day_of_week&gt;
  *         &lt;/time_axis&gt;
  *         &lt;time_axis_label&gt;time&lt;/time_axis_label&gt;
  *         &lt;title&gt;Graph title&lt;/title&gt;
@@ -125,6 +125,7 @@ import java.util.GregorianCalendar;
  *             &lt;rrd&gt;test2.rrd&lt;/rrd&gt;
  *             &lt;source&gt;outOctets&lt;/source&gt;
  *             &lt;cf&gt;MAX&lt;/cf&gt;
+ *             &lt;backend&gt;FILE&lt;/backend&gt;
  *         &lt;/def&gt;
  *         &lt;def&gt;
  *             &lt;name&gt;input8&lt;/name&gt;
@@ -134,6 +135,22 @@ import java.util.GregorianCalendar;
  *             &lt;name&gt;output8&lt;/name&gt;
  *             &lt;rpn&gt;output,8,*,-1,*&lt;/rpn&gt;
  *         &lt;/def&gt;
+ *         &lt;def&gt;
+ *             &lt;name&gt;avgOutput8&lt;/name&gt;
+ *             &lt;datasource&gt;output8&lt;/datasource&gt;
+ *             &lt;cf&gt;AVERAGE&lt;/cf&gt;
+ *         &lt;/def&gt;
+ *         &lt;export_data&gt;
+ *             &lt;file&gt;exportdata1.xml&lt;/file&gt;
+ *             &lt;ds_name_prefix&gt;traffic&lt;/ds_name_prefix&gt;
+ *         &lt;/export_data&gt;
+ *         &lt;export_data&gt;
+ *             &lt;file&gt;exportdata2.xml&lt;/file&gt;
+ *             &lt;use_legend_names&gt;true&lt;/use_legend_names&gt;
+ *         &lt;/export_data&gt;
+ *         &lt;export_data&gt;
+ *             &lt;file&gt;exportdata3.xml&lt;/file&gt;
+ *         &lt;/export_data&gt;
  *     &lt;/datasources&gt;
  *     &lt;graph&gt;
  *         &lt;area&gt;
@@ -203,6 +220,15 @@ import java.util.GregorianCalendar;
  *             &lt;legend&gt;vertical rule&lt;/legend&gt;
  *             &lt;width&gt;6&lt;/width&gt;
  *         &lt;/vrule&gt;
+ *         &lt;time&gt;
+ *             &lt;format&gt;Current time: @t&lt;/format&gt;
+ *             &lt;pattern&gt;MMM dd, yyyy   HH:mm:ss&lt;/pattern&gt;
+ *         &lt;/time&gt;
+ *         &lt;time&gt;
+ *             &lt;format&gt;Month: @t&lt;/format&gt;
+ *             &lt;pattern&gt;MMMM yyyy&lt;/pattern&gt;
+ *             &lt;value&gt;2004-01-01 12:00:00&lt;/value&gt;
+ *         &lt;/time&gt;
  *         &lt;comment&gt;Created with JRobin&lt;/comment&gt;
  *     &lt;/graph&gt;
  * &lt;/rrd_graph_def&gt;
@@ -214,7 +240,9 @@ import java.util.GregorianCalendar;
  * for the corresponding class.
  * <li>hard-coded timestamps in templates should be long integeres
  * (like: 1000243567) or ISO formatted strings (like: 2004-02-21 12:25:45)
- * <li>whitespaces are not harmful
+ * <li>whitespaces are not harmful, however, whitespaces do get special treatment in case of printed text: it is not
+ * necessary to use CDATA blocks to specify fixed whitespace with <code>comment</code>,<code>title</code>, <code>time</code>,
+ * <code>gprint</code> or <code>legend</code> tags
  * <li>use <code>true</code>, <code>on</code>, <code>yes</code>, <code>y</code>,
  * or <code>1</code> to specify boolean <code>true</code> value (anything else will
  * be treated as <code>false</code>).

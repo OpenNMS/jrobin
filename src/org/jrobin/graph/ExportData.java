@@ -195,6 +195,7 @@ public class ExportData implements RrdDataSet
 
 	/**
 	 * Returns the step with which this data was fetched.
+	 * 
 	 * @return Step as long.
 	 */
 	public long getStep()

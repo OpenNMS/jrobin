@@ -81,31 +81,41 @@ class ValueAxisUnit
 	 */
 	ValueMarker[] getValueMarkers( double lower, double upper )
 	{
-		double minPoint		= 0.0d;
-		double majPoint		= 0.0d;
+		double minPoint		= 0.0;
+		double majPoint		= 0.0;
 
 		// Find the first visible gridpoint
-		if ( lower > 0 ) {
-			while ( minPoint < lower ) minPoint += gridStep;
-			while ( majPoint < lower ) majPoint += labelStep;
-		} else {
-			while ( minPoint > lower ) minPoint -= gridStep;
-			while ( majPoint > lower ) majPoint -= labelStep;
-			// Go one up to make it visible
-			if (minPoint != lower ) minPoint += gridStep;
-			if (majPoint != lower ) majPoint += labelStep;
+		if ( lower > 0 )
+		{
+			minPoint 	= lower;
+			double mod 	= ( lower % labelStep );
+
+			if ( mod > 0 )
+				majPoint	= lower + (labelStep - mod );
+			else
+				majPoint	= lower;
 		}
-		
-		// Now get all time markers.
-		// Again we choose to use a series of loops as to avoid unnecessary drawing.		
+		else if ( lower < 0 )
+		{
+			minPoint 	= lower;
+			double mod 	= ( lower % labelStep );
+
+			if ( Math.abs(mod) > 0 )
+				majPoint	= lower - mod;
+			else
+				majPoint	= lower;
+		}
+
+		// Now get all value markers.
+		// Again we choose to use a series of loops as to avoid unnecessary drawing.
 		ArrayList markerList	= new ArrayList();
-		
+
 		while ( minPoint <= upper && majPoint <= upper )
 		{
 			if ( minPoint < majPoint )
 			{
 				markerList.add( new ValueMarker(minPoint, false) );
-				minPoint = round( minPoint + gridStep );	
+				minPoint = round( minPoint + gridStep );
 			}
 			else
 			{
@@ -134,10 +144,10 @@ class ValueAxisUnit
 			markerList.add( new ValueMarker(majPoint, true) );
 			majPoint = round( majPoint + labelStep );
 		}
-		
+
 		return (ValueMarker[]) markerList.toArray( new ValueMarker[0] );
 	}
-	
+
 	/**
 	 * Gets a rounded value that's slightly below the given exact value.
 	 * The rounding is based on the given grid specifications of the axis.

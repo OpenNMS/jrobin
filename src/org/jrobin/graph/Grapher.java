@@ -661,7 +661,7 @@ class Grapher extends RrdExporter
 			for (int i = 0; i < valueList.length; i++)
 			{
 				int valRel 		= chartGraph.getY( valueList[i].getValue() );
-				
+
 				valueFormat.setFormat( valueList[i].getValue(), 2, 0 );
 				String label	= (valueFormat.getScaledValue() + " " + valueFormat.getPrefix()).trim();
 	
