@@ -85,7 +85,7 @@ public class Datasource implements RrdUpdater {
 		nanSeconds = new RrdLong(reader.getNanSeconds(dsIndex), this);
 	}
 
-	String dump() throws IOException {
+	String dump() {
 		return "== DATASOURCE ==\n" +
 			"DS:" + dsName.get() + ":" + dsType.get() + ":" +
 			heartbeat.get() + ":" + minValue.get() + ":" +
@@ -105,9 +105,8 @@ public class Datasource implements RrdUpdater {
 	/**
 	 * Returns datasource name.
 	 * @return Datasource name
-	 * @throws IOException Thrown in case of IO related error
 	 */
-	public String getDsName() throws IOException {
+	public String getDsName() {
 		return dsName.get();
 	}
 
@@ -115,9 +114,8 @@ public class Datasource implements RrdUpdater {
 	 * Returns datasource type (GAUGE, COUNTER, DERIVE, ABSOLUTE).
 	 *
 	 * @return Datasource type.
-	 * @throws IOException Thrown in case of IO related error
 	 */
-	public String getDsType() throws IOException {
+	public String getDsType() {
 		return dsType.get();
 	}
 
@@ -125,9 +123,8 @@ public class Datasource implements RrdUpdater {
 	 * Returns datasource heartbeat
 	 *
 	 * @return Datasource heartbeat
-	 * @throws IOException Thrown in case of IO related error
 	 */
-	public long getHeartbeat() throws IOException {
+	public long getHeartbeat() {
 		return heartbeat.get();
 	}
 
@@ -135,9 +132,8 @@ public class Datasource implements RrdUpdater {
 	 * Returns mimimal allowed value of the datasource.
 	 *
 	 * @return Minimal value allowed.
-	 * @throws IOException Thrown in case of IO related error
 	 */
-	public double getMinValue() throws IOException {
+	public double getMinValue() {
 		return minValue.get();
 	}
 
@@ -145,9 +141,8 @@ public class Datasource implements RrdUpdater {
 	 * Returns maximal allowed value of the datasource.
 	 *
 	 * @return Maximal value allowed.
-	 * @throws IOException Thrown in case of IO related error
 	 */
-	public double getMaxValue() throws IOException {
+	public double getMaxValue() {
 		return maxValue.get();
 	}
 
@@ -155,9 +150,8 @@ public class Datasource implements RrdUpdater {
 	 * Returns last known value of the datasource.
 	 *
 	 * @return Last datasource value.
-	 * @throws IOException Thrown in case of IO related error
 	 */
-	public double getLastValue() throws IOException {
+	public double getLastValue() {
 		return lastValue.get();
 	}
 
@@ -165,9 +159,8 @@ public class Datasource implements RrdUpdater {
 	 * Returns value this datasource accumulated so far.
 	 *
 	 * @return Accumulated datasource value.
-	 * @throws IOException Thrown in case of IO related error
 	 */
-	public double getAccumValue() throws IOException {
+	public double getAccumValue() {
 		return accumValue.get();
 	}
 
@@ -175,9 +168,8 @@ public class Datasource implements RrdUpdater {
 	 * Returns the number of accumulated NaN seconds.
 	 *
 	 * @return Accumulated NaN seconds.
-	 * @throws IOException Thrown in case of IO related error
 	 */
-	public long getNanSeconds() throws IOException {
+	public long getNanSeconds() {
 		return nanSeconds.get();
 	}
 
@@ -312,4 +304,112 @@ public class Datasource implements RrdUpdater {
 		datasource.accumValue.set(accumValue.get());
 	}
 
+	/**
+	 * Returns index of this Datasource object in a RRD file.
+	 * @return Datasource index in a RRD file.
+	 */
+	public int getDsIndex() {
+		try {
+			return parentDb.getDsIndex(dsName.get());
+		}
+		catch(RrdException e) {
+			return -1;
+		}
+	}
+
+	/**
+	 * Sets datasource heartbeat to a new value.
+	 * @param heartbeat New heartbeat value
+	 * @throws IOException Thrown in case of I/O error
+	 * @throws RrdException Thrown if invalid (non-positive) heartbeat value is specified.
+	 */
+	public void setHeartbeat(long heartbeat) throws RrdException, IOException {
+		if(heartbeat < 1L) {
+			throw new RrdException("Invalid heartbeat specified: " + heartbeat);
+		}
+		this.heartbeat.set(heartbeat);
+	}
+
+	/**
+	 * Sets minimum allowed value for this datasource. If <code>filterArchivedValues</code>
+	 * argment is set to true, all archived values less then <code>minValue</code> will
+	 * be fixed to NaN.
+	 * @param minValue New minimal value. Specify <code>Double.NaN</code> if no minimal
+	 * value should be set
+	 * @param filterArchivedValues true, if archived datasource values should be fixed;
+	 * false, otherwise.
+	 * @throws IOException Thrown in case of I/O error
+	 * @throws RrdException Thrown if invalid minValue was supplied (not less then maxValue)
+	 */
+	public void setMinValue(double minValue, boolean filterArchivedValues)
+		throws IOException, RrdException {
+		double maxValue = this.maxValue.get();
+		if(!Double.isNaN(minValue) && !Double.isNaN(maxValue) && minValue >= maxValue) {
+			throw new RrdException("Invalid min/max values: " + minValue + "/" + maxValue);
+		}
+    	this.minValue.set(minValue);
+		if(!Double.isNaN(minValue) && filterArchivedValues) {
+			int dsIndex = getDsIndex();
+			Archive[] archives = parentDb.getArchives();
+			for(int i = 0; i < archives.length; i++) {
+				archives[i].getRobin(dsIndex).filterValues(minValue, Double.NaN);
+			}
+		}
+	}
+
+	/**
+	 * Sets maximum allowed value for this datasource. If <code>filterArchivedValues</code>
+	 * argment is set to true, all archived values greater then <code>maxValue</code> will
+	 * be fixed to NaN.
+	 * @param maxValue New maximal value. Specify <code>Double.NaN</code> if no max
+	 * value should be set.
+	 * @param filterArchivedValues true, if archived datasource values should be fixed;
+	 * false, otherwise.
+	 * @throws IOException Thrown in case of I/O error
+	 * @throws RrdException Thrown if invalid maxValue was supplied (not greater then minValue)
+	 */
+	public void setMaxValue(double maxValue, boolean filterArchivedValues)
+		throws IOException, RrdException {
+		double minValue = this.minValue.get();
+		if(!Double.isNaN(minValue) && !Double.isNaN(maxValue) && minValue >= maxValue) {
+			throw new RrdException("Invalid min/max values: " + minValue + "/" + maxValue);
+		}
+    	this.maxValue.set(maxValue);
+		if(!Double.isNaN(maxValue) && filterArchivedValues) {
+			int dsIndex = getDsIndex();
+			Archive[] archives = parentDb.getArchives();
+			for(int i = 0; i < archives.length; i++) {
+				archives[i].getRobin(dsIndex).filterValues(Double.NaN, maxValue);
+			}
+		}
+	}
+
+	/**
+	 * Sets min/max values allowed for this datasource. If <code>filterArchivedValues</code>
+	 * argment is set to true, all archived values less then <code>minValue</code> or
+	 * greater then <code>maxValue</code> will be fixed to NaN.
+	 * @param minValue New minimal value. Specify <code>Double.NaN</code> if no min
+	 * value should be set.
+	 * @param maxValue New maximal value. Specify <code>Double.NaN</code> if no max
+	 * value should be set.
+	 * @param filterArchivedValues true, if archived datasource values should be fixed;
+	 * false, otherwise.
+	 * @throws IOException Thrown in case of I/O error
+	 * @throws RrdException Thrown if invalid min/max values were supplied
+	 */
+	public void setMinMaxValue(double minValue, double maxValue, boolean filterArchivedValues)
+		throws IOException, RrdException {
+		if(!Double.isNaN(minValue) && !Double.isNaN(maxValue) && minValue >= maxValue) {
+			throw new RrdException("Invalid min/max values: " + minValue + "/" + maxValue);
+		}
+		this.minValue.set(minValue);
+    	this.maxValue.set(maxValue);
+		if(!(Double.isNaN(minValue) && Double.isNaN(maxValue)) && filterArchivedValues) {
+			int dsIndex = getDsIndex();
+			Archive[] archives = parentDb.getArchives();
+			for(int i = 0; i < archives.length; i++) {
+				archives[i].getRobin(dsIndex).filterValues(minValue, maxValue);
+			}
+		}
+	}
 }

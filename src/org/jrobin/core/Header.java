@@ -88,9 +88,8 @@ public class Header implements RrdUpdater {
 	 * change since Jrobin 1.0.0 release (and probably never will).
 	 *
 	 * @return RRD file signature
-	 * @throws IOException Thrown in case of IO specific error
 	 */
-	public String getSignature() throws IOException {
+	public String getSignature() {
 		return signature.get();
 	}
 
@@ -98,9 +97,8 @@ public class Header implements RrdUpdater {
 	 * Returns the last update time of the RRD file.
 	 *
 	 * @return Timestamp (Unix epoch, no milliseconds) corresponding to the last update time.
-	 * @throws IOException Thrown in case of IO specific error
 	 */
-	public long getLastUpdateTime() throws IOException {
+	public long getLastUpdateTime() {
 		return lastUpdateTime.get();
 	}
 
@@ -108,9 +106,8 @@ public class Header implements RrdUpdater {
 	 * Returns primary RRD file time step.
 	 *
 	 * @return Primary time step in seconds
-	 * @throws IOException Thrown in case of IO specific error
 	 */
-	public long getStep() throws IOException {
+	public long getStep() {
 		return step.get();
 	}
 
@@ -118,9 +115,8 @@ public class Header implements RrdUpdater {
 	 * Returns the number of datasources defined in the RRD file.
 	 *
 	 * @return Number of datasources defined
-	 * @throws IOException Thrown in case of IO specific error
 	 */
-	public int getDsCount() throws IOException {
+	public int getDsCount() {
 		return dsCount.get();
 	}
 
@@ -128,9 +124,8 @@ public class Header implements RrdUpdater {
 	 * Returns the number of archives defined in the RRD file.
 	 *
 	 * @return Number of archives defined
-	 * @throws IOException Thrown in case of IO specific error
 	 */
-	public int getArcCount() throws IOException {
+	public int getArcCount() {
 		return arcCount.get();
 	}
 
@@ -138,7 +133,7 @@ public class Header implements RrdUpdater {
         this.lastUpdateTime.set(lastUpdateTime);
 	}
 
-	String dump() throws IOException {
+	String dump() {
 		return "== HEADER ==\n" +
 			"signature:" + getSignature() +
 			" lastUpdateTime:" + getLastUpdateTime() +

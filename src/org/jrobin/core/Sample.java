@@ -56,7 +56,7 @@ public class Sample {
 	private String[] dsNames;
 	private double[] values;
 
-	Sample(RrdDb parentDb, long time) throws IOException {
+	Sample(RrdDb parentDb, long time) {
 		this.parentDb = parentDb;
 		this.time = time;
 		this.dsNames = parentDb.getDsNames();

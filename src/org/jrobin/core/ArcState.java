@@ -67,7 +67,7 @@ public class ArcState implements RrdUpdater {
 		return parentArc.getParentDb().getRrdFile();
 	}
 
-	String dump() throws IOException {
+	String dump() {
 		return "accumValue:" + accumValue.get() + " nanSteps:" + nanSteps.get() + "\n";
 	}
 
@@ -79,9 +79,8 @@ public class ArcState implements RrdUpdater {
 	 * Returns the number of currently accumulated NaN steps.
 	 *
 	 * @return Number of currently accumulated NaN steps.
-	 * @throws IOException Thrown in case of IO specific error
 	 */
-	public long getNanSteps() throws IOException {
+	public long getNanSteps() {
 		return nanSteps.get();
 	}
 
@@ -93,9 +92,8 @@ public class ArcState implements RrdUpdater {
 	 * Returns the value accumulated so far.
 	 *
 	 * @return Accumulated value
-	 * @throws IOException Thrown in case of IO specific error
 	 */
-	public double getAccumValue() throws IOException {
+	public double getAccumValue() {
 		return accumValue.get();
 	}
 

@@ -145,4 +145,16 @@ public class Robin implements RrdUpdater {
 		// BULK operation, will speed things up
 		robin.values.writeBytes(values.readBytes());
 	}
+
+	void filterValues(double minValue, double maxValue) throws IOException {
+		for(int i = 0; i < rows; i++) {
+			double value = values.get(i);
+			if(!Double.isNaN(minValue) && !Double.isNaN(value) && minValue > value) {
+				values.set(i, Double.NaN);
+			}
+			if(!Double.isNaN(maxValue) && !Double.isNaN(value) && maxValue < value) {
+				values.set(i, Double.NaN);
+			}
+		}
+	}
 }

@@ -275,12 +275,11 @@ public class RrdDb implements RrdUpdater {
 	}
 
 	/**
-	 * <p>Returns an array of data source names defined in RRD file.</p>
+	 * <p>Returns an array of datasource names defined in RRD file.</p>
 	 *
-	 * @return Array of data source names.
-	 * @throws IOException In case of I/O related error.
+	 * @return Array of datasource names.
 	 */
-	public String[] getDsNames() throws IOException {
+	public String[] getDsNames() {
 		int n = datasources.length;
 		String[] dsNames = new String[n];
 		for(int i = 0; i < n; i++) {
@@ -300,9 +299,8 @@ public class RrdDb implements RrdUpdater {
 	 * store sample in the RRD file associated with it.</p>
 	 * @param time Sample timestamp rounded to the nearest second (without milliseconds).
 	 * @return Fresh sample with the given timestamp and all data source values set to 'unknown'.
-	 * @throws IOException Thrown in case of I/O error.
 	 */
-	public Sample createSample(long time) throws IOException {
+	public Sample createSample(long time) {
 		return new Sample(this, time);
 	}
 
@@ -317,9 +315,8 @@ public class RrdDb implements RrdUpdater {
 	 * store sample in the RRD file associated with it.</p>
 	 * @return Fresh sample with the current timestamp and all
 	 * data source values set to 'unknown'.
-	 * @throws IOException Thrown in case of I/O error.
 	 */
-	public Sample createSample() throws IOException {
+	public Sample createSample() {
 		return createSample(Util.getTime());
 	}
 
@@ -395,7 +392,7 @@ public class RrdDb implements RrdUpdater {
 		return fetchData;
 	}
 
-	private Archive findMatchingArchive(FetchRequest request) throws IOException, RrdException {
+	private Archive findMatchingArchive(FetchRequest request) throws RrdException {
 		String consolFun = request.getConsolFun();
 		long fetchStart = request.getFetchStart();
 		long fetchEnd = request.getFetchEnd();
@@ -474,11 +471,10 @@ public class RrdDb implements RrdUpdater {
 	 * used by jrobin.graph package and has no value outside of it.</p>
 	 * @param dsName Data source name.
 	 * @return Internal index of the given data source name in RRD file.
-	 * @throws IOException Thrown in case of I/O related error.
 	 * @throws RrdException Thrown in case of JRobin related error (invalid data source name,
 	 * for example)
 	 */
-	public int getDsIndex(String dsName) throws IOException, RrdException {
+	public int getDsIndex(String dsName) throws RrdException {
 		for(int i = 0; i < datasources.length; i++) {
 			if(datasources[i].getDsName().equals(dsName)) {
 				return i;
@@ -562,9 +558,8 @@ public class RrdDb implements RrdUpdater {
 	/**
 	 * Returns time of last update operation as timestamp (in seconds).
 	 * @return Last update time (in seconds).
-	 * @throws IOException Thrown in case of I/O error.
 	 */
-	public long getLastUpdateTime() throws IOException {
+	public long getLastUpdateTime() {
 		return header.getLastUpdateTime();
 	}
 
@@ -583,10 +578,9 @@ public class RrdDb implements RrdUpdater {
 	 * RrdDb rrd2 = new RrdDb(def);
 	 * </pre>
 	 * @return RRD file definition.
-	 * @throws IOException Thrown in case of I/O error.
 	 * @throws RrdException Thrown in case of JRobin specific error.
 	 */
-	public RrdDef getRrdDef() throws IOException, RrdException {
+	public RrdDef getRrdDef() throws RrdException {
 		// set header
 		long startTime = header.getLastUpdateTime();
 		long step = header.getStep();
