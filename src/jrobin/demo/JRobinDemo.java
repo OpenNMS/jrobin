@@ -104,6 +104,7 @@ public class JRobinDemo {
 		String rrdRestoredPath = getFullPath(FILE + "_restored.rrd");
 		String pngPath = getFullPath(FILE + ".png");
 		String jpegPath = getFullPath(FILE + ".jpeg");
+		String gifPath = getFullPath(FILE + ".gif");
 		String logPath = getFullPath(FILE + ".log");
 		PrintWriter pw = new PrintWriter(
 			new BufferedOutputStream(new FileOutputStream(logPath, false))
@@ -154,10 +155,10 @@ public class JRobinDemo {
 		FetchRequest request = rrdDb.createFetchRequest("AVERAGE", start, end);
 		println(request.dump());
 		pw.println(request.dump());
-		FetchPoint[] points = request.fetch();
-		println("==Data fetched. " + points.length + " points obtained");
-		for(int i = 0; i < points.length; i++) {
-			println(points[i].dump());
+		FetchData fetchData = request.fetchData();
+		println("==Data fetched. " + fetchData.getRowCount() + " points obtained");
+		for(int i = 0; i < fetchData.getRowCount(); i++) {
+			println(fetchData.getRow(i).dump());
 		}
 		println("==Fetch completed");
 		println("==Dumping RRD file to XML file " + xmlPath + " (can be restored with RRDTool)");
@@ -208,6 +209,8 @@ public class JRobinDemo {
 		graph.saveAsPNG(pngPath, 400, 250);
 		println("==Saving graph as JPEG file " + jpegPath);
 		graph.saveAsJPEG(jpegPath, 400, 250, 0.5F);
+		println("==Saving graph as GIF file " + gifPath);
+		graph.saveAsGIF(gifPath, 400, 250);
 
 		// demo ends
 		pw.close();

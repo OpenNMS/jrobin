@@ -132,7 +132,8 @@ class Grapher
 		imgHeight 		= chartHeight + commentBlock + y_offset + BBORDER_SPACE + CHART_UPADDING + CHART_BPADDING;
 		
 		// Create the buffered image, get the graphics handle
-		BufferedImage bImg 	= new BufferedImage( imgWidth, imgHeight, BufferedImage.TYPE_INT_RGB );
+		// BufferedImage bImg 	= new BufferedImage( imgWidth, imgHeight, BufferedImage.TYPE_INT_RGB);
+		BufferedImage bImg 	= new BufferedImage( imgWidth, imgHeight, BufferedImage.TYPE_BYTE_INDEXED);
 		Graphics2D graphics	= (Graphics2D) bImg.getGraphics();
 		
 		// DEBUG -- Prepare checkpoint

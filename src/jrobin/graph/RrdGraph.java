@@ -28,10 +28,7 @@ import javax.imageio.stream.*;
 import java.awt.image.*;
 
 import java.util.*;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.Serializable;
+import java.io.*;
 
 import jrobin.core.Util;
 
@@ -42,7 +39,7 @@ import jrobin.core.Util;
  * <a href="http://www.jfree.org/jfreechart/index.html">JFreeChart</a>
  * is an excellent free Java library for generating charts and graphs.</p>
  */
-public class RrdGraph implements Serializable 
+public class RrdGraph implements Serializable
 {
 	private Grapher grapher;
 	private BufferedImage img = null;
@@ -53,11 +50,11 @@ public class RrdGraph implements Serializable
 	 * @throws IOException Thrown in case of I/O error.
 	 * @throws RrdException Thrown in case of JRobin specific error.
 	 */
-	public RrdGraph(RrdGraphDef graphDef) throws IOException, RrdException 
+	public RrdGraph(RrdGraphDef graphDef) throws IOException, RrdException
 	{
 		grapher = new Grapher( graphDef );
 	}
-	
+
 
     /**
 	 * Creates buffered image object from the graph.
@@ -67,9 +64,9 @@ public class RrdGraph implements Serializable
 	 */
    	// Check, if width/height has changed since last generation
    	// Regenerate the graph
-	public BufferedImage getBufferedImage(int width, int height) 
+	public BufferedImage getBufferedImage(int width, int height)
 	{
-		try 
+		try
 		{
 			if ( img != null )
 				return img;
@@ -82,7 +79,7 @@ public class RrdGraph implements Serializable
 		catch (RrdException e) {
 			e.printStackTrace();
 		}
-		
+
 		return null;
 	}
 
@@ -93,16 +90,16 @@ public class RrdGraph implements Serializable
 	 * @param height Image height
 	 * @throws IOException Thrown in case of I/O error.
 	 */
-	public void saveAsPNG(String path, int width, int height)	throws IOException 
+	public void saveAsPNG(String path, int width, int height)	throws IOException
 	{
 		Util.time();
 		RenderedImage r =(RenderedImage) getBufferedImage(width, height);
 		Util.time();
 		ImageIO.write( r, "png", new File(path) );
 		Util.time(5);
-		
+
 	}
-	
+
 	/**
 	 * Saves graph in JPEG format
 	 * @param path Path to JPEG file.
@@ -111,14 +108,14 @@ public class RrdGraph implements Serializable
 	 * @param quality JPEG qualitty (between 0 and 1).
 	 * @throws IOException Thrown in case of I/O error.
 	 */
-	public void saveAsJPEG(String path, int width, int height, float quality)	throws IOException 
+	public void saveAsJPEG(String path, int width, int height, float quality)	throws IOException
 	{
 		// Based on http://javaalmanac.com/egs/javax.imageio/JpegWrite.html?l=rel
 		try {
 			// Retrieve jpg image to be compressed
 			BufferedImage gImage 	= getBufferedImage(width, height);
 			RenderedImage rndImage	= (RenderedImage) gImage;
-			
+
 			// Find a jpeg writer
 			ImageWriter writer = null;
 			Iterator iter = ImageIO.getImageWritersByFormatName("jpg");
@@ -142,11 +139,35 @@ public class RrdGraph implements Serializable
 			ios.flush();
 			writer.dispose();
 			ios.close();
-		} 
+		}
 		catch (Exception e) {
 			e.printStackTrace();
 		}
 
+	}
+
+	public void saveAsGIF(String path, int width, int height) {
+		BufferedImage image = getBufferedImage(width, height);
+		try {
+			Gif89Encoder gifEncoder = new Gif89Encoder(image);
+			FileOutputStream stream = new FileOutputStream(path, false);
+			gifEncoder.encode(stream);
+			stream.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public byte[] getGIFBytes(int width, int height) {
+		BufferedImage image = getBufferedImage(width, height);
+		ByteArrayOutputStream bStream = new ByteArrayOutputStream();
+		try {
+			Gif89Encoder gifEncoder = new Gif89Encoder(image);
+			gifEncoder.encode(bStream);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return bStream.toByteArray();
 	}
 
 	/**
