@@ -48,7 +48,7 @@ public class Robin implements RrdUpdater {
 	Robin(Archive parentArc, int rows) throws IOException {
 		this.parentArc = parentArc;
 		this.rows = rows;
-		if(getRrdFile().getMode() == RrdFile.MODE_CREATE) { 
+		if(getRrdFile().getMode() == RrdFile.MODE_CREATE) {
 			pointer = new RrdInt(0, this);
 			values = new RrdDoubleArray(this, rows, Double.NaN);
 		}
@@ -128,22 +128,27 @@ public class Robin implements RrdUpdater {
 	 * Copies object's internal state to another Robin object.
 	 * @param other New Robin object to copy state to
 	 * @throws IOException Thrown in case of I/O error
-	 * @throws RrdException Thrown if supplied argument is not a Robin object or
-	 * is a Robin object with different number of rows
+	 * @throws RrdException Thrown if supplied argument is not a Robin object
 	 */
 	public void copyStateTo(RrdUpdater other) throws IOException, RrdException {
 		if(!(other instanceof Robin)) {
 			throw new RrdException(
-				"Cannot copy Archive object to " + other.getClass().getName());
+				"Cannot copy Robin object to " + other.getClass().getName());
 		}
 		Robin robin = (Robin) other;
-		if(rows != robin.rows) {
-			throw new RrdException("Incompatible number of rows: " + rows +
-				" != " + robin.rows);
+		int rowsDiff = rows - robin.rows;
+		if(rowsDiff == 0) {
+			// Identical dimensions. Do copy in BULK to speed things up
+			robin.pointer.set(pointer.get());
+			robin.values.writeBytes(values.readBytes());
 		}
-		robin.pointer.set(pointer.get());
-		// BULK operation, will speed things up
-		robin.values.writeBytes(values.readBytes());
+		else {
+			// different sizes
+			for(int i = 0; i < robin.rows; i++) {
+				int j = i + rowsDiff;
+				robin.store(j >= 0? getValue(j): Double.NaN);
+			}
+		}
 	}
 
 	void filterValues(double minValue, double maxValue) throws IOException {

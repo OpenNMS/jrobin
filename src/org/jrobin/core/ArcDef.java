@@ -157,4 +157,8 @@ public class ArcDef {
 		return false;
 	}
 
+	void setRows(int rows) {
+		this.rows = rows;
+	}
+
 }

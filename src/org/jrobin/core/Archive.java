@@ -398,9 +398,6 @@ public class Archive implements RrdUpdater {
 		if(arc.steps.get() != steps.get()) {
 			throw new RrdException("Incompatible number of steps");
 		}
-		if(arc.rows.get() != rows.get()) {
-			throw new RrdException("Incompatible number of rows");
-		}
 		int count = parentDb.getHeader().getDsCount();
 		for(int i = 0; i < count; i++) {
 			int j = Util.getMatchingDatasourceIndex(parentDb, i, arc.parentDb);

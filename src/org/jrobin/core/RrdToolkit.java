@@ -356,6 +356,60 @@ public class RrdToolkit {
 		rrd.close();
 	}
 
+	/**
+	 * Creates new RRD file based on the existing one, but with a different
+	 * size (number of rows) for a single archive. The archive to be resized
+	 * is identified by its consolidation function and the number of steps.
+	 * @param sourcePath Path to the source RRD file (will not be modified)
+	 * @param destPath Path to the new RRD file (will be created)
+	 * @param consolFun Consolidation function of the archive to be resized
+	 * @param numSteps Number of steps of the archive to be resized
+	 * @param newRows New archive size (number of archive rows)
+	 * @throws IOException Thrown in case of I/O error
+	 * @throws RrdException Thrown in case of JRobin specific error
+	 */
+	public void resizeArchive(String sourcePath, String destPath, String consolFun,
+							  int numSteps, int newRows)
+		throws IOException, RrdException {
+		if(Util.sameFilePath(sourcePath, destPath)) {
+			throw new RrdException("Source and destination paths are the same");
+		}
+		if(newRows < 2) {
+			throw new RrdException("New arcihve size must be at least 2");
+		}
+        RrdDb rrdSource = new RrdDb(sourcePath);
+		RrdDef rrdDef = rrdSource.getRrdDef();
+		ArcDef arcDef = rrdDef.findArchive(consolFun, numSteps);
+		if(arcDef.getRows() != newRows) {
+			arcDef.setRows(newRows);
+			rrdDef.setPath(destPath);
+			RrdDb rrdDest = new RrdDb(rrdDef);
+			rrdSource.copyStateTo(rrdDest);
+			rrdDest.close();
+		}
+		rrdSource.close();
+	}
+
+	/**
+	 * Modifies existing RRD file, by resizing its chosen archive. The archive to be resized
+	 * is identified by its consolidation function and the number of steps.
+	 * @param sourcePath Path to the RRD file (will be modified)
+	 * @param consolFun Consolidation function of the archive to be resized
+	 * @param numSteps Number of steps of the archive to be resized
+	 * @param newRows New archive size (number of archive rows)
+	 * @param saveBackup true, if backup of the original file should be created;
+	 * false, otherwise
+	 * @throws IOException Thrown in case of I/O error
+	 * @throws RrdException Thrown in case of JRobin specific error
+	 */
+	public void resizeArchive(String sourcePath, String consolFun,
+							  int numSteps, int newRows, boolean saveBackup)
+		throws IOException, RrdException {
+		String destPath = Util.getTmpFilename();
+		resizeArchive(sourcePath, destPath, consolFun, numSteps, newRows);
+		copyFile(destPath, sourcePath, saveBackup);
+	}
+
 	private static void deleteFile(File file) throws IOException {
 		if(file.exists() && !file.delete()) {
 			throw new IOException("Could not delete file: " + file.getCanonicalPath());

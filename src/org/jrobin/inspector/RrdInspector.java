@@ -362,8 +362,12 @@ class RrdInspector extends JFrame {
 			if(newArcDef != null) {
 				// action!
 				RrdToolkit toolkit = RrdToolkit.getInstance();
+				// fix X-files factor
 				toolkit.setArcXff(sourcePath, newArcDef.getConsolFun(),
 					newArcDef.getSteps(), newArcDef.getXff());
+                // fix archive size
+				toolkit.resizeArchive(sourcePath, newArcDef.getConsolFun(),
+					newArcDef.getSteps(), newArcDef.getRows(), SHOULD_CREATE_BACKUPS);
 				inspectorModel.refresh();
 				tabbedPane.setSelectedIndex(0);
 			}

@@ -320,11 +320,17 @@ public class RrdDef {
 	}
 
 	void removeArchive(String consolFun, int steps) throws RrdException {
+        ArcDef arcDef = findArchive(consolFun, steps);
+		if(!arcDefs.remove(arcDef)) {
+			throw new RrdException("Could not remove archive " +  consolFun + "/" + steps);
+		}
+	}
+
+	ArcDef findArchive(String consolFun, int steps) throws RrdException {
 		for(int i = 0; i < arcDefs.size(); i++) {
 			ArcDef arcDef = (ArcDef) arcDefs.get(i);
 			if(arcDef.getConsolFun().equals(consolFun) && arcDef.getSteps() == steps) {
-				arcDefs.remove(i);
-				return;
+				return arcDef;
 			}
 		}
 		throw new RrdException("Could not find archive " + consolFun + "/" + steps);
