@@ -39,8 +39,9 @@ abstract class RrdToolCmd {
 	abstract String getCmdType();
 	abstract Object execute() throws RrdException, IOException;
 
-	void setCommand(String command) throws RrdException {
+	Object executeCommand(String command) throws RrdException, IOException {
 		cmdScanner = new RrdCmdScanner(command);
+		return execute();
 	}
 
 	String getOptionValue(String shortForm, String longForm) throws RrdException {

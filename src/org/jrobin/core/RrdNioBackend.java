@@ -43,7 +43,7 @@ public class RrdNioBackend extends RrdFileBackend {
 	 * By forcing <code>gc()</code> where appropriate, memory gets freed sooner and file
 	 * re-creation won't fail.<p>
 	 *
-	 * The constant is set to false initially and currently there is no API to change it
+	 * The constant is set to true initially and currently there is no API to change it
 	 * during runtime.<p>
 	 */
 	public static final boolean SHOULD_GC = true;

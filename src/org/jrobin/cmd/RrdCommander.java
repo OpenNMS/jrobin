@@ -43,8 +43,8 @@ public class RrdCommander {
 		new RrdLastCmd(),
 		new RrdFetchCmd(),
 		new RrdDumpCmd(),
-		new RrdRestoreCmd()
-
+		new RrdRestoreCmd(),
+		new RrdXportCmd()
 	};
 
 	/**
@@ -119,8 +119,7 @@ public class RrdCommander {
 		String cmd = command.trim();
 		for(int i = 0; i < rrdCommands.length; i++) {
 			if(cmd.startsWith(rrdCommands[i].getCmdType())) {
-				rrdCommands[i].setCommand(cmd);
-				return rrdCommands[i].execute();
+				return rrdCommands[i].executeCommand(cmd);
 			}
 		}
 		throw new RrdException("Unknown RRDTool command: " + command);
