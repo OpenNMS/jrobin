@@ -146,11 +146,12 @@ class FetchSource
 	 * @param rrd An open <code>RrdDb</code> object holding the necessary datasources.
 	 * @param startTime Start time of the given timespan.
 	 * @param endTime End time of the given timespan.
+	 * @param resolution Resolution for the fetch request.
 	 * @return A <code>ValueExtractor</code> object holding all fetched data.
 	 * @throws IOException Thrown in case of fetching I/O error.
 	 * @throws RrdException Thrown in case of a JRobin specific error.
 	 */
-	protected ValueExtractor fetch ( RrdDb rrd, long startTime, long endTime ) throws IOException, RrdException
+	protected ValueExtractor fetch ( RrdDb rrd, long startTime, long endTime, long resolution ) throws IOException, RrdException
 	{
 		int dsSize				= 0;
 		String[] dsNames, vNames;
@@ -177,7 +178,7 @@ class FetchSource
 				}
 				
 				// Fetch datasources
-				FetchRequest request 		= rrd.createFetchRequest( cfNames[i], startTime, endTime + rrdStep);
+				FetchRequest request 		= rrd.createFetchRequest( cfNames[i], startTime, endTime + rrdStep, resolution );
 				request.setFilter( dsNames );
 				
 				FetchData data				= request.fetchData();

@@ -362,7 +362,7 @@ class Grapher
 			}
 			
 			// Fetch all required datasources
-			ve 		= src.fetch( rrd, startTime,  endTime );
+			ve 		= src.fetch( rrd, startTime, endTime, graphDef.getResolution() );
 			varList = ve.getNames();
 
 			// BUGFIX: Release the rrdDb
@@ -586,12 +586,22 @@ class Grapher
 			
 		double val;
 		double[] tmpSeries 	= new double[numPoints];
-		
+
+		boolean rigid		= false;
+		double lowerValue	= Double.MAX_VALUE;
+		double upperValue	= Double.MIN_VALUE;
+
 		GridRange range		= graphDef.getGridRange();
-		boolean rigid		= ( range != null ? range.isRigid() : false );
-		double lowerValue	= ( range != null ? range.getLowerValue() : Double.MAX_VALUE );
-		double upperValue	= ( range != null ? range.getUpperValue() : Double.MIN_VALUE );
-		
+		if ( range != null )
+		{
+			rigid		= range.isRigid();
+			lowerValue	= range.getLowerValue();
+			upperValue	= range.getUpperValue();
+
+			if ( Double.isNaN(lowerValue) ) lowerValue = Double.MAX_VALUE;
+			if ( Double.isNaN(upperValue) ) upperValue = Double.MIN_VALUE;
+		}
+
 		// For autoscale, detect lower and upper limit of values
 		PlotDef[] plotDefs 	= graphDef.getPlotDefs();
 		for ( int i = 0; i < plotDefs.length; i++ )

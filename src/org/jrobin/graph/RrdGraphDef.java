@@ -62,7 +62,8 @@ public class RrdGraphDef implements Serializable
 	// ================================================================
 	private long endTime				= Util.getTime();					// default time span of the last 24 hours
 	private long startTime				= Util.getTime() - 86400L;
-	
+	private long resolution				= 1;								// resolution to fetch from the RRD databases
+
 	private Title title					= null;								// no title
 	private String valueAxisLabel		= null;								// no vertical label
 	private TimeAxisLabel timeAxisLabel = null;								// no horizontal label
@@ -206,7 +207,17 @@ public class RrdGraphDef implements Serializable
 	{
 		setTimePeriod( start.getTime(), end.getTime() );
 	}
-	
+
+	/**
+	 * Sets the resolution with which data will be fetched from the RRD sources.
+	 * JRobin will try to match the requested resolution as closely as possible.
+	 * @param resolution Resolution (data step) in seconds.
+	 */
+	public void setResolution( long resolution )
+	{
+		this.resolution = resolution;
+	}
+
 	/**
 	 * Sets graph title.
 	 * @param title Graph title.
@@ -547,14 +558,26 @@ public class RrdGraphDef implements Serializable
 
 	/**
 	 * Sets value range that will be presented in the graph. If not set, graph limits will be autoscaled.
+	 * If you wish to specify one limit but leave the other auto-scaled, specify the value as Double.NaN
+	 * fot the limit that should be auto-scaled.
 	 * @param lower Lower limit.
 	 * @param upper Upper limit.
 	 * @param rigid Rigid grid, won't autoscale limits.
 	 */
 
-	public void setGridRange(double lower, double upper, boolean rigid) 
+	public void setGridRange( double lower, double upper, boolean rigid )
 	{
 		gridRange = new GridRange( lower, upper, rigid );
+	}
+
+	/**
+	 * This sets the lower limit of the grid to the specified value {@see setGridRange}.
+	 * This is the equivalent of: <code>setGridRange( lower, Double.NaN, false );</code>
+	 * @param lower Lower limit.
+	 */
+	public void setLowerLimit( double lower )
+	{
+		gridRange = new GridRange( lower, Double.NaN, false );
 	}
 
 	/**
@@ -1138,7 +1161,11 @@ public class RrdGraphDef implements Serializable
 	protected long getEndTime() {
 		return endTime;
 	}
-	
+
+	protected long getResolution() {
+		return resolution;
+	}
+
 	protected Title getTitle() {
 		return title;
 	}
