@@ -41,6 +41,7 @@ public class FetchRequest {
 	private long fetchStart;
 	private long fetchEnd;
 	private long resolution;
+	private String[] filter;
 
 	FetchRequest(RrdDb parentDb, String consolFun, long fetchStart, long fetchEnd,
 		long resolution) throws RrdException {
@@ -50,6 +51,41 @@ public class FetchRequest {
 		this.fetchEnd = fetchEnd;
 		this.resolution = resolution;
 		validate();
+	}
+
+	/**
+	 * Sets request filter in order to fetch data only for
+	 * the specified array of datasources (datasource names).
+	 * If not set (or set to null), fetched data will
+	 * containt values of all datasources defined in the underlying RRD file.
+	 * To fetch data only from selected
+	 * datasources, specify an array of datasource names as method argument.
+	 * @param filter Array of datsources (datsource names) to fetch data from.
+	 */
+	public void setFilter(String[] filter) {
+		this.filter = filter;
+	}
+
+	/**
+	 * Sets request filter in order to fetch data only for
+	 * a single datasource (datasource name).
+	 * If not set (or set to null), fetched data will
+	 * containt values of all datasources defined in the underlying RRD file.
+	 * To fetch data for a single datasource only,
+	 * specify an array of datasource names as method argument.
+	 * @param filter Array of datsources (datsource names) to fetch data from.
+	 */
+	public void setFilter(String filter) {
+		this.filter = (filter == null)? null: (new String[] { filter });
+	}
+
+	/**
+	 * Returns request filter. See {@link #setFilter(String[]) setFilter()} for
+	 * complete explanation.
+	 * @return Request filter (array of datasource names), null if not set.
+	 */
+	public String[] getFilter() {
+		return filter;
 	}
 
 	/**
@@ -141,6 +177,14 @@ public class FetchRequest {
 	 */
 	public FetchData fetchData() throws RrdException, IOException {
 		return parentDb.fetchData(this);
+	}
+
+	/**
+	 * Returns the underlying RrdDb object.
+	 * @return RrdDb object used to create this FetchRequest object.
+	 */
+	public RrdDb getParentDb() {
+		return parentDb;
 	}
 
 }

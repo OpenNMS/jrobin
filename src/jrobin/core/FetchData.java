@@ -55,7 +55,10 @@ public class FetchData {
 
 	FetchData(Archive matchingArchive, FetchRequest request) throws IOException {
 		this.matchingArchive = matchingArchive;
-		this.dsNames = matchingArchive.getParentDb().getDsNames();
+		this.dsNames = request.getFilter();
+		if(this.dsNames == null) {
+			this.dsNames = matchingArchive.getParentDb().getDsNames();
+		}
 		this.request = request;
 	}
 
@@ -174,7 +177,9 @@ public class FetchData {
 	}
 
 	/**
-	 * Returns array of datasource names found in the underlying RRD file.
+	 * Returns array of datasource names found in the underlying RRD file. If the request
+	 * was filtered (data was fetched only for selected datasources), only datasources selected
+	 * for fetching are returned.
 	 * @return Array of datasource names.
 	 */
 	public String[] getDsNames() {

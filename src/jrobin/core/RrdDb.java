@@ -23,7 +23,6 @@
 package jrobin.core;
 
 import java.io.*;
-import java.util.GregorianCalendar;
 
 /**
  * <p>Main class used for RRD files manipulation. Use this class to perform

@@ -286,6 +286,10 @@ public class Archive implements RrdUpdater {
 	}
 
 	FetchPoint[] fetch(FetchRequest request) throws IOException, RrdException {
+		if(request.getFilter() != null) {
+			throw new RrdException("fetch() method does not support filtered datasources." +
+				" Use fetchData() to get filtered fetch data.");
+		}
 		long arcStep = getArcStep();
 		long fetchStart = Util.normalize(request.getFetchStart(), arcStep);
 		long fetchEnd = Util.normalize(request.getFetchEnd(), arcStep);
@@ -320,7 +324,11 @@ public class Archive implements RrdUpdater {
 		}
 		long startTime = getStartTime();
 		long endTime = getEndTime();
-		int dsCount = robins.length;
+		String[] dsToFetch = request.getFilter();
+		if(dsToFetch == null) {
+			dsToFetch = parentDb.getDsNames();
+		}
+		int dsCount = dsToFetch.length;
 		int ptsCount = (int) ((fetchEnd - fetchStart) / arcStep + 1);
 		long[] timestamps = new long[ptsCount];
 		double[][] values = new double[dsCount][ptsCount];
@@ -330,14 +338,15 @@ public class Archive implements RrdUpdater {
 			if(time >= startTime && time <= endTime) {
 				// inbound time
 				int robinIndex = (int)((time - startTime) / arcStep);
-				for(int dsIndex = 0; dsIndex < dsCount; dsIndex++) {
-					values[dsIndex][ptIndex] = robins[dsIndex].getValue(robinIndex);
+				for(int i = 0; i < dsCount; i++) {
+					int dsIndex = parentDb.getDsIndex(dsToFetch[i]);
+					values[i][ptIndex] = robins[dsIndex].getValue(robinIndex);
 				}
 			}
 			else {
 				// time out of bounds
-				for(int dsIndex = 0; dsIndex < dsCount; dsIndex++) {
-					values[dsIndex][ptIndex] = Double.NaN;
+				for(int i = 0; i < dsCount; i++) {
+					values[i][ptIndex] = Double.NaN;
 				}
 			}
 		}
