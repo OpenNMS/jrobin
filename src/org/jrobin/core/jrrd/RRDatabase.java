@@ -287,7 +287,7 @@ public class RRDatabase {
 		//          + rows);
 
 		// Find start and end offsets
-		// todo: This is terrible - some of this should be encapsulated in Archive - CT.
+		// This is terrible - some of this should be encapsulated in Archive - CT.
 		long lastUpdateLong = lastUpdate.getTime() / 1000;
 		long archiveEndTime = lastUpdateLong - (lastUpdateLong % step);
 		long archiveStartTime = archiveEndTime - (step * (archive.rowCount - 1));
@@ -320,7 +320,7 @@ public class RRDatabase {
 		int firstPart = 1;
 		int firstFull = 1;
 		long bestMatch = 0;
-		long bestPartRRA = 0;
+		//long bestPartRRA = 0;
 		long bestStepDiff = 0;
 		long tmpStepDiff = 0;
 
@@ -363,7 +363,7 @@ public class RRDatabase {
 		}
 
 		// See how the matching went
-		// todo: optimise this
+		// optimise this
 		if (firstFull == 0) {
 			archive = bestFullArchive;
 		} else if (firstPart == 0) {
