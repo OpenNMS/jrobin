@@ -2,8 +2,8 @@
  * JRobin : Pure java implementation of RRDTool's functionality
  * ============================================================
  *
- * Project Info:  http://www.sourceforge.net/projects/jrobin
- * Project Lead:  Sasa Markovic (saxon@eunet.yu);
+ * Project Info:  http://www.jrobin.org
+ * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
  * (C) Copyright 2003, by Sasa Markovic.
  *
@@ -30,13 +30,13 @@ import java.io.IOException;
 /**
  * Class to represent fetch request. For the complete explanation of all
  * fetch parameters consult RRDTool's
- * <a href="/man/rrdfetch.html" target="man">rrdfetch man page</a>.
+ * <a href="../../../../man/rrdfetch.html" target="man">rrdfetch man page</a>.
  *
  * You cannot create <code>FetchRequest</code> directly (no public constructor
  * is provided). Use {@link org.jrobin.core.RrdDb#createFetchRequest(java.lang.String, long, long, long)
  * createFetchRequest()} method of your {@link org.jrobin.core.RrdDb RrdDb} object.
  *
- * @author <a href="mailto:saxon@eunet.yu">Sasa Markovic</a>
+ * @author <a href="mailto:saxon@jrobin.org">Sasa Markovic</a>
  */
 public class FetchRequest {
 	private RrdDb parentDb;

@@ -47,7 +47,7 @@ import org.jrobin.core.RrdException;
  * like more advanced text alignment and custom point-to-point lines and area's.</p>
  * 
  * <p>To learn more about RDTool's graphs see RRDTool's
- * <a href="http://people.ee.ethz.ch/~oetiker/webtools/rrdtool/manual/rrdgraph.html" target="man">rrdgraph man page</a>.  This man page
+ * <a href="../../../../man/rrdgraph.html" target="man">rrdgraph man page</a>.  This man page
  * is important: JRobin uses the same concept of graph sources definition (DEF directives)
  * and supports RPN extensions in complex datasource definitions (RRDTool's CDEF directives).</p>
  * 

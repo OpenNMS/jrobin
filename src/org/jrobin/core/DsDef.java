@@ -2,8 +2,8 @@
  * JRobin : Pure java implementation of RRDTool's functionality
  * ============================================================
  *
- * Project Info:  http://www.sourceforge.net/projects/jrobin
- * Project Lead:  Sasa Markovic (saxon@eunet.yu);
+ * Project Info:  http://www.jrobin.org
+ * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
  * (C) Copyright 2003, by Sasa Markovic.
  *
@@ -37,9 +37,9 @@ package org.jrobin.core;
  * <li>maximal value
  * </ul>
  * <p>For the complete explanation of all source definition parameters, see RRDTool's
- * <a href="/man/rrdcreate.html" target="man">rrdcreate man page</a>.</p>
+ * <a href="../../../../man/rrdcreate.html" target="man">rrdcreate man page</a>.</p>
  *
- * @author <a href="mailto:saxon@eunet.yu">Sasa Markovic</a>
+ * @author <a href="mailto:saxon@jrobin.org">Sasa Markovic</a>
  */
 public class DsDef {
 	/** array of valid source types */
@@ -55,7 +55,7 @@ public class DsDef {
 	 * {@link org.jrobin.core.RrdDb RrdDb} object.</p>
 	 *
      * <p>For the complete explanation of all source definition parameters, see RRDTool's
-     * <a href="../../../man/rrdcreate.html" target="man">rrdcreate man page</a></p>
+     * <a href="../../../../man/rrdcreate.html" target="man">rrdcreate man page</a></p>
 	 *
 	 * @param dsName Data source name.
 	 * @param dsType Data source type. Valid values are "COUNTER", "GAUGE", "DERIVE"

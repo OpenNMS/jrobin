@@ -2,8 +2,8 @@
  * JRobin : Pure java implementation of RRDTool's functionality
  * ============================================================
  *
- * Project Info:  http://www.sourceforge.net/projects/jrobin
- * Project Lead:  Sasa Markovic (saxon@eunet.yu);
+ * Project Info:  http://www.jrobin.org
+ * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
  * (C) Copyright 2003, by Sasa Markovic.
  *
@@ -35,7 +35,7 @@ import java.nio.channels.FileLock;
  * through object of this class. <code>RrdFile</code> is a light wrapper around
  * <code>java.io.RandomAccessFile</code>.
  *
- * @author <a href="mailto:saxon@eunet.yu">Sasa Markovic</a> 
+ * @author <a href="mailto:saxon@jrobin.org">Sasa Markovic</a>
  */
 public class RrdFile {
 	/** Maximum acceptable string length (20).*/

@@ -2,8 +2,8 @@
  * JRobin : Pure java implementation of RRDTool's functionality
  * ============================================================
  *
- * Project Info:  http://www.sourceforge.net/projects/jrobin
- * Project Lead:  Sasa Markovic (saxon@eunet.yu);
+ * Project Info:  http://www.jrobin.org
+ * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
  * (C) Copyright 2003, by Sasa Markovic.
  *
@@ -32,7 +32,7 @@ import java.util.StringTokenizer;
  * <p>Class to represent data source values for the given timestamp. Objects of this
  * class are never created directly (no public constructor is provided). To learn more how
  * to update a RRD file, see RRDTool's
- * <a href="/man/rrdupdate.html" target="man">rrdupdate man page</a>.
+ * <a href="../../../../man/rrdupdate.html" target="man">rrdupdate man page</a>.
  *
  * <p>To update a RRD file with JRobin use the following procedure:</p>
  *
@@ -48,7 +48,7 @@ import java.util.StringTokenizer;
  * You should specifify only 'known' data source values. However, if you want to specify
  * 'unknown' values too, use <code>Double.NaN</code>.</p>
  *
- * @author <a href="mailto:saxon@eunet.yu">Sasa Markovic</a>
+ * @author <a href="mailto:saxon@jrobin.org">Sasa Markovic</a>
  */
 public class Sample {
 	private RrdDb parentDb;
