@@ -173,29 +173,31 @@ class Demo {
 	static void println(String msg) {
 		System.out.println(msg);
 	}
+
+	static class GaugeSource {
+		private double value;
+		private double step;
+
+		GaugeSource(double value, double step) {
+			this.value = value;
+			this.step = step;
+		}
+
+		long getValue() {
+			double oldValue = value;
+			double increment = RANDOM.nextDouble() * step;
+			if(RANDOM.nextDouble() > 0.5) {
+				increment *= -1;
+			}
+			value += increment;
+			if(value <= 0) {
+				value = 0;
+			}
+			return Math.round(oldValue);
+		}
+	}
 }
 
-class GaugeSource {
-	private double value;
-	private double step;
 
-	GaugeSource(double value, double step) {
-		this.value = value;
-		this.step = step;
-	}
-
-	long getValue() {
-		double oldValue = value;
-		double increment = Demo.RANDOM.nextDouble() * step;
-		if(Demo.RANDOM.nextDouble() > 0.5) {
-			increment *= -1;
-		}
-		value += increment;
-		if(value <= 0) {
-			value = 0;
-		}
-		return Math.round(oldValue);
-	}
-}
 
 
