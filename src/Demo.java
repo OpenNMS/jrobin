@@ -174,7 +174,8 @@ class Demo {
 	}
 
 	static void println(String msg) {
-		System.out.println(msg + " " + Util.getLapTime());
+		//System.out.println(msg + " " + Util.getLapTime());
+		System.out.println(msg);
 	}
 
 	static void print(String msg) {
