@@ -190,6 +190,8 @@ public class RrdDb implements RrdUpdater {
 		for(int i = 0; i < archives.length; i++) {
 			archives[i] = new Archive(this, reader, i);
 		}
+		// XMLReader is a rather huge DOM tree, release memory ASAP
+		reader = null;
 		// finalize
 		finalizeSetup(true);
 	}
@@ -512,7 +514,7 @@ public class RrdDb implements RrdUpdater {
 	 */
 
 	public synchronized void dumpXml(String filename) throws IOException, RrdException {
-		OutputStream destination = new BufferedOutputStream(new FileOutputStream(filename, false));
+		OutputStream destination = new FileOutputStream(filename, false);
 		dumpXml(destination);
 		destination.close();
 	}

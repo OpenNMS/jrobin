@@ -28,19 +28,15 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.FactoryConfigurationError;
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.File;
+import javax.xml.parsers.*;
 import java.io.IOException;
+import java.io.File;
 import java.util.ArrayList;
 
 class XmlReader {
-	private Document doc;
+
 	private Element root;
-	private Node[] dsNodes;
-	private Node[] arcNodes;
+	private Node[] dsNodes, arcNodes;
 
     public XmlReader(String xmlFilePath) throws IOException, RrdException {
 		try {
@@ -48,7 +44,7 @@ class XmlReader {
 			factory.setValidating(false);
 			factory.setNamespaceAware(false);
 			DocumentBuilder builder = factory.newDocumentBuilder();
-			doc = builder.parse(new File(xmlFilePath));
+			Document doc = builder.parse(new File(xmlFilePath));
 			root = doc.getDocumentElement();
 			dsNodes = getChildNodes(root, "ds");
 			arcNodes = getChildNodes(root, "rra");
@@ -150,10 +146,12 @@ class XmlReader {
 		for(int i = 0; i < rows.length; i++) {
             Node[] vNodes = getChildNodes(rows[i], "v");
 			Node vNode = vNodes[dsIndex];
-			values[i] = Double.parseDouble(vNode.getFirstChild().getNodeValue().trim());
+			values[i] = Util.parseDouble(vNode.getFirstChild().getNodeValue().trim());
 		}
 		return values;
 	}
+
+	// utility functions for DOM tree traversing
 
 	static Node[] getChildNodes(Node parentNode, String childName) {
 		ArrayList nodes = new ArrayList();
@@ -197,14 +195,7 @@ class XmlReader {
 	}
 
 	static double getChildValueAsDouble(Node parentNode, String childName) throws RrdException {
-		// Arne Vandamme fixed bug on UNKN value from Windows
 		String valueStr = getChildValue(parentNode, childName);
-		try {
-			return Double.parseDouble(valueStr);
-		}
-        catch (NumberFormatException nfe) {
-			return Double.NaN;
-		}
+		return Util.parseDouble(valueStr);
 	}
-
 }

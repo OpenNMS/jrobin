@@ -24,7 +24,7 @@ package jrobin.core;
 
 import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.util.ArrayList;
+import java.util.Stack;
 import java.text.DecimalFormat;
 
 class XmlWriter {
@@ -46,7 +46,7 @@ class XmlWriter {
 	}
 
 	void closeTag() {
-		String tag = openTags.pop();
+		String tag = (String) openTags.pop();
 		indent.setLength(indent.length() - INDENT_STR.length());
 		writer.println(indent + "</" + tag + ">");
 	}
@@ -86,23 +86,5 @@ class XmlWriter {
 
 	void writeComment(Object comment) {
 		writer.println(indent + "<!-- " + comment + " -->");
-	}
-
-	private class Stack {
-		private ArrayList stack = new ArrayList();
-
-		void push(String tag) {
-			stack.add(tag);
-		}
-
-		String pop() {
-			int last = stack.size() - 1;
-			if(last >= 0) {
-				String tag = (String) stack.get(last);
-				stack.remove(last);
-				return tag;
-			}
-			return null;
-		}
 	}
 }

@@ -109,4 +109,16 @@ public class Util {
 		return new Date(timestamp * 1000L);
 	}
 
+	public static double parseDouble(String valueStr) {
+		double value;
+		try {
+			value = Double.parseDouble(valueStr);
+		}
+		catch(NumberFormatException nfe) {
+			// Arne Vandamme fixed bug on UNKN value from Windows
+			value = Double.NaN;
+		}
+		return value;
+	}
+
 }
