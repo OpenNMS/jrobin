@@ -64,12 +64,24 @@ abstract class RrdPrimitive {
 	
 	byte[] getBytes() throws IOException {
 		byte[] b = new byte[byteCount];
-		int bytesRead = parent.getRrdFile().read(b);
+		RrdFile rrdFile = getRrdFile();
+		rrdFile.seek(pointer);
+		int bytesRead = rrdFile.read(b);
 		if(bytesRead != byteCount) {
 			throw new IOException("Could not read enough bytes (" + byteCount + 
 				" bytes requested, " + bytesRead + " bytes obtained");
 		}
 		return b;
 	}
-	
+
+	void writeBytes(byte[] b) throws IOException {
+		if(b.length != byteCount) {
+			throw new IOException("Invalid number of bytes supplied (" + b.length +
+				"), exactly " + byteCount + " needed");
+		}
+		RrdFile rrdFile = getRrdFile();
+		rrdFile.seek(pointer);
+		rrdFile.write(b);
+	}
+
 }
