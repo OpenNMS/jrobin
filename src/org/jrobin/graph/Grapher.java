@@ -39,7 +39,6 @@ import java.awt.RenderingHints;
 import java.awt.image.RenderedImage;
 import java.awt.image.BufferedImage;
 
-import org.jrobin.core.Util;
 import org.jrobin.core.RrdDb;
 import org.jrobin.core.RrdException;
 
@@ -342,7 +341,7 @@ class Grapher
 	}
 	
 	/**
-	 * Plots all datasources on the graph, uses all values gathered in {@link #CalculateSeries() }.
+	 * Plots all datasources on the graph, uses all values gathered in {@link #calculateSeries() }.
 	 * @param graphics Handle of a Graphics2D context to draw on.
 	 * @throws RrdException Thrown in case of a JRobin specific error.
 	 */

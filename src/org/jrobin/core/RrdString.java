@@ -27,10 +27,6 @@ package org.jrobin.core;
 
 import java.io.IOException;
 
-/**
- *
- */
-
 class RrdString {
 	private RrdFile file;
 	private long pointer;

@@ -186,7 +186,7 @@ class Cdef extends Source
 	/**
 	 * Sets the value of a specific datapoint for this Cdef.
 	 * @param pos Position (index in the value table) of the new datapoint.
-	 * @param time Timestamp of the new datapoint in number of seconds.
+	 * @param timestamp Timestamp of the new datapoint in number of seconds.
 	 * @param val Double value of the new datapoint.
 	 */
 	void set( int pos, long timestamp, double val )

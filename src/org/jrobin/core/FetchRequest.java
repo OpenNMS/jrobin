@@ -30,7 +30,7 @@ import java.io.IOException;
 /**
  * Class to represent fetch request. For the complete explanation of all
  * fetch parameters consult RRDTool's
- * <a href="../../../man/rrdfetch.html" target="man">rrdfetch man page</a>.
+ * <a href="/man/rrdfetch.html" target="man">rrdfetch man page</a>.
  *
  * You cannot create <code>FetchRequest</code> directly (no public constructor
  * is provided). Use {@link org.jrobin.core.RrdDb#createFetchRequest(java.lang.String, long, long, long)

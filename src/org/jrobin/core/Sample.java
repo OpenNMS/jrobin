@@ -32,7 +32,7 @@ import java.util.StringTokenizer;
  * <p>Class to represent data source values for the given timestamp. Objects of this
  * class are never created directly (no public constructor is provided). To learn more how
  * to update a RRD file, see RRDTool's
- * <a href="../../../man/rrdupdate.html" target="man">rrdupdate man page</a>.
+ * <a href="/man/rrdupdate.html" target="man">rrdupdate man page</a>.
  *
  * <p>To update a RRD file with JRobin use the following procedure:</p>
  *

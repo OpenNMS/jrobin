@@ -40,7 +40,6 @@ import javax.imageio.stream.ImageOutputStream;
 import java.awt.image.RenderedImage;
 import java.awt.image.BufferedImage;
 
-import org.jrobin.core.Util;
 import org.jrobin.core.RrdDb;
 import org.jrobin.core.RrdDbPool;
 import org.jrobin.core.RrdException;
@@ -242,8 +241,6 @@ public class RrdGraph implements Serializable
 	
 	/**
 	 * Returns graph with default chart dimensions (400 by 100) as an array of PNG bytes.
-	 * @param width Width of the chart area in pixels.
-	 * @param height Height of the chart area in pixels.
 	 * @return Array of PNG bytes.
 	 * @throws IOException Thrown in case of I/O error.
 	 */

@@ -45,7 +45,7 @@ import java.util.ArrayList;
  * </ul>
  * <p>RrdDef provides API to set all these elements. For the complete explanation of all
  * RRD definition parameters, see RRDTool's
- * <a href="../../../man/rrdcreate.html" target="man">rrdcreate man page</a>.</p>
+ * <a href="/man/rrdcreate.html" target="man">rrdcreate man page</a>.</p>
  *
  * @author <a href="mailto:saxon@eunet.yu">Sasa Markovic</a>
  */
@@ -172,7 +172,7 @@ public class RrdDef {
 	 * Adds single datasource to RRD definition by specifying its data source name, source type,
 	 * heartbeat, minimal and maximal value. For the complete explanation of all data
 	 * source definition parameters see RRDTool's
-	 * <a href="../../../man/rrdcreate.html" target="man">rrdcreate man page</a>.</p>
+	 * <a href="/man/rrdcreate.html" target="man">rrdcreate man page</a>.</p>
 	 *
 	 * @param dsName Data source name.
 	 * @param dsType Data source type. Valid types are "COUNTER",
@@ -228,7 +228,7 @@ public class RrdDef {
 	 * Adds single archive definition by specifying its consolidation function, X-files factor,
 	 * number of steps and rows. For the complete explanation of all archive
 	 * definition parameters see RRDTool's
-	 * <a href="../../../man/rrdcreate.html" target="man">rrdcreate man page</a>.</p>
+	 * <a href="/man/rrdcreate.html" target="man">rrdcreate man page</a>.</p>
 	 * @param consolFun Consolidation function. Valid values are "AVERAGE",
 	 * "MIN", "MAX" and "LAST"
 	 * @param xff X-files factor. Valid values are between 0 and 1.

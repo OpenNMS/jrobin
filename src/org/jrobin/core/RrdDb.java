@@ -45,10 +45,10 @@ import java.io.*;
  * You will not be able to use JRobin API if you are not familiar with
  * basic RRDTool concepts. Good place to start is
  * <a href="http://people.ee.ethz.ch/~oetiker/webtools/rrdtool/tutorial/rrdtutorial.html">official RRD tutorial</a>
- * and relevant RRDTool man pages: <a href="../../../man/rrdcreate.html" target="man">rrdcreate</a>,
- * <a href="../../../man/rrdupdate.html" target="man">rrdupdate</a>,
- * <a href="../../../man/rrdfetch.html" target="man">rrdfetch</a> and
- * <a href="../../../man/rrdgraph.html" target="man">rrdgraph</a>.
+ * and relevant RRDTool man pages: <a href="/man/rrdcreate.html" target="man">rrdcreate</a>,
+ * <a href="/man/rrdupdate.html" target="man">rrdupdate</a>,
+ * <a href="/man/rrdfetch.html" target="man">rrdfetch</a> and
+ * <a href="/man/rrdgraph.html" target="man">rrdgraph</a>.
  * For RRDTool's advanced graphing capabilities (RPN extensions), also supported in JRobin,
  * there is an excellent
  * <a href="http://people.ee.ethz.ch/~oetiker/webtools/rrdtool/tutorial/cdeftutorial.html" target="man">CDEF tutorial</a>.
@@ -330,7 +330,7 @@ public class RrdDb implements RrdUpdater {
 	 * @param fetchStart Starting timestamp for fetch request.
 	 * @param fetchEnd Ending timestamp for fetch request.
 	 * @param resolution Fetch resolution (see RRDTool's
-	 * <a href="../../man/rrdfetch.html" target="man">rrdfetch man page</a> for an
+	 * <a href="/man/rrdfetch.html" target="man">rrdfetch man page</a> for an
 	 * explanation of this parameter.
 	 * @return Request object that should be used to actually fetch data from RRD file.
 	 * @throws RrdException In case of JRobin related error (invalid consolidation function or
@@ -346,7 +346,7 @@ public class RrdDb implements RrdUpdater {
 	 * <code>FetchRequest</code> object and its {@link org.jrobin.core.FetchRequest#fetch() fetch()}
 	 * method to actually fetch data from the RRD file. Data will be fetched with the smallest
 	 * possible resolution (see RRDTool's
-	 * <a href="../../../man/rrdfetch.html" target="man">rrdfetch man page</a>
+	 * <a href="/man/rrdfetch.html" target="man">rrdfetch man page</a>
 	 * for the explanation of the resolution parameter).</p>
 	 *
 	 * @param consolFun Consolidation function to be used in fetch request. Allowed values are

@@ -36,7 +36,7 @@ package org.jrobin.core;
  * <li>number of rows.
  * </ul>
  * <p>For the complete explanation of all archive definition parameters, see RRDTool's
- * <a href="../../../man/rrdcreate.html" target="man">rrdcreate man page</a>
+ * <a href="/man/rrdcreate.html" target="man">rrdcreate man page</a>
  * </p>
  *
  * @author <a href="mailto:saxon@eunet.yu">Sasa Markovic</a>
@@ -56,7 +56,7 @@ public class ArcDef {
 	 * {@link org.jrobin.core.RrdDb RrdDb} object.</p>
 	 *
      * <p>For the complete explanation of all archive definition parameters, see RRDTool's
-	 * <a href="../../../man/rrdcreate.html" target="man">rrdcreate man page</a></p>
+	 * <a href="/man/rrdcreate.html" target="man">rrdcreate man page</a></p>
 	 *
 	 * @param consolFun Consolidation function. Allowed values are "AVERAGE", "MIN",
 	 * "MAX" and "LAST".

@@ -30,7 +30,7 @@ package org.jrobin.graph;
  * @author Arne Vandamme (cobralord@jrobin.org)
  */
 import java.util.Locale;
-import javax.imageio.plugins.jpeg.JPEGImageWriteParam;;
+import javax.imageio.plugins.jpeg.JPEGImageWriteParam;
 
 class JpegImageWriteParam extends JPEGImageWriteParam
 {

@@ -37,7 +37,7 @@ package org.jrobin.core;
  * <li>maximal value
  * </ul>
  * <p>For the complete explanation of all source definition parameters, see RRDTool's
- * <a href="../../../man/rrdcreate.html" target="man">rrdcreate man page</a>.</p>
+ * <a href="/man/rrdcreate.html" target="man">rrdcreate man page</a>.</p>
  *
  * @author <a href="mailto:saxon@eunet.yu">Sasa Markovic</a>
  */

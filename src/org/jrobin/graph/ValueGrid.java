@@ -48,9 +48,9 @@ class ValueGrid
 	 * Creates a value grid based on a value range and possibly a value axis
 	 * unit specification.  The grid can also be specified to be rigid, to prevent
 	 * auto scaling of the displayed value range.
-	 * @param rigid True if the grid is rigid, false if not.
-	 * @param lower Lower value of the value range.
-	 * @param upper Upper value of the value range.
+	 * @param gr Grid range object.
+	 * @param low Lower value of the value range.
+	 * @param up Upper value of the value range.
 	 * @param vAxis ValueAxisUnit specified to determine the grid lines, if the given
 	 * ValueAxisUnit is null, one will be automatically determined.
 	 */
