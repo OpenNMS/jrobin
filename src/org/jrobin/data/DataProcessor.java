@@ -59,10 +59,10 @@ public class DataProcessor implements ConsolFuns {
 	 * Constant representing the default number of pixels on a JRobin graph (will be used if
 	 * no other value is specified with {@link #setStep(long) setStep()} method.
 	 */
-	public static final int DEFAUL_PIXEL_COUNT = 400;
+	public static final int DEFAULT_PIXEL_COUNT = 400;
 	private static final double DEFAULT_PERCENTILE = 95.0; // %
 
-	private int pixelCount = DEFAUL_PIXEL_COUNT;
+	private int pixelCount = DEFAULT_PIXEL_COUNT;
 
 	/**
 	 * Constant that defines the default {@link RrdDbPool} usage policy. Defaults to <code>false</code>
@@ -152,7 +152,7 @@ public class DataProcessor implements ConsolFuns {
 	 * and similar methods. In other words, aggregated values will not change once you decide to change
 	 * the dimension of your graph.<p>
 	 *
-	 * The default number of pixels is defined by constant {@link #DEFAUL_PIXEL_COUNT}
+	 * The default number of pixels is defined by constant {@link #DEFAULT_PIXEL_COUNT}
 	 * and can be changed with a {@link #setPixelCount(int)} method.
 	 *
 	 * @param pixelCount The number of pixels. If you process RRD data in order to display it on the graph,
@@ -329,7 +329,7 @@ public class DataProcessor implements ConsolFuns {
 	 */
 	public double getPercentile(String sourceName, double percentile) throws RrdException {
 		if(percentile <= 0.0 || percentile > 100.0) {
-			throw new RrdException("Invalid percentile [" + percentile + "], sohuld be between 0 and 100");
+			throw new RrdException("Invalid percentile [" + percentile + "], should be between 0 and 100");
 		}
 		Source source = getSource(sourceName);
 		return source.getPercentile(tStart, tEnd, percentile);
