@@ -41,11 +41,11 @@ class ComplexDemo {
 	private static final String filename = "complexdemo";
 
 	private static String getPath(String ext) {
-		return Util.getJRobinDemoDirectory() + filename + "." + ext;
+		return Util.getJRobinDemoPath(filename + "." + ext);
 	}
 
 	private static String getPath(int version, String ext) {
-		return Util.getJRobinDemoDirectory() + filename + version + "." + ext;
+		return Util.getJRobinDemoPath(filename + version + "." + ext);
 	}
 
 	private static void println(String msg) {

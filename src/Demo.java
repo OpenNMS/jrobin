@@ -38,7 +38,6 @@ class Demo {
 	static final long SEED = 1909752002L;  
 	
 	static final Random RANDOM = new Random(SEED);
-	static final String HOME = Util.getJRobinDemoDirectory();
 	static final String FILE = "demo";
 
 	static final long START = Util.getTimestamp(2003, 4, 1);
@@ -54,13 +53,13 @@ class Demo {
 		long startMillis = System.currentTimeMillis();
 		long start = START;
 		long end = END;
-		String rrdPath = getFullPath(FILE + ".rrd");
-		String xmlPath = getFullPath(FILE + ".xml");
-		String rrdRestoredPath = getFullPath(FILE + "_restored.rrd");
-		String pngPath = getFullPath(FILE + ".png");
-		String jpegPath = getFullPath(FILE + ".jpeg");
-		String gifPath = getFullPath(FILE + ".gif");
-		String logPath = getFullPath(FILE + ".log");
+		String rrdPath = Util.getJRobinDemoPath(FILE + ".rrd");
+		String xmlPath = Util.getJRobinDemoPath(FILE + ".xml");
+		String rrdRestoredPath = Util.getJRobinDemoPath(FILE + "_restored.rrd");
+		String pngPath = Util.getJRobinDemoPath(FILE + ".png");
+		String jpegPath = Util.getJRobinDemoPath(FILE + ".jpeg");
+		String gifPath = Util.getJRobinDemoPath(FILE + ".gif");
+		String logPath = Util.getJRobinDemoPath(FILE + ".log");
 		PrintWriter log = new PrintWriter(
 			new BufferedOutputStream(new FileOutputStream(logPath, false))
 		);
@@ -173,10 +172,6 @@ class Demo {
 
 	static void println(String msg) {
 		System.out.println(msg);
-	}
-
-	static String getFullPath(String path) {
-		return HOME + path;
 	}
 }
 

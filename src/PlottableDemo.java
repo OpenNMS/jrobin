@@ -1,5 +1,7 @@
 import org.jrobin.graph.*;
 import org.jrobin.core.RrdException;
+import org.jrobin.core.Util;
+
 import java.awt.*;
 import java.io.IOException;
 import java.util.Date;
@@ -37,6 +39,8 @@ class PlottableDemo {
 		gdef.line("spline", Color.MAGENTA, "Spline interpolation@r", 1);
 		gdef.setTimeAxis(TimeAxisUnit.DAY, 1, TimeAxisUnit.DAY, 1, "dd", true);
 		RrdGraph g = new RrdGraph(gdef);
-		g.saveAsPNG("plottable2.png", 400, 200);
+		String filename = Util.getJRobinDemoPath("plottable.png");
+		g.saveAsPNG(filename, 400, 200);
+		System.out.println("Graph saved to " + filename);
 	}
 }

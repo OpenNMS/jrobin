@@ -189,13 +189,29 @@ public class Util {
 	}
 
 	/**
-	 * Returns path to directory used for placement of JRobin demo graphs.  and creates it
+	 * Returns path to directory used for placement of JRobin demo graphs and creates it
 	 * if necessary.
 	 * @return Path to demo directory (defaults to $HOME/jrobin/) if directory exists or
 	 * was successfully created. Null if such directory could not be created.
 	 */
 	public static String getJRobinDemoDirectory() {
 		return (homeDirFile.exists() || homeDirFile.mkdirs())? homeDirPath: null;
+	}
+
+	/**
+	 * Returns full path to the file stored in the demo directory of JRobin
+	 * @param filename Partial path to the file stored in the demo directory of JRobin
+	 * (just name and extension, without parent directories)
+	 * @return Full path to the file
+	 */
+	public static String getJRobinDemoPath(String filename) {
+		String demoDir = getJRobinDemoDirectory();
+		if(demoDir != null) {
+			return demoDir + filename;
+		}
+		else {
+			return null;
+		}
 	}
 
 	static boolean sameFilePath(String path1, String path2) throws IOException {
