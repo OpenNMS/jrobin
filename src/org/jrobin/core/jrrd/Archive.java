@@ -289,13 +289,42 @@ public class Archive {
 		}
 	}
 
-	public double[][] getValues() throws IOException {
+	/*
+	// THIS IS THE ORIGINAL CODE: BUGGY! Replaced by Sasa Markovic with a new method
+	// Funny: the bug will appear only if dsCount != 2 :)
+	public double[][] getValuesOriginal() throws IOException {
 		if (values != null) {
 			return values;
 		}
 		values = new double[db.header.dsCount][rowCount];
 		int row = currentRow;
-		db.rrdFile.ras.seek(dataOffset + (row + 1) * 16);
+		db.rrdFile.ras.seek(dataOffset + (row + 1) * 16); // <----- BUG (resolved below)
+		for (int counter = 0; counter < rowCount; counter++) {
+			row++;
+			if (row == rowCount) {
+				row = 0;
+				db.rrdFile.ras.seek(dataOffset);
+			}
+			for (int col = 0; col < db.header.dsCount; col++) {
+				double value = db.rrdFile.readDouble();
+				values[col][counter] = value;
+			}
+		}
+		return values;
+	}
+    */
+
+	// Resolved bug from the original method (see above)
+	public double[][] getValues() throws IOException {
+		// OK PART
+		if (values != null) {
+			return values;
+		}
+		values = new double[db.header.dsCount][rowCount];
+		int row = currentRow;
+		// HERE ARE THE DRAGONS!
+		db.rrdFile.ras.seek(dataOffset + (row + 1) * db.header.dsCount * 8);
+		// OK, TOO!
 		for (int counter = 0; counter < rowCount; counter++) {
 			row++;
 			if (row == rowCount) {

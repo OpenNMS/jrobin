@@ -53,6 +53,10 @@ class Demo {
 		println("== Starting demo");
 		RrdDb.setLockMode(RrdDb.NO_LOCKS);
 		long startMillis = System.currentTimeMillis();
+		if(args.length > 0) {
+			println("Setting default backend factory to " + args[0]);
+			RrdDb.setDefaultFactory(args[0]);
+		}
 		long start = START;
 		long end = END;
 		String rrdPath = Util.getJRobinDemoPath(FILE + ".rrd");
