@@ -43,37 +43,45 @@ import java.io.IOException;
  * final long t2 = ...
  * DataProcessor dp = new DataProcessor(t1, t2);
  * // DEF datasource
- * dp.addDatasource("x", "demo.rrd", "sun", "AVERAGE");
+ * dp.addDatasource("x", "demo.rrd", "some_source", "AVERAGE");
  * // DEF datasource
- * dp.addDatasource("y", "demo.rrd", "shade", "AVERAGE");
+ * dp.addDatasource("y", "demo.rrd", "some_other_source", "AVERAGE");
  * // CDEF datasource, z = (x + y) / 2
  * dp.addDatasource("z", "x,y,+,2,/");
  * // ACTION!
  * dp.processData();
+ * // Dump calculated values
  * System.out.println(dp.dump());
  * </pre>
  */
 public class DataProcessor implements ConsolFuns {
 	/**
-	 * Constant used to determine the time step used in internal calculations. Note that AVERAGEs and TOTALs
-	 * calculated for the data in RRD files are not affected with this value.
- 	 */
+	 * Constant representing the default number of pixels on a JRobin graph (will be used if
+	 * no other value is specified with {@link #setStep(long) setStep()} method.
+	 */
 	public static final int DEFAUL_PIXEL_COUNT = 400;
-
 	private int pixelCount = DEFAUL_PIXEL_COUNT;
-	private int pixelsPerStep = 1;
-	private long customStep = 0;
-	private boolean poolUsed = false;
 
-	final private long tStart;
-	private long tEnd;
-	private double[] timestamps;
+	/**
+	 * Constant that defines the default {@link RrdDbPool} usage policy. Defaults to <code>false</code>
+	 * (i.e. the pool will not be used to fetch data from RRD files)
+	 */
+	public static final boolean DEFAULT_POOL_USAGE_POLICY = false;
+	private boolean poolUsed = DEFAULT_POOL_USAGE_POLICY;
+
+	private final long tStart;
+	private long tEnd, timestamps[];
+	// this will be adjusted later
+	private long step = 0;
+
 	// the order is important, ordinary HashMap is unordered
 	private Map sources = new LinkedHashMap();
 
+	private Def[] defSources;
+
 	/**
 	 * Creates new DataProcessor object for the given time span. Ending timestamp may be set to zero.
-	 * In that case, the class will try to find optimal ending timestamp based on the last update time of
+	 * In that case, the class will try to find the optimal ending timestamp based on the last update time of
 	 * RRD files processed with the {@link #processData()} method.
 	 *
 	 * @param t1 Starting timestamp in seconds without milliseconds
@@ -81,7 +89,7 @@ public class DataProcessor implements ConsolFuns {
 	 * @throws RrdException Thrown if invalid timestamps are supplied
 	 */
 	public DataProcessor(long t1, long t2) throws RrdException {
-		if((t1 < t2 && t1 > 0 && t2 > 0) || (t1 > 0 && t2 == 0)) {
+		if ((t1 < t2 && t1 > 0 && t2 > 0) || (t1 > 0 && t2 == 0)) {
 			this.tStart = t1;
 			this.tEnd = t2;
 		}
@@ -91,8 +99,8 @@ public class DataProcessor implements ConsolFuns {
 	}
 
 	/**
-	 * Creates new DataProcessor object for the given time span. Ending timestamp may be set to zero.
-	 * In that case, the class will try to find optimal ending timestamp based on the last update time of
+	 * Creates new DataProcessor object for the given time span. Ending date may be set to null.
+	 * In that case, the class will try to find optimal ending date based on the last update time of
 	 * RRD files processed with the {@link #processData()} method.
 	 *
 	 * @param d1 Starting date
@@ -100,12 +108,12 @@ public class DataProcessor implements ConsolFuns {
 	 * @throws RrdException Thrown if invalid timestamps are supplied
 	 */
 	public DataProcessor(Date d1, Date d2) throws RrdException {
-		this(Util.getTimestamp(d1), Util.getTimestamp(d2));
+		this(Util.getTimestamp(d1), d2 != null ? Util.getTimestamp(d2) : 0);
 	}
 
 	/**
-	 * Creates new DataProcessor object for the given time span. Ending timestamp may be set to zero.
-	 * In that case, the class will try to find optimal ending timestamp based on the last update time of
+	 * Creates new DataProcessor object for the given time span. Ending date may be set to null.
+	 * In that case, the class will try to find optimal ending date based on the last update time of
 	 * RRD files processed with the {@link #processData()} method.
 	 *
 	 * @param gc1 Starting Gregorian calendar date
@@ -113,16 +121,13 @@ public class DataProcessor implements ConsolFuns {
 	 * @throws RrdException Thrown if invalid timestamps are supplied
 	 */
 	public DataProcessor(GregorianCalendar gc1, GregorianCalendar gc2) throws RrdException {
-		this(Util.getTimestamp(gc1), Util.getTimestamp(gc2));
+		this(Util.getTimestamp(gc1), gc2 != null ? Util.getTimestamp(gc2) : 0);
 	}
-
-	/////////////////////////////////////////////////////////////////
-	// BASIC FUNCTIONS
-	/////////////////////////////////////////////////////////////////
 
 	/**
 	 * Returns boolean value representing {@link org.jrobin.core.RrdDbPool RrdDbPool} usage policy.
-	 * @return true, if the pool will be used to fetch data from RRD files, false otherwise.
+	 *
+	 * @return true, if the pool will be used internally to fetch data from RRD files, false otherwise.
 	 */
 	public boolean isPoolUsed() {
 		return poolUsed;
@@ -130,6 +135,7 @@ public class DataProcessor implements ConsolFuns {
 
 	/**
 	 * Sets the {@link org.jrobin.core.RrdDbPool RrdDbPool} usage policy.
+	 *
 	 * @param poolUsed true, if the pool should be used to fetch data from RRD files, false otherwise.
 	 */
 	public void setPoolUsed(boolean poolUsed) {
@@ -137,25 +143,29 @@ public class DataProcessor implements ConsolFuns {
 	}
 
 	/**
-	 * Returns the number of pixels (which is used to determine the length of time step
-	 * used in internal calculations)
-	 * @return Number of pixels (time steps)
-	 */
-	public int getPixelCount() {
-		return pixelCount;
-	}
-
-	/**
-	 * Sets the number of pixels. This number will be used to determine the length of time step
-	 * used in internal calculations. You can freely change this value but, at the same time,
-	 * you can be sure that AVERAGE and TOTAL values calculated for datasources in RRD files will not change.
-	 * The default number of pixels is defined by {@link #DEFAUL_PIXEL_COUNT}.
+	 * Sets the number of pixels (target graph width). This number is used only to calculate pixel coordinates
+	 * for JRobin graphs (methods {@link #getValuesPerPixel(String)} and {@link #getTimestampsPerPixel()}),
+	 * but has influence neither on datasource values calculated with the
+	 * {@link #processData()} method nor on aggregated values returned from {@link #getAggregates(String)}
+	 * and similar methods. In other words, aggregated values will not change once you decide to change
+	 * the dimension of your graph.<p>
+	 *
+	 * The default number of pixels is defined by constant {@link #DEFAUL_PIXEL_COUNT}
+	 * and can be changed with a {@link #setPixelCount(int)} method.
 	 *
 	 * @param pixelCount The number of pixels. If you process RRD data in order to display it on the graph,
-	 * this should be the width of your graph.
+	 *                   this should be the width of your graph.
 	 */
 	public void setPixelCount(int pixelCount) {
 		this.pixelCount = pixelCount;
+	}
+
+	/**
+	 * Returns the number of pixels (target graph width). See {@link #setPixelCount(int)} for more information.
+	 * @return Target graph width
+	 */
+	public int getPixelCount() {
+		return pixelCount;
 	}
 
 	/**
@@ -171,17 +181,31 @@ public class DataProcessor implements ConsolFuns {
 	 *
 	 * I think this option is not that useful, but it's here just for compatibility.<p>
 	 *
-	 * @param step Time step at which data should be fetched from RRD files.
+	 * @param step Time step at which data should be fetched from RRD files. If this method is not used,
+	 *             the step will be equal to the smallest RRD step of all processed RRD files. If no RRD file is processed,
+	 *             the step will be roughly equal to the with of one graph pixel (in seconds).
 	 */
 	public void setStep(long step) {
-		this.customStep = step;
+		this.step = step;
+	}
+
+	/**
+	 * Returns the time step used for data processing. Initially, this method returns zero.
+	 * Once {@link #processData()} is finished, the method will return the real value used for
+	 * all internal computations. Roughly corresponds to the --step option in RRDTool's graph/xport commands.
+	 *
+	 * @return Step used for data processing.
+	 */
+	public long getStep() {
+		return step;
 	}
 
 	/**
 	 * Returns ending timestamp. Basically, this value is equal to the ending timestamp
-	 * specified in the constructor. However, if it was set to zero in the constructor, it
+	 * specified in the constructor. However, if the ending timestamps was zero, it
 	 * will be replaced with the real timestamp when the {@link #processData()} method returns. The real
 	 * value will be calculated from the last update times of processed RRD files.
+	 *
 	 * @return Ending timestamp in seconds
 	 */
 	public long getEndingTimestamp() {
@@ -189,13 +213,12 @@ public class DataProcessor implements ConsolFuns {
 	}
 
 	/**
-	 * Returns timestamps for all pixels.
-	 * @return array of timestamps in seconds - to preserve maximum precision,
-	 * this values are not rounded to the nearest second. The length of this array is equal to the
-	 * number of pixels.
+	 * Returns consolidated timestamps created with the {@link #processData()} method.
+	 *
+	 * @return array of timestamps in seconds
 	 */
-	public double[] getTimestamps() throws RrdException {
-		if(timestamps == null) {
+	public long[] getTimestamps() throws RrdException {
+		if (timestamps == null) {
 			throw new RrdException("Timestamps not calculated yet");
 		}
 		else {
@@ -206,36 +229,51 @@ public class DataProcessor implements ConsolFuns {
 	/**
 	 * Returns calculated values for a single datasource. Corresponding timestamps can be obtained from
 	 * the {@link #getTimestamps()} method.
+	 *
 	 * @param sourceName Datasource name
-	 * @return an array of doubles. The length of this array is equal to the
-	 * number of pixels.
+	 * @return an array of datasource values
 	 * @throws RrdException Thrown if invalid datasource name is specified,
-	 * or if datasource values are not yet calculated
+	 *                      or if datasource values are not yet calculated (method {@link #processData()}
+	 *                      was not called)
 	 */
 	public double[] getValues(String sourceName) throws RrdException {
 		Source source = getSource(sourceName);
 		double[] values = source.getValues();
-		if(values == null) {
+		if (values == null) {
 			throw new RrdException("Values not available for source [" + sourceName + "]");
 		}
 		return values;
 	}
 
 	/**
-	 * Returns aggregated value for a single datasource.
+	 * Returns single aggregated value for a single datasource.
 	 *
 	 * @param sourceName Datasource name
-	 * @param consolFun Consolidation function to be applied to fetched datasource values.
-	 *                  Valid consolidation functions are "MIN", "MAX", "LAST", "FIRST", "AVERAGE" and "TOTAL"
-	 *                  (these string constants are conveniently defined in the {@link ConsolFuns} class)
+	 * @param consolFun  Consolidation function to be applied to fetched datasource values.
+	 *                   Valid consolidation functions are MIN, MAX, LAST, FIRST, AVERAGE and TOTAL
+	 *                   (these string constants are conveniently defined in the {@link ConsolFuns} class)
 	 * @return MIN, MAX, LAST, FIRST, AVERAGE or TOTAL value calculated from the data
 	 *         for the given datasource name
 	 * @throws RrdException Thrown if invalid datasource name is specified,
-	 * or if datasource values are not yet calculated
+	 *                      or if datasource values are not yet calculated (method {@link #processData()}
+	 *                      was not called)
 	 */
 	public double getAggregate(String sourceName, String consolFun) throws RrdException {
 		Source source = getSource(sourceName);
-		return source.getAggregate(consolFun, getSecondsPerPixel());
+		return source.getAggregates(tStart, tEnd).getAggregate(consolFun);
+	}
+
+	/**
+	 * Returns all (MIN, MAX, LAST, FIRST, AVERAGE and TOTAL) aggregated values for a single datasource.
+	 * @param sourceName Datasource name
+	 * @return Object containing all aggregated values
+	 * @throws RrdException Thrown if invalid datasource name is specified,
+	 *                      or if datasource values are not yet calculated (method {@link #processData()}
+	 *                      was not called)
+	 */
+	public Aggregates getAggregates(String sourceName) throws RrdException {
+		Source source = getSource(sourceName);
+		return source.getAggregates(tStart, tEnd);
 	}
 
 	/**
@@ -255,11 +293,12 @@ public class DataProcessor implements ConsolFuns {
 	 */
 	public double get95Percentile(String sourceName) throws RrdException {
 		Source source = getSource(sourceName);
-		return source.getPercentile(95);
+		return source.get95Percentile(tStart, tEnd);
 	}
 
 	/**
 	 * Returns array of datasource names defined in this DataProcessor.
+	 *
 	 * @return array of datasource names
 	 */
 	public String[] getSourceNames() {
@@ -270,16 +309,18 @@ public class DataProcessor implements ConsolFuns {
 	 * Returns an array of all datasource values for all datasources. Each row in this two-dimensional
 	 * array represents an array of calculated values for a single datasource. The order of rows is the same
 	 * as the order in which datasources were added to this DataProcessor object.
-	 * @return All datasource values for all datasources. The first index describes is the index of the datasource,
-	 * the second index is the index of the datasource value. In other words, the dimension of this array is
-	 * <code>numberOfDatasources x number of pixels</code>
+	 *
+	 * @return All datasource values for all datasources. The first index is the index of the datasource,
+	 *         the second index is the index of the datasource value. The number of datasource values is equal
+	 *         to the number of timestamps returned with {@link #getTimestamps()}  method.
 	 * @throws RrdException Thrown if invalid datasource name is specified,
-	 * or if datasource values are not yet calculated
+	 *                      or if datasource values are not yet calculated (method {@link #processData()}
+	 *                      was not called)
 	 */
 	public double[][] getValues() throws RrdException {
 		String[] names = getSourceNames();
 		double[][] values = new double[names.length][];
-		for(int i = 0; i < names.length; i++) {
+		for (int i = 0; i < names.length; i++) {
 			values[i] = getValues(names[i]);
 		}
 		return values;
@@ -287,7 +328,7 @@ public class DataProcessor implements ConsolFuns {
 
 	private Source getSource(String sourceName) throws RrdException {
 		Object source = sources.get(sourceName);
-		if(source != null) {
+		if (source != null) {
 			return (Source) source;
 		}
 		throw new RrdException("Unknown source: " + sourceName);
@@ -302,7 +343,7 @@ public class DataProcessor implements ConsolFuns {
 	 * The datapoints should be made available by a class extending
 	 * {@link org.jrobin.graph.Plottable Plottable} class.</p>
 	 *
-	 * @param name source name.
+	 * @param name      source name.
 	 * @param plottable class that extends Plottable class and is suited for graphing.
 	 */
 	public void addDatasource(String name, Plottable plottable) {
@@ -315,9 +356,9 @@ public class DataProcessor implements ConsolFuns {
 	 * The datapoints should be made available by a class extending
 	 * {@link org.jrobin.graph.Plottable Plottable}.</p>
 	 *
-	 * @param name Source name.
+	 * @param name      Source name.
 	 * @param plottable Class that extends Plottable class and is suited for graphing.
-	 * @param index Integer referring to the datasource in the Plottable class.
+	 * @param index     Integer referring to the datasource in the Plottable class.
 	 */
 	public void addDatasource(String name, Plottable plottable, int index) {
 		PDef pDef = new PDef(name, plottable, index);
@@ -329,8 +370,8 @@ public class DataProcessor implements ConsolFuns {
 	 * The datapoints should be made available by a class extending
 	 * {@link org.jrobin.graph.Plottable Plottable}.</p>
 	 *
-	 * @param name Source name.
-	 * @param plottable Class that extends Plottable class and is suited for graphing.
+	 * @param name       Source name.
+	 * @param plottable  Class that extends Plottable class and is suited for graphing.
 	 * @param sourceName String name referring to the datasource in the Plottable class.
 	 */
 	public void addDatasource(String name, Plottable plottable, String sourceName) {
@@ -352,7 +393,7 @@ public class DataProcessor implements ConsolFuns {
 	 * %, SIN, COS, LOG, EXP, FLOOR, CEIL, ROUND, POW, ABS, SQRT, RANDOM, LT, LE, GT, GE, EQ,
 	 * IF, MIN, MAX, LIMIT, DUP, EXC, POP, UN, UNKN, NOW, TIME, PI, E,
 	 * AND, OR, XOR, PREV, PREV(sourceName), INF, NEGINF, STEP, YEAR, MONTH, DATE,
-	 * HOUR, MINUTE, SECOND and WEEK.</p>
+	 * HOUR, MINUTE, SECOND, WEEK, SIGN and RND.</p>
 	 *
 	 * <p>JRobin does not force you to specify at least one simple source name as RRDTool.</p>
 	 *
@@ -360,9 +401,9 @@ public class DataProcessor implements ConsolFuns {
 	 * <a href="http://people.ee.ethz.ch/~oetiker/webtools/rrdtool/manual/rrdgraph.html" target="man">
 	 * rrdgraph man page</a>.</p>
 	 *
-	 * @param name source name.
+	 * @param name          source name.
 	 * @param rpnExpression RPN expression containig comma (or space) delimited simple and complex
-	 * source names, RPN constants, functions and operators.
+	 *                      source names, RPN constants, functions and operators.
 	 */
 	public void addDatasource(String name, String rpnExpression) {
 		CDef cDef = new CDef(name, rpnExpression);
@@ -373,8 +414,8 @@ public class DataProcessor implements ConsolFuns {
 	 * <p>Adds static source (<b>SDEF</b>). Static sources are the result of a consolidation function applied
 	 * to *any* other source that has been defined previously.</p>
 	 *
-	 * @param name source name.
-	 * @param defName Name of the datasource to calculate the value from.
+	 * @param name      source name.
+	 * @param defName   Name of the datasource to calculate the value from.
 	 * @param consolFun Consolidation function to use for value calculation
 	 */
 	public void addDatasource(String name, String defName, String consolFun) {
@@ -390,12 +431,12 @@ public class DataProcessor implements ConsolFuns {
 	 * <li>To define complex sources
 	 * </ul>
 	 *
-	 * @param name source name.
-	 * @param file Path to RRD file.
-	 * @param dsName Datasource name defined in the RRD file.
+	 * @param name       source name.
+	 * @param file       Path to RRD file.
+	 * @param dsName     Datasource name defined in the RRD file.
 	 * @param consolFunc Consolidation function that will be used to extract data from the RRD
-	 * file ("AVERAGE", "MIN", "MAX" or "LAST" - these string constants are conveniently defined
-	 * in the {@link org.jrobin.core.ConsolFuns ConsolFuns} class).
+	 *                   file ("AVERAGE", "MIN", "MAX" or "LAST" - these string constants are conveniently defined
+	 *                   in the {@link org.jrobin.core.ConsolFuns ConsolFuns} class).
 	 */
 	public void addDatasource(String name, String file, String dsName, String consolFunc) {
 		Def def = new Def(name, file, dsName, consolFunc);
@@ -409,149 +450,293 @@ public class DataProcessor implements ConsolFuns {
 	 * <li>To define complex sources
 	 * </ul>
 	 *
-	 * @param name Source name.
-	 * @param file Path to RRD file.
-	 * @param dsName Data source name defined in the RRD file.
+	 * @param name       Source name.
+	 * @param file       Path to RRD file.
+	 * @param dsName     Data source name defined in the RRD file.
 	 * @param consolFunc Consolidation function that will be used to extract data from the RRD
-	 * file ("AVERAGE", "MIN", "MAX" or "LAST" - these string constants are conveniently defined
-	 * in the {@link org.jrobin.core.ConsolFuns ConsolFuns} class).
-	 * @param backend Name of the RrdBackendFactory that should be used for this RrdDb.
+	 *                   file ("AVERAGE", "MIN", "MAX" or "LAST" - these string constants are conveniently defined
+	 *                   in the {@link org.jrobin.core.ConsolFuns ConsolFuns} class).
+	 * @param backend    Name of the RrdBackendFactory that should be used for this RrdDb.
 	 */
 	public void addDatasource(String name, String file, String dsName, String consolFunc, String backend) {
 		Def def = new Def(name, file, dsName, consolFunc, backend);
 		sources.put(name, def);
 	}
 
-	/////////////////////////////////////////////////////////////////
-	// MAIN FUNCTION
-	/////////////////////////////////////////////////////////////////
-
 	/**
 	 * Method that should be called once all datasources are defined. Data will be fetched from
 	 * RRD files, RPN expressions will be calculated, etc.
-	 * @throws IOException Thrown in case of I/O error (while fetching data from RRD files)
+	 *
+	 * @throws IOException  Thrown in case of I/O error (while fetching data from RRD files)
 	 * @throws RrdException Thrown in case of JRobin specific error
 	 */
 	public void processData() throws IOException, RrdException {
-		calculateDefs();
-		calculatePDefs();
-		calculateSdefsAndCdefs();
+		extractDefs();
+		fetchRrdData();
+		fixZeroEndingTimestamp();
+		chooseOptimalStep();
+		createTimestamps();
+		assignTimestampsToSources();
+		normalizeRrdValues();
+		calculateNonRrdSources();
 	}
 
-	/////////////////////////////////////////////////////////////////
-	// DEFS CALCULATION
-	/////////////////////////////////////////////////////////////////
+	/**
+	 * Method used to calculate datasource values which should be presented on the graph
+	 * based on the desired graph width. Each value returned represents a single pixel on the graph.
+	 * Corresponding timestamp can be found in the array returned from {@link #getTimestampsPerPixel()}
+	 * method.
+	 *
+	 * @param sourceName Datasource name
+	 * @param pixelCount Graph width
+	 * @return Per-pixel datasource values
+	 * @throws RrdException Thrown if datasource values are not yet calculated (method {@link #processData()}
+	 * was not called)
+	 */
+	public double[] getValuesPerPixel(String sourceName, int pixelCount) throws RrdException {
+		setPixelCount(pixelCount);
+		return getValuesPerPixel(sourceName);
+	}
 
-	private void calculateDefs() throws IOException, RrdException {
-		Def[] defs = getDefs();
-		fetchRrdData(defs);
-		createTimestamps(defs);
-		for(int i = 0; i < defs.length; i++) {
-			normalizeRrdValues(defs[i]);
+	/**
+	 * Method used to calculate datasource values which should be presented on the graph
+	 * based on the graph width set with a {@link #setPixelCount(int)} method call.
+	 * Each value returned represents a single pixel on the graph. Corresponding timestamp can be
+	 * found in the array returned from {@link #getTimestampsPerPixel()} method.
+	 *
+	 * @param sourceName Datasource name
+	 * @return Per-pixel datasource values
+	 * @throws RrdException Thrown if datasource values are not yet calculated (method {@link #processData()}
+	 * was not called)
+	 */
+	public double[] getValuesPerPixel(String sourceName) throws RrdException {
+		double[] values = getValues(sourceName);
+		double[] pixelValues = new double[pixelCount];
+		Arrays.fill(pixelValues, Double.NaN);
+		long span = tEnd - tStart;
+		// this is the ugliest nested loop I have ever made
+		for (int pix = 0, ref = 0; pix < pixelCount; pix++) {
+			double t = tStart + (double) (span * pix) / (double) (pixelCount - 1);
+			while (ref < timestamps.length) {
+				if (t <= timestamps[ref] - step) {
+					// too left, nothing to do, already NaN
+					break;
+				}
+				else if (t <= timestamps[ref]) {
+					// in brackets, get this value
+					pixelValues[pix] = values[ref];
+					break;
+				}
+				else {
+					// too right
+					ref++;
+				}
+			}
 		}
+		return pixelValues;
 	}
 
-	private void fetchRrdData(Def[] defs) throws IOException, RrdException {
-		long tEndFixed = (tEnd == 0)? Util.getTime(): tEnd;
-		for (int i = 0; i < defs.length; i++) {
-			if (defs[i].getValues() == null) {
+	/**
+	 * Calculates timestamps which correspond to individual pixels on the graph.
+	 *
+	 * @param pixelCount Graph width
+	 * @return Array of timestamps
+	 */
+	public long[] getTimestampsPerPixel(int pixelCount) {
+		setPixelCount(pixelCount);
+		return getTimestampsPerPixel();
+	}
+
+	/**
+	 * Calculates timestamps which correspond to individual pixels on the graph
+	 * based on the graph width set with a {@link #setPixelCount(int)} method call.
+	 *
+	 * @return Array of timestamps
+	 */
+	public long[] getTimestampsPerPixel() {
+		long[] times = new long[pixelCount];
+		long span = tEnd - tStart;
+		for (int i = 0; i < pixelCount; i++) {
+			times[i] = Math.round(tStart + (double) (span * i) / (double) (pixelCount - 1));
+		}
+		return times;
+	}
+
+	/**
+	 * Dumps timestamps and values of all datasources in a tabelar form. Very useful for debugging.
+	 *
+	 * @return Dumped object content.
+	 * @throws RrdException Thrown if nothing is calculated so far (the method {@link #processData()}
+	 *                      was not called).
+	 */
+	public String dump() throws RrdException {
+		String[] names = getSourceNames();
+		double[][] values = getValues();
+		StringBuffer buffer = new StringBuffer();
+		buffer.append(format("timestamp", 12));
+		for (int i = 0; i < names.length; i++) {
+			buffer.append(format(names[i], 20));
+		}
+		buffer.append("\n");
+		for (int i = 0; i < timestamps.length; i++) {
+			buffer.append(format("" + timestamps[i], 12));
+			for (int j = 0; j < names.length; j++) {
+				buffer.append(format(Util.formatDouble(values[j][i]), 20));
+			}
+			buffer.append("\n");
+		}
+		return buffer.toString();
+	}
+
+	// PRIVATE METHODS
+
+	private void extractDefs() {
+		List defList = new ArrayList();
+		Iterator it = sources.values().iterator();
+		while (it.hasNext()) {
+			Source source = (Source) it.next();
+			if (source instanceof Def) {
+				defList.add(source);
+			}
+		}
+		defSources = (Def[]) defList.toArray(new Def[defList.size()]);
+	}
+
+	private void fetchRrdData() throws IOException, RrdException {
+		long tEndFixed = (tEnd == 0) ? Util.getTime() : tEnd;
+		for (int i = 0; i < defSources.length; i++) {
+			if (defSources[i].getValues() == null) {
 				// not fetched yet
 				Set dsNames = new HashSet();
-				dsNames.add(defs[i].getDsName());
+				dsNames.add(defSources[i].getDsName());
 				// look for all other datasources with the same path and the same consolidation function
-				for (int j = i + 1; j < defs.length; j++) {
-					if (defs[i].isCompatibleWith(defs[j])) {
-						dsNames.add(defs[j].getDsName());
+				for (int j = i + 1; j < defSources.length; j++) {
+					if (defSources[i].isCompatibleWith(defSources[j])) {
+						dsNames.add(defSources[j].getDsName());
 					}
 				}
 				// now we have everything
 				RrdDb rrd = null;
 				try {
-					rrd = getRrd(defs[i]);
-					FetchRequest req = rrd.createFetchRequest(defs[i].getConsolFun(), tStart, tEndFixed);
+					rrd = getRrd(defSources[i]);
+					FetchRequest req = rrd.createFetchRequest(defSources[i].getConsolFun(), tStart, tEndFixed);
 					req.setFilter(dsNames);
 					FetchData data = req.fetchData();
-					defs[i].setFetchData(data);
-					for (int j = i + 1; j < defs.length; j++) {
-						if (defs[i].isCompatibleWith(defs[j])) {
-							defs[j].setFetchData(data);
+					defSources[i].setFetchData(data);
+					for (int j = i + 1; j < defSources.length; j++) {
+						if (defSources[i].isCompatibleWith(defSources[j])) {
+							defSources[j].setFetchData(data);
 						}
 					}
 				}
 				finally {
 					if (rrd != null) {
-						releaseRrd(rrd, defs[i]);
+						releaseRrd(rrd, defSources[i]);
 					}
 				}
 			}
 		}
 	}
 
-	private void createTimestamps(Def[] defs) throws RrdException, IOException {
-		// Fix zero ending timestamp if necessary
-		if(tEnd == 0) {
-			if(defs.length == 0) {
+	private void fixZeroEndingTimestamp() throws RrdException {
+		if (tEnd == 0) {
+			if (defSources.length == 0) {
 				throw new RrdException("Could not adjust zero ending timestamp, no DEF source provided");
 			}
-			tEnd = defs[0].getEndingFetchTimestamp();
-			for(int i = 1; i < defs.length; i++) {
-				tEnd = Math.min(tEnd, defs[i].getEndingFetchTimestamp());
+			tEnd = defSources[0].getLastValidTimestamp();
+			for (int i = 1; i < defSources.length; i++) {
+				tEnd = Math.min(tEnd, defSources[i].getLastValidTimestamp());
+			}
+			if (tEnd <= tStart) {
+				throw new RrdException("Could not resolve zero ending timestamp.");
 			}
 		}
-		// create timestamps
-		timestamps = new double[pixelCount];
-		double span = tEnd - tStart;
-		for(int i = 0; i < pixelCount; i++) {
-			timestamps[i] = tStart + ((double) i / (double)(pixelCount - 1)) * span;
-		}
-		// determine pixelsPerStep
-		pixelsPerStep = Math.max((int) Math.ceil(customStep / getSecondsPerPixel()), 1);
 	}
 
-	private void normalizeRrdValues(Def def) throws RrdException {
-		long[] rrdTimestamps = def.getRrdTimestamps();
-		double[] rrdValues = def.getRrdValues();
-		double[] values = new double[pixelCount];
-		int dsSegment = 1, accumPixels = 0;
-		values[0] = (tStart == rrdTimestamps[0])? rrdValues[0]: rrdValues[1];
-		double totalValue = 0D, totalTime = 0D;
-		for(int pixel = 1; pixel < pixelCount; pixel++) {
-			double t0 = timestamps[pixel - 1], t1 = timestamps[pixel];
-			while(t0 < t1) {
-				double tLimit = Math.min(rrdTimestamps[dsSegment], t1);
-				double dt = tLimit - t0;
-				double val = rrdValues[dsSegment];
-				if(!Double.isNaN(val)) {
-					totalValue += val * dt;
-					totalTime += dt;
-				}
-				t0 = tLimit;
-				if(t0 == rrdTimestamps[dsSegment]) {
-					dsSegment++;
-				}
+	// Tricky and ugly. Should be redesigned some time in the future
+	private void chooseOptimalStep() {
+		long newStep = Long.MAX_VALUE;
+		for (int i = 0; i < defSources.length; i++) {
+			long fetchStep = defSources[i].getFetchStep(), tryStep = fetchStep;
+			if (step > 0) {
+				tryStep = Math.min(newStep, (((step - 1) / fetchStep) + 1) * fetchStep);
 			}
-			if(++accumPixels == pixelsPerStep || pixel == pixelCount - 1) {
-				double average = (totalTime > 0)? totalValue / totalTime: Double.NaN;
-				for(int i = 0; i < accumPixels; i++) {
-					values[pixel - i] = average;
-				}
-				totalValue = totalTime = 0;
-				accumPixels = 0;
-			}
+			newStep = Math.min(newStep, tryStep);
 		}
-		def.setValues(values);
+		if (newStep != Long.MAX_VALUE) {
+			// step resolved from a RRD file
+			step = newStep;
+		}
+		else {
+			// choose step based on the number of pixels (useful for plottable datasources)
+			step = Math.max((tEnd - tStart) / pixelCount, 1);
+		}
 	}
 
-	private Def[] getDefs() {
-		List defs = new ArrayList();
+	private void createTimestamps() {
+		long t1 = Util.normalize(tStart, step);
+		long t2 = Util.normalize(tEnd, step);
+		if (t2 < tEnd) {
+			t2 += step;
+		}
+		int count = (int) (((t2 - t1) / step) + 1);
+		timestamps = new long[count];
+		for (int i = 0; i < count; i++) {
+			timestamps[i] = t1;
+			t1 += step;
+		}
+	}
+
+	private void assignTimestampsToSources() {
+		Iterator it = sources.values().iterator();
+		while (it.hasNext()) {
+			Source src = (Source) it.next();
+			src.setTimestamps(timestamps);
+		}
+	}
+
+	private void normalizeRrdValues() throws RrdException {
+		for (int i = 0; i < defSources.length; i++) {
+			Def def = defSources[i];
+			long[] rrdTimestamps = def.getRrdTimestamps();
+			double[] rrdValues = def.getRrdValues();
+			Normalizer normalizer = new Normalizer(timestamps);
+			double[] values = normalizer.normalize(rrdTimestamps, rrdValues);
+			def.setValues(values);
+		}
+	}
+
+	private void calculateNonRrdSources() throws RrdException {
 		Iterator it = sources.values().iterator();
 		while (it.hasNext()) {
 			Object source = it.next();
-			if(source instanceof Def) {
-				defs.add(source);
+			if (source instanceof SDef) {
+				calculateSDef((SDef) source);
+			}
+			else if (source instanceof CDef) {
+				calculateCDef((CDef) source);
+			}
+			else if (source instanceof PDef) {
+				calculatePDef((PDef) source);
 			}
 		}
-		return (Def[]) defs.toArray(new Def[defs.size()]);
+	}
+
+	private void calculatePDef(PDef pdef) {
+		pdef.calculateValues();
+	}
+
+	private void calculateCDef(CDef cDef) throws RrdException {
+		RpnCalculator calc = new RpnCalculator(cDef.getRpnExpression(), cDef.getName(), this);
+		cDef.setValues(calc.calculateValues());
+	}
+
+	private void calculateSDef(SDef sDef) throws RrdException {
+		String defName = sDef.getDefName();
+		String consolFun = sDef.getConsolFun();
+		Source source = getSource(defName);
+		double value = source.getAggregates(tStart, tEnd).getAggregate(consolFun);
+		sDef.setValue(value);
 	}
 
 	private RrdDb getRrd(Def def) throws IOException, RrdException {
@@ -577,106 +762,9 @@ public class DataProcessor implements ConsolFuns {
 		}
 	}
 
-	/////////////////////////////////////////////////////////////////
-	// PLOTTABLE CALCULATION
-	/////////////////////////////////////////////////////////////////
-
-	private void calculatePDefs() {
-		PDef[] pDefs = getPDefs();
-		for(int i = 0; i < pDefs.length; i++) {
-			double[] values = new double[pixelCount];
-			for(int j = 0; j < pixelCount; j++) {
-				double t = timestamps[j];
-				values[j] = pDefs[i].getValue(t);
-			}
-			pDefs[i].setValues(values);
-		}
-	}
-
-	private PDef[] getPDefs() {
-		List pDefs = new ArrayList();
-		Iterator it = sources.values().iterator();
-		while (it.hasNext()) {
-			Object source = it.next();
-			if(source instanceof PDef) {
-				pDefs.add(source);
-			}
-		}
-		return (PDef[]) pDefs.toArray(new PDef[pDefs.size()]);
-	}
-
-	/////////////////////////////////////////////////////////////////
-	// SDEFS AND CDEFS
-	/////////////////////////////////////////////////////////////////
-
-	private void calculateSdefsAndCdefs() throws RrdException {
-		Iterator it = sources.values().iterator();
-		while (it.hasNext()) {
-			Object source = it.next();
-			if(source instanceof SDef) {
-				calculateSDef((SDef) source);
-			}
-			else if(source instanceof CDef) {
-				calculateCDef((CDef) source);
-			}
-		}
-	}
-
-	private void calculateCDef(CDef cDef) throws RrdException {
-		RpnCalculator calc = new RpnCalculator(cDef.getRpnExpression(), cDef.getName(), this);
-		cDef.setValues(calc.calculateValues());
-	}
-
-	private void calculateSDef(SDef sDef) throws RrdException {
-		String defName = sDef.getDefName();
-		String consolFun = sDef.getConsolFun();
-		Source source = getSource(defName);
-		double value = source.getAggregate(consolFun, getSecondsPerPixel());
-		sDef.setValue(value, pixelCount);
-	}
-
-	/////////////////////////////////////////////////////////////////
-	// TRIVIA
-	/////////////////////////////////////////////////////////////////
-
-	private double getSecondsPerPixel() throws RrdException {
-		double secondsPerPixel = (double) (tEnd - tStart) / (double) (pixelCount - 1);
-		if(secondsPerPixel < 1.0) {
-			throw new RrdException("Time span [" + tStart + "," + tEnd + "] too narrow. " +
-				"The time span (in seconds) sohuld be greater than number of pixels [" + pixelCount + "]");
-		}
-		return secondsPerPixel;
-	}
-
-	/**
-	 * Dumps timestamps and values of all datasources in a tabelar form. Very useful for debugging.
-	 * @return Dumped object content.
-	 * @throws RrdException Thrown if nothing is calculated so far (the method {@link #processData()}
-	 * was not called).
-	 */
-	public String dump() throws RrdException {
-		String[] names = getSourceNames();
-		double[][] values = getValues();
-		StringBuffer buffer = new StringBuffer();
-		buffer.append(fmt("timestamp", 12));
-		for(int i = 0; i < names.length; i++) {
-			buffer.append(fmt(names[i], 20));
-		}
-		buffer.append("\n");
-		for(int i = 0; i < timestamps.length; i++) {
-			long t = (long) Math.round(timestamps[i]);
-			buffer.append(fmt("" + t, 12));
-			for(int j = 0; j < names.length; j++) {
-				buffer.append(fmt(Util.formatDouble(values[j][i]), 20));
-			}
-			buffer.append("\n");
-		}
-		return buffer.toString();
-	}
-
-	private static String fmt(String s, int length) {
+	private static String format(String s, int length) {
 		StringBuffer b = new StringBuffer(s);
-		for(int i = 0; i < length - s.length(); i++) {
+		for (int i = 0; i < length - s.length(); i++) {
 			b.append(' ');
 		}
 		return b.toString();
@@ -684,31 +772,60 @@ public class DataProcessor implements ConsolFuns {
 
 	/**
 	 * Cute little demo. Uses demo.rrd file previously created by basic JRobin demo.
-	 * @param args
+	 *
+	 * @param args Not used
 	 * @throws IOException
 	 * @throws RrdException
 	 */
 	public static void main(String[] args) throws IOException, RrdException {
+		// time span
 		long t1 = Util.getTimestamp(2003, 4, 1);
+		long t2 = Util.getTimestamp(2003, 5, 1);
+
+		// RRD file to use
 		String rrdPath = Util.getJRobinDemoPath("demo.rrd");
-		DataProcessor dp = new DataProcessor(t1, 0);
-		//dp.setStep(2 * 86400);
-		// DEF datasource
+
+		// constructor
+		DataProcessor dp = new DataProcessor(t1, t2);
+
+		// uncomment and run again
+		//dp.setStep(7300);
+
+		// datasource definitions
 		dp.addDatasource("X", rrdPath, "sun", "AVERAGE");
-		// DEF datasource
 		dp.addDatasource("Y", rrdPath, "shade", "AVERAGE");
-		// CDEF datasource
 		dp.addDatasource("Z", "X,Y,+,2,/");
-		// SDEF datasource
-		dp.addDatasource("AVG", "Z", "AVERAGE");
-		// CDEF datasource
-		dp.addDatasource("DELTA", "Z,AVG,-");
-		// SDEF datasource, values should be close to zero
-		dp.addDatasource("ALMOST ZERO", "DELTA", "AVERAGE");
-		// action!
+		dp.addDatasource("DERIVE[Z]", "Z,PREV(Z),-,STEP,/");
+		dp.addDatasource("TREND[Z]", "DERIVE[Z],SIGN");
+		dp.addDatasource("AVG[Z]", "Z", "AVERAGE");
+		dp.addDatasource("DELTA", "Z,AVG[Z],-");
+
+		// action
+		long laptime = System.currentTimeMillis();
 		dp.processData();
-		Date endingDate = new Date(dp.getEndingTimestamp() * 1000L);
-		System.out.println("Ending timestamp used: " + dp.getEndingTimestamp() + " (" + endingDate + ")\n");
+		System.out.println("Data processed in " + (System.currentTimeMillis() - laptime) + " milliseconds\n---");
 		System.out.println(dp.dump());
+
+		// pixel values and timestamps
+		System.out.println("Per pixel timestasmps and values for datasource X (pixelCount=" +
+				dp.getPixelCount() + ")");
+		long[] t = dp.getTimestampsPerPixel();
+		double[] v = dp.getValuesPerPixel("X");
+		for(int i = 0; i < t.length; i++) {
+			System.out.println(t[i] + "  " + Util.formatDouble(v[i]));
+		}
+
+		// aggregates
+		System.out.println("\nAggregates for X");
+		Aggregates agg = dp.getAggregates("X");
+		System.out.println(agg.dump());
+		System.out.println("\nAggregates for Y");
+		agg = dp.getAggregates("Y");
+		System.out.println(agg.dump());
+
+		// 95-percentile
+		System.out.println("\n95-percentile for X: " + Util.formatDouble(dp.get95Percentile("X")));
+		System.out.println("95-percentile for Y: " + Util.formatDouble(dp.get95Percentile("Y")));
 	}
 }
+

@@ -83,6 +83,8 @@ class RpnCalculator {
 	private static final byte TKN_MINUTE	= 47;
 	private static final byte TKN_SECOND	= 48;
 	private static final byte TKN_WEEK		= 49;
+	private static final byte TKN_SIGN		= 50;
+	private static final byte TKN_RND		= 51;
 
 	private String rpnExpression;
 	private String sourceName;
@@ -91,7 +93,7 @@ class RpnCalculator {
 	private Token[] tokens;
 	private RpnStack stack = new RpnStack();
 	private double[] calculatedValues;
-	private double[] timestamps;
+	private long[] timestamps;
 	private double timeStep;
 
 	RpnCalculator(String rpnExpression, String sourceName, DataProcessor dataProcessor) throws RrdException {
@@ -264,6 +266,12 @@ class RpnCalculator {
 		}
 		else if (parsedText.equals("WEEK")) {
 			token.id = TKN_WEEK;
+		}
+		else if(parsedText.equals("SIGN")) {
+			token.id = TKN_SIGN;
+		}
+		else if(parsedText.equals("RND")) {
+			token.id = TKN_RND;
 		}
 		else {
 			token.id = TKN_VAR;
@@ -462,6 +470,13 @@ class RpnCalculator {
 						break;
 					case TKN_WEEK:
 						push(getCalendarField(pop(), Calendar.WEEK_OF_YEAR));
+						break;
+					case TKN_SIGN:
+						x1 = pop();
+						push(Double.isNaN(x1)? Double.NaN: x1 > 0? +1: x1 < 0? -1: 0);
+						break;
+					case TKN_RND:
+						push(Math.floor(pop() * Math.random()));
 						break;
 					default:
 						throw new RrdException("Unexpected RPN token encountered, token.id=" + token.id);

@@ -34,7 +34,7 @@ import java.io.IOException;
 class Def extends Source {
 	private String path, dsName, consolFun, backend;
 	private FetchData fetchData;
-	private long endingFetchTimestamp;
+	private long lastValidTimestamp, fetchStep;
 
 	Def(String name, String path, String dsName, String consolFunc) {
 		this(name, path, dsName, consolFunc, null);
@@ -77,7 +77,8 @@ class Def extends Source {
 
 	void setFetchData(FetchData fetchData) throws IOException {
 		this.fetchData = fetchData;
-		this.endingFetchTimestamp = fetchData.getMatchingArchive().getEndTime();
+		this.lastValidTimestamp = fetchData.getMatchingArchive().getEndTime();
+		this.fetchStep = fetchData.getMatchingArchive().getArcStep(); 
 	}
 
 	long[] getRrdTimestamps() {
@@ -88,7 +89,25 @@ class Def extends Source {
 		return fetchData.getValues(dsName);
 	}
 
-	long getEndingFetchTimestamp() throws IOException {
-		return endingFetchTimestamp;
+	long getLastValidTimestamp() {
+		return lastValidTimestamp;
+	}
+
+	long getFetchStep() {
+		return fetchStep;
+	}
+
+	Aggregates getAggregates(long tStart, long tEnd) throws RrdException {
+		long[] t = getRrdTimestamps();
+		double[] v = getRrdValues();
+		Aggregator agg = new Aggregator(t, v);
+		return agg.getAggregates(tStart, tEnd);
+	}
+
+	double get95Percentile(long tStart, long tEnd) throws RrdException {
+		long[] t = getRrdTimestamps();
+		double[] v = getRrdValues();
+		Aggregator agg = new Aggregator(t, v);
+		return agg.get95Percentile(tStart, tEnd);
 	}
 }

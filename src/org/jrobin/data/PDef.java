@@ -53,8 +53,12 @@ class PDef extends Source {
 		};
 	}
 
-	double getValue(double timestamp) {
-		long t = (long) Math.round(timestamp);
-		return plottable.getValue(t);
+	void calculateValues() {
+		long[] times = getTimestamps();
+		double[] vals = new double[times.length];
+		for(int i = 0; i < times.length; i++) {
+			vals[i] = plottable.getValue(times[i]);
+		}
+		setValues(vals);
 	}
 }
