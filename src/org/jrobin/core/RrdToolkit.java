@@ -255,7 +255,7 @@ public class RrdToolkit {
 		File source = new File(sourcePath);
 		File dest = new File(destPath);
 		if (saveBackup) {
-			String backupPath = destPath + ".bak";
+			String backupPath = getBackupPath(destPath);
 			File backup = new File(backupPath);
 			deleteFile(backup);
 			if (!dest.renameTo(backup)) {
@@ -266,6 +266,14 @@ public class RrdToolkit {
 		if (!source.renameTo(dest)) {
 			throw new IOException("Could not create file " + destPath + " from " + sourcePath);
 		}
+	}
+
+	private static String getBackupPath(String destPath) {
+		String backupPath = destPath;
+		do {
+			backupPath += ".bak";
+		} while(new File(backupPath).exists());
+		return backupPath;
 	}
 
 	/**
