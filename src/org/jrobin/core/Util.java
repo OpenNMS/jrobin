@@ -37,12 +37,13 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.DocumentBuilder;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.text.SimpleDateFormat;
+import java.text.ParseException;
 import java.util.Date;
 import java.util.Locale;
 import java.util.GregorianCalendar;
 import java.util.ArrayList;
 import java.io.*;
-import java.awt.*;
 
 /**
  * Class defines various utility functions used in JRobin. 
@@ -165,6 +166,7 @@ public class Util {
 	 * @return Corresponding timestamp (without milliseconds)
 	 */
 	public static long getTimestamp(Date date) {
+		// round to whole seconds, ignore milliseconds
 		return (date.getTime() + 499L) / 1000L;
 	}
 
@@ -285,6 +287,34 @@ public class Util {
 
 	static String getTmpFilename() throws IOException {
 		return File.createTempFile("JROBIN_", ".tmp").getCanonicalPath();
+	}
+
+	static final String ISO_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";   // ISO
+
+	/**
+	 * Creates GregorianCalendar object from a string. The string should represent
+	 * either a long integer (UNIX timestamp in seconds without milliseconds,
+	 * like "1002354657") or a human readable date string in the format "yyyy-MM-dd HH:mm:ss"
+	 * (like "2004-02-25 12:23:45").
+	 * @param timeStr Input string
+	 * @return GregorianCalendar object
+	 */
+	public static GregorianCalendar getGregorianCalendar(String timeStr) {
+		// try to parse it as long
+		try {
+			long timestamp = Long.parseLong(timeStr);
+			return Util.getGregorianCalendar(timestamp);
+		} catch (NumberFormatException e) { }
+		// not a long timestamp, try to parse it as data
+		SimpleDateFormat df = new SimpleDateFormat(ISO_DATE_FORMAT);
+		df.setLenient(false);
+		try {
+			Date date = df.parse(timeStr);
+            return Util.getGregorianCalendar(date);
+		} catch (ParseException e) {
+			throw new IllegalArgumentException("Time/date not in " + ISO_DATE_FORMAT +
+				" format: " + timeStr);
+		}
 	}
 
 	/**

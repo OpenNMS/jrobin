@@ -75,7 +75,7 @@ public abstract class XmlTemplate {
 	 * @param name variable name
 	 * @param value value to be set in the XML template
 	 */
-	public void setMapping(String name, String value) {
+	public void setVariable(String name, String value) {
 		valueMap.put(name, value);
 	}
 
@@ -86,7 +86,7 @@ public abstract class XmlTemplate {
 	 * @param name variable name
 	 * @param value value to be set in the XML template
 	 */
-	public void setMapping(String name, int value) {
+	public void setVariable(String name, int value) {
 		valueMap.put(name, new Integer(value));
 	}
 
@@ -97,7 +97,7 @@ public abstract class XmlTemplate {
 	 * @param name variable name
 	 * @param value value to be set in the XML template
 	 */
-	public void setMapping(String name, long value) {
+	public void setVariable(String name, long value) {
 		valueMap.put(name, new Long(value));
 	}
 
@@ -108,7 +108,7 @@ public abstract class XmlTemplate {
 	 * @param name variable name
 	 * @param value value to be set in the XML template
 	 */
-	public void setMapping(String name, double value) {
+	public void setVariable(String name, double value) {
 		valueMap.put(name, new Double(value));
 	}
 
@@ -119,7 +119,7 @@ public abstract class XmlTemplate {
 	 * @param name variable name
 	 * @param value value to be set in the XML template
 	 */
-	public void setMapping(String name, Color value) {
+	public void setVariable(String name, Color value) {
 		valueMap.put(name, "#" + Integer.toHexString(value.getRGB() & 0xFFFFFF));
 	}
 
@@ -130,8 +130,8 @@ public abstract class XmlTemplate {
 	 * @param name variable name
 	 * @param value value to be set in the XML template
 	 */
-	public void setMapping(String name, Date value) {
-        setMapping(name, Util.getTimestamp(value));
+	public void setVariable(String name, Date value) {
+        setVariable(name, Util.getTimestamp(value));
 	}
 
 	/**
@@ -141,8 +141,8 @@ public abstract class XmlTemplate {
 	 * @param name variable name
 	 * @param value value to be set in the XML template
 	 */
-	public void setMapping(String name, GregorianCalendar value) {
-        setMapping(name, Util.getTimestamp(value));
+	public void setVariable(String name, GregorianCalendar value) {
+        setVariable(name, Util.getTimestamp(value));
 	}
 
 	/**
@@ -152,7 +152,7 @@ public abstract class XmlTemplate {
 	 * @param name variable name
 	 * @param value value to be set in the XML template
 	 */
-	public void setMapping(String name, boolean value) {
+	public void setVariable(String name, boolean value) {
 		valueMap.put(name, "" + value);
 	}
 
@@ -192,7 +192,8 @@ public abstract class XmlTemplate {
 			}
 			else {
 				// no mapping found - this is illegal
-				throw new IllegalArgumentException("No mapping found for template variable " + value);
+				throw new IllegalArgumentException(
+					"No mapping found for template variable " + value);
 			}
 		}
 		return value;
@@ -244,10 +245,9 @@ public abstract class XmlTemplate {
 			(node.getNodeName().equals("#text") && node.getNodeValue().trim().length() == 0);
 	}
 
-	protected void validateOnce(Node parentNode, String[] allowedChildNames) throws RrdException {
+	protected void validateTagsOnlyOnce(Node parentNode, String[] allowedChildNames) throws RrdException {
 		// validate node only once
 		if(validatedNodes.contains(parentNode)) {
-			//System.out.println("Already validated");
 			return;
 		}
 		Node[] childs = getChildNodes(parentNode);
@@ -255,7 +255,13 @@ public abstract class XmlTemplate {
 		for(int i = 0; i < childs.length; i++) {
 			String childName = childs[i].getNodeName();
 			for(int j = 0; j < allowedChildNames.length; j++) {
-				if(childName.equals(allowedChildNames[j])) {
+				if(allowedChildNames[j].equals(childName)) {
+					// only one such tag is allowed
+					allowedChildNames[j] = "<--removed-->";
+					continue main;
+				}
+				else if(allowedChildNames[j].equals(childName + "*")) {
+					// several tags allowed
 					continue main;
 				}
 			}
@@ -263,6 +269,7 @@ public abstract class XmlTemplate {
 				throw new RrdException("Unexpected tag encountered: <" + childName + ">");
 			}
 		}
+		// everything is OK
 		validatedNodes.add(parentNode);
 	}
 }

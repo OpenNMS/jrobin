@@ -130,11 +130,6 @@ public class RrdGraphDef implements Serializable
 	public RrdGraphDef() {
 	}
 	
-	public RrdGraphDef( String jrobinXml ) throws RrdException
-	{
-		new XmlGraphDefConvertor( jrobinXml, this );
-	}
-
 	/**
 	 * Constructs a new JRobin graph object, with a specified time span to be presented on the graph.  
 	 * Using timestamps defined as number of seconds since the epoch.
@@ -904,10 +899,7 @@ public class RrdGraphDef implements Serializable
 		addComment( new Gprint(sourceName, consolFun, format) );
 	}
 		
-	/**
-	 * 
-	 * @return
-	 */
+/*
 	public String getJRobinXml()
 	{
 		StringBuffer xml = new StringBuffer( "" );
@@ -1010,7 +1002,7 @@ public class RrdGraphDef implements Serializable
 		
 		return xml.toString();
 	}
-		
+*/
 	// ================================================================
 	// -- Protected (package) methods
 	// ================================================================

@@ -26,6 +26,8 @@
 package org.jrobin.core;
 
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.GregorianCalendar;
 
 /**
  * <p>Class to represent definition of new RRD file. Object of this class is used to create
@@ -140,15 +142,31 @@ public class RrdDef {
 	}
 
 	/**
-	 * Sets RRD starting timestamp.
-	 * @param startTime RRD starting timestamp.
+	 * Sets RRD's starting timestamp.
+	 * @param startTime starting timestamp.
 	 */
 	public void setStartTime(long startTime) {
 		this.startTime = startTime;
 	}
 
 	/**
-	 * Sets RRD time step.
+	 * Sets RRD's starting timestamp.
+	 * @param date starting date
+	 */
+	public void setStartTime(Date date) {
+		this.startTime = Util.getTimestamp(date);
+	}
+
+	/**
+	 * Sets RRD's starting timestamp.
+	 * @param gc starting date
+	 */
+	public void setStartTime(GregorianCalendar gc) {
+		this.startTime = Util.getTimestamp(gc);
+	}
+
+	/**
+	 * Sets RRD's time step.
 	 * @param step RRD time step.
 	 */
 	public void setStep(long step) {

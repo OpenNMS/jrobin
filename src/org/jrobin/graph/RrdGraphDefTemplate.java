@@ -35,11 +35,9 @@ import java.io.File;
 import java.awt.*;
 import java.util.GregorianCalendar;
 import java.util.Date;
-import java.text.SimpleDateFormat;
-import java.text.ParseException;
 
 /**
- * Class used to create an arbitrary number of RrdGraphDefs (graph definition) objects
+ * Class used to create an arbitrary number of RrdGraphDef (graph definition) objects
  * from a single XML template. XML template can be supplied as an XML InputSource,
  * XML file or XML formatted string.<p>
  *
@@ -213,19 +211,21 @@ import java.text.ParseException;
  * for the corresponding class.
  * <li>hard-coded timestamps in templates should be long integeres
  * (like: 1000243567) or ISO formatted strings (like: 2004-02-21 12:25:45)
- * <li>all leading and trailing whitespaces are removed
+ * <li>whitespaces are not harmful
  * <li>use <code>true</code>, <code>on</code>, <code>yes</code>, <code>y</code>,
  * or <code>1</code> to specify boolean <code>true</code> value (anything else will
  * be treated as <code>false</code>).
  * <li>floating point values: anything that cannot be parsed will be treated as Double.NaN
  * (like: U, unknown, 12r.23)
  * <li>use #RRGGBB format to specify colors.
+ * <li>valid font styles are: PLAIN, ITALIC, BOLD, BOLD ITALIC
  * <li>comments are allowed.
  * </ul>
  * Any template value (text between <code>&lt;some_tag&gt;</code> and
  * <code>&lt;/some_tag&gt;</code>) can be replaced with
  * a variable of the following form: <code>${variable_name}</code>. Use
- * {@link XmlTemplate#setMapping(String, String) setMapping()} methods from the base class to replace
+ * {@link XmlTemplate#setVariable(String, String) setVariable()}
+ * methods from the base class to replace
  * template variables with real values at runtime.<p>
  *
  * Typical usage scenario:<p>
@@ -233,7 +233,7 @@ import java.text.ParseException;
  * <li>Create your XML template and save it to a file (template.xml, for example)
  * <li>Replace template values with variables if you want to change them during runtime.
  * For example, time span should not be hard-coded in the template - you probably want to create
- * many different graphs with different time spans, but starting from the same XML template.
+ * many different graphs with different time spans from the same XML template.
  * For example, your XML template could start with:
  * <pre>
  * &lt;rrd_graph_def&gt;
@@ -249,8 +249,8 @@ import java.text.ParseException;
  * </pre>
  * <li>Then, specify real values for template variables:
  * <pre>
- * t.setMapping("start", new GregorianCalendar(2004, 2, 25));
- * t.setMapping("end", new GregorianCalendar(2004, 2, 26));
+ * t.setVariable("start", new GregorianCalendar(2004, 2, 25));
+ * t.setVariable("end", new GregorianCalendar(2004, 2, 26));
  * </pre>
  * <li>Once all template variables are set, just use the template object to create RrdGraphDef
  * object. This object is actually used to create JRobin grahps:
@@ -266,7 +266,6 @@ import java.text.ParseException;
  * definition object gets created relatively slowly, but it will be created much faster next time.
  */
 public class RrdGraphDefTemplate extends XmlTemplate {
-	static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";   // ISO format
 
 	private RrdGraphDef rrdGraphDef;
 
@@ -304,7 +303,7 @@ public class RrdGraphDefTemplate extends XmlTemplate {
 	 * Creates RrdGraphDef object which can be used to create RrdGraph
 	 * object (actual JRobin graphs). Before this method is called, all template variables (if any)
 	 * must be resolved (replaced with real values).
-	 * See {@link XmlTemplate#setMapping(String, String) setMapping()} method information to
+	 * See {@link XmlTemplate#setVariable(String, String) setVariable()} method information to
 	 * understand how to supply values for template variables.
 	 * @return Graph definition which can be used to create RrdGraph object (actual JRobin graphs)
 	 * @throws RrdException Thrown if parsed XML template contains invalid (unrecognized) tags
@@ -314,7 +313,7 @@ public class RrdGraphDefTemplate extends XmlTemplate {
 		if(!root.getTagName().equals("rrd_graph_def")) {
 			throw new RrdException("XML definition must start with <rrd_graph_def>");
 		}
-		validateOnce(root, new String[] {"span", "options", "datasources", "graph"});
+		validateTagsOnlyOnce(root, new String[] {"span", "options", "datasources", "graph"});
 		rrdGraphDef = new RrdGraphDef();
         // traverse all nodes
 		Node[] childs = getChildNodes(root);
@@ -341,8 +340,8 @@ public class RrdGraphDefTemplate extends XmlTemplate {
 	}
 
 	private void resolveGraphElements(Node graphNode) throws RrdException {
-		validateOnce(graphNode, new String[] {
-			"area", "line", "stack", "gprint", "hrule", "vrule", "comment"
+		validateTagsOnlyOnce(graphNode, new String[] {
+			"area*", "line*", "stack*", "gprint*", "hrule*", "vrule*", "comment*"
 		});
 		Node[] childs = getChildNodes(graphNode);
 		for(int i = 0; i < childs.length; i++) {
@@ -354,7 +353,7 @@ public class RrdGraphDefTemplate extends XmlTemplate {
 				resolveLine(childs[i]);
 			}
 			else if(nodeName.equals("stack")) {
-				validateOnce(childs[i], new String[] { "datasource", "color", "legend" });
+				validateTagsOnlyOnce(childs[i], new String[] { "datasource", "color", "legend" });
 				String datasource = getChildValue(childs[i], "datasource");
 				String colorStr = getChildValue(childs[i], "color");
 				Color color = Color.decode(colorStr);
@@ -366,14 +365,14 @@ public class RrdGraphDefTemplate extends XmlTemplate {
 				rrdGraphDef.comment(comment);
 			}
 			else if(nodeName.equals("gprint")) {
-				validateOnce(childs[i], new String[] { "datasource", "cf", "format" });
+				validateTagsOnlyOnce(childs[i], new String[] { "datasource", "cf", "format" });
 				String datasource = getChildValue(childs[i], "datasource");
 				String consolFun = getChildValue(childs[i], "cf");
 				String format = getChildValue(childs[i], "format");
 				rrdGraphDef.gprint(datasource, consolFun, format);
 			}
 			else if(nodeName.equals("hrule")) {
-				validateOnce(childs[i], new String[] { "value", "color", "legend", "width" });
+				validateTagsOnlyOnce(childs[i], new String[] { "value", "color", "legend", "width" });
 				double value = getChildValueAsDouble(childs[i], "value");
 				String colorStr = getChildValue(childs[i], "color");
 				Color color = Color.decode(colorStr);
@@ -385,9 +384,9 @@ public class RrdGraphDefTemplate extends XmlTemplate {
 				rrdGraphDef.hrule(value, color, legend, width);
 			}
 			else if(nodeName.equals("vrule")) {
-				validateOnce(childs[i], new String[] { "time", "color", "legend", "width" });
+				validateTagsOnlyOnce(childs[i], new String[] { "time", "color", "legend", "width" });
 				String timeStr = getChildValue(childs[i], "time");
-				GregorianCalendar gc = resolveTime(timeStr);
+				GregorianCalendar gc = Util.getGregorianCalendar(timeStr);
 				String colorStr = getChildValue(childs[i], "color");
 				Color color = Color.decode(colorStr);
 				String legend = getChildValue(childs[i], "legend");
@@ -403,7 +402,7 @@ public class RrdGraphDefTemplate extends XmlTemplate {
 	private void resolveLine(Node lineNode) throws RrdException {
         if(hasChildNode(lineNode, "datasource")) {
 			// ordinary line definition
-			validateOnce(lineNode, new String[] { "datasource", "color", "legend", "width" });
+			validateTagsOnlyOnce(lineNode, new String[] { "datasource", "color", "legend", "width" });
 			String datasource = getChildValue(lineNode, "datasource");
 			String colorStr = getChildValue(lineNode, "color");
 			Color color = Color.decode(colorStr);
@@ -417,13 +416,13 @@ public class RrdGraphDefTemplate extends XmlTemplate {
 		}
 		else if(hasChildNode(lineNode, "time1")) {
 			// two point definition
-			validateOnce(lineNode, new String[] {
+			validateTagsOnlyOnce(lineNode, new String[] {
 				"time1", "time2", "value1", "value2", "color", "legend", "width"
 			});
 			String t1str = getChildValue(lineNode, "time1");
-			GregorianCalendar gc1 = resolveTime(t1str);
+			GregorianCalendar gc1 = Util.getGregorianCalendar(t1str);
 			String t2str = getChildValue(lineNode, "time2");
-			GregorianCalendar gc2 = resolveTime(t2str);
+			GregorianCalendar gc2 = Util.getGregorianCalendar(t2str);
 			double v1 = getChildValueAsDouble(lineNode, "value1");
 			double v2 = getChildValueAsDouble(lineNode, "value2");
             String colorStr = getChildValue(lineNode, "color");
@@ -442,7 +441,7 @@ public class RrdGraphDefTemplate extends XmlTemplate {
 
 	private void resolveArea(Node areaNode) throws RrdException {
         if(hasChildNode(areaNode, "datasource")) {
-			validateOnce(areaNode, new String[] { "datasource", "color", "legend" });
+			validateTagsOnlyOnce(areaNode, new String[] { "datasource", "color", "legend" });
 			// ordinary area definition
 			String datasource = getChildValue(areaNode, "datasource");
 			String colorStr = getChildValue(areaNode, "color");
@@ -452,13 +451,13 @@ public class RrdGraphDefTemplate extends XmlTemplate {
 		}
 		else if(hasChildNode(areaNode, "time1")) {
 			// two point definition
-			validateOnce(areaNode, new String[] {
+			validateTagsOnlyOnce(areaNode, new String[] {
 				"time1", "time2", "value1", "value2", "color", "legend", "width"
 			});
 			String t1str = getChildValue(areaNode, "time1");
-			GregorianCalendar gc1 = resolveTime(t1str);
+			GregorianCalendar gc1 = Util.getGregorianCalendar(t1str);
 			String t2str = getChildValue(areaNode, "time2");
-			GregorianCalendar gc2 = resolveTime(t2str);
+			GregorianCalendar gc2 = Util.getGregorianCalendar(t2str);
 			double v1 = getChildValueAsDouble(areaNode, "value1");
 			double v2 = getChildValueAsDouble(areaNode, "value2");
             String colorStr = getChildValue(areaNode, "color");
@@ -471,13 +470,13 @@ public class RrdGraphDefTemplate extends XmlTemplate {
 		}
 	}
 
-	private void resolveDatasources(Node dsNode) throws RrdException {
-		validateOnce(dsNode, new String[] { "def" });
-		Node[] nodes = getChildNodes(dsNode, "def");
+	private void resolveDatasources(Node datasourceNode) throws RrdException {
+		validateTagsOnlyOnce(datasourceNode, new String[] { "def*" });
+		Node[] nodes = getChildNodes(datasourceNode, "def");
 		for(int i = 0; i < nodes.length; i++) {
 			if(hasChildNode(nodes[i], "rrd")) {
 				// RRD datasource
-				validateOnce(nodes[i], new String[] {"name", "rrd", "source", "cf"});
+				validateTagsOnlyOnce(nodes[i], new String[] {"name", "rrd", "source", "cf"});
 				String name = getChildValue(nodes[i], "name");
             	String rrd = getChildValue(nodes[i], "rrd");
 				String dsName = getChildValue(nodes[i], "source");
@@ -486,7 +485,7 @@ public class RrdGraphDefTemplate extends XmlTemplate {
 			}
 			else if(hasChildNode(nodes[i], "rpn")) {
 				// RPN datasource
-				validateOnce(nodes[i], new String[] {"name", "rpn"});
+				validateTagsOnlyOnce(nodes[i], new String[] {"name", "rpn"});
 				String name = getChildValue(nodes[i], "name");
 				String rpn = getChildValue(nodes[i], "rpn");
 				rrdGraphDef.datasource(name, rpn);
@@ -498,7 +497,7 @@ public class RrdGraphDefTemplate extends XmlTemplate {
 	}
 
 	private void resolveOptions(Node rootOptionNode) throws RrdException {
-		validateOnce(rootOptionNode, new String[] {
+		validateTagsOnlyOnce(rootOptionNode, new String[] {
 			"anti_aliasing", "arrow_color", "axis_color", "back_color", "background",
 			"base_value", "canvas", "left_padding", "default_font",	"default_font_color",
 			"frame_color", "front_grid", "grid_range", "grid_x", "grid_y", "border",
@@ -574,7 +573,7 @@ public class RrdGraphDefTemplate extends XmlTemplate {
 			}
 			// GRID RANGE
 			else if(option.equals("grid_range")) {
-				validateOnce(optionNode, new String[] { "lower", "upper", "rigid" });
+				validateTagsOnlyOnce(optionNode, new String[] { "lower", "upper", "rigid" });
 				double lower = getChildValueAsDouble(optionNode, "lower");
 				double upper = getChildValueAsDouble(optionNode, "upper");
 				boolean rigid = getChildValueAsBoolean(optionNode, "rigid");
@@ -592,7 +591,7 @@ public class RrdGraphDefTemplate extends XmlTemplate {
 			}
 			// BORDER
 			else if(option.equals("border")) {
-				validateOnce(optionNode, new String[] {"color", "width"});
+				validateTagsOnlyOnce(optionNode, new String[] {"color", "width"});
 				String colorStr = getChildValue(optionNode, "color");
 				int width = getChildValueAsInt(optionNode, "width");
 				rrdGraphDef.setImageBorder(Color.decode(colorStr), width);
@@ -644,7 +643,7 @@ public class RrdGraphDefTemplate extends XmlTemplate {
 			}
 			// TIME AXIS
 			else if(option.equals("time_axis")) {
-				validateOnce(optionNode, new String[] {
+				validateTagsOnlyOnce(optionNode, new String[] {
 					"min_grid_time_unit", "min_grid_unit_steps", "maj_grid_time_unit",
 					"maj_grid_unit_steps", "date_format", "center_labels"
 				});
@@ -683,7 +682,7 @@ public class RrdGraphDefTemplate extends XmlTemplate {
 			}
 			// VALUE AXIS
 			else if(option.equals("value_axis")) {
-				validateOnce(optionNode, new String[] {"grid_step", "label_step"});
+				validateTagsOnlyOnce(optionNode, new String[] {"grid_step", "label_step"});
 				double gridStep = getChildValueAsDouble(optionNode, "grid_step");
 				double labelStep = getChildValueAsDouble(optionNode, "label_step");
 				rrdGraphDef.setValueAxis(gridStep, labelStep);
@@ -724,16 +723,16 @@ public class RrdGraphDefTemplate extends XmlTemplate {
 	}
 
 	private void resolveSpan(Node spanNode) throws RrdException {
-		validateOnce(spanNode, new String[] {"start", "end"});
+		validateTagsOnlyOnce(spanNode, new String[] {"start", "end"});
 		String startStr = getChildValue(spanNode, "start");
 		String endStr = getChildValue(spanNode, "end");
-		GregorianCalendar gc1 = resolveTime(startStr);
-		GregorianCalendar gc2 = resolveTime(endStr);
+		GregorianCalendar gc1 = Util.getGregorianCalendar(startStr);
+		GregorianCalendar gc2 = Util.getGregorianCalendar(endStr);
 		rrdGraphDef.setTimePeriod(gc1, gc2);
 	}
 
 	private Font resolveFont(Node fontNode) throws RrdException {
-		validateOnce(fontNode, new String[] {"name", "style", "size"});
+		validateTagsOnlyOnce(fontNode, new String[] {"name", "style", "size"});
         String name = getChildValue(fontNode, "name");
 		String style = getChildValue(fontNode, "style");
 		int size = getChildValueAsInt(fontNode, "size");
@@ -753,28 +752,10 @@ public class RrdGraphDefTemplate extends XmlTemplate {
 		return new Font(name, stl, size);
 	}
 
-	private GregorianCalendar resolveTime(String timeStr) {
-		// try to parse it as long
-		try {
-			long timestamp = Long.parseLong(timeStr);
-			return Util.getGregorianCalendar(timestamp);
-		} catch (NumberFormatException e) { }
-		// not a long timestamp, try to parse it as data
-		SimpleDateFormat df = new SimpleDateFormat(DATE_FORMAT);
-		df.setLenient(false);
-		try {
-			Date date = df.parse(timeStr);
-            return Util.getGregorianCalendar(date);
-		} catch (ParseException e) {
-			throw new IllegalArgumentException("Time/date not in " + DATE_FORMAT +
-				" format: " + timeStr);
-		}
-	}
-
 	public static void main(String[] args) throws IOException, RrdException {
 		File f = new File("work/test2.xml");
 		RrdGraphDefTemplate t = new RrdGraphDefTemplate(f);
-		t.setMapping("date", new Date());
+		t.setVariable("date", new Date());
 		t.getRrdGraphDef();
 	}
 }

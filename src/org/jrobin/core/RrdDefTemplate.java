@@ -29,21 +29,22 @@ import org.w3c.dom.Node;
 
 import java.io.IOException;
 import java.io.File;
+import java.util.GregorianCalendar;
 
 /**
- * Class to represent RrdDef XML template. Use this class to produce similar RRD definitions
- * (RrdDef objects) from the same XML template. Use <code>${placeholder_name}</code> placeholders
- * in the XML source to mark XML code which will be modified (replaced) at run time.<p>
+ * Class used to create an arbitrary number of RrdDef (RRD file definition) objects
+ * from a single XML template. XML template can be supplied as an XML InputSource,
+ * XML file or XML formatted string.<p>
  *
- * Here is a self-explaining example of a valid XML definition:<p>
- *
- * <pre><code>
+ * Here is an example of a properly formatted XML template with all available options in it
+ * (unwanted options can be removed):<p>
+ * <pre>
  * &lt;rrd_def&gt;
- *     &lt;path&gt;${path}&lt;/path&gt;
+ *     &lt;path&gt;test.rrd&lt;/path&gt;
  *     &lt;!-- not mandatory --&gt;
  *     &lt;start&gt;1000123456&lt;/start&gt;
  *     &lt;!-- not mandatory --&gt;
- *     &lt;step&gt;${step}&lt;/step&gt;
+ *     &lt;step&gt;300&lt;/step&gt;
  *     &lt;!-- at least one datasource must be supplied --&gt;
  *     &lt;datasource&gt;
  *         &lt;name&gt;input&lt;/name&gt;
@@ -64,7 +65,7 @@ import java.io.File;
  *         &lt;cf&gt;AVERAGE&lt;/cf&gt;
  *         &lt;xff&gt;0.5&lt;/xff&gt;
  *         &lt;steps&gt;1&lt;/steps&gt;
- *         &lt;rows&gt;${rows}&lt;/rows&gt;
+ *         &lt;rows&gt;600&lt;/rows&gt;
  *     &lt;/archive&gt;
  *     &lt;archive&gt;
  *         &lt;cf&gt;MAX&lt;/cf&gt;
@@ -73,52 +74,59 @@ import java.io.File;
  *         &lt;rows&gt;7000&lt;/rows&gt;
  *     &lt;/archive&gt;
  * &lt;/rrd_def&gt;
- * </code></pre>
- * XML template can be embedded in a String or a file - the class provides constructors in both
- * cases. <p>
- *
- * Note that the above XML definition contains three placeholders (<code>${path}</code>,
- * <code>${step}</code> and <code>${rows}</code>) - these placeholders must be replaced with
- * real values before the RrdDef object is requested by calling {@link #getRrdDef getRrdDef()}
- * method. To replace placeholders with real values at run time use inhereted
- * (and overloaded) public {@link XmlTemplate#setMapping(String, String) setMapping()}
- * methods.<p>
- *
- * You are free to use the same template object to create as many RrdDef objects as needed
- * (probably with different placeholder-value mappings).<p>
- *
- * Here is an example how to create two different RRD files using the template given above:<p>
- *
- * <pre>
- * // 'template.xml' file contains XML template already specified
- * File file = new File("template.xml");
- * RrdDefTemplate t = new RrdDefTemplate(file);
- *
- * // replace ${path} placeholder with the real value (test1.rrd)
- * t.setMapping("path", "test1.rrd");
- *
- * // replace ${step} placeholder with the real value (600)
- * t.setMapping("step", 600);
- *
- * // replace ${rows} placeholder with the real value (800)
- * t.setMapping("rows", 800);
- *
- * // get RrdDef from the template object...
- * RrdDef def = t.getRrdDef();
- *
- * // ...and use it to construct the first RRD file
- * RrdDb rrd = new RrdDb(def); rrd.close();
- *
- * // note that all mappings are still active
- * // change the value for some (or all) placeholders
- * // to construct the second database
- * // with different parameters
- * t.setMapping("path", "test2.rrd");
- * def = t.getRrdDef();
- *
- * // the second RRD file will be also created with step=600, rows=800
- * rrd = new RrdDb(def); rrd.close();
  * </pre>
+ * Notes on the template syntax:<p>
+ * <ul>
+ * <li>There is a strong relation between the XML template syntax and the syntax of
+ * {@link RrdDef} class methods. If you are not sure what some XML tag means, check javadoc
+ * for the corresponding class.
+ * <li>starting timestamp can be supplied either as a long integer
+ * (like: 1000243567) or as an ISO formatted string (like: 2004-02-21 12:25:45)
+ * <li>whitespaces are not harmful
+ * <li>floating point values: anything that cannot be parsed will be treated as Double.NaN
+ * (like: U, unknown, 12r.23)
+ * <li>comments are allowed.
+ * </ul>
+ * Any template value (text between <code>&lt;some_tag&gt;</code> and
+ * <code>&lt;/some_tag&gt;</code>) can be replaced with
+ * a variable of the following form: <code>${variable_name}</code>. Use
+ * {@link XmlTemplate#setVariable(String, String) setVariable()}
+ * methods from the base class to replace template variables with real values
+ * at runtime.<p>
+ *
+ * Typical usage scenario:<p>
+ * <ul>
+ * <li>Create your XML template and save it to a file (template.xml, for example)
+ * <li>Replace hardcoded template values with variables if you want to change them during runtime.
+ * For example, file path should not be hardcoded in the template - you probably want to create
+ * many different RRD files from the same XML template. For example, your XML
+ * template could start with:
+ * <pre>
+ * &lt;rrd_def&gt;
+ *     &lt;path&gt;${path}&lt;/path&gt;
+ *     &lt;step&gt;300&lt;/step&gt;
+ *     ...
+ * </pre>
+ * <li>In your Java code, create RrdDefTemplate object using your XML template file:
+ * <pre>
+ * RrdDefTemplate t = new RrdDefTemplate(new File(template.xml));
+ * </pre>
+ * <li>Then, specify real values for template variables:
+ * <pre>
+ * t.setVariable("path", "demo/test.rrd");
+ * </pre>
+ * <li>Once all template variables are set, just use the template object to create RrdDef
+ * object. This object is actually used to create JRobin RRD files:
+ * <pre>
+ * RrdDef def = t.getRrdDef();
+ * RrdDb rrd = new RrdDb(def);
+ * rrd.close();
+ * </pre>
+ * </ul>
+ * You should create new RrdDefTemplate object only once for each XML template. Single template
+ * object can be reused to create as many RrdDef objects as needed, with different values
+ * specified for template variables. XML synatax check is performed only once - the first
+ * definition object gets created relatively slowly, but it will be created much faster next time.
  */
 public class RrdDefTemplate extends XmlTemplate {
 	/**
@@ -158,7 +166,7 @@ public class RrdDefTemplate extends XmlTemplate {
 	 * Returns RrdDef object constructed from the underlying XML template. Before this method
 	 * is called, values for all non-optional placeholders must be supplied. To specify
 	 * placeholder values at runtime, use some of the overloaded
-	 * {@link XmlTemplate#setMapping(String, String) setMapping()} methods. Once this method
+	 * {@link XmlTemplate#setVariable(String, String) setVariable()} methods. Once this method
 	 * returns, all placeholder values are preserved. To remove them all, call inhereted
 	 * {@link XmlTemplate#clearValues() clearValues()} method explicitly.<p>
 	 *
@@ -166,19 +174,23 @@ public class RrdDefTemplate extends XmlTemplate {
 	 * with all placeholders replaced with real values. This object can be passed to the constructor
 	 * of the new RrdDb object.
 	 * @throws RrdException Thrown (in most cases) if the value for some placeholder
-	 * was not supplied through {@link XmlTemplate#setMapping(String, String) setMapping()}
+	 * was not supplied through {@link XmlTemplate#setVariable(String, String) setVariable()}
 	 * method call
 	 */
 	public RrdDef getRrdDef() throws RrdException {
 		if (!root.getTagName().equals("rrd_def")) {
 			throw new RrdException("XML definition must start with <rrd_def>");
 		}
+		validateTagsOnlyOnce(root, new String[] {
+			"path", "start", "step", "datasource*", "archive*"
+		});
 		// PATH must be supplied or exception is thrown
 		String path = getChildValue(root, "path");
 		RrdDef rrdDef = new RrdDef(path);
 		try {
-			long start = getChildValueAsLong(root, "start");
-			rrdDef.setStartTime(start);
+			String startStr = getChildValue(root, "start");
+			GregorianCalendar startGc = Util.getGregorianCalendar(startStr);
+			rrdDef.setStartTime(startGc);
 		} catch (RrdException e) {
 			// START is not mandatory
 		}
@@ -191,6 +203,9 @@ public class RrdDefTemplate extends XmlTemplate {
 		// datsources
 		Node[] dsNodes = getChildNodes(root, "datasource");
 		for (int i = 0; i < dsNodes.length; i++) {
+			validateTagsOnlyOnce(dsNodes[i], new String[] {
+				"name", "type", "heartbeat", "min", "max"
+			});
 			String name = getChildValue(dsNodes[i], "name");
 			String type = getChildValue(dsNodes[i], "type");
 			long heartbeat = getChildValueAsLong(dsNodes[i], "heartbeat");
@@ -201,6 +216,9 @@ public class RrdDefTemplate extends XmlTemplate {
 		// archives
 		Node[] arcNodes = getChildNodes(root, "archive");
 		for (int i = 0; i < arcNodes.length; i++) {
+			validateTagsOnlyOnce(arcNodes[i], new String[] {
+				"cf", "xff", "steps", "rows"
+			});
 			String consolFun = getChildValue(arcNodes[i], "cf");
 			double xff = getChildValueAsDouble(arcNodes[i], "xff");
 			int steps = getChildValueAsInt(arcNodes[i], "steps");
@@ -210,17 +228,27 @@ public class RrdDefTemplate extends XmlTemplate {
 		return rrdDef;
 	}
 
-
+/*
 	public static void main(String[] args) throws RrdException, IOException {
 		File f = new File("work/test.xml");
 		RrdDefTemplate t = new RrdDefTemplate(f);
 
-		t.setMapping("path", "test1.rrd");
-		t.setMapping("step", 310);
-		t.setMapping("hb", 123);
+		t.setVariable("path", "work/test1.rrd");
+		t.setVariable("start", new GregorianCalendar(2004, 2, 12, 12, 23, 34));
+		t.setVariable("step", 310);
+		t.setVariable("hb", 123);
 
 		RrdDef def = t.getRrdDef();
 		System.out.println(def.dump());
-	}
 
+		t.setVariable("path", "work/test2.rrd");
+		t.setVariable("step", 320);
+		t.setVariable("hb", 321);
+		t.setVariable("start", new GregorianCalendar());
+
+		RrdDef def2 = t.getRrdDef();
+		System.out.println(def2.dump());
+
+	}
+*/
 }
