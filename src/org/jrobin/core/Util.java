@@ -261,14 +261,6 @@ public class Util {
 		return System.getProperty("user.home") + getFileSeparator();
 	}
 
-	private static final File homeDirFile;
-	private static final String homeDirPath;
-
-	static {
-		homeDirPath = getUserHomeDirectory() + JROBIN_DIR + getFileSeparator();
-		homeDirFile = new File(homeDirPath);
-	}
-
 	/**
 	 * Returns path to directory used for placement of JRobin demo graphs and creates it
 	 * if necessary.
@@ -276,6 +268,8 @@ public class Util {
 	 * was successfully created. Null if such directory could not be created.
 	 */
 	public static String getJRobinDemoDirectory() {
+		String homeDirPath = getUserHomeDirectory() + JROBIN_DIR + getFileSeparator();
+		File homeDirFile = new File(homeDirPath);
 		return (homeDirFile.exists() || homeDirFile.mkdirs())? homeDirPath: null;
 	}
 
