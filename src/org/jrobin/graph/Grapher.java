@@ -462,7 +462,9 @@ class Grapher
 		for (int i = 0; i < plotDefs.length; i++) 
 		{
 			plotDefs[i].draw( g, xValues, parentSeries, lastPlotType );
-			lastPlotType = plotDefs[i].plotType;
+			if(plotDefs[i].plotType != PlotDef.PLOT_STACK) {
+				lastPlotType = plotDefs[i].plotType;
+			}
 		}
 		
 		// Reset clipping area, origin and AA settings
