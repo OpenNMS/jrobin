@@ -235,6 +235,21 @@ public class Util {
 	}
 
 	/**
+	 * Checks if a string can be parsed as double.
+	 * @param s Input string
+	 * @return <code>true</code> if the string can be parsed as double, <code>false</code> otherwise
+	 */
+	public static boolean isDouble(String s) {
+		try {
+			Double.parseDouble(s);
+			return true;
+		}
+		catch(NumberFormatException nfe) {
+			return false;
+		}
+	}
+
+	/**
 	 * Parses input string as a boolean value. The parser is case insensitive.
 	 * @param valueStr String representing boolean value
 	 * @return <code>true</code>, if valueStr equals to 'true', 'on', 'yes', 'y' or '1';
@@ -544,9 +559,10 @@ public class Util {
 	}
 
 	/**
-	 * Compares two doubles, but returns true if x=y=Double.NaN (by default Double.NaN != Double.NaN)
-	 * @param x first value
-	 * @param y second value
+	 * Compares two doubles but treats all NaNs as equal.
+	 * In Java (by default) Double.NaN == Double.NaN always returns <code>false</code>
+	 * @param x the first value
+	 * @param y the second value
 	 * @return <code>true</code> if x and y are both equal to Double.NaN, or if x == y. <code>false</code> otherwise
 	 */
 	public static boolean equal(double x, double y) {
