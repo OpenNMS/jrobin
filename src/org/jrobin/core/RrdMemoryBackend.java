@@ -33,7 +33,7 @@ import java.io.IOException;
 public class RrdMemoryBackend extends RrdBackend {
 	private byte[] buffer = new byte[0];
 
-	RrdMemoryBackend(String path) {
+	protected RrdMemoryBackend(String path) {
 		super(path);
 	}
 

@@ -187,7 +187,7 @@ public abstract class RrdBackend {
 	 *
 	 * @throws IOException Thrown in case of I/O error
 	 */
-	protected void sync() throws IOException {
+	public void sync() throws IOException {
 	}
 
 	final void writeInt(long offset, int value) throws IOException {

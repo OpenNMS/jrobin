@@ -43,7 +43,7 @@ public class RrdFileBackend extends RrdBackend {
 	protected RandomAccessFile file;
 	protected FileLock fileLock;
 
-	RrdFileBackend(String path, boolean readOnly, int lockMode) throws IOException {
+	protected RrdFileBackend(String path, boolean readOnly, int lockMode) throws IOException {
 		super(path);
 		file = new RandomAccessFile(path, readOnly? "r": "rw");
 		// We'll try to lock the file only in "rw" mode

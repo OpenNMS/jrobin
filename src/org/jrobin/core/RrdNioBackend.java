@@ -42,7 +42,7 @@ public class RrdNioBackend extends RrdFileBackend {
 	MappedByteBuffer byteBuffer;
 	private TimerTask syncTask;
 
-	RrdNioBackend(String path, boolean readOnly, int lockMode, int syncMode, int syncPeriod)
+	protected RrdNioBackend(String path, boolean readOnly, int lockMode, int syncMode, int syncPeriod)
 			throws IOException {
 		super(path, readOnly, lockMode);
 		this.syncMode = syncMode;
@@ -115,7 +115,7 @@ public class RrdNioBackend extends RrdFileBackend {
 	 * This method is automatically invoked when the {@link #close()}
 	 * method is called. In other words, you don't have to call sync() before you call close().<p>
 	 */
-	protected void sync() {
+	public void sync() {
 		synchronized(byteBuffer) {
 			// System.out.println("** SYNC **");
 			byteBuffer.force();
