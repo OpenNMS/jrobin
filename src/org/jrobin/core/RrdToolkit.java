@@ -65,8 +65,6 @@ public class RrdToolkit {
 	 * @throws RrdException Thrown in case of JRobin specific error
 	 */
 
-	/*
-	Still buggy! Will fix later
 	public void removeDatasource(String sourcePath, String destPath, String dsName)
 		throws IOException, RrdException {
 		if(Util.sameFilePath(sourcePath, destPath)) {
@@ -81,7 +79,6 @@ public class RrdToolkit {
 		rrdSource.close();
 		rrdDest.close();
 	}
-	*/
 
 	/**
 	 * Creates a new RRD file with one more archive in it. RRD file is created based on the
@@ -111,8 +108,7 @@ public class RrdToolkit {
     public static void main(String[] args) throws RrdException, IOException {
 		DsDef dsDef = new DsDef("XXX", "GAUGE", 666, -1, Double.NaN);
 		RrdToolkit.getInstance().addDatasource("demo.rrd", "demo2.rrd", dsDef);
-		ArcDef arcDef = new ArcDef("LAST", 0.666, 77, 888);
-		RrdToolkit.getInstance().addArchive("demo2.rrd", "demo3.rrd", arcDef);
+		RrdToolkit.getInstance().removeDatasource("demo2.rrd", "demo3.rrd", "sun");
 	}
 }
 

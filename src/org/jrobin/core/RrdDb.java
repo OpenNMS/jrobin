@@ -661,13 +661,70 @@ public class RrdDb implements RrdUpdater {
 		}
 		RrdDb rrd = (RrdDb) other;
 		header.copyStateTo(rrd.header);
-		int dsCount = Math.min(header.getDsCount(), rrd.header.getDsCount());
-		for(int i = 0; i < dsCount; i++) {
-			datasources[i].copyStateTo(rrd.datasources[i]);
+		for(int i = 0; i < datasources.length; i++) {
+			Datasource matchingDatasource = rrd.getDatasource(datasources[i].getDsName());
+			if(matchingDatasource != null) {
+				datasources[i].copyStateTo(matchingDatasource);
+			}
 		}
-		int arcCount = Math.min(header.getArcCount(), rrd.header.getArcCount());
-		for(int i = 0; i < arcCount; i++) {
-			archives[i].copyStateTo(rrd.archives[i]);
+		for(int i = 0; i < archives.length; i++) {
+			Archive matchingArchive = rrd.getArchive(
+				archives[i].getConsolFun(), archives[i].getSteps());
+			if(matchingArchive != null) {
+				archives[i].copyStateTo(matchingArchive);
+			}
+		}
+	}
+
+	/**
+	 * Returns Datasource object corresponding to the given datasource name.
+	 * @param dsName Datasource name
+	 * @return Datasource object corresponding to the give datasource name or null
+	 * if not found.
+	 * @throws IOException Thrown in case of I/O error
+	 */
+	public Datasource getDatasource(String dsName) throws IOException {
+		try {
+			return getDatasource(getDsIndex(dsName));
+		}
+		catch (RrdException e) {
+			return null;
+		}
+	}
+
+	/**
+	 * Returns index of Archive object with the given consolidation function and the number
+	 * of steps. Exception is thrown if such archive could not be found.
+	 * @param consolFun Consolidation function
+	 * @param steps Number of archive steps
+	 * @return Requested Archive object
+	 * @throws IOException Thrown in case of I/O error
+	 * @throws RrdException Thrown if no such archive could be found
+	 */
+	public int getArcIndex(String consolFun, int steps) throws RrdException, IOException {
+		for(int i = 0; i < archives.length; i++) {
+			if(archives[i].getConsolFun().equals(consolFun) &&
+				archives[i].getSteps() == steps) {
+				return i;
+			}
+		}
+		throw new RrdException("Could not find archive " + consolFun + "/" + steps);
+	}
+
+	/**
+	 * Returns Archive object with the given consolidation function and the number
+	 * of steps.
+	 * @param consolFun Consolidation function
+	 * @param steps Number of archive steps
+	 * @return Requested Archive object or null if no such archive could be found
+	 * @throws IOException Thrown in case of I/O error
+	 */
+	public Archive getArchive(String consolFun, int steps) throws IOException {
+		try {
+			return getArchive(getArcIndex(consolFun, steps));
+		}
+		catch (RrdException e) {
+			return null;
 		}
 	}
 }

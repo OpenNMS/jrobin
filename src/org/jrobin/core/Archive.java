@@ -407,12 +407,14 @@ public class Archive implements RrdUpdater {
 		if(arc.rows.get() != rows.get()) {
 			throw new RrdException("Incompatible number of rows");
 		}
-		int count = Math.min(
-			    parentDb.getHeader().getDsCount(),
-			arc.parentDb.getHeader().getDsCount());
+		int count = parentDb.getHeader().getDsCount();
 		for(int i = 0; i < count; i++) {
-			states[i].copyStateTo(arc.states[i]);
-			robins[i].copyStateTo(arc.robins[i]);
+			String dsName = parentDb.getDatasource(i).getDsName();
+			if(arc.getParentDb().getDatasource(dsName) != null) {
+				int j = arc.getParentDb().getDsIndex(dsName);
+				states[i].copyStateTo(arc.states[j]);
+				robins[i].copyStateTo(arc.robins[j]);
+			}
 		}
 	}
 }
