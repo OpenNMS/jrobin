@@ -180,7 +180,8 @@
     			<include name="*.jar"/>
   			</tarfileset>
 			<tarfileset dir="${cwd}/${src}" prefix="${prefix}/${src}">
-				<exclude name="**/test/**/*"/>
+				<exclude name="**/dev/**/*"/>
+				<exclude name="**/cmd/**/*"/>
     			<include name="**/*.java"/>
   			</tarfileset>
 			<tarfileset dir="${cwd}/${res}" prefix="${prefix}/${res}">
