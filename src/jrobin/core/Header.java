@@ -24,10 +24,15 @@ package jrobin.core;
 
 import java.io.IOException;
 
-// TODO: Fix javadoc, class made public!
-
 /**
+ * Class to represent RRD file header. Header information is mainly static (once set, it
+ * cannot be changed), with the exception of last update time (this value is changed whenever
+ * RRD file gets updated).<p>
  *
+ * Normally, you don't need to manipulate the Header object directly - JRobin framework
+ * does it for you.<p>
+ *
+ * @author <a href="mailto:saxon@eunet.yu">Sasa Markovic</a>*
  */
 public class Header implements RrdUpdater {
 	static final String SIGNATURE = "JRobin, version 0.1";
@@ -74,22 +79,54 @@ public class Header implements RrdUpdater {
 		lastUpdateTime = new RrdLong(reader.getLastUpdateTime(), this);
 	}
 
+	/**
+	 * Returns RRD file signature. The returned string will be always
+	 * of the form <b><i>JRobin, version x.x</i></b>. Note: RRD file format did not
+	 * change since Jrobin 1.0.0 release (and probably never will).
+	 *
+	 * @return RRD file signature
+	 * @throws IOException Thrown in case of IO specific error
+	 */
 	public String getSignature() throws IOException {
 		return signature.get();
 	}
 
+	/**
+	 * Returns the last update time of the RRD file.
+	 *
+	 * @return Timestamp (Unix epoch, no milliseconds) corresponding to the last update time.
+	 * @throws IOException Thrown in case of IO specific error
+	 */
 	public long getLastUpdateTime() throws IOException {
 		return lastUpdateTime.get();
 	}
 
+	/**
+	 * Returns primary RRD file time step.
+	 *
+	 * @return Primary time step in seconds
+	 * @throws IOException Thrown in case of IO specific error
+	 */
 	public long getStep() throws IOException {
 		return step.get();
 	}
 
+	/**
+	 * Returns the number of datasources defined in the RRD file.
+	 *
+	 * @return Number of datasources defined
+	 * @throws IOException Thrown in case of IO specific error
+	 */
 	public int getDsCount() throws IOException {
 		return dsCount.get();
 	}
 
+	/**
+	 * Returns the number of archives defined in the RRD file.
+	 *
+	 * @return Number of archives defined
+	 * @throws IOException Thrown in case of IO specific error
+	 */
 	public int getArcCount() throws IOException {
 		return arcCount.get();
 	}
@@ -107,6 +144,11 @@ public class Header implements RrdUpdater {
 			" arcCount:" + getArcCount() + "\n";
 	}
 
+	/**
+	 * Returns the underlying RrdFile object.
+	 *
+	 * @return Underlying RrdFile object.
+	 */
 	public RrdFile getRrdFile() {
 		return parentDb.getRrdFile();
 	}

@@ -242,15 +242,28 @@ public class RrdDb implements RrdUpdater {
 		return file;
 	}
 
-	// TODO: ADD JAVADOC for methods made public!
+	/**
+	 * Returns RRD file header.
+	 * @return Header object
+	 */
 	public Header getHeader() {
 		return header;
 	}
 
+	/**
+	 * Returns Datasource object for the given datasource index.
+	 * @param dsIndex Datasource index (zero based)
+	 * @return Datasource object
+	 */
 	public Datasource getDatasource(int dsIndex) {
 		return datasources[dsIndex];
 	}
 
+	/**
+	 * Returns Archive object for the given archive index.
+	 * @param arcIndex Archive index (zero based)
+	 * @return Archive object
+	 */
 	public Archive getArchive(int arcIndex) {
 		return archives[arcIndex];
 	}

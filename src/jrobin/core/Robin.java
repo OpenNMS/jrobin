@@ -24,14 +24,22 @@ package jrobin.core;
 
 import java.io.IOException;
 
-// TODO: Fix javadoc, class made public
+/**
+ * Class to represent archive values for a single datasource. Robin class is the heart of
+ * the so-called "round robin database" concept. Basically, each Robin object is a
+ * fixed length array of double values. Each double value reperesents consolidated archive
+ * value for the specific timestamp. When the underlying array of double values gets completely
+ * filled, new values will replace the oldest entries.<p>
+ *
+ * Robin object does not hold values in memory - such object could be quite large.
+ * Instead of it, Robin stores all values on the disk and reads them only when necessary.
+ *
+ * @author <a href="mailto:saxon@eunet.yu">Sasa Markovic</a>
+ */
 public class Robin implements RrdUpdater {
-
 	private Archive parentArc;
-
 	private RrdInt pointer;
 	private RrdDouble values;
-
 	private int rows;
 
 	Robin(Archive parentArc, int rows, boolean newRobin) throws IOException {
@@ -47,6 +55,12 @@ public class Robin implements RrdUpdater {
 		}
 	}
 
+	/**
+	 * Fetches all Robin archive values from the disk.
+	 *
+	 * @return Array of double archive values, starting from the oldest one.
+	 * @throws IOException Thrown in case of IO specific error.
+	 */
 	public double[] getValues() throws IOException {
 		double[] result = new double[rows];
 		int start = pointer.get();
@@ -62,6 +76,10 @@ public class Robin implements RrdUpdater {
 		pointer.set((position + 1) % rows);
 	}
 
+	/**
+	 * Returns the underlying RrdFile object.
+	 * @return Underlying RrdFile object
+	 */
 	public RrdFile getRrdFile() {
 		return parentArc.getRrdFile();
 	}
@@ -76,9 +94,32 @@ public class Robin implements RrdUpdater {
 		return buffer.toString();
 	}
 
-	double getValue(int index) throws IOException {
+	/**
+	 * Returns the i-th value from the Robin archive.
+	 * @param index Value index
+	 * @return Value stored in the i-th position (the oldest value has zero index)
+	 */
+	public double getValue(int index) throws IOException {
 		assert(index < rows);
 		return values.get((pointer.get() + index) % rows);
+	}
+
+	/**
+	 * Returns the Archive object to which this Robin object belongs.
+	 *
+	 * @return Parent Archive object
+	 */
+	public Archive getParent() {
+		return parentArc;
+	}
+
+	/**
+	 * Returns the size of the underlying array of archive values.
+	 *
+	 * @return Number of stored values
+	 */
+	public int getSize() {
+		return rows;
 	}
 
 }

@@ -24,7 +24,13 @@ package jrobin.core;
 
 import java.io.IOException;
 
-// TODO: Fix javadoc, class made public
+/**
+ * Class to represent internal RRD archive state for a single datasource. Objects of this
+ * class are never manipulated directly, it's up to JRobin framework to manage
+ * internal arcihve states.<p>
+ *
+ * @author <a href="mailto:saxon@eunet.yu">Sasa Markovic</a>
+ */
 public class ArcState implements RrdUpdater {
 	private Archive parentArc;
 
@@ -49,6 +55,10 @@ public class ArcState implements RrdUpdater {
 		}
 	}
 
+	/**
+	 * Returns the underlying RrdFile object.
+	 * @return Underlying RrdFile object.
+	 */
 	public RrdFile getRrdFile() {
 		return parentArc.getParentDb().getRrdFile();
 	}
@@ -61,6 +71,12 @@ public class ArcState implements RrdUpdater {
 		nanSteps.set(value);
 	}
 
+	/**
+	 * Returns the number of currently accumulated NaN steps.
+	 *
+	 * @return Number of currently accumulated NaN steps.
+	 * @throws IOException Thrown in case of IO specific error
+	 */
 	public long getNanSteps() throws IOException {
 		return nanSteps.get();
 	}
@@ -69,8 +85,23 @@ public class ArcState implements RrdUpdater {
 		accumValue.set(value);
 	}
 
+	/**
+	 * Returns the value accumulated so far.
+	 *
+	 * @return Accumulated value
+	 * @throws IOException Thrown in case of IO specific error
+	 */
 	public double getAccumValue() throws IOException {
 		return accumValue.get();
+	}
+
+	/**
+	 * Returns the Archive object to which this ArcState object belongs.
+	 *
+	 * @return Parent Archive object.
+	 */
+	public Archive getParent() {
+		return parentArc;
 	}
 
 	void appendXml(XmlWriter writer) throws IOException {

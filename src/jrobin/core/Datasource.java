@@ -25,7 +25,14 @@ package jrobin.core;
 import java.io.IOException;
 
 /**
+ * Class to represent single datasource within RRD file. Each datasource object holds the
+ * following information: datasource definition (once set, never changed) and
+ * datasource state variables (changed whenever RRD file gets updated).<p>
  *
+ * Normally, you don't need to manipluate Datasource objects directly, it's up to
+ * JRobin framework to do it for you.
+ *
+ * @author <a href="mailto:saxon@eunet.yu">Sasa Markovic</a>
  */
 public class Datasource implements RrdUpdater {
 	private RrdDb parentDb;
@@ -84,38 +91,89 @@ public class Datasource implements RrdUpdater {
 			" accumValue:" + accumValue.get() + "\n";
 	}
 
+	/**
+	 * Returns the underlying RrdFile object.
+	 * @return Underlying RrdFile object.
+	 */
 	public RrdFile getRrdFile() {
 		return parentDb.getRrdFile();
 	}
 
+	/**
+	 * Returns datasource name.
+	 * @return Datasource name
+	 * @throws IOException Thrown in case of IO related error
+	 */
 	public String getDsName() throws IOException {
 		return dsName.get();
 	}
 
+	/**
+	 * Returns datasource type (GAUGE, COUNTER, DERIVE, ABSOLUTE).
+	 *
+	 * @return Datasource type.
+	 * @throws IOException Thrown in case of IO related error
+	 */
 	public String getDsType() throws IOException {
 		return dsType.get();
 	}
 
+	/**
+	 * Returns datasource heartbeat
+	 *
+	 * @return Datasource heartbeat
+	 * @throws IOException Thrown in case of IO related error
+	 */
 	public long getHeartbeat() throws IOException {
 		return heartbeat.get();
 	}
 
+	/**
+	 * Returns mimimal allowed value of the datasource.
+	 *
+	 * @return Minimal value allowed.
+	 * @throws IOException Thrown in case of IO related error
+	 */
 	public double getMinValue() throws IOException {
 		return minValue.get();
 	}
 
+	/**
+	 * Returns maximal allowed value of the datasource.
+	 *
+	 * @return Maximal value allowed.
+	 * @throws IOException Thrown in case of IO related error
+	 */
 	public double getMaxValue() throws IOException {
 		return maxValue.get();
 	}
 
+	/**
+	 * Returns last known value of the datasource.
+	 *
+	 * @return Last datasource value.
+	 * @throws IOException Thrown in case of IO related error
+	 */
 	public double getLastValue() throws IOException {
 		return lastValue.get();
 	}
 
+	/**
+	 * Returns value this datasource accumulated so far.
+	 *
+	 * @return Accumulated datasource value.
+	 * @throws IOException Thrown in case of IO related error
+	 */
 	public double getAccumValue() throws IOException {
 		return accumValue.get();
 	}
 
+	/**
+	 * Returns the number of accumulated NaN seconds.
+	 *
+	 * @return Accumulated NaN seconds.
+	 * @throws IOException Thrown in case of IO related error
+	 */
 	public long getNanSeconds() throws IOException {
 		return nanSeconds.get();
 	}
