@@ -362,7 +362,15 @@ public class Util {
 		}
 
 		static String getValue(Node node) {
-			return node.getFirstChild().getNodeValue().trim();
+			String value = null;
+			Node child = node.getFirstChild();
+			if(child != null) {
+				value = child.getNodeValue();
+				if(value != null) {
+					value = value.trim();
+				}
+			}
+			return value;
 		}
 
 		static int getChildValueAsInt(Node parentNode, String childName) throws RrdException {

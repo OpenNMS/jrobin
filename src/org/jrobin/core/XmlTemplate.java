@@ -183,7 +183,7 @@ public abstract class XmlTemplate {
 	}
 
 	private String resolveMappings(String value) {
-		if(value.startsWith("${") && value.endsWith("}")) {
+		if(value != null && value.startsWith("${") && value.endsWith("}")) {
 			// template variable found, remove leading "${" and trailing "}"
 			String var = value.substring(2, value.length() - 1);
 			if(valueMap.containsKey(var)) {

@@ -53,7 +53,12 @@ class XmlWriter {
 	}
 
 	void writeTag(String tag, Object value) {
-		writer.println(indent + "<" + tag + ">" + value + "</" + tag + ">");
+		if(value != null) {
+			writer.println(indent + "<" + tag + ">" + value + "</" + tag + ">");
+		}
+		else {
+			writer.println(indent + "<" + tag + "></" + tag + ">");
+		}
 	}
 
 	void writeTag(String tag, int value) {

@@ -227,28 +227,4 @@ public class RrdDefTemplate extends XmlTemplate {
 		}
 		return rrdDef;
 	}
-
-/*
-	public static void main(String[] args) throws RrdException, IOException {
-		File f = new File("work/test.xml");
-		RrdDefTemplate t = new RrdDefTemplate(f);
-
-		t.setVariable("path", "work/test1.rrd");
-		t.setVariable("start", new GregorianCalendar(2004, 2, 12, 12, 23, 34));
-		t.setVariable("step", 310);
-		t.setVariable("hb", 123);
-
-		RrdDef def = t.getRrdDef();
-		System.out.println(def.dump());
-
-		t.setVariable("path", "work/test2.rrd");
-		t.setVariable("step", 320);
-		t.setVariable("hb", 321);
-		t.setVariable("start", new GregorianCalendar());
-
-		RrdDef def2 = t.getRrdDef();
-		System.out.println(def2.dump());
-
-	}
-*/
 }

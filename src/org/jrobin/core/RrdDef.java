@@ -28,6 +28,7 @@ package org.jrobin.core;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.io.*;
 
 /**
  * <p>Class to represent definition of new RRD file. Object of this class is used to create
@@ -352,5 +353,62 @@ public class RrdDef {
 			}
 		}
 		throw new RrdException("Could not find archive " + consolFun + "/" + steps);
+	}
+
+	/**
+	 * Exports RrdDef object to output stream in XML format. Generated XML code can be parsed
+	 * with {@link RrdDefTemplate} class.
+	 * @param out Output stream
+	 */
+	public void exportXmlTemplate(OutputStream out) {
+		XmlWriter xml = new XmlWriter(out);
+		xml.startTag("rrd_def");
+		xml.writeTag("path", getPath());
+		xml.writeTag("step", getStep());
+		xml.writeTag("start", getStartTime());
+		// datasources
+		DsDef[] dsDefs = getDsDefs();
+		for(int i = 0; i < dsDefs.length; i++) {
+            xml.startTag("datasource");
+			xml.writeTag("name", dsDefs[i].getDsName());
+			xml.writeTag("type", dsDefs[i].getDsType());
+			xml.writeTag("heartbeat", dsDefs[i].getHeartbeat());
+			xml.writeTag("min", dsDefs[i].getMinValue(), "U");
+			xml.writeTag("max", dsDefs[i].getMaxValue(), "U");
+			xml.closeTag(); // datasource
+		}
+		ArcDef[] arcDefs = getArcDefs();
+		for(int i = 0; i < arcDefs.length; i++) {
+			xml.startTag("archive");
+			xml.writeTag("cf", arcDefs[i].getConsolFun());
+			xml.writeTag("xff", arcDefs[i].getXff());
+			xml.writeTag("steps", arcDefs[i].getSteps());
+			xml.writeTag("rows", arcDefs[i].getRows());
+			xml.closeTag(); // archive
+		}
+		xml.closeTag(); // rrd_def
+		xml.finish();
+	}
+
+	/**
+	 * Exports RrdDef object to string in XML format. Generated XML string can be parsed
+	 * with {@link RrdDefTemplate} class.
+	 * @return XML formatted string representing this RrdDef object
+	 */
+	public String exportXmlTemplate() {
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		exportXmlTemplate(out);
+		return out.toString();
+	}
+
+	/**
+	 * Exports RrdDef object to a file in XML format. Generated XML code can be parsed
+	 * with {@link RrdDefTemplate} class.
+	 * @param filePath Path to the file
+	 */
+	public void exportXmlTemplate(String filePath) throws IOException {
+		FileOutputStream out = new FileOutputStream(filePath, false);
+		exportXmlTemplate(out);
+		out.close();
 	}
 }
