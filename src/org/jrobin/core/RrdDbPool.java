@@ -424,7 +424,7 @@ public class RrdDbPool implements Runnable {
 		buff.append("open=" + rrdMap.size() + ", idle=" + rrdIdleMap.size() + "\n");
 		buff.append("capacity=" + capacity + ", " + "maxUsedCapacity=" + maxUsedCapacity + "\n");
 		buff.append("hits=" + poolHitsCount + ", " + "requests=" + poolRequestsCount + "\n");
-		buff.append("efficiency=" + getPoolEfficency() + "\n");
+		buff.append("efficiency=" + getPoolEfficiency() + "\n");
 		if(dumpFiles) {
 			buff.append("---- CACHED FILES ------------------------\n");
 			Iterator it = rrdMap.values().iterator();
@@ -536,10 +536,10 @@ public class RrdDbPool implements Runnable {
 	 * RrdDb requests served from the internal pool of open RRD files
 	 * with the number of total RrdDb requests.
 	 *
-	 * @return Pool's efficiency ratio as a double between 1 (best) and 0 (worst). If no RrdDb reference
-	 *         was ever requested, 1 would be returned.
+	 * @return Pool's efficiency ratio as a double between 1 (best) and 0 (worst).
+	 * If no RrdDb reference was ever requested, 1 would be returned.
 	 */
-	public synchronized double getPoolEfficency() {
+	public synchronized double getPoolEfficiency() {
 		if (poolRequestsCount == 0) {
 			return 1.0;
 		}
