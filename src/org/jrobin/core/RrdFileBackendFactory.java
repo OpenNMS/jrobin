@@ -60,15 +60,6 @@ public class RrdFileBackendFactory extends RrdBackendFactory {
 	}
 
 	/**
-	 * Removes the file from the disk.
-	 * @param path File path
-	 * @return True, if the file is deleted, false otherwise.
-	 */
-	protected boolean delete(String path) {
-		return new File(path).delete();
-	}
-
-	/**
 	 * Returns the name of this factory.
 	 * @return Factory name (equals to string "FILE")
 	 */

@@ -141,23 +141,15 @@ public abstract class RrdBackendFactory {
 	 * @return Backend object which handles all I/O operations for the given storage path
 	 * @throws IOException Thrown in case of I/O error.
 	 */
-	protected abstract RrdBackend open(String path, boolean readOnly, int lockMode) throws IOException;
+	protected abstract RrdBackend open(String path, boolean readOnly, int lockMode)
+			throws IOException;
 
 	/**
 	 * Method to determine if a storage with the given path already exists.
 	 * @param path Storage path
 	 * @return True, if such storage exists, false otherwise.
 	 */
-	protected abstract boolean exists(String path);
-
-	/**
-	 * Releases all system resources associated with the storage with the given path.
-	 * If the storage represents a file on the disk, the file will be removed.
-	 * If the storage represents a section in memory, the memory will be released.
-	 * @param path Storage path
-	 * @return true, if all resources are released without a problem, false otherwise.
-	 */
-	protected abstract boolean delete(String path);
+	protected abstract boolean exists(String path) throws IOException;
 
 	/**
 	 * Returns the name (primary ID) for the factory.

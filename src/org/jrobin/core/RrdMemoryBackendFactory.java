@@ -29,7 +29,14 @@ import java.io.IOException;
 import java.util.HashMap;
 
 /**
- * Factory class which creates actual {@link RrdMemoryBackend} objects.
+ * Factory class which creates actual {@link RrdMemoryBackend} objects. JRobin's support
+ * for in-memory RRDs is still experimental. You should know that all active RrdMemoryBackend
+ * objects are held in memory, each backend object stores RRD data in one big byte array. This
+ * implementation is therefore quite basic and memory hungry but runs very fast.<p>
+ *
+ * Calling {@link RrdDb#close() close()} on RrdDb objects does not release any memory at all
+ * (RRD data must be available for the next <code>new RrdDb(path)</code> call. To release allocated
+ * memory, you'll have to call {@link #delete(java.lang.String) delete(path)} method of this class.<p>
  */
 public class RrdMemoryBackendFactory extends RrdBackendFactory {
 	/** factory name, "MEMORY" */
@@ -72,7 +79,7 @@ public class RrdMemoryBackendFactory extends RrdBackendFactory {
 	 * @param id Storage ID
 	 * @return True, if the storage with the given ID is deleted, false otherwise.
 	 */
-	protected boolean delete(String id) {
+	public boolean delete(String id) {
 		if(backends.containsKey(id)) {
 			backends.remove(id);
 			return true;
