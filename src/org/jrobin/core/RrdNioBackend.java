@@ -36,10 +36,11 @@ import java.util.Timer;
  * by using java.nio.* package.
  */
 public class RrdNioBackend extends RrdFileBackend {
+	private static final Timer syncTimer = new Timer(true);
+
 	private int syncMode;
 	MappedByteBuffer byteBuffer;
-
-	private Timer syncTimer;
+	private TimerTask syncTask;
 
 	RrdNioBackend(String path, boolean readOnly, int lockMode, int syncMode, int syncPeriod)
 			throws IOException {
@@ -54,12 +55,11 @@ public class RrdNioBackend extends RrdFileBackend {
 	}
 
 	private void createSyncTask(int syncPeriod) {
-		TimerTask syncTask = new TimerTask() {
+		syncTask = new TimerTask() {
 			public void run() {
 				sync();
 			}
 		};
-		syncTimer = new Timer(true);
 		syncTimer.schedule(syncTask, syncPeriod * 1000L, syncPeriod * 1000L);
 	}
 
@@ -103,8 +103,8 @@ public class RrdNioBackend extends RrdFileBackend {
 	 * @throws IOException Thrown in case of I/O error
 	 */
 	public void close() throws IOException {
-		if(syncTimer != null) {
-			syncTimer.cancel();
+		if(syncTask != null) {
+			syncTask.cancel();
 		}
 		super.close(); // calls sync()
 	}

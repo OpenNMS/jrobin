@@ -1097,7 +1097,7 @@ public class RrdGraphDef implements Serializable
 	/**
 	 *  Exports RrdGraphDef (graph definition) object in XML format to string.
 	 * Generated code can be parsed with {@link RrdGraphDefTemplate} class
-	 * {@see exportXmlTemplate).
+	 * {@see exportXmlTemplate}.
 	 *
 	 * @return String representing graph definition in XML format
 	 */
