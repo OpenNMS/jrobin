@@ -35,7 +35,7 @@ public class RrdNioBackendFactory extends RrdFileBackendFactory{
 	public static final String NAME = "NIO";
 
 	/** See {@link #setSyncMode(int) for explanation }  */
-	public static final int SYNC_DEFAULT = 0; // will sync() only on close()
+	public static final int SYNC_ONCLOSE = 0; // will sync() only on close()
 	/** See {@link #setSyncMode(int) for explanation }  */
 	public static final int SYNC_BEFOREUPDATE = 1;
 	/** See {@link #setSyncMode(int) for explanation }  */
@@ -56,7 +56,7 @@ public class RrdNioBackendFactory extends RrdFileBackendFactory{
 	 * Returns the current synchronization mode between backend data in memory and data
 	 * in the persistent storage (disk file).
 	 *
-	 * @return Integer representing current synchronization mode (SYNC_DEFAULT,
+	 * @return Integer representing current synchronization mode (SYNC_ONCLOSE,
 	 * SYNC_BEFOREUPDATE, SYNC_AFTERUPDATE, SYNC_BEFOREFETCH, SYNC_AFTERFETCH or
 	 * SYNC_BACKGROUND). See {@link #setSyncMode(int)} for full explanation of these return values.
 	 */
@@ -69,7 +69,7 @@ public class RrdNioBackendFactory extends RrdFileBackendFactory{
 	 * RRD data in the persistant storage (disk file).<p>
 	 * @param syncMode Desired synchronization mode. Possible values are:<p>
 	 * <ul>
-	 * <li>SYNC_DEFAULT: synchronization will be performed only when {@link RrdDb#close()}
+	 * <li>SYNC_ONCLOSE: synchronization will be performed only when {@link RrdDb#close()}
 	 * is called (RRD file is closed) or when {@link RrdDb#sync()} method is called.
 	 * <li>SYNC_BEFOREUPDATE: synchronization will be performed before each {@link Sample#update()}
 	 * call (right before RRD file is about to be updated).
