@@ -29,9 +29,7 @@ import snmp.*;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.SocketException;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
 class Poller {
 	static final int SNMP_TIMEOUT = 10; // seconds
@@ -114,8 +112,8 @@ class Poller {
 		return result;
 	}
 
-	public Map walk(String base) throws IOException {
-		TreeMap map = new TreeMap();
+	public SortedMap walk(String base) throws IOException {
+		SortedMap map = new TreeMap();
 		String baseOid = getNumericOid(base);
 		String currentOid = baseOid;
 		try {
@@ -142,8 +140,30 @@ class Poller {
 		return map;
 	}
 
+	public SortedMap walkIfDescr() throws IOException {
+		SortedMap rawInterfacesMap = walk("ifDescr");
+		SortedMap enumeratedInterfacesMap = new TreeMap();
+		Collection enumeratedInterfaces = enumeratedInterfacesMap.values();
+		// check for duplicate interface names
+		// append integer suffix to duplicated name
+		Iterator iter = rawInterfacesMap.keySet().iterator();
+		while(iter.hasNext()) {
+			Integer ifIndex = (Integer) iter.next();
+			String ifDescr = (String) rawInterfacesMap.get(ifIndex);
+			if(enumeratedInterfaces.contains(ifDescr)) {
+				int ifDescrSuffix = 1;
+				while(enumeratedInterfaces.contains(ifDescr + "#" + ifDescrSuffix)) {
+					ifDescrSuffix++;
+				}
+				ifDescr += "#" + ifDescrSuffix;
+			}
+			enumeratedInterfacesMap.put(ifIndex, ifDescr);
+		}
+		return enumeratedInterfacesMap;
+	}
+
 	public int getIfIndexByIfDescr(String ifDescr) throws IOException {
-		Map map = walk("ifDescr");
+		SortedMap map = walkIfDescr();
 		Iterator it = map.keySet().iterator();
 		while(it.hasNext()) {
 			Integer ix = (Integer) it.next();

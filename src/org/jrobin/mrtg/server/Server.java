@@ -118,6 +118,11 @@ public class Server implements MrtgConstants {
 		timer.terminate();
 		listener.terminate();
 		active = false;
+		try {
+			RrdDbPool.getInstance().reset();
+		} catch (IOException e) {
+			throw new MrtgException(e);
+		}
 	}
 
 	void saveHardware() throws MrtgException {
@@ -216,9 +221,11 @@ public class Server implements MrtgConstants {
 	synchronized int removeLink(String host, String ifDescr) throws MrtgException {
 		int retCode = deviceList.removeLink(host, ifDescr);
 		saveHardware();
-		// remove the underlying RRD file
-        String rrdFile = RrdWriter.getRrdFilename(host, ifDescr);
-		new File(rrdFile).delete();
+		if(retCode == 0 && REMOVE_RRD_FOR_DEACTIVATED_LINK) {
+			// remove the underlying RRD file
+        	String rrdFile = RrdWriter.getRrdFilename(host, ifDescr);
+			new File(rrdFile).delete();
+		}
 		return retCode;
 	}
 
@@ -272,5 +279,6 @@ public class Server implements MrtgConstants {
         Server s = Server.getInstance();
 		s.start(acceptedClients);
 	}
+
 }
 

@@ -92,6 +92,16 @@ class Port {
 		return ifDescr;
 	}
 
+	String getIfDescrCore() {
+		int index = ifDescr.indexOf("#");
+		if(index != -1) {
+			return ifDescr.substring(0, index);
+		}
+		else {
+			return ifDescr;
+		}
+	}
+
 	void setIfDescr(String ifDescr) {
 		if(ifDescr != null) {
 			this.ifDescr = ifDescr;
@@ -179,7 +189,7 @@ class Port {
 
 	void processSample(RawSample sample) throws MrtgException {
 		// check if ifDescr match
-        if(!ifDescr.equals(sample.getIfDescr())) {
+        if(!getIfDescrCore().equals(sample.getIfDescr())) {
 			// something changed on the router
 			switchToIfIndex(-1);
 			return;

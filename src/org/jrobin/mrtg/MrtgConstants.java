@@ -44,6 +44,9 @@ public interface MrtgConstants {
 	// graph dimensions
 	int GRAPH_WIDTH = 502, GRAPH_HEIGHT = 234;
 
+	// should we remove a RRD file if link is removed from the client
+	boolean REMOVE_RRD_FOR_DEACTIVATED_LINK = true;
+
 	// initial template for RrdDef
 	String RRD_TEMPLATE_STR =
 		"<rrd_def>                                 \n" +
