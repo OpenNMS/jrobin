@@ -197,7 +197,13 @@ public interface MrtgConstants {
 		"        <gprint>                                                         \n" +
 		"            <datasource>out8</datasource>                                \n" +
 		"            <cf>MAX</cf>                                                 \n" +
-		"            <format>Maximum output:@7.2 @Sbits/s@l</format>              \n" +
+		"            <format>Maximum output:@7.2 @Sbits/s</format>                \n" +
+		"        </gprint>                                                        \n" +
+		"        <gprint>                                                         \n" +
+		"            <datasource>out</datasource>                                 \n" +
+		"            <cf>TOTAL</cf>                                               \n" +
+		"            <format>Total output:@7.2 @sbytes@l</format>                 \n" +
+		"            <base>1024</base>                                            \n" +
 		"        </gprint>                                                        \n" +
 		"        <gprint>                                                         \n" +
 		"            <datasource>in8</datasource>                                 \n" +
@@ -207,7 +213,13 @@ public interface MrtgConstants {
 		"        <gprint>                                                         \n" +
 		"            <datasource>in8</datasource>                                 \n" +
 		"            <cf>MAX</cf>                                                 \n" +
-		"            <format>Maximum input: @7.2 @Sbits/s@l</format>              \n" +
+		"            <format>Maximum input: @7.2 @Sbits/s</format>                \n" +
+		"        </gprint>                                                        \n" +
+		"        <gprint>                                                         \n" +
+		"            <datasource>in</datasource>                                  \n" +
+		"            <cf>TOTAL</cf>                                               \n" +
+		"            <format>Total input :@7.2 @sbytes@l</format>                 \n" +
+		"            <base>1024</base>                                            \n" +
 		"        </gprint>                                                        \n" +
 		"        <comment>@l</comment>                                            \n" +
 		"        <comment>Description on device: ${alias}@l</comment>             \n" +
