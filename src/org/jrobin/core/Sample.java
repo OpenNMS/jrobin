@@ -98,7 +98,7 @@ public class Sample {
 			values[i] = value;
 			return;
 		}
-		throw new RrdException("Sample index " + i + " out of bounds");
+		throw new RrdException("Sample datasource index " + i + " out of bounds");
 	}
 
 	/**
@@ -163,29 +163,43 @@ public class Sample {
 	 * as unknowns. To specify unknown value in the argument string, use letter 'U'
 	 *
 	 * @param timeAndValues String made by concatenating sample timestamp with corresponding
-	 * data source values delmited with colons. For example:
-	 * <code>1005234132:12.2:35.6:U:24.5</code>
+	 * data source values delmited with colons. For example:<p>
+	 * <pre>
+	 * 1005234132:12.2:35.6:U:24.5
+	 * NOW:12.2:35.6:U:24.5
+	 * </pre>
+	 * 'N' stands for the current timestamp (can be replaced with 'NOW')<p>
+	 * Method will throw an exception if timestamp is invalid (cannot be parsed as Long, and is not 'N'
+	 * or 'NOW'). Datasource value which cannot be parsed as 'double' will be silently set to NaN.<p>
 	 * @throws RrdException Thrown if too many datasource values are supplied
 	 */
 	public void set(String timeAndValues) throws RrdException {
-		StringTokenizer st = new StringTokenizer(timeAndValues, ":", false);
-		int numTokens = st.countTokens();
-		String[] tokens = new String[numTokens];
-		for(int i = 0; i < numTokens; i++) {
-			tokens[i] = st.nextToken();
+		StringTokenizer tokenizer = new StringTokenizer(timeAndValues, ":", false);
+		int n = tokenizer.countTokens();
+		if(n > values.length + 1) {
+			throw new RrdException("Invalid number of values specified (found " +
+				values.length +	", " + dsNames.length + " allowed)");
 		}
-		long time = Long.parseLong(tokens[0]);
-		double[] values = new double[numTokens - 1];
-		for(int i = 0; i < numTokens - 1; i++) {
+		String timeToken = tokenizer.nextToken();
+		try {
+			time = Long.parseLong(timeToken);
+		}
+		catch(NumberFormatException nfe) {
+			if(timeToken.equalsIgnoreCase("N") || timeToken.equalsIgnoreCase("NOW")) {
+				time = Util.getTime();
+			}
+			else {
+				throw new RrdException("Invalid sample timestamp: " + timeToken);
+			}
+		}
+		for(int i = 0; tokenizer.hasMoreTokens(); i++) {
 			try {
-				values[i] = Double.parseDouble(tokens[i + 1]);
+				values[i] = Double.parseDouble(tokenizer.nextToken());
 			}
-			catch(NumberFormatException nfe) {
-				values[i] = Double.NaN;
+			catch (NumberFormatException nfe) {
+				// NOP, value is already set to NaN
 			}
 		}
-		setTime(time);
-		setValues(values);
 	}
 
 	/**
@@ -209,8 +223,9 @@ public class Sample {
 	 *     update();
 	 * </pre>
 	 * @param timeAndValues String made by concatenating sample timestamp with corresponding
-	 * data source values delmited with colons. For example:
-	 * <code>1005234132:12.2:35.6:U:24.5</code>
+	 * data source values delmited with colons. For example:<br>
+	 * <code>1005234132:12.2:35.6:U:24.5</code><br>
+	 * <code>NOW:12.2:35.6:U:24.5</code>
 	 *
 	 * @throws IOException Thrown in case of I/O error.
 	 * @throws RrdException Thrown in case of JRobin related error.
