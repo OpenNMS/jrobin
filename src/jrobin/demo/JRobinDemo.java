@@ -99,7 +99,8 @@ public class JRobinDemo {
 		String rrdFile = getFullPath(FILE + ".rrd");
 		String xmlFile = getFullPath(FILE + ".xml");
 		String rrdFile2 = getFullPath(FILE + "_restored.rrd");
-		String pngFile = getFullPath(FILE + ".png");
+		//String pngFile = getFullPath(FILE + ".png");
+		String pngFile = "/zzzzzz.png";
 		String jpegFile = getFullPath(FILE + ".jpeg");
 		String logFile = getFullPath(FILE + ".log");
 		PrintWriter pw = new PrintWriter(
@@ -158,13 +159,13 @@ public class JRobinDemo {
 		}
 		println("==Fetch completed");
 		println("==Dumping RRD file to XML file " + xmlFile + " (can be restored with RRDTool)");
-		rrdDb.dumpXml(xmlFile);
+		//rrdDb.dumpXml(xmlFile);
 		println("==Creating RRD file " + rrdFile2 + " from " + xmlFile);
-		RrdDb rrdDb2 = new RrdDb(rrdFile2, xmlFile);
+		//RrdDb rrdDb2 = new RrdDb(rrdFile2, xmlFile);
 		// close files
 		println("==Closing both RRD files");
 		rrdDb.close();
-		rrdDb2.close();
+		//rrdDb2.close();
 
 		// creating graph
 		println("==Creating graph from the second file");
@@ -173,8 +174,8 @@ public class JRobinDemo {
 		gDef.setTimeAxisLabel("day in month");
         gDef.setTitle("Temperatures in May 2003");
 		gDef.setValueAxisLabel("temperature");
-		gDef.datasource("sun", rrdFile2, "sun", "AVERAGE");
-		gDef.datasource("shade", rrdFile2, "shade", "AVERAGE");
+		gDef.datasource("sun", rrdFile, "sun", "AVERAGE");
+		gDef.datasource("shade", rrdFile, "shade", "AVERAGE");
 		gDef.datasource("median", "sun,shade,+,2,/");
 		gDef.datasource("diff", "sun,shade,-,ABS,-1,*");
 		gDef.datasource("sine", "TIME," + start + ",-," + (end - start) +
@@ -184,7 +185,7 @@ public class JRobinDemo {
 		gDef.line("median", Color.GREEN, "median value");
 		gDef.area("diff", Color.ORANGE, "difference");
 		gDef.line("sine", Color.CYAN, "sine function demo");
-		gDef.gprint("sun", "MAX", "maxSun = @3@s");
+		gDef.gprint("sun", "MAX", "\nmaxSun = @3@s");
 		gDef.gprint("sun", "AVERAGE", "avgSun = @3@S@r");
 		gDef.gprint("shade", "MAX", "maxShade = @3@s");
 		gDef.gprint("shade", "AVERAGE", "avgShade = @3@S@r");

@@ -19,52 +19,16 @@
  * library; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-
+ 
 package jrobin.graph;
-import java.util.*;
 
-
-/**
- *
- */
-class RrdTimeSeries
+class Range 
 {
-	Vector times 	= new Vector();
-	Vector values	= new Vector();
+	private double lower, upper;
 	
-	RrdTimeSeries (String legend) {
-		
-	}
-
-	void add(long timestamp, double value)
+	Range ( double lower, double upper )
 	{
-		RrdSecond second = new RrdSecond(timestamp);
-		
-		// Add to series
-		times.add( second );
-		values.add( new Double(value) );
-		
-		// AVD FIX
-		/*
-		try {
-			add(second, value);
-		}
-		catch(SeriesException e) {
-			System.err.println("Error for " + new Date(timestamp * 1000L) + ": " + e);
-			System.exit(-1);
-		}
-		*/
+		this.lower	= lower;
+		this.upper	= upper;	
 	}
-
-	// AVD FIX
-	/*
-	void fixNaNs(Number newValue) {
-		for(int i = 0; i < getItemCount(); i++) {
-			if(Double.isNaN(getValue(i).doubleValue())) {
-				update(i, newValue);
-			}
-		}
-	}
-	*/
-
 }

@@ -28,7 +28,7 @@ class ValueScaler {
 		1e18, 1e15, 1e12, 1e9, 1e6, 1e3, 1e0, 1e-3, 1e-6, 1e-9, 1e-12, 1e-15
 	};
 	private static String[] PREFIXES = new String[] {
-		"E",  "P",  "T",  "G", "M", "k", "",  "m", "micro", "n", "p",  "f"
+		"E",  "P",  "T",  "G", "M", "k", " ",  "m", "µ", "n", "p",  "f"
 	};
 	private String prefix;
 	private double scaledValue;
@@ -40,14 +40,20 @@ class ValueScaler {
 
 	ValueScaler(double value, int scaleIndex) {
 		if(scaleIndex == NO_SCALE) {
-			this.prefix = "";
-			this.scaledValue = value;
-			for(int i = 0; i < VALUES.length; i++) {
-				if(value >= VALUES[i] && value < VALUES[i] * 1000.0) {
-					this.prefix = PREFIXES[i];
-					this.scaledValue = value / VALUES[i];
-					this.scaleIndex = i;
-					return;
+			this.prefix 		= " ";
+			this.scaledValue 	= value;
+			
+			for (int i = 0; i < VALUES.length; i++) 
+			{
+				if (value >= VALUES[i] && value < VALUES[i] * 1000.0) 
+				{
+					if ( VALUES[i] != 1e-3 )	// Special case, is treated in the GPRINT section
+					{
+						this.prefix = PREFIXES[i];
+						this.scaledValue = value / VALUES[i];
+						this.scaleIndex = i;
+						return;
+					}
 				}
 			}
 		}

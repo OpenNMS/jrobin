@@ -22,14 +22,7 @@
 
 package jrobin.graph;
 
-import com.jrefinery.chart.plot.XYPlot;
-import com.jrefinery.chart.renderer.AreaXYRenderer;
-import com.jrefinery.chart.renderer.StandardXYItemRenderer;
-import com.jrefinery.chart.renderer.XYItemRenderer;
-import com.jrefinery.data.TimeSeriesCollection;
 import jrobin.core.RrdException;
-
-import java.awt.*;
 import java.util.ArrayList;
 
 /**
@@ -60,6 +53,7 @@ class OverlayGraph {
 		return (PlotDef) plotDefs.get(count - 1);
 	}
 
+	/*
 	XYPlot getXYPlot() throws RrdException {
 		if(plotDefs.size() == 0) {
 			throw new RrdException("Nothing to plot");
@@ -83,7 +77,8 @@ class OverlayGraph {
 		XYPlot plot = new XYPlot(dataset, null, null, renderer);
 		return plot;
 	}
-
+	*/
+	
 	private boolean shouldFill() {
 		return plotDefs.get(0) instanceof Area;
 	}

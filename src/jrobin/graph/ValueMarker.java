@@ -19,52 +19,34 @@
  * library; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-
+/*
+ * Created on 29-aug-2003
+ *
+ * To change the template for this generated file go to
+ * Window - Preferences - Java - Code Generation - Code and Comments
+ */
 package jrobin.graph;
-import java.util.*;
-
 
 /**
+ * @author cbld
  *
+ * To change the template for this generated type comment go to
+ * Window - Preferences - Java - Code Generation - Code and Comments
  */
-class RrdTimeSeries
-{
-	Vector times 	= new Vector();
-	Vector values	= new Vector();
-	
-	RrdTimeSeries (String legend) {
-		
-	}
+public class ValueMarker {
+	double value			= 0;
+	String text				= "";
+	private boolean label 	= false;
 
-	void add(long timestamp, double value)
+	ValueMarker( double value, String text, boolean label )
 	{
-		RrdSecond second = new RrdSecond(timestamp);
-		
-		// Add to series
-		times.add( second );
-		values.add( new Double(value) );
-		
-		// AVD FIX
-		/*
-		try {
-			add(second, value);
-		}
-		catch(SeriesException e) {
-			System.err.println("Error for " + new Date(timestamp * 1000L) + ": " + e);
-			System.exit(-1);
-		}
-		*/
+		this.label	= label;
+		this.value 	= value;
+		this.text 	= text;
 	}
-
-	// AVD FIX
-	/*
-	void fixNaNs(Number newValue) {
-		for(int i = 0; i < getItemCount(); i++) {
-			if(Double.isNaN(getValue(i).doubleValue())) {
-				update(i, newValue);
-			}
-		}
+	
+	public boolean isLabel()
+	{
+		return label;
 	}
-	*/
-
 }

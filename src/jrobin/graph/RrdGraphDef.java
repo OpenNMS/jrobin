@@ -22,9 +22,8 @@
 
 package jrobin.graph;
 
-import com.jrefinery.data.Range;
-import jrobin.core.RrdException;
 import jrobin.core.Util;
+import jrobin.core.RrdException;
 
 import java.awt.*;
 import java.text.SimpleDateFormat;
@@ -106,7 +105,8 @@ import java.util.GregorianCalendar;
  *
  * @author <a href="mailto:saxon@eunet.yu">Sasa Markovic</a>
  */
-public class RrdGraphDef {
+public class RrdGraphDef 
+{
 	  /** A constant for years. */
     public static final int YEAR = 0;
 
@@ -135,9 +135,9 @@ public class RrdGraphDef {
 	private SimpleDateFormat timeFormat;
 	private long endTime = Util.getTime();
 	private long startTime = endTime - 86400L;
-	private String title = "JRRDTool Graph";
-	private String timeAxisLabel = "";
-	private String valueAxisLabel = "";
+	private String title 			= null;				// Default to null, to check
+	private String timeAxisLabel 	= "";
+	private String valueAxisLabel	= null;
 	private Range valueRange;
 	private boolean logarithmic = false;
 	private double valueStep = 0;
@@ -216,6 +216,8 @@ public class RrdGraphDef {
 	void addPlot(PlotDef plotDef) throws RrdException {
 		plotDefs.add(plotDef);
 		graphs.add(new OverlayGraph(plotDef));
+		// Add comment line for the legend
+		addComment( new Legend(plotDef.getColor(), plotDef.getLegend()) );
 	}
 
 	void addPlot(Stack plotDef) throws RrdException {
@@ -490,13 +492,15 @@ public class RrdGraphDef {
 	 * @param lower Lower limit.
 	 * @param upper Upper limit.
 	 */
+	
 	public void setValueRange(double lower, double upper) {
-		valueRange = new Range(lower, upper);
+		valueRange = new Range( lower, upper);
 	}
 
 	Range getValueRange() {
 		return valueRange;
 	}
+	
 
 	boolean isLogarithmic() {
 		return logarithmic;

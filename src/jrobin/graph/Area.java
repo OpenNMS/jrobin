@@ -31,6 +31,7 @@ class Area extends PlotDef {
 
 	Area(Source source, Color color, String legend) {
 		super(source, color, legend);
+		plotType = PlotDef.PLOT_AREA;
 	}
 
 }

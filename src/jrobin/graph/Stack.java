@@ -31,6 +31,7 @@ class Stack extends PlotDef {
 
 	Stack(Source source, Color color, String legend) {
 		super(source, color, legend);
+		plotType = PlotDef.PLOT_STACK;
 	}
 
 }

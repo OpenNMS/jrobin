@@ -22,25 +22,24 @@
 
 package jrobin.graph;
 
-import com.jrefinery.data.RegularTimePeriod;
-
 import java.util.Calendar;
 
 /**
  *
  */
-class RrdSecond extends RegularTimePeriod {
+class RrdSecond
+{
 	long timestamp;
 
 	RrdSecond(long timestamp) {
 		this.timestamp = timestamp;
 	}
 
-	public RegularTimePeriod previous() {
+	public RrdSecond previous() {
 		return new RrdSecond(timestamp - 1);
 	}
 
-	public RegularTimePeriod next() {
+	public RrdSecond next() {
 		return new RrdSecond(timestamp + 1);
 	}
 

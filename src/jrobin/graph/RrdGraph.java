@@ -22,12 +22,12 @@
 
 package jrobin.graph;
 
-import com.jrefinery.chart.ChartPanel;
-import com.jrefinery.chart.ChartUtilities;
-import com.jrefinery.chart.JFreeChart;
 import jrobin.core.RrdException;
 
-import java.awt.image.BufferedImage;
+import javax.swing.*;
+import javax.imageio.*;
+import java.awt.image.*;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -40,8 +40,9 @@ import java.io.Serializable;
  * <a href="http://www.jfree.org/jfreechart/index.html">JFreeChart</a>
  * is an excellent free Java library for generating charts and graphs.</p>
  */
-public class RrdGraph implements Serializable {
-	private JFreeChart chart;
+public class RrdGraph implements Serializable 
+{
+	private Grapher grapher;
 
 	/**
 	 * Constructs new JRobin graph from the supplied definition.
@@ -50,8 +51,7 @@ public class RrdGraph implements Serializable {
 	 * @throws RrdException Thrown in case of JRobin specific error.
 	 */
 	public RrdGraph(RrdGraphDef graphDef) throws IOException, RrdException {
-		Grapher grapher = new Grapher(graphDef);
-		chart = grapher.createJFreeChart();
+		grapher = new Grapher( graphDef );
 	}
 
     /**
@@ -61,7 +61,7 @@ public class RrdGraph implements Serializable {
 	 * @return Graph as a buffered image.
 	 */
 	public BufferedImage getBufferedImage(int width, int height) {
-		return chart.createBufferedImage(width, height);
+		return null;
 	}
 
 	/**
@@ -71,8 +71,16 @@ public class RrdGraph implements Serializable {
 	 * @param height Image height
 	 * @throws IOException Thrown in case of I/O error.
 	 */
-	public void saveAsPNG(String path, int width, int height)	throws IOException {
-        ChartUtilities.saveChartAsPNG(new File(path), chart, width, height);
+	public void saveAsPNG(String path, int width, int height)	throws IOException 
+	{
+		try 
+		{
+			BufferedImage gImage = grapher.createImage( width, height ); 
+			ImageIO.write( (RenderedImage) gImage, "png", new File(path) );
+		} 
+		catch ( RrdException e ) {
+			e.printStackTrace();
+		}    
 	}
 
 	/**
@@ -84,16 +92,18 @@ public class RrdGraph implements Serializable {
 	 * @throws IOException Thrown in case of I/O error.
 	 */
 	public void saveAsJPEG(String path, int width, int height, float quality)	throws IOException {
-        ChartUtilities.saveChartAsJPEG(new File(path), quality, chart, width, height);
+        //ChartUtilities.saveChartAsJPEG(new File(path), quality, chart, width, height);
 	}
 
 	/**
 	 * Returns panel object so that graph can be easily embedded in swing applications.
 	 * @return Swing panel object with graph embedded in panel.
 	 */
+	/*
 	public ChartPanel getChartPanel() {
 		return new ChartPanel(chart);
 	}
+	*/
 
 	/**
 	 * Returns graph as an array of PNG bytes
@@ -104,7 +114,7 @@ public class RrdGraph implements Serializable {
 	 */
 	public byte[] getPNGBytes(int width, int height) throws IOException {
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-		ChartUtilities.writeBufferedImageAsPNG(outputStream, getBufferedImage(width, height));
+		//ChartUtilities.writeBufferedImageAsPNG(outputStream, getBufferedImage(width, height));
 		return outputStream.toByteArray();
 	}
 
@@ -118,8 +128,8 @@ public class RrdGraph implements Serializable {
 	 */
 	public byte[] getJPEGBytes(int width, int height, float quality) throws IOException {
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-		ChartUtilities.writeBufferedImageAsJPEG(outputStream,
-			quality, getBufferedImage(width, height));
+		//ChartUtilities.writeBufferedImageAsJPEG(outputStream,
+		//	quality, getBufferedImage(width, height));
 		return outputStream.toByteArray();
 	}
 
@@ -127,7 +137,9 @@ public class RrdGraph implements Serializable {
 	 * Returns the underlying JFreeChart object.
 	 * @return The underlying JFreeChart object.
 	 */
+	/*
 	public JFreeChart getChart() {
 		return chart;
 	}
+	*/
 }

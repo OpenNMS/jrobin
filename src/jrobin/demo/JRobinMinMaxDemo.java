@@ -62,7 +62,8 @@ public class JRobinMinMaxDemo {
 	public static void main(String[] args) throws RrdException, IOException {
 		// create the database
 		String rrdFile = getFullPath(FILE + ".rrd");
-		String pngFile = getFullPath(FILE + ".png");
+		//String pngFile = getFullPath(FILE + ".png");
+		String pngFile = "/zzzzzz.png";
         long start = Util.getTime();
 		long end = start + 300 * 300;
         RrdDef rrdDef = new RrdDef(rrdFile, start - 1, 300);
@@ -96,7 +97,8 @@ public class JRobinMinMaxDemo {
 		gDef.line("c", Color.decode("0xee22"), "max");
 		//gDef.setBackColor(Color.WHITE);
 		RrdGraph graph = new RrdGraph(gDef);
-		graph.saveAsPNG(pngFile, 550, 250);
+		//graph.saveAsPNG(pngFile, 550, 250);
+		graph.saveAsPNG(pngFile, 0, 0);
 	}
 
 	static void p(String msg) {

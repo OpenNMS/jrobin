@@ -32,9 +32,9 @@ import java.util.regex.Pattern;
  *
  */
 class Gprint extends Comment {
-	private static final String SCALE_MARKER = "@s";
-	private static final String UNIFORM_SCALE_MARKER = "@S";
-	private static final String VALUE_MARKER = "@([0-9]{1})";
+	private static final String SCALE_MARKER 			= "@s";
+	private static final String UNIFORM_SCALE_MARKER 	= "@S";
+	private static final String VALUE_MARKER 			= "@([0-9]*\\.[0-9]{1}|[0-9]{1}|\\.[0-9]{1})";
 	private static final Pattern VALUE_PATTERN = Pattern.compile(VALUE_MARKER);
 	private Source source;
 	private String consolFun;
@@ -45,16 +45,39 @@ class Gprint extends Comment {
 		this.consolFun = consolFun;
 	}
 
-	String getMessage() throws RrdException {
+	String getMessage() throws RrdException 
+	{
 		double value = source.getAggregate(consolFun);
 		Matcher m = VALUE_PATTERN.matcher(comment);
-		if(m.find()) {
-			String valueStr = "" + value;
-			String prefixStr = "";
+		if ( m.find() ) 
+		{
+			String valueStr 		= "" + value;
+			String prefixStr 		= "";
 			String uniformPrefixStr = "";
-			if(!Double.isNaN(value)) {
-				int numDec = Integer.parseInt(m.group(1));
+			
+			if(!Double.isNaN(value)) 
+			{
+				String[] group = m.group(1).split("\\.");
+				int len = -1, numDec = 0;
+				
+				if ( group.length > 1 ) 
+				{
+					if ( group[0].length() > 0 ) {
+						len 	= Integer.parseInt(group[0]);
+						numDec 	= Integer.parseInt(group[1]);
+					}
+					else
+						numDec = Integer.parseInt(group[1]);
+				}
+				else
+					numDec 	= Integer.parseInt(group[0]);
+				
 				DecimalFormat df = getDecimalFormat(numDec);
+				// TO BE DONE
+				// Treat special case here, if the value is something like 0.336985464
+				// Look at the number of decimals we want, if we lose too much precision
+				// use the scaler, otherwise just don't (it all depends also on the total
+				// length we predefined) 
 				if(shouldScale() && !shouldUniformScale()) {
 					ValueScaler scaler = new ValueScaler(value);
 					valueStr = df.format(scaler.getScaledValue());
@@ -74,8 +97,15 @@ class Gprint extends Comment {
 					throw new RrdException("You cannot specify uniform and non-uniform value " +
 						"scaling at the same time");
 				}
+				
+				int diff = len - valueStr.length();
+				
+				StringBuffer preSpace = new StringBuffer("");
+				for (int i = 0; i < diff; i++)
+					preSpace.append(' ');
+				valueStr = preSpace.append(valueStr).toString();
 			}
-            comment = comment.replaceFirst(VALUE_MARKER, valueStr);
+			comment = comment.replaceFirst(VALUE_MARKER, valueStr);
 			comment = comment.replaceFirst(SCALE_MARKER, prefixStr);
 			comment = comment.replaceFirst(UNIFORM_SCALE_MARKER, uniformPrefixStr);
 		}

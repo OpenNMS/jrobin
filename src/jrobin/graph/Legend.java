@@ -19,52 +19,32 @@
  * library; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-
 package jrobin.graph;
-import java.util.*;
 
+import jrobin.core.RrdException;
+
+import java.awt.*;
 
 /**
+ * @author cbld
  *
+ * To change the template for this generated type comment go to
+ * Window - Preferences - Java - Code Generation - Code and Comments
  */
-class RrdTimeSeries
-{
-	Vector times 	= new Vector();
-	Vector values	= new Vector();
+// AVD NEW CLASS
+public class Legend extends Comment {
+
+	private Color c;
 	
-	RrdTimeSeries (String legend) {
-		
-	}
-
-	void add(long timestamp, double value)
+	Legend( Color c, String comment) throws RrdException
 	{
-		RrdSecond second = new RrdSecond(timestamp);
-		
-		// Add to series
-		times.add( second );
-		values.add( new Double(value) );
-		
-		// AVD FIX
-		/*
-		try {
-			add(second, value);
-		}
-		catch(SeriesException e) {
-			System.err.println("Error for " + new Date(timestamp * 1000L) + ": " + e);
-			System.exit(-1);
-		}
-		*/
+		super(comment);
+		legend = true;
+		this.c = c;
 	}
-
-	// AVD FIX
-	/*
-	void fixNaNs(Number newValue) {
-		for(int i = 0; i < getItemCount(); i++) {
-			if(Double.isNaN(getValue(i).doubleValue())) {
-				update(i, newValue);
-			}
-		}
+	
+	public Color getColor()
+	{
+		return c;
 	}
-	*/
-
 }

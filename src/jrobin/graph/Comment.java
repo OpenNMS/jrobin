@@ -22,19 +22,25 @@
 
 package jrobin.graph;
 
-import com.jrefinery.chart.TextTitle;
 import jrobin.core.RrdException;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-class Comment {
-	static final int NO_ALIGN = -1;
-	private static final String MONKEY = "\u8888";
-	private static final String ALIGN_REGEX = "(.*)@(l|r|c)";
-	private static final Pattern ALIGN_PATTERN = Pattern.compile(ALIGN_REGEX);
+class Comment 
+{
+	// Text alignment states for 'comments'
+	static final int NO_ALIGN 					= -1;
+	static final int ALIGN_LEFT					= 0;
+	static final int ALIGN_RIGHT				= 1;
+	static final int ALIGN_CENTER				= 2;
+		
+	private static final String MONKEY 			= "\u8888";
+	private static final String ALIGN_REGEX 	= "(.*)@(l|r|c)";
+	private static final Pattern ALIGN_PATTERN 	= Pattern.compile(ALIGN_REGEX);
 
-	private int align = NO_ALIGN;
+	private int align 							= NO_ALIGN;
+	protected boolean legend					= false;
 
 	String comment;
 	int scaleIndex = ValueScaler.NO_SCALE;
@@ -47,13 +53,13 @@ class Comment {
 			char alignChar = matcher.group(2).charAt(0);
 			switch(alignChar) {
 				case 'l':
-					align = TextTitle.LEFT;
+					align = ALIGN_LEFT;
 					break;
 				case 'r':
-					align = TextTitle.RIGHT;
+					align = ALIGN_RIGHT;
 					break;
 				case 'c':
-					align = TextTitle.CENTER;
+					align = ALIGN_CENTER;
 					break;
 			}
 			comment = matcher.group(1);
@@ -61,6 +67,10 @@ class Comment {
 		this.comment = comment;
 	}
 
+	boolean isLegend() {
+		return legend;	
+	}
+	
 	String getMessage() throws RrdException {
 		return comment.replaceAll(MONKEY, "@");
 	}

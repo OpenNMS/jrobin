@@ -31,6 +31,7 @@ class Line extends PlotDef {
 
 	Line(Source source, Color color, String legend) {
 		super(source, color, legend);
+		plotType = PlotDef.PLOT_LINE;
 	}
 
 	Line(Source source, Color color, String legend, float lineWidth) {

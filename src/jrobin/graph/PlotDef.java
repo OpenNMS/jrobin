@@ -22,8 +22,6 @@
 
 package jrobin.graph;
 
-import com.jrefinery.data.RegularTimePeriod;
-
 import java.awt.*;
 
 /**
@@ -31,20 +29,31 @@ import java.awt.*;
  */
 class PlotDef {
 	public static final float DEFAULT_LINE_WIDTH = 1.0F;
-
+	
+	static final int PLOT_LINE 	= 0;
+	static final int PLOT_AREA 	= 1;
+	static final int PLOT_STACK	= 2;
+	int plotType 				= PLOT_LINE;
+	
 	protected Source source;
     protected Color color;
 	protected String legend;
 	protected PlotDef parent;
 	private RrdTimeSeries totalSeries;
-	private float lineWidth = DEFAULT_LINE_WIDTH;
-
-	PlotDef(Source source, Color color, String legend) {
+	private float lineWidth 	= DEFAULT_LINE_WIDTH;
+	
+	PlotDef(Source source, Color color, String legend) 
+	{
 		this.source = source;
-		this.color = color;
+		this.color 	= color;
 		this.legend = legend;
+		System.out.println( legend );
 	}
-
+	
+	int getType() {
+		return plotType;	
+	}
+	
 	void stack(PlotDef parent) {
 		this.parent = parent;
 	}
@@ -67,27 +76,6 @@ class PlotDef {
 
 	public PlotDef getParent() {
         return parent;
-	}
-
-	RrdTimeSeries getSeries() {
-		if(totalSeries == null) {
-			RrdTimeSeries parentSeries = null;
-			if(parent != null) {
-				parentSeries = parent.getSeries();
-			}
-			totalSeries = new RrdTimeSeries(legend);
-			RrdTimeSeries realSeries = source.getSeries();
-			for(int i = 0; i < realSeries.getItemCount(); i++) {
-				RegularTimePeriod t = realSeries.getTimePeriod(i);
-				double realValue = realSeries.getValue(i).doubleValue();
-				double parentValue = 0;
-				if(parentSeries != null) {
-					parentValue = parentSeries.getValue(i).doubleValue();
-				}
-				totalSeries.add(t, realValue + parentValue);
-			}
-		}
-		return totalSeries;
 	}
 
 	void setLineWidth(float lineWidth) {
