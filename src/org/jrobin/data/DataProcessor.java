@@ -62,53 +62,63 @@ public class DataProcessor implements ConsolFuns {
 
 	private int pixelCount = DEFAUL_PIXEL_COUNT;
 	private int pixelsPerStep = 1;
+	private long customStep = 0;
 	private boolean poolUsed = false;
 
-	final private long tStart, tEnd;
+	final private long tStart;
+	private long tEnd;
 	private double[] timestamps;
+	// the order is important, ordinary HashMap is unordered
 	private Map sources = new LinkedHashMap();
 
 	/**
-	 * Creates new DataProcessor object for the given time span.
+	 * Creates new DataProcessor object for the given time span. Ending timestamp may be set to zero.
+	 * In that case, the class will try to find optimal ending timestamp based on the last update time of
+	 * RRD files processed with the {@link #processData()} method.
+	 *
 	 * @param t1 Starting timestamp in seconds without milliseconds
 	 * @param t2 Ending timestamp in seconds without milliseconds
+	 * @throws RrdException Thrown if invalid timestamps are supplied
 	 */
-	public DataProcessor(long t1, long t2) {
-		assert t1 < t2: "Invalid time span while constructing DataAnalyzer";
-		this.tStart = t1;
-		this.tEnd = t2;
-		createTimestamps();
+	public DataProcessor(long t1, long t2) throws RrdException {
+		if((t1 < t2 && t1 > 0 && t2 > 0) || (t1 > 0 && t2 == 0)) {
+			this.tStart = t1;
+			this.tEnd = t2;
+		}
+		else {
+			throw new RrdException("Invalid timestamps specified: " + t1 + ", " + t2);
+		}
 	}
 
 	/**
-	 * Creates new DataProcessor object for the given time span.
+	 * Creates new DataProcessor object for the given time span. Ending timestamp may be set to zero.
+	 * In that case, the class will try to find optimal ending timestamp based on the last update time of
+	 * RRD files processed with the {@link #processData()} method.
+	 *
 	 * @param d1 Starting date
 	 * @param d2 Ending date
+	 * @throws RrdException Thrown if invalid timestamps are supplied
 	 */
-	public DataProcessor(Date d1, Date d2) {
+	public DataProcessor(Date d1, Date d2) throws RrdException {
 		this(Util.getTimestamp(d1), Util.getTimestamp(d2));
 	}
 
 	/**
-	 * Creates new DataProcessor object for the given time span.
+	 * Creates new DataProcessor object for the given time span. Ending timestamp may be set to zero.
+	 * In that case, the class will try to find optimal ending timestamp based on the last update time of
+	 * RRD files processed with the {@link #processData()} method.
+	 *
 	 * @param gc1 Starting Gregorian calendar date
 	 * @param gc2 Ending Gregorian calendar date
+	 * @throws RrdException Thrown if invalid timestamps are supplied
 	 */
-	public DataProcessor(GregorianCalendar gc1, GregorianCalendar gc2) {
+	public DataProcessor(GregorianCalendar gc1, GregorianCalendar gc2) throws RrdException {
 		this(Util.getTimestamp(gc1), Util.getTimestamp(gc2));
 	}
 
 	/////////////////////////////////////////////////////////////////
 	// BASIC FUNCTIONS
 	/////////////////////////////////////////////////////////////////
-
-	private void createTimestamps() {
-		timestamps = new double[pixelCount];
-		final double span = tEnd - tStart;
-		for(int i = 0; i < pixelCount; i++) {
-			timestamps[i] = tStart + ((double) i / (double)(pixelCount - 1)) * span;
-		}
-	}
 
 	/**
 	 * Returns boolean value representing {@link org.jrobin.core.RrdDbPool RrdDbPool} usage policy.
@@ -146,7 +156,6 @@ public class DataProcessor implements ConsolFuns {
 	 */
 	public void setPixelCount(int pixelCount) {
 		this.pixelCount = pixelCount;
-		createTimestamps();
 	}
 
 	/**
@@ -165,12 +174,18 @@ public class DataProcessor implements ConsolFuns {
 	 * @param step Time step at which data should be fetched from RRD files.
 	 */
 	public void setStep(long step) {
-		double secondsPerPixel = getSecondsPerPixel();
-		pixelsPerStep = Math.max((int) Math.ceil(step / secondsPerPixel), 1);
+		this.customStep = step;
 	}
 
-	private double getSecondsPerPixel() {
-		return (double) (tEnd - tStart) / (double) (pixelCount - 1);
+	/**
+	 * Returns ending timestamp. Basically, this value is equal to the ending timestamp
+	 * specified in the constructor. However, if it was set to zero in the constructor, it
+	 * will be replaced with the real timestamp when the {@link #processData()} method returns. The real
+	 * value will be calculated from the last update times of processed RRD files.
+	 * @return Ending timestamp in seconds
+	 */
+	public long getEndingTimestamp() {
+		return tEnd;
 	}
 
 	/**
@@ -179,8 +194,13 @@ public class DataProcessor implements ConsolFuns {
 	 * this values are not rounded to the nearest second. The length of this array is equal to the
 	 * number of pixels.
 	 */
-	public double[] getTimestamps() {
-		return timestamps;
+	public double[] getTimestamps() throws RrdException {
+		if(timestamps == null) {
+			throw new RrdException("Timestamps not calculated yet");
+		}
+		else {
+			return timestamps;
+		}
 	}
 
 	/**
@@ -404,6 +424,15 @@ public class DataProcessor implements ConsolFuns {
 
 	private void calculateDefs() throws IOException, RrdException {
 		Def[] defs = getDefs();
+		fetchRrdData(defs);
+		createTimestamps(defs);
+		for(int i = 0; i < defs.length; i++) {
+			normalizeRrdValues(defs[i]);
+		}
+	}
+
+	private void fetchRrdData(Def[] defs) throws IOException, RrdException {
+		long tEndFixed = (tEnd == 0)? Util.getTime(): tEnd;
 		for (int i = 0; i < defs.length; i++) {
 			if (defs[i].getValues() == null) {
 				// not fetched yet
@@ -419,17 +448,13 @@ public class DataProcessor implements ConsolFuns {
 				RrdDb rrd = null;
 				try {
 					rrd = getRrd(defs[i]);
-					FetchRequest req = rrd.createFetchRequest(defs[i].getConsolFun(), tStart, tEnd);
+					FetchRequest req = rrd.createFetchRequest(defs[i].getConsolFun(), tStart, tEndFixed);
 					req.setFilter(dsNames);
 					FetchData data = req.fetchData();
-					//System.out.println(data.getAggregate(defs[i].getDsName(), "AVERAGE"));
-					double[] values = data.getValues(defs[i].getDsName());
-					normalizeDefValues(data.getTimestamps(), values, defs[i]);
+					defs[i].setFetchData(data);
 					for (int j = i + 1; j < defs.length; j++) {
 						if (defs[i].isCompatibleWith(defs[j])) {
-							//System.out.println(data.getAggregate(defs[j].getDsName(), "AVERAGE"));
-							values = data.getValues(defs[j].getDsName());
-							normalizeDefValues(data.getTimestamps(), values, defs[j]);
+							defs[j].setFetchData(data);
 						}
 					}
 				}
@@ -442,23 +467,46 @@ public class DataProcessor implements ConsolFuns {
 		}
 	}
 
-	private void normalizeDefValues(long[] dsTimestamps, double[] dsValues, Def def) {
+	private void createTimestamps(Def[] defs) throws RrdException, IOException {
+		// Fix zero ending timestamp if necessary
+		if(tEnd == 0) {
+			if(defs.length == 0) {
+				throw new RrdException("Could not adjust zero ending timestamp, no DEF source provided");
+			}
+			tEnd = defs[0].getEndingFetchTimestamp();
+			for(int i = 1; i < defs.length; i++) {
+				tEnd = Math.min(tEnd, defs[i].getEndingFetchTimestamp());
+			}
+		}
+		// create timestamps
+		timestamps = new double[pixelCount];
+		double span = tEnd - tStart;
+		for(int i = 0; i < pixelCount; i++) {
+			timestamps[i] = tStart + ((double) i / (double)(pixelCount - 1)) * span;
+		}
+		// determine pixelsPerStep
+		pixelsPerStep = Math.max((int) Math.ceil(customStep / getSecondsPerPixel()), 1);
+	}
+
+	private void normalizeRrdValues(Def def) throws RrdException {
+		long[] rrdTimestamps = def.getRrdTimestamps();
+		double[] rrdValues = def.getRrdValues();
 		double[] values = new double[pixelCount];
 		int dsSegment = 1, accumPixels = 0;
-		values[0] = (tStart == dsTimestamps[0])? dsValues[0]: dsValues[1];
+		values[0] = (tStart == rrdTimestamps[0])? rrdValues[0]: rrdValues[1];
 		double totalValue = 0D, totalTime = 0D;
 		for(int pixel = 1; pixel < pixelCount; pixel++) {
 			double t0 = timestamps[pixel - 1], t1 = timestamps[pixel];
 			while(t0 < t1) {
-				double tLimit = Math.min(dsTimestamps[dsSegment], t1);
+				double tLimit = Math.min(rrdTimestamps[dsSegment], t1);
 				double dt = tLimit - t0;
-				double val = dsValues[dsSegment];
+				double val = rrdValues[dsSegment];
 				if(!Double.isNaN(val)) {
 					totalValue += val * dt;
 					totalTime += dt;
 				}
 				t0 = tLimit;
-				if(t0 == dsTimestamps[dsSegment]) {
+				if(t0 == rrdTimestamps[dsSegment]) {
 					dsSegment++;
 				}
 			}
@@ -571,6 +619,15 @@ public class DataProcessor implements ConsolFuns {
 	// TRIVIA
 	/////////////////////////////////////////////////////////////////
 
+	private double getSecondsPerPixel() throws RrdException {
+		double secondsPerPixel = (double) (tEnd - tStart) / (double) (pixelCount - 1);
+		if(secondsPerPixel < 1.0) {
+			throw new RrdException("Time span [" + tStart + "," + tEnd + "] too narrow. " +
+				"The time span (in seconds) sohuld be greater than number of pixels [" + pixelCount + "]");
+		}
+		return secondsPerPixel;
+	}
+
 	/**
 	 * Dumps timestamps and values of all datasources in a tabelar form. Very useful for debugging.
 	 * @return Dumped object content.
@@ -604,26 +661,34 @@ public class DataProcessor implements ConsolFuns {
 		}
 		return b.toString();
 	}
-/*
+
+	/**
+	 * Cute little demo. Uses demo.rrd file previously created by basic JRobin demo.
+	 * @param args
+	 * @throws IOException
+	 * @throws RrdException
+	 */
 	public static void main(String[] args) throws IOException, RrdException {
-		final long t1 = Util.getTimestamp(2003, 4, 1);
-		final long t2 = Util.getTimestamp(2003, 5, 1);
-		DataProcessor dp = new DataProcessor(t1, t2);
+		long t1 = Util.getTimestamp(2003, 4, 1);
+		String rrdPath = Util.getJRobinDemoPath("demo.rrd");
+		DataProcessor dp = new DataProcessor(t1, 0);
+		//dp.setStep(2 * 86400);
 		// DEF datasource
-		dp.addDatasource("x", "demo.rrd", "sun", "AVERAGE");
+		dp.addDatasource("X", rrdPath, "sun", "AVERAGE");
 		// DEF datasource
-		dp.addDatasource("y", "demo.rrd", "shade", "AVERAGE");
+		dp.addDatasource("Y", rrdPath, "shade", "AVERAGE");
 		// CDEF datasource
-		dp.addDatasource("z", "x,y,+,2,/");
+		dp.addDatasource("Z", "X,Y,+,2,/");
 		// SDEF datasource
-		dp.addDatasource("w", "z", "AVERAGE");
+		dp.addDatasource("AVG", "Z", "AVERAGE");
 		// CDEF datasource
-		dp.addDatasource("wz", "w,z,-");
+		dp.addDatasource("DELTA", "Z,AVG,-");
 		// SDEF datasource, values should be close to zero
-		dp.addDatasource("wzavg", "wz", "AVERAGE");
+		dp.addDatasource("ALMOST ZERO", "DELTA", "AVERAGE");
 		// action!
 		dp.processData();
+		Date endingDate = new Date(dp.getEndingTimestamp() * 1000L);
+		System.out.println("Ending timestamp used: " + dp.getEndingTimestamp() + " (" + endingDate + ")\n");
 		System.out.println(dp.dump());
 	}
-//*/
 }

@@ -26,10 +26,15 @@
 package org.jrobin.data;
 
 import org.jrobin.core.Util;
+import org.jrobin.core.FetchData;
+import org.jrobin.core.RrdException;
+
 import java.io.IOException;
 
 class Def extends Source {
 	private String path, dsName, consolFun, backend;
+	private FetchData fetchData;
+	private long endingFetchTimestamp;
 
 	Def(String name, String path, String dsName, String consolFunc) {
 		this(name, path, dsName, consolFunc, null);
@@ -68,5 +73,22 @@ class Def extends Source {
 				getConsolFun().equals(def.consolFun) &&
 				((backend == null && def.backend == null) ||
 				(backend != null && def.backend != null && backend.equals(def.backend)));
+	}
+
+	void setFetchData(FetchData fetchData) throws IOException {
+		this.fetchData = fetchData;
+		this.endingFetchTimestamp = fetchData.getMatchingArchive().getEndTime();
+	}
+
+	long[] getRrdTimestamps() {
+		return fetchData.getTimestamps();
+	}
+
+	double[] getRrdValues() throws RrdException {
+		return fetchData.getValues(dsName);
+	}
+
+	long getEndingFetchTimestamp() throws IOException {
+		return endingFetchTimestamp;
 	}
 }
