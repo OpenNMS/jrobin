@@ -31,12 +31,12 @@ import java.io.FileOutputStream;
 import java.io.ByteArrayOutputStream;
 
 /**
- * Class used to represent data fetched from the RRD file.
+ * Class used to represent data fetched from the RRD.
  * Object of this class is created when the method
  * {@link org.jrobin.core.FetchRequest#fetchData() fetchData()} is
  * called on a {@link org.jrobin.core.FetchRequest FetchRequest} object.<p>
  *
- * Data returned from the RRD file is, simply, just one big table filled with
+ * Data returned from the RRD is, simply, just one big table filled with
  * timestamps and corresponding datasource values.
  * Use {@link #getRowCount() getRowCount()} method to count the number
  * of returned timestamps (table rows).<p>
@@ -77,7 +77,7 @@ public class FetchData {
 	}
 
 	/**
-	 * Returns the number of rows fetched from the underlying RRD file.
+	 * Returns the number of rows fetched from the corresponding RRD.
 	 * Each row represents datasource values for the specific timestamp.
 	 * @return Number of rows.
 	 */
@@ -86,9 +86,9 @@ public class FetchData {
 	}
 
     /**
-	 * Returns the number of columns fetched from the underlying RRD file.
+	 * Returns the number of columns fetched from the corresponding RRD.
 	 * This number is always equal to the number of datasources defined
-	 * in the RRD file. Each column represents values of a single datasource.
+	 * in the RRD. Each column represents values of a single datasource.
 	 * @return Number of columns (datasources).
 	 */
 	public int getColumnCount() {
@@ -96,7 +96,7 @@ public class FetchData {
 	}
 
 	/**
-	 * Returns the number of rows fetched from the underlying RRD file.
+	 * Returns the number of rows fetched from the corresponding RRD.
 	 * Each row represents datasource values for the specific timestamp.
 	 * @param rowIndex Row index.
 	 * @return FetchPoint object which represents datasource values for the
@@ -193,7 +193,7 @@ public class FetchData {
 	}
 
 	/**
-	 * Returns array of datasource names found in the underlying RRD file. If the request
+	 * Returns array of datasource names found in the corresponding RRD. If the request
 	 * was filtered (data was fetched only for selected datasources), only datasources selected
 	 * for fetching are returned.
 	 * @return Array of datasource names.
@@ -207,7 +207,7 @@ public class FetchData {
 	 * @param dsName Name of the datasource for which to find the index.
 	 * @return Index number of the datasources in the value table.
 	 */
-	public int getDsIndex( String dsName ) {
+	public int getDsIndex(String dsName) {
 		// Let's assume the table of dsNames is always small, so it is not necessary to use a hashmap for lookups
 		for (int i = 0; i < dsNames.length; i++)
 			if ( dsNames[i].equals(dsName) )
@@ -245,7 +245,7 @@ public class FetchData {
 	 * find the maximum fetched value in meters use something like:</p>
 	 * <code>getAggregate("foots", "MAX", "value,0.3048,*");</code>
 	 * Note that 'value' in the RPN expression is a reserved word and stands for the
-	 * original value (value fetched from RRD file)</p>
+	 * original value (value fetched from RRD)</p>
 	 * @param dsName Datasource name
 	 * @param consolFun Consolidation function to be applied to fetched datasource values.
 	 * Valid consolidation functions are MIN, MAX, LAST and AVERAGE
@@ -353,7 +353,7 @@ public class FetchData {
 		XmlWriter writer = new XmlWriter(outputStream);
 		writer.startTag("fetch_data");
 		writer.startTag("request");
-		writer.writeTag("file", request.getParentDb().getRrdFile().getCanonicalFilePath());
+		writer.writeTag("file", request.getParentDb().getPath());
 		writer.writeComment(Util.getDate(request.getFetchStart()));
 		writer.writeTag("start", request.getFetchStart());
 		writer.writeComment(Util.getDate(request.getFetchEnd()));

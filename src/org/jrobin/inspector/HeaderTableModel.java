@@ -80,7 +80,7 @@ class HeaderTableModel extends AbstractTableModel {
 				new Date(header.getLastUpdateTime() * 1000L) + "]";
 			String datasources = "" + header.getDsCount();
 			String archives = "" + header.getArcCount();
-			String size = rrd.getRrdFile().getFileSize() + " bytes";
+			String size = rrd.getRrdBackend().getLength() + " bytes";
 			rrd.close();
 			values = new Object[]{
 				path, signature, step, lastTimestamp, datasources, archives, size

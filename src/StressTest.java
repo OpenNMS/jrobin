@@ -37,6 +37,7 @@ class StressTest {
 	public static final String RRD_PATH = Util.getJRobinDemoPath("stress.rrd");
 	public static final long RRD_START = 946710000L;
 	public static final long RRD_STEP = 30;
+	public static final String BACKEND_NAME = "MEMORY";
 
 	public static final String RRD_DATASOURCE_NAME = "T";
 	public static final int RRD_DATASOURCE_COUNT = 6;
@@ -93,10 +94,8 @@ class StressTest {
         def.addArchive("AVERAGE", 0.5, 1440, 50000);
         def.addArchive("MIN", 0.5, 1440, 50000);
         def.addArchive("MAX", 0.5, 1440, 50000);
-		//printLapTime(def.dump());
 		printLapTime("Definition created, creating RRD file");
-		RrdDbPool pool = RrdDbPool.getInstance();
-		RrdDb rrd = pool.requestRrdDb(def);
+		RrdDb rrd = new RrdDb(def);
 		printLapTime("RRD file created: " + RRD_PATH);
 		BufferedReader r = new BufferedReader(new FileReader(args[0]));
 		printLapTime("Buffered reader created, processing data");
@@ -116,7 +115,7 @@ class StressTest {
 				printLapTime("RRD ERROR: " + line);
 			}
 		}
-		pool.release(rrd);
+		rrd.close();
 		printLapTime("FINISHED: " + count + " samples stored");
         // GRAPH
 		printLapTime("Creating composite graph definition");
@@ -138,7 +137,7 @@ class StressTest {
 		gdef.comment("@c");
 		gdef.comment("\nOriginal data provided by diy-zoning.sf.net@c");
 		printLapTime("Graph definition created");
-		RrdGraph g = new RrdGraph(gdef, true);
+		RrdGraph g = new RrdGraph(gdef);
 		g.saveAsPNG(PNG_PATH, PNG_WIDTH, PNG_HEIGHT);
 		printLapTime("Graph saved: " + PNG_PATH);
 		printLapTime("Finished at " + new Date());

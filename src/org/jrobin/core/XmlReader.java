@@ -135,4 +135,14 @@ class XmlReader {
 		return values;
 	}
 
+	long getEstimatedSize() throws RrdException {
+		int dsCount = getDsCount();
+		int arcCount = getArcCount();
+		int rowCount = 0;
+		for(int i = 0; i < arcCount; i++) {
+			rowCount += getRows(i);
+		}
+		return RrdDef.calculateSize(dsCount, arcCount, rowCount);
+	}
+
 }

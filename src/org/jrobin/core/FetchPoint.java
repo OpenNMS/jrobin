@@ -31,6 +31,10 @@ package org.jrobin.core;
  * method of the {@link org.jrobin.core.FetchRequest FetchRequest} class.
  *
  * @author <a href="mailto:saxon@jrobin.org">Sasa Markovic</a>
+ * @deprecated This class is deprecated since 1.2.0 and might be removed from future releases
+ * of JRobin. You don't need this class if you fetch RRD data with the
+ * {@link org.jrobin.core.FetchRequest#fetchData() fetchData()} method from the
+ * {@link org.jrobin.core.FetchRequest FetchRequest} class
  */
 public class FetchPoint {
 
@@ -64,7 +68,7 @@ public class FetchPoint {
 	}
 
 	/**
-	 * Returns number of data source values (same as number od data sources defined in RRD file).
+	 * Returns number of data source values (same as number od data sources defined in RRD).
 	 * @return Number of data source values.
 	 */
 	public int getSize() {

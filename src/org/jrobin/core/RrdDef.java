@@ -32,16 +32,17 @@ import java.util.StringTokenizer;
 import java.io.*;
 
 /**
- * <p>Class to represent definition of new RRD file. Object of this class is used to create
- * new RRD file from scratch - pass its reference as a <code>RrdDb</code> constructor
+ * <p>Class to represent definition of new Round Robin Database (RRD).
+ * Object of this class is used to create
+ * new RRD from scratch - pass its reference as a <code>RrdDb</code> constructor
  * argument (see documentation for {@link org.jrobin.core.RrdDb RrdDb} class). <code>RrdDef</code>
- * object <b>does not</b> actually create new RRD file. It just holds all necessary
+ * object <b>does not</b> actually create new RRD. It just holds all necessary
  * information which will be used during the actual creation process</p>
  *
- * <p>RRD file definition (RrdDef object) consists of the following elements:</p>
+ * <p>RRD definition (RrdDef object) consists of the following elements:</p>
  *
  * <ul>
- * <li> path to RRD file that will be created
+ * <li> path to RRD that will be created
  * <li> starting timestamp
  * <li> step
  * <li> one or more datasource definitions
@@ -66,23 +67,23 @@ public class RrdDef {
     private ArrayList dsDefs = new ArrayList(), arcDefs = new ArrayList();
 
 	/**
-	 * <p>Creates new RRD definition object with the given file path.
+	 * <p>Creates new RRD definition object with the given path.
 	 * When this object is passed to
-	 * <code>RrdDb</code> constructor, new RRD file will be created using the
-	 * specified file path. </p>
-	 * @param path Path to new RRD file.
-	 * @throws RrdException Thrown if file name is invalid (null or empty).
+	 * <code>RrdDb</code> constructor, new RRD will be created using the
+	 * specified path. </p>
+	 * @param path Path to new RRD.
+	 * @throws RrdException Thrown if name is invalid (null or empty).
 	 */
 	public RrdDef(String path) throws RrdException {
 		if(path == null || path.length() == 0) {
-			throw new RrdException("No filename specified");
+			throw new RrdException("No path specified");
 		}
 		this.path = path;
 	}
 
 	/**
-	 * <p>Creates new RRD definition object with the given file path and step.</p>
-	 * @param path Path to new RRD file.
+	 * <p>Creates new RRD definition object with the given path and step.</p>
+	 * @param path Path to new RRD.
 	 * @param step RRD step.
 	 * @throws RrdException Thrown if supplied parameters are invalid.
 	 */
@@ -95,9 +96,9 @@ public class RrdDef {
 	}
 
 	/**
-	 * <p>Creates new RRD definition object with the given file path, starting timestamp
+	 * <p>Creates new RRD definition object with the given path, starting timestamp
 	 * and step.</p>
-	 * @param path Path to new RRD file.
+	 * @param path Path to new RRD.
 	 * @param startTime RRD starting timestamp.
 	 * @param step RRD step.
 	 * @throws RrdException Thrown if supplied parameters are invalid.
@@ -111,16 +112,15 @@ public class RrdDef {
 	}
 
 	/**
-	 * Returns file path for the new RRD file
-	 * @return path to the new RRD file
+	 * Returns path for the new RRD
+	 * @return path to the new RRD which should be created
 	 */
-
 	public String getPath() {
 		return path;
 	}
 
 	/**
-	 * Returns starting timestamp for the RRD file that will be created.
+	 * Returns starting timestamp for the RRD that should be created.
 	 * @return RRD starting timestamp
 	 */
 	public long getStartTime() {
@@ -128,7 +128,7 @@ public class RrdDef {
 	}
 
 	/**
-	 * Returns time step for the RRD file that will be created.
+	 * Returns time step for the RRD that will be created.
 	 * @return RRD step
 	 */
 	public long getStep() {
@@ -136,8 +136,8 @@ public class RrdDef {
 	}
 
 	/**
-	 * Sets path to RRD file.
-	 * @param path to new RRD file.
+	 * Sets path to RRD.
+	 * @param path to new RRD.
 	 */
 	public void setPath(String path) {
 		this.path = path;
@@ -529,9 +529,9 @@ public class RrdDef {
 	}
 
 	/**
-	 * Returns the number of bytes required on the disk to create RRD file from this
+	 * Returns the number of storage bytes required to create RRD from this
 	 * RrdDef object.
-	 * @return Estimated length of the new RRD file.
+	 * @return Estimated byte count of the underlying RRD storage.
 	 */
 	public long getEstimatedSize() {
 		int dsCount = dsDefs.size();
@@ -541,7 +541,11 @@ public class RrdDef {
 			ArcDef arcDef = (ArcDef) arcDefs.get(i);
 			rowsCount += arcDef.getRows();
 		}
+		return calculateSize(dsCount, arcCount, rowsCount);   
+	}
+
+	static long calculateSize(int dsCount, int arcCount, int rowsCount) {
 		return 64L + 128L * dsCount + 56L * arcCount +
-				20L * dsCount * arcCount + 8L * dsCount * rowsCount;
+			20L * dsCount * arcCount + 8L * dsCount * rowsCount;
 	}
 }

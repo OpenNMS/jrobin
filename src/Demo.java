@@ -39,6 +39,7 @@ class Demo {
 	
 	static final Random RANDOM = new Random(SEED);
 	static final String FILE = "demo";
+	static final String FACTORY_NAME = "FILE";
 
 	static final long START = Util.getTimestamp(2003, 4, 1);
 	static final long END = Util.getTimestamp(2003, 5, 1);
@@ -49,7 +50,6 @@ class Demo {
 		// setup
 		println("== Starting demo");
 		RrdDb.setLockMode(RrdDb.NO_LOCKS);
-
 		long startMillis = System.currentTimeMillis();
 		long start = START;
 		long end = END;

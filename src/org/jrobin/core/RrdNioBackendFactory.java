@@ -23,48 +23,36 @@
  * Boston, MA 02111-1307, USA.
  */
 
-package org.jrobin.inspector;
+package org.jrobin.core;
 
-import org.jrobin.core.*;
-
-import java.io.File;
 import java.io.IOException;
 
-class RrdNode {
-	private int dsIndex = -1, arcIndex = -1;
-	private String label;
+/**
+ * Factory class which creates actual {@link RrdNioBackend} objects.
+ */
+public class RrdNioBackendFactory extends RrdFileBackendFactory{
+	/** factory name, "NIO" */
+	public static final String NAME = "NIO";
 
-	RrdNode(RrdDb rrd) {
-		// header node
-		String path = rrd.getRrdBackend().getPath();
-		label = new File(path).getName();
+	/**
+	 * Creates RrdNioBackend object for the given file path.
+	 * @param path File path
+	 * @param readOnly True, if the file should be accessed in read/only mode.
+	 * False otherwise.
+	 * @param lockMode One of the following constants: {@link RrdDb.NO_LOCKS},
+	 * {@link RrdDb.EXCEPTION_IF_LOCKED} or {@link RrdDb.WAIT_IF_LOCKED}.
+	 * @return RrdNioBackend object which handles all I/O operations for the given file path
+	 * @throws IOException Thrown in case of I/O error.
+	 */
+	protected RrdBackend open(String path, boolean readOnly, int lockMode) throws IOException {
+		return new RrdNioBackend(path, readOnly, lockMode);
 	}
 
-	RrdNode(RrdDb rrd, int dsIndex) throws IOException, RrdException {
-		// datasource node
-		this.dsIndex = dsIndex;
-		RrdDef def = rrd.getRrdDef();
-		DsDef[] dsDefs = def.getDsDefs();
-		label = dsDefs[dsIndex].dump();
-	}
-
-	RrdNode(RrdDb rrd, int dsIndex, int arcIndex) throws IOException, RrdException {
-		// archive node
-		this.dsIndex = dsIndex;
-		this.arcIndex = arcIndex;
-		ArcDef[] arcDefs = rrd.getRrdDef().getArcDefs();
-		label = arcDefs[arcIndex].dump();
-	}
-
-	int getDsIndex() {
-		return dsIndex;
-	}
-
-	int getArcIndex() {
-		return arcIndex;
-	}
-
-	public String toString() {
-		return label;
+	/**
+	 * Returns the name of this factory.
+	 * @return Factory name (equals to string "NIO")
+	 */
+	protected String getFactoryName() {
+		return NAME;    
 	}
 }

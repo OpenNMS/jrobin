@@ -28,39 +28,22 @@ package org.jrobin.core;
 import java.io.IOException;
 
 class RrdDouble extends RrdPrimitive {
-	static final int SIZE = 8;
-	
-	private double cache;
+	private RrdCacher cache = new RrdCacher();
 
 	RrdDouble(RrdUpdater updater) throws IOException {
-		super(updater, SIZE);
-		loadCache();
-	}
-	
-	void loadCache() throws IOException {
-		if(rrdFile.getRrdMode() == RrdFile.MODE_RESTORE) {
-			restorePosition();
-			cache = rrdFile.readDouble();
-			cached = true;
-		}
-	}
-
-	RrdDouble(double initValue, RrdUpdater updater) throws IOException {
-		super(updater, SIZE);
-		set(initValue);
+		super(updater, RrdDouble.RRD_DOUBLE);
 	}
 
 	void set(double value) throws IOException {
-		if(!cached || cache != value) {
-			restorePosition();
-			rrdFile.writeDouble(value);
-			cache = value;
-			cached = true;
+		if(cache.setDouble(value)) {
+			writeDouble(value);
 		}
 	}
 
-	double get() {
-		assert cached: "Not cached!";
-		return cache;
+	double get() throws IOException {
+		if(cache.isEmpty()) {
+			cache.setDouble(readDouble());
+		}
+		return cache.getDouble();
 	}
 }

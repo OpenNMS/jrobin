@@ -31,10 +31,10 @@ import java.util.StringTokenizer;
 /**
  * <p>Class to represent data source values for the given timestamp. Objects of this
  * class are never created directly (no public constructor is provided). To learn more how
- * to update a RRD file, see RRDTool's
+ * to update RRDs, see RRDTool's
  * <a href="../../../../man/rrdupdate.html" target="man">rrdupdate man page</a>.
  *
- * <p>To update a RRD file with JRobin use the following procedure:</p>
+ * <p>To update a RRD with JRobin use the following procedure:</p>
  *
  * <ol>
  * <li>Obtain empty Sample object by calling method {@link org.jrobin.core.RrdDb#createSample(long)
@@ -56,7 +56,7 @@ public class Sample {
 	private String[] dsNames;
 	private double[] values;
 
-	Sample(RrdDb parentDb, long time) {
+	Sample(RrdDb parentDb, long time) throws IOException {
 		this.parentDb = parentDb;
 		this.time = time;
 		this.dsNames = parentDb.getDsNames();
@@ -87,8 +87,8 @@ public class Sample {
 	}
 
 	/**
-	 * Sets single datasource value using data source index. Data sources are indexed using
-	 * the order of RRD file creation (zero-based).
+	 * Sets single datasource value using data source index. Data sources are indexed by
+	 * the order specified during RRD creation (zero-based).
 	 * @param i Data source index
 	 * @param value Data source values
 	 * @throws RrdException Thrown if data source index is invalid.
@@ -103,11 +103,11 @@ public class Sample {
 
 	/**
 	 * Sets some (possibly all) data source values in bulk. Data source values are
-	 * assigned in the order of their definition inside the RRD file.
+	 * assigned in the order of their definition inside the RRD.
 	 *
 	 * @param values Data source values.
 	 * @throws RrdException Thrown if the number of supplied values is zero or greater
-	 * than the number of data sources defined in the RRD file.
+	 * than the number of data sources defined in the RRD.
 	 */
 	public void setValues(double[] values) throws RrdException {
 		if(values.length <= this.values.length) {
@@ -189,7 +189,7 @@ public class Sample {
 	}
 
 	/**
-	 * Stores sample in the corresponding RRD file. If the update operation succeedes,
+	 * Stores sample in the corresponding RRD. If the update operation succeedes,
 	 * all datasource values in the sample will be set to Double.NaN (unknown) values.
 	 *
 	 * @throws IOException Thrown in case of I/O error.
@@ -204,7 +204,7 @@ public class Sample {
 
 	/**
 	 * <p>Creates sample with the timestamp and data source values supplied
-	 * in the argument string and stores sample in the corresponding RRD file.
+	 * in the argument string and stores sample in the corresponding RRD.
 	 * This method is just a shortcut for:</p>
 	 * <pre>
 	 *     set(timeAndValues);
@@ -228,7 +228,7 @@ public class Sample {
 	 */
 	public String dump() {
 		StringBuffer buffer = new StringBuffer(RrdDb.RRDTOOL);
-		buffer.append(" update " + parentDb.getRrdFile().getFilePath() + " " + time);
+		buffer.append(" update " + parentDb.getRrdBackend().getPath() + " " + time);
 		for(int i = 0; i < values.length; i++) {
 			buffer.append(":");
 			buffer.append(Util.formatDouble(values[i], "U", false));

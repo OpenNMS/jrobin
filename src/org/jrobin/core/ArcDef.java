@@ -26,7 +26,7 @@
 package org.jrobin.core;
 
 /**
- * Class to represent single archive definition within the RRD file.
+ * Class to represent single archive definition within the RRD.
  * Archive definition consists of the following four elements:
  *
  * <ul>
@@ -128,7 +128,7 @@ public class ArcDef {
 	/**
 	 * Checks if two archive definitions are equal.
 	 * Archive definitions are considered equal if they have the same number of steps
-	 * and the same consolidation function. It is not possible to create RRD file with two
+	 * and the same consolidation function. It is not possible to create RRD with two
 	 * equal archive definitions.
 	 * @param obj Archive definition to compare with.
 	 * @return <code>true</code> if archive definitions are equal,

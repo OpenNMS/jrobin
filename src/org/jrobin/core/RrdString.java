@@ -28,51 +28,22 @@ package org.jrobin.core;
 import java.io.IOException;
 
 class RrdString extends RrdPrimitive {
-	private static final int SIZE = 20;
-	
-	private String cache;
+	private RrdCacher cache = new RrdCacher();
 
 	RrdString(RrdUpdater updater) throws IOException {
-		super(updater, SIZE * 2);
-		loadCache();
-	}
-	
-	void loadCache() throws IOException {
-		if(rrdFile.getRrdMode() == RrdFile.MODE_RESTORE) {
-			restorePosition();
-			char[] c = new char[SIZE];
-			for(int i = 0; i < SIZE; i++) {
-				c[i] = rrdFile.readChar();			
-			}
-			cache = new String(c).trim();
-			cached = true;
-		}
-	}
-
-	RrdString(String initValue, RrdUpdater updater) throws IOException {
-		super(updater, SIZE * 2);
-		set(initValue);
+		super(updater, RrdPrimitive.RRD_STRING);
 	}
 
 	void set(String value) throws IOException {
-		value = value.trim();
-		if(!cached || !cache.equals(value)) {
-			restorePosition();
-			for(int i = 0; i < SIZE; i++) {
-				if(i < value.length()) {
-					rrdFile.writeChar(value.charAt(i));
-				}
-				else {
-					rrdFile.writeChar(' ');
-				}
-			}
-			cache = value;
-			cached = true;
+		if(cache.setString(value)) {
+			writeString(value);
 		}
 	}
 
-	String get() {
-		assert cached: "Not cached!";
-		return cache;
+	String get() throws IOException {
+		if(cache.isEmpty()) {
+			cache.setString(readString());
+		}
+		return cache.getString();
 	}
 }

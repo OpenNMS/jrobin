@@ -26,7 +26,7 @@
 package org.jrobin.core;
 
 /**
- * Class to represent single data source definition within the RRD file.
+ * Class to represent single data source definition within the RRD.
  * Datasource definition consists of the following five elements:
  *
  * <ul>
@@ -157,9 +157,9 @@ public class DsDef {
 	}
 
 	/**
-	 * Checks if two source definitions are equal.
+	 * Checks if two datasource definitions are equal.
 	 * Source definitions are treated as equal if they have the same source name.
-	 * It is not possible to create RRD file with two equal archive definitions.
+	 * It is not possible to create RRD with two equal archive definitions.
 	 * @param obj Archive definition to compare with.
 	 * @return <code>true</code> if archive definitions are equal,
 	 * <code>false</code> otherwise.

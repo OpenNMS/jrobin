@@ -60,7 +60,7 @@ public class FetchRequest {
 	 * Sets request filter in order to fetch data only for
 	 * the specified array of datasources (datasource names).
 	 * If not set (or set to null), fetched data will
-	 * containt values of all datasources defined in the underlying RRD file.
+	 * containt values of all datasources defined in the corresponding RRD.
 	 * To fetch data only from selected
 	 * datasources, specify an array of datasource names as method argument.
 	 * @param filter Array of datsources (datsource names) to fetch data from.
@@ -73,7 +73,7 @@ public class FetchRequest {
 	 * Sets request filter in order to fetch data only for
 	 * a single datasource (datasource name).
 	 * If not set (or set to null), fetched data will
-	 * containt values of all datasources defined in the underlying RRD file.
+	 * containt values of all datasources defined in the corresponding RRD.
 	 * To fetch data for a single datasource only,
 	 * specify an array of datasource names as method argument.
 	 * @param filter Array of datsources (datsource names) to fetch data from.
@@ -147,7 +147,7 @@ public class FetchRequest {
 	 * @return Fetch request dump.
 	 */
 	public String dump() {
-		return RrdDb.RRDTOOL + " fetch " + parentDb.getRrdFile().getFilePath() +
+		return RrdDb.RRDTOOL + " fetch " + parentDb.getRrdBackend().getPath() +
 			" " + consolFun + " --start " + fetchStart + " --end " + fetchEnd +
 			(resolution > 1? " --resolution " + resolution: "");
 	}
@@ -157,7 +157,7 @@ public class FetchRequest {
 	}
 
 	/**
-	 * Returns data from the underlying RRD file as an array of
+	 * Returns data from the underlying RRD as an array of
 	 * {@link org.jrobin.core.FetchPoint FetchPoint} objects. Each fetch point object represents
 	 * RRD datasource values for the specific timestamp. Timestamp difference between
 	 * consecutive fecth points is guaranteed to be constant.
@@ -173,7 +173,7 @@ public class FetchRequest {
 	}
 
 	/**
-	 * Returns data from the underlying RRD file and puts it in a single
+	 * Returns data from the underlying RRD and puts it in a single
 	 * {@link org.jrobin.core.FetchData FetchData} object. Use this method instead of
 	 * deprecated {@link #fetch() fetch()} method.
 	 * @return FetchPoint object filled with timestamps and datasource values.

@@ -28,9 +28,9 @@ package org.jrobin.core;
 import java.io.IOException;
 
 /**
- * Class to represent single datasource within RRD file. Each datasource object holds the
+ * Class to represent single datasource within RRD. Each datasource object holds the
  * following information: datasource definition (once set, never changed) and
- * datasource state variables (changed whenever RRD file gets updated).<p>
+ * datasource state variables (changed whenever RRD gets updated).<p>
  *
  * Normally, you don't need to manipluate Datasource objects directly, it's up to
  * JRobin framework to do it for you.
@@ -51,19 +51,7 @@ public class Datasource implements RrdUpdater {
 	private RrdDouble accumValue;
 
 	Datasource(RrdDb parentDb, DsDef dsDef) throws IOException {
-		this.parentDb = parentDb;
-		dsName = new RrdString(dsDef.getDsName(), this);
-		dsType = new RrdString(dsDef.getDsType(), this);
-		heartbeat = new RrdLong(dsDef.getHeartbeat(), this);
-		minValue = new RrdDouble(dsDef.getMinValue(), this);
-		maxValue = new RrdDouble(dsDef.getMaxValue(), this);
-        lastValue = new RrdDouble(Double.NaN, this);
-		accumValue = new RrdDouble(0.0, this);
-		Header header = parentDb.getHeader();
-		nanSeconds = new RrdLong(header.getLastUpdateTime() % header.getStep(), this);
-	}
-
-	Datasource(RrdDb parentDb) throws IOException {
+		boolean shouldInitialize = dsDef != null;
 		this.parentDb = parentDb;
 		dsName = new RrdString(this);
 		dsType = new RrdString(this);
@@ -73,21 +61,32 @@ public class Datasource implements RrdUpdater {
         lastValue = new RrdDouble(this);
 		accumValue = new RrdDouble(this);
 		nanSeconds = new RrdLong(this);
+		if(shouldInitialize) {
+			dsName.set(dsDef.getDsName());
+			dsType.set(dsDef.getDsType());
+			heartbeat.set(dsDef.getHeartbeat());
+			minValue.set(dsDef.getMinValue());
+			maxValue.set(dsDef.getMaxValue());
+        	lastValue.set(Double.NaN);
+			accumValue.set(0.0);
+			Header header = parentDb.getHeader();
+			nanSeconds.set(header.getLastUpdateTime() % header.getStep());
+		}
 	}
 
 	Datasource(RrdDb parentDb, XmlReader reader, int dsIndex) throws IOException, RrdException {
-		this.parentDb = parentDb;
-		dsName = new RrdString(reader.getDsName(dsIndex), this);
-		dsType = new RrdString(reader.getDsType(dsIndex), this);
-		heartbeat = new RrdLong(reader.getHeartbeat(dsIndex), this);
-		minValue = new RrdDouble(reader.getMinValue(dsIndex), this);
-		maxValue = new RrdDouble(reader.getMaxValue(dsIndex), this);
-        lastValue = new RrdDouble(reader.getLastValue(dsIndex), this);
-		accumValue = new RrdDouble(reader.getAccumValue(dsIndex), this);
-		nanSeconds = new RrdLong(reader.getNanSeconds(dsIndex), this);
+		this(parentDb, null);
+		dsName.set(reader.getDsName(dsIndex));
+		dsType.set(reader.getDsType(dsIndex));
+		heartbeat.set(reader.getHeartbeat(dsIndex));
+		minValue.set(reader.getMinValue(dsIndex));
+		maxValue.set(reader.getMaxValue(dsIndex));
+        lastValue.set(reader.getLastValue(dsIndex));
+		accumValue.set(reader.getAccumValue(dsIndex));
+		nanSeconds.set(reader.getNanSeconds(dsIndex));
 	}
 
-	String dump() {
+	String dump() throws IOException {
 		return "== DATASOURCE ==\n" +
 			"DS:" + dsName.get() + ":" + dsType.get() + ":" +
 			heartbeat.get() + ":" + minValue.get() + ":" +
@@ -97,18 +96,11 @@ public class Datasource implements RrdUpdater {
 	}
 
 	/**
-	 * Returns the underlying RrdFile object.
-	 * @return Underlying RrdFile object.
-	 */
-	public RrdFile getRrdFile() {
-		return parentDb.getRrdFile();
-	}
-
-	/**
 	 * Returns datasource name.
 	 * @return Datasource name
+	 * @throws IOException Thrown in case of I/O error
 	 */
-	public String getDsName() {
+	public String getDsName() throws IOException {
 		return dsName.get();
 	}
 
@@ -116,8 +108,9 @@ public class Datasource implements RrdUpdater {
 	 * Returns datasource type (GAUGE, COUNTER, DERIVE, ABSOLUTE).
 	 *
 	 * @return Datasource type.
+	 * @throws IOException Thrown in case of I/O error
 	 */
-	public String getDsType() {
+	public String getDsType() throws IOException {
 		return dsType.get();
 	}
 
@@ -125,27 +118,30 @@ public class Datasource implements RrdUpdater {
 	 * Returns datasource heartbeat
 	 *
 	 * @return Datasource heartbeat
+	 * @throws IOException Thrown in case of I/O error
 	 */
 
-	public long getHeartbeat() {
+	public long getHeartbeat() throws IOException {
 		return heartbeat.get();
 	}
 
 	/**
-	 * Returns mimimal allowed value of the datasource.
+	 * Returns mimimal allowed value for this datasource.
 	 *
 	 * @return Minimal value allowed.
+	 * @throws IOException Thrown in case of I/O error
 	 */
-	public double getMinValue() {
+	public double getMinValue() throws IOException {
 		return minValue.get();
 	}
 
 	/**
-	 * Returns maximal allowed value of the datasource.
+	 * Returns maximal allowed value for this datasource.
 	 *
 	 * @return Maximal value allowed.
+	 * @throws IOException Thrown in case of I/O error
 	 */
-	public double getMaxValue() {
+	public double getMaxValue() throws IOException {
 		return maxValue.get();
 	}
 
@@ -153,8 +149,9 @@ public class Datasource implements RrdUpdater {
 	 * Returns last known value of the datasource.
 	 *
 	 * @return Last datasource value.
+	 * @throws IOException Thrown in case of I/O error
 	 */
-	public double getLastValue() {
+	public double getLastValue() throws IOException {
 		return lastValue.get();
 	}
 
@@ -162,8 +159,9 @@ public class Datasource implements RrdUpdater {
 	 * Returns value this datasource accumulated so far.
 	 *
 	 * @return Accumulated datasource value.
+	 * @throws IOException Thrown in case of I/O error
 	 */
-	public double getAccumValue() {
+	public double getAccumValue() throws IOException {
 		return accumValue.get();
 	}
 
@@ -171,8 +169,9 @@ public class Datasource implements RrdUpdater {
 	 * Returns the number of accumulated NaN seconds.
 	 *
 	 * @return Accumulated NaN seconds.
+	 * @throws IOException Thrown in case of I/O error
 	 */
-	public long getNanSeconds() {
+	public long getNanSeconds() throws IOException {
 		return nanSeconds.get();
 	}
 
@@ -261,7 +260,7 @@ public class Datasource implements RrdUpdater {
 		}
 	}
 
-	private double calculateTotal(long startTime, long boundaryTime) {
+	private double calculateTotal(long startTime, long boundaryTime) throws IOException {
 		double totalValue = Double.NaN;
 		long validSeconds = boundaryTime - startTime - nanSeconds.get();
 		if(nanSeconds.get() <= heartbeat.get() && validSeconds > 0) {
@@ -308,10 +307,11 @@ public class Datasource implements RrdUpdater {
 	}
 
 	/**
-	 * Returns index of this Datasource object in a RRD file.
-	 * @return Datasource index in a RRD file.
+	 * Returns index of this Datasource object in the RRD.
+	 * @return Datasource index in the RRD.
+	 * @throws IOException Thrown in case of I/O error
 	 */
-	public int getDsIndex() {
+	public int getDsIndex() throws IOException {
 		try {
 			return parentDb.getDsIndex(dsName.get());
 		}
@@ -344,7 +344,6 @@ public class Datasource implements RrdUpdater {
 	 * @throws IOException Thrown in case of I/O error
 	 * @throws RrdException Thrown if invalid minValue was supplied (not less then maxValue)
 	 */
-
 	public void setMinValue(double minValue, boolean filterArchivedValues)
 		throws IOException, RrdException {
 		double maxValue = this.maxValue.get();
@@ -415,6 +414,23 @@ public class Datasource implements RrdUpdater {
 				archives[i].getRobin(dsIndex).filterValues(minValue, maxValue);
 			}
 		}
+	}
+
+	/**
+	 * Returns the underlying storage (backend) object which actually performs all
+	 * I/O operations.
+	 * @return I/O backend object
+	 */
+	public RrdBackend getRrdBackend() {
+		return parentDb.getRrdBackend();
+	}
+
+	/**
+	 * Required to implement RrdUpdater interface. You should never call this method directly.
+	 * @return Allocator object
+	 */
+	public RrdAllocator getRrdAllocator() {
+		return parentDb.getRrdAllocator();
 	}
 }
 

@@ -24,12 +24,14 @@
  */
 package org.jrobin.core;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
 /**
- * Class to represent the pool of open RRD files.
+ * Class to represent the pool of open RRD files.<p>
+ *
+ * <b>WARNING:</b> The pool cannot be used to manipulate RrdDb objects
+ * with {@link RrdBackend backends} different from default.
  *
  * To open already existing RRD file with JRobin, you have to create a
  * {@link org.jrobin.core.RrdDb RrdDb} object by specifying RRD file path
@@ -257,9 +259,7 @@ public class RrdDbPool implements Runnable {
 		if(rrdDb.isClosed()) {
 			throw new RrdException("Cannot release: already closed");
 		}
-		RrdFile rrdFile = rrdDb.getRrdFile();
-		String path = rrdFile.getFilePath();
-		String keypath = getCanonicalPath(path);
+		String keypath = rrdDb.getCanonicalPath();
 		if(rrdMap.containsKey(keypath)) {
 			RrdEntry rrdEntry = (RrdEntry) rrdMap.get(keypath);
 			reportRelease(rrdEntry);
@@ -323,7 +323,7 @@ public class RrdDbPool implements Runnable {
 	}
 
 	private static String getCanonicalPath(String path) throws IOException {
-		return new File(path).getCanonicalPath();
+		return RrdFileBackend.getCanonicalPath(path);
 	}
 
 	private static void debug(String msg) {
@@ -400,7 +400,7 @@ public class RrdDbPool implements Runnable {
 		}
 
 		String dump() throws IOException {
-			String keypath = getCanonicalPath(rrdDb.getCanonicalPath());
+			String keypath = rrdDb.getCanonicalPath();
 			return keypath + " [" + usageCount + "]";
 		}
 	}

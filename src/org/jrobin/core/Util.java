@@ -121,12 +121,6 @@ public class Util {
 		return formatDouble(x, "" + Double.NaN, forceExponents);
 	}
 
-	static void debug(String message) {
-		if(RrdDb.DEBUG) {
-			System.out.println(message);
-		}
-	}
-
 	/**
 	 * Returns <code>Date</code> object for the given timestamp (in seconds, without
 	 * milliseconds)
@@ -279,7 +273,7 @@ public class Util {
 		return file1.getCanonicalPath().equals(file2.getCanonicalPath());
 	}
 
-	static int getMatchingDatasourceIndex(RrdDb rrd1, int dsIndex, RrdDb rrd2) {
+	static int getMatchingDatasourceIndex(RrdDb rrd1, int dsIndex, RrdDb rrd2) throws IOException {
 		String dsName = rrd1.getDatasource(dsIndex).getDsName();
 		try {
 			return rrd2.getDsIndex(dsName);

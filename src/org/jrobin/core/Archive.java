@@ -28,7 +28,7 @@ package org.jrobin.core;
 import java.io.IOException;
 
 /**
- * Class to represent single RRD archive in a RRD file with its internal state.
+ * Class to represent single RRD archive in a RRD with its internal state.
  * Normally, you don't need methods to manipulate archive objects directly
  * because JRobin framework does it automatically for you.<p>
  *
@@ -48,69 +48,52 @@ public class Archive implements RrdUpdater {
 	private Robin[] robins;
 	private ArcState[] states;
 
-	// first time creation
 	Archive(RrdDb parentDb, ArcDef arcDef) throws IOException {
-		this.parentDb = parentDb;
-		consolFun = new RrdString(arcDef.getConsolFun(), this);
-		xff = new RrdDouble(arcDef.getXff(), this);
-		steps = new RrdInt(arcDef.getSteps(), this);
-		rows = new RrdInt(arcDef.getRows(), this);
-		int n = parentDb.getHeader().getDsCount();
-		robins = new Robin[n];
-		states = new ArcState[n];
-		for(int i = 0; i < n; i++) {
-            states[i] = new ArcState(this);
-			robins[i] = new Robin(this, rows.get());
-		}
-	}
-
-	// read from file
-	Archive(RrdDb parentDb) throws IOException {
+		boolean shouldInitialize = arcDef != null;
 		this.parentDb = parentDb;
 		consolFun = new RrdString(this);
 		xff = new RrdDouble(this);
 		steps = new RrdInt(this);
 		rows = new RrdInt(this);
+		if(shouldInitialize) {
+			consolFun.set(arcDef.getConsolFun());
+			xff.set(arcDef.getXff());
+			steps.set(arcDef.getSteps());
+			rows.set(arcDef.getRows());
+		}
 		int n = parentDb.getHeader().getDsCount();
 		states = new ArcState[n];
 		robins = new Robin[n];
 		for(int i = 0; i < n; i++) {
-			states[i] = new ArcState(this);
-            robins[i] = new Robin(this, rows.get());
+			states[i] = new ArcState(this, shouldInitialize);
+            robins[i] = new Robin(this, rows.get(), shouldInitialize);
 		}
 	}
 
 	// read from XML
 	Archive(RrdDb parentDb, XmlReader reader, int arcIndex) throws IOException, RrdException {
-		this.parentDb = parentDb;
-		consolFun = new RrdString(reader.getConsolFun(arcIndex), this);
-		xff = new RrdDouble(reader.getXff(arcIndex), this);
-		steps = new RrdInt(reader.getSteps(arcIndex), this);
-		rows = new RrdInt(reader.getRows(arcIndex), this);
-		int dsCount = reader.getDsCount();
-		states = new ArcState[dsCount];
-		robins = new Robin[dsCount];
-		for(int dsIndex = 0; dsIndex < dsCount; dsIndex++) {
+		this(parentDb, new ArcDef(
+			reader.getConsolFun(arcIndex), reader.getXff(arcIndex),
+			reader.getSteps(arcIndex), reader.getRows(arcIndex)));
+		int n = parentDb.getHeader().getDsCount();
+		for(int i = 0; i < n; i++) {
 			// restore state
-            states[dsIndex] = new ArcState(this);
-			states[dsIndex].setAccumValue(reader.getStateAccumValue(arcIndex, dsIndex));
-			states[dsIndex].setNanSteps(reader.getStateNanSteps(arcIndex, dsIndex));
+			states[i].setAccumValue(reader.getStateAccumValue(arcIndex, i));
+			states[i].setNanSteps(reader.getStateNanSteps(arcIndex, i));
 			// restore robins
-			robins[dsIndex] = new Robin(this, rows.get());
-			double[] values = reader.getValues(arcIndex, dsIndex);
-			for(int j = 0; j < values.length; j++) {
-				robins[dsIndex].store(values[j]);
-			}
+			double[] values = reader.getValues(arcIndex, i);
+			robins[i].update(values);
 		}
 	}
 
 	/**
-	 * Returns archive time step in seconds. Archive step is equal to RRD file step
+	 * Returns archive time step in seconds. Archive step is equal to RRD step
 	 * multiplied with the number of archive steps.
 	 *
 	 * @return Archive time step in seconds
+	 * @throws IOException Thrown in case of I/O error.
 	 */
-	public long getArcStep() {
+	public long getArcStep() throws IOException {
 		long step = parentDb.getHeader().getStep();
 		return step * steps.get();
 	} 
@@ -129,14 +112,6 @@ public class Archive implements RrdUpdater {
 
 	RrdDb getParentDb() {
 		return parentDb;
-	}
-
-	/**
-	 * Returns the underlying RrdFile object.
-	 * @return Underlying RrdFile object
-	 */
-	public RrdFile getRrdFile() {
-		return parentDb.getRrdFile();
 	}
 
 	void archive(int dsIndex, double value, long numUpdates) throws IOException {
@@ -211,40 +186,45 @@ public class Archive implements RrdUpdater {
 	/**
 	 * Returns archive consolidation function (AVERAGE, MIN, MAX or LAST).
 	 * @return Archive consolidation function.
+	 * @throws IOException Thrown in case of I/O error.
 	 */
-	public String getConsolFun() {
+	public String getConsolFun() throws IOException {
 		return consolFun.get();
 	}
 
 	/**
 	 * Returns archive X-files factor.
 	 * @return Archive X-files factor (between 0 and 1).
+	 * @throws IOException Thrown in case of I/O error.
 	 */
-	public double getXff() {
+	public double getXff() throws IOException {
 		return xff.get();
 	}
 
 	/**
 	 * Returns the number of archive steps.
 	 * @return Number of archive steps.
+	 * @throws IOException Thrown in case of I/O error.
 	 */
-	public int getSteps() {
+	public int getSteps() throws IOException {
 		return steps.get();
 	}
 
 	/**
 	 * Returns the number of archive rows.
 	 * @return Number of archive rows.
+	 * @throws IOException Thrown in case of I/O error.
 	 */
-	public int getRows() {
+	public int getRows() throws IOException {
 		return rows.get();
 	}
 
 	/**
 	 * Returns current starting timestamp. This value is not constant.
 	 * @return Timestamp corresponding to the first archive row
+	 * @throws IOException Thrown in case of I/O error.
 	 */
-	public long getStartTime() {
+	public long getStartTime() throws IOException {
 		long endTime = getEndTime();
 		long arcStep = getArcStep();
 		long numRows = rows.get();
@@ -254,8 +234,9 @@ public class Archive implements RrdUpdater {
 	/**
 	 * Returns current ending timestamp. This value is not constant.
 	 * @return Timestamp corresponding to the last archive row
+	 * @throws IOException Thrown in case of I/O error.
 	 */
-	public long getEndTime() {
+	public long getEndTime() throws IOException {
 		long arcStep = getArcStep();
 		long lastUpdateTime = parentDb.getHeader().getLastUpdateTime();
 		return Util.normalize(lastUpdateTime, arcStep);
@@ -275,7 +256,7 @@ public class Archive implements RrdUpdater {
 	/**
 	 * Returns the underlying round robin archive. Robins are used to store actual
 	 * archive values on a per-datasource basis.
-	 * @param dsIndex Index of the datasource in the RRD file.
+	 * @param dsIndex Index of the datasource in the RRD.
 	 * @return Underlying round robin archive for the given datasource.
 	 */
 	public Robin getRobin(int dsIndex) {
@@ -426,5 +407,22 @@ public class Archive implements RrdUpdater {
 			throw new RrdException("Invalid xff supplied (" + xff + "), must be >= 0 and < 1");
 		}
 		this.xff.set(xff);
+	}
+
+	/**
+	 * Returns the underlying storage (backend) object which actually performs all
+	 * I/O operations.
+	 * @return I/O backend object
+	 */
+	public RrdBackend getRrdBackend() {
+		return parentDb.getRrdBackend();
+	}
+
+	/**
+	 * Required to implement RrdUpdater interface. You should never call this method directly.
+	 * @return Allocator object
+	 */
+	public RrdAllocator getRrdAllocator() {
+		return parentDb.getRrdAllocator();
 	}
 }

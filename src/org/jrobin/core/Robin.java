@@ -30,12 +30,12 @@ import java.io.IOException;
 /**
  * Class to represent archive values for a single datasource. Robin class is the heart of
  * the so-called "round robin database" concept. Basically, each Robin object is a
- * fixed length array of double values. Each double value reperesents consolidated archive
+ * fixed length array of double values. Each double value reperesents consolidated, archived
  * value for the specific timestamp. When the underlying array of double values gets completely
- * filled, new values will replace the oldest entries.<p>
+ * filled, new values will replace the oldest ones.<p>
  *
  * Robin object does not hold values in memory - such object could be quite large.
- * Instead of it, Robin stores all values on the disk and reads them only when necessary.
+ * Instead of it, Robin reads them from the backend I/O only when necessary.
  *
  * @author <a href="mailto:saxon@jrobin.org">Sasa Markovic</a>
  */
@@ -45,24 +45,22 @@ public class Robin implements RrdUpdater {
 	private RrdDoubleArray values;
 	private int rows;
 
-	Robin(Archive parentArc, int rows) throws IOException {
+	Robin(Archive parentArc, int rows, boolean shouldInitialize) throws IOException {
 		this.parentArc = parentArc;
+		this.pointer = new RrdInt(this);
+		this.values = new RrdDoubleArray(this, rows);
 		this.rows = rows;
-		if(getRrdFile().getRrdMode() == RrdFile.MODE_CREATE) {
-			pointer = new RrdInt(0, this);
-			values = new RrdDoubleArray(this, rows, Double.NaN);
-		}
-		else {
-			pointer = new RrdInt(this);
-			values = new RrdDoubleArray(this, rows);
+		if(shouldInitialize) {
+			pointer.set(0);
+			values.set(0, Double.NaN, rows);
 		}
 	}
 
 	/**
-	 * Fetches all Robin archive values from the disk.
+	 * Fetches all archived values.
 	 *
 	 * @return Array of double archive values, starting from the oldest one.
-	 * @throws IOException Thrown in case of IO specific error.
+	 * @throws IOException Thrown in case of I/O specific error.
 	 */
 	public double[] getValues() throws IOException {
 		return getValues(0, rows);
@@ -92,12 +90,12 @@ public class Robin implements RrdUpdater {
 		}
 	}
 
-	/**
-	 * Returns the underlying RrdFile object.
-	 * @return Underlying RrdFile object
-	 */
-	public RrdFile getRrdFile() {
-		return parentArc.getRrdFile();
+	// updates Robin values in bulk
+	void update(double[] newValues) throws IOException {
+		assert rows == newValues.length: "Invalid number of values supplied: " + newValues.length +
+			" rows=" + rows;
+		pointer.set(0);
+		values.writeDouble(0, newValues);
 	}
 
 	String dump() throws IOException {
@@ -114,6 +112,7 @@ public class Robin implements RrdUpdater {
 	 * Returns the i-th value from the Robin archive.
 	 * @param index Value index
 	 * @return Value stored in the i-th position (the oldest value has zero index)
+	 * @throws IOException Thrown in case of I/O specific error.
 	 */
 	public double getValue(int index) throws IOException {
 		int arrayIndex = (pointer.get() + index) % rows;
@@ -153,7 +152,7 @@ public class Robin implements RrdUpdater {
 	}
 
 	/**
-	 * Returns the size of the underlying array of archive values.
+	 * Returns the size of the underlying array of archived values.
 	 *
 	 * @return Number of stored values
 	 */
@@ -198,5 +197,22 @@ public class Robin implements RrdUpdater {
 				values.set(i, Double.NaN);
 			}
 		}
+	}
+
+	/**
+	 * Returns the underlying storage (backend) object which actually performs all
+	 * I/O operations.
+	 * @return I/O backend object
+	 */
+	public RrdBackend getRrdBackend() {
+		return parentArc.getRrdBackend();
+	}
+
+	/**
+	 * Required to implement RrdUpdater interface. You should never call this method directly.
+	 * @return Allocator object
+	 */
+	public RrdAllocator getRrdAllocator() {
+		return parentArc.getRrdAllocator();
 	}
 }

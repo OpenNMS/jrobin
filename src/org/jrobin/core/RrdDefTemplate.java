@@ -32,12 +32,12 @@ import java.io.File;
 import java.util.GregorianCalendar;
 
 /**
- * Class used to create an arbitrary number of RrdDef (RRD file definition) objects
+ * Class used to create an arbitrary number of {@link RrdDef} (RRD definition) objects
  * from a single XML template. XML template can be supplied as an XML InputSource,
  * XML file or XML formatted string.<p>
  *
- * Here is an example of a properly formatted XML template with all available options in it
- * (unwanted options can be removed):<p>
+ * Here is an example of a properly formatted XML template with all available
+ * options in it (unwanted options can be removed):<p>
  * <pre>
  * &lt;rrd_def&gt;
  *     &lt;path&gt;test.rrd&lt;/path&gt;
@@ -98,7 +98,7 @@ import java.util.GregorianCalendar;
  * <ul>
  * <li>Create your XML template and save it to a file (template.xml, for example)
  * <li>Replace hardcoded template values with variables if you want to change them during runtime.
- * For example, file path should not be hardcoded in the template - you probably want to create
+ * For example, RRD path should not be hardcoded in the template - you probably want to create
  * many different RRD files from the same XML template. For example, your XML
  * template could start with:
  * <pre>
