@@ -39,6 +39,9 @@ import java.io.IOException;
  */
 
 public class Datasource implements RrdUpdater, DsTypes {
+	private static final double MAX_32_BIT = Math.pow(2, 32);
+	private static final double MAX_64_BIT = Math.pow(2, 64);
+	
 	private RrdDb parentDb;
 	// definition
 	private RrdString dsName, dsType;
@@ -223,13 +226,11 @@ public class Datasource implements RrdUpdater, DsTypes {
 			else if(type.equals(DT_COUNTER)) {
 				if(!Double.isNaN(newValue) && !Double.isNaN(oldValue)) {
 					double diff = newValue - oldValue;
-					double max32bit = Math.pow(2, 32);
-					double max64bit = Math.pow(2, 64);
 					if(diff < 0) {
-                           diff += max32bit;
+                           diff += MAX_32_BIT;
 					}
 					if(diff < 0) {
-                           diff += max64bit - max32bit;
+                           diff += MAX_64_BIT - MAX_32_BIT;
 					}
 					if(diff >= 0) {
 						updateValue = diff / (newTime - oldTime);
