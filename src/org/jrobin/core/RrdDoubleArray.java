@@ -49,23 +49,20 @@ class RrdDoubleArray extends RrdPrimitive {
 		// rollovers not allowed!
 		assert index + count <= length:	"Invalid robin index supplied: index=" + index +
 			", count=" + count + ", length=" + length;
-		RrdFile rrdFile = getRrdFile();
-		rrdFile.seek(getPointer() + index * RrdDouble.SIZE);
+		restorePosition(index, RrdDouble.SIZE);
 		rrdFile.writeDouble(value, count);
 	}
 
 	double get(int index) throws IOException {
 		assert index < length: "Invalid index supplied: " + index + ", length=" + length;
-		RrdFile rrdFile = getRrdFile();
-		rrdFile.seek(getPointer() + index * RrdDouble.SIZE);
+		restorePosition(index, RrdDouble.SIZE);
 		return rrdFile.readDouble();
 	}
 
 	double[] get(int index, int count) throws IOException {
 		assert index + count <= length: "Invalid index/count supplied: " + index +
 			"/" + count + " (length=" + length + ")";
-		RrdFile rrdFile = getRrdFile();
-		rrdFile.seek(getPointer() + index * RrdDouble.SIZE);
+		restorePosition(index, RrdDouble.SIZE);
 		return rrdFile.readDouble(count);
 	}
 

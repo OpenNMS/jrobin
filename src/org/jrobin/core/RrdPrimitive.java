@@ -27,17 +27,17 @@ package org.jrobin.core;
 import java.io.IOException;
 
 abstract class RrdPrimitive {
-	
-	private RrdUpdater parent;
+
 	private long pointer;
 	private int byteCount;
 
-	protected boolean cached = false;
+	RrdFile rrdFile;
+	boolean cached = false;
 
 	RrdPrimitive(RrdUpdater parent, int byteCount) throws IOException {
-		this.parent = parent;
+		rrdFile = parent.getRrdFile();
 		// this will set pointer and byteCount
-		parent.getRrdFile().allocate(this, byteCount);
+		rrdFile.allocate(this, byteCount);
 	}
 	
 	long getPointer() {
@@ -56,34 +56,27 @@ abstract class RrdPrimitive {
 		this.byteCount = byteCount;
 	}
 	
-	RrdUpdater getParent() {
-		return parent;
-	}
-	
-	RrdFile getRrdFile() {
-		return parent.getRrdFile();
-	}
-	
 	byte[] readBytes() throws IOException {
 		byte[] b = new byte[byteCount];
-		RrdFile rrdFile = getRrdFile();
-		rrdFile.seek(pointer);
+		restorePosition();
 		int bytesRead = rrdFile.read(b);
-		if(bytesRead != byteCount) {
-			throw new IOException("Could not read enough bytes (" + byteCount + 
-				" bytes requested, " + bytesRead + " bytes obtained");
-		}
+		assert bytesRead == byteCount: "Could not read enough bytes (" + byteCount +
+				" bytes requested, " + bytesRead + " bytes obtained";
 		return b;
 	}
 
 	void writeBytes(byte[] b) throws IOException {
-		if(b.length != byteCount) {
-			throw new IOException("Invalid number of bytes supplied (" + b.length +
-				"), exactly " + byteCount + " needed");
-		}
-		RrdFile rrdFile = getRrdFile();
-		rrdFile.seek(pointer);
+		assert b.length == byteCount: "Invalid number of bytes supplied (" + b.length +
+				"), exactly " + byteCount + " needed";
+		restorePosition();
 		rrdFile.write(b);
 	}
 
+	final void restorePosition() throws IOException {
+		rrdFile.seek(pointer);
+	}
+
+	final void restorePosition(int unitIndex, int unitSize) throws IOException {
+		rrdFile.seek(pointer + unitIndex * unitSize);
+	}
 }

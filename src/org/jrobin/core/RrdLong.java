@@ -38,9 +38,8 @@ class RrdLong extends RrdPrimitive {
 	}
 	
 	void loadCache() throws IOException {
-		RrdFile rrdFile = getRrdFile();
 		if(rrdFile.getRrdMode() == RrdFile.MODE_RESTORE) {
-			rrdFile.seek(getPointer());
+			restorePosition();
 			cache = rrdFile.readLong();
 			cached = true;
 		}
@@ -53,8 +52,7 @@ class RrdLong extends RrdPrimitive {
 
 	void set(long value) throws IOException {
 		if(!cached || cache != value) {
-			RrdFile rrdFile = getRrdFile();
-			rrdFile.seek(getPointer());
+			restorePosition();
 			rrdFile.writeLong(value);
 			cache = value;
 			cached = true;

@@ -38,9 +38,8 @@ class RrdString extends RrdPrimitive {
 	}
 	
 	void loadCache() throws IOException {
-		RrdFile rrdFile = getRrdFile();
 		if(rrdFile.getRrdMode() == RrdFile.MODE_RESTORE) {
-			rrdFile.seek(getPointer());
+			restorePosition();
 			char[] c = new char[SIZE];
 			for(int i = 0; i < SIZE; i++) {
 				c[i] = rrdFile.readChar();			
@@ -58,8 +57,7 @@ class RrdString extends RrdPrimitive {
 	void set(String value) throws IOException {
 		value = value.trim();
 		if(!cached || !cache.equals(value)) {
-			RrdFile rrdFile = getRrdFile();
-			rrdFile.seek(getPointer());
+			restorePosition();
 			for(int i = 0; i < SIZE; i++) {
 				if(i < value.length()) {
 					rrdFile.writeChar(value.charAt(i));

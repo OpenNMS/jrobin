@@ -74,6 +74,8 @@ public class RrdDb implements RrdUpdater {
 	private Datasource[] datasources;
 	private Archive[] archives;
 
+	private boolean closed = false;
+
 	/**
 	 * <p>Constructor used to create new RRD file from the definition. New RRD file structure is specified by object of class
 	 * {@link org.jrobin.core.RrdDef <b>RrdDef</b>}. RRD file is created on
@@ -250,9 +252,9 @@ public class RrdDb implements RrdUpdater {
 	 * @throws IOException Thrown in case of I/O related error.
 	 */
 	public synchronized void close() throws IOException {
-		if(file != null) {
+		if(!closed) {
 			file.close();
-			file = null;
+			closed = true;
 		}
 	}
 
@@ -261,7 +263,7 @@ public class RrdDb implements RrdUpdater {
 	 * @return true if closed, false otherwise
 	 */
 	public boolean isClosed() {
-		return file == null;
+		return closed;
 	}
 
 	/**

@@ -38,9 +38,8 @@ class RrdDouble extends RrdPrimitive {
 	}
 	
 	void loadCache() throws IOException {
-		RrdFile rrdFile = getRrdFile();
 		if(rrdFile.getRrdMode() == RrdFile.MODE_RESTORE) {
-			rrdFile.seek(getPointer());
+			restorePosition();
 			cache = rrdFile.readDouble();
 			cached = true;
 		}
@@ -53,8 +52,7 @@ class RrdDouble extends RrdPrimitive {
 
 	void set(double value) throws IOException {
 		if(!cached || cache != value) {
-			RrdFile rrdFile = getRrdFile();
-			rrdFile.seek(getPointer());
+			restorePosition();
 			rrdFile.writeDouble(value);
 			cache = value;
 			cached = true;

@@ -30,8 +30,6 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
-import java.util.LinkedList;
-import java.util.List;
 
 /**
  * Class to represent RRD file on the disk. All disk I/O operations are performed
@@ -55,8 +53,9 @@ public class RrdFile extends RandomAccessFile {
 
 	private String filePath;
 	private FileLock fileLock;
-	private List primitives = new LinkedList();
+
 	private int rrdMode;
+	private long nextPointer = 0L;
 
 	RrdFile(String filePath, int rrdMode, boolean readOnly) throws IOException {
 		super(filePath, readOnly? ACCESS_READ_ONLY: ACCESS_READ_WRITE);
@@ -109,33 +108,18 @@ public class RrdFile extends RandomAccessFile {
 		close();
 	}
 	
-	RrdPrimitive getPrimitive(int index) {
-		return (RrdPrimitive) primitives.get(index);
-	}
-	
 	void allocate(RrdPrimitive primitive, int byteCount) throws IOException {
-		long pointer = getNextPointer();
-		primitive.setPointer(pointer);
+		primitive.setPointer(nextPointer);
 		primitive.setByteCount(byteCount);
-		primitives.add(primitive);
+		nextPointer += byteCount;
 	}
 	
-	private long getNextPointer() {
-		long pointer = 0;
-		int count = primitives.size();
-		if(count > 0) {
-			RrdPrimitive lastPrimitive = getPrimitive(count - 1);
-			pointer = lastPrimitive.getPointer() + lastPrimitive.getByteCount();  		 
-		}
-		return pointer;
-	}	
-
 	void truncateFile() throws IOException {
-		setLength(getNextPointer());
+		setLength(nextPointer);
 	}
 
 	boolean isEndReached() throws IOException {
-		return getNextPointer() == length();
+		return nextPointer == length();
 	}
 
 	/**
