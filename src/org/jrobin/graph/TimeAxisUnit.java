@@ -29,7 +29,7 @@ import java.text.SimpleDateFormat;
  * 
  * @author Arne Vandamme (cobralord@jrobin.org)
  */
-class TimeAxisUnit 
+public class TimeAxisUnit
 {
 	// ================================================================
 	// -- Members
@@ -56,13 +56,20 @@ class TimeAxisUnit
 				};
 
 	// Indices in the calendarUnit table
-	protected static final int SECOND	= 0;
-	protected static final int MINUTE	= 1;
-	protected static final int HOUR 	= 2;
-	protected static final int DAY 		= 3;
-	protected static final int WEEK 	= 4;
-	protected static final int MONTH 	= 5;
-	protected static final int YEAR 	= 6;
+	/** constant for seconds */
+	public static final int SECOND	= 0;
+	/** constant for minutes */
+	public static final int MINUTE	= 1;
+	/** constant for hours */
+	public static final int HOUR 	= 2;
+	/** constant for days */
+	public static final int DAY 	= 3;
+	/** constant for weeks */
+	public static final int WEEK 	= 4;
+	/** constant for months */
+	public static final int MONTH 	= 5;
+	/** constant for years */
+	public static final int YEAR 	= 6;
 	
 	private int gridTime				= HOUR;			// minor grid
 	private int gridUnits				= 1;
