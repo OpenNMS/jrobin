@@ -39,7 +39,7 @@ abstract class RrdToolCmd {
 	abstract String getCmdType();
 	abstract Object execute() throws RrdException, IOException;
 
-	public void setCommand(String command) throws RrdException {
+	void setCommand(String command) throws RrdException {
 		cmdScanner = new RrdCmdScanner(command);
 	}
 

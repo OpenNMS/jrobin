@@ -36,35 +36,28 @@ class RrdFetchCmd extends RrdToolCmd {
 	static final String DEFAULT_START = "end-1day";
 	static final String DEFAULT_END = "now";
 
-	public RrdFetchCmd(RrdCmdScanner cmdScanner) {
-		super(cmdScanner);
-	}
-
 	String getCmdType() {
 		return "fetch";
 	}
 
 	Object execute() throws RrdException, IOException {
 		// --start
-		String startStr = cmdScanner.getOptionValue("s", "start", DEFAULT_START);
+		String startStr = getOptionValue("s", "start", DEFAULT_START);
 		TimeSpec spec1 = new TimeParser(startStr).parse();
 		// --end
-		String endStr = cmdScanner.getOptionValue("e", "end", DEFAULT_END);
+		String endStr = getOptionValue("e", "end", DEFAULT_END);
 		TimeSpec spec2 = new TimeParser(endStr).parse();
 		long[] timestamps = TimeSpec.getTimestamps(spec1, spec2);
 		// --resolution
-		String resolutionStr = cmdScanner.getOptionValue("r", "resolution");
-		long resolution = 1;
-		if(resolutionStr != null) {
-			resolution = parseLong(resolutionStr);
-		}
+		String resolutionStr = getOptionValue("r", "resolution", "1");
+		long resolution = parseLong(resolutionStr);
 		// other words
-    	String[] tokens = cmdScanner.getRemainingWords();
-		if(tokens.length != 3) {
+    	String[] words = getRemainingWords();
+		if(words.length != 3) {
 			throw new RrdException("Invalid rrdfetch syntax");
 		}
-		String path = tokens[1];
-		String consolFun = tokens[2];
+		String path = words[1];
+		String consolFun = words[2];
 		RrdDb rrdDb = getRrdDbReference(path);
 		try {
 			FetchRequest fetchRequest = rrdDb.createFetchRequest(

@@ -36,6 +36,28 @@ import java.util.Timer;
  * by using java.nio.* package. This is the default backend engine since JRobin 1.4.0.
  */
 public class RrdNioBackend extends RrdFileBackend {
+	/**
+	 * Defines if the <code>System.gc()</code> method should be executed when necessary.
+	 * NIO backend uses large in-memory buffer to cache file data. The buffer remains 'active'
+	 * (by prohibiting file re-creation, for example) as long as it is not garbage collected.
+	 * By forcing <code>gc()</code> where appropriate, memory gets freed sooner and file
+	 * re-creation won't fail.<p>
+	 *
+	 * The constant is set to false initially and currently there is no API to change it
+	 * during runtime.<p>
+	 */
+	public static final boolean SHOULD_GC = true;
+
+	static {
+		if(SHOULD_GC) {
+			Runtime.getRuntime().addShutdownHook(new Thread() {
+				public void run() {
+					System.gc();
+				}
+			});
+		}
+	}
+
 	private static final Timer syncTimer = new Timer(true);
 
 	private int syncMode;
@@ -45,12 +67,25 @@ public class RrdNioBackend extends RrdFileBackend {
 	protected RrdNioBackend(String path, boolean readOnly, int lockMode, int syncMode, int syncPeriod)
 			throws IOException {
 		super(path, readOnly, lockMode);
+		map(false, readOnly);
 		this.syncMode = syncMode;
-		FileChannel.MapMode mapMode =
-				readOnly? FileChannel.MapMode.READ_ONLY: FileChannel.MapMode.READ_WRITE;
-		this.byteBuffer = channel.map(mapMode, 0, getLength());
 		if(syncMode == RrdNioBackendFactory.SYNC_BACKGROUND && !readOnly) {
 			createSyncTask(syncPeriod);
+		}
+	}
+
+	private void map(boolean isShorter, boolean readOnly) throws IOException {
+		if(isShorter) {
+			byteBuffer = null;
+			if(SHOULD_GC) {
+				System.gc();
+			}
+		}
+		long newLength = getLength();
+		if(newLength > 0) {
+			FileChannel.MapMode mapMode =
+				readOnly? FileChannel.MapMode.READ_ONLY: FileChannel.MapMode.READ_WRITE;
+			byteBuffer = channel.map(mapMode, 0, newLength);
 		}
 	}
 
@@ -66,12 +101,13 @@ public class RrdNioBackend extends RrdFileBackend {
 	/**
 	 * Sets length of the underlying RRD file. This method is called only once, immediately
 	 * after a new RRD file gets created.
-	 * @param length Length of the RRD file
+	 * @param newLength Length of the RRD file
 	 * @throws IOException Thrown in case of I/O error.
 	 */
-	protected void setLength(long length) throws IOException {
-		super.setLength(length);
-		byteBuffer = channel.map(FileChannel.MapMode.READ_WRITE, 0, length);
+	protected void setLength(long newLength) throws IOException {
+		boolean isShorter = newLength < getLength();
+		super.setLength(newLength);
+		map(isShorter, false);
 	}
 
 	/**
@@ -119,9 +155,11 @@ public class RrdNioBackend extends RrdFileBackend {
 	 * method is called. In other words, you don't have to call sync() before you call close().<p>
 	 */
 	public void sync() {
-		synchronized(byteBuffer) {
-			// System.out.println("** SYNC **");
-			byteBuffer.force();
+		if(byteBuffer != null) {
+			synchronized(byteBuffer) {
+				// System.out.println("** SYNC **");
+				byteBuffer.force();
+			}
 		}
 	}
 

@@ -7,17 +7,14 @@ import org.jrobin.core.Datasource;
 import java.io.IOException;
 
 class RrdRestoreCmd extends RrdToolCmd {
-	public RrdRestoreCmd(RrdCmdScanner cmdScanner) {
-		super(cmdScanner);
-	}
 
 	String getCmdType() {
 		return "restore";
 	}
 
 	Object execute() throws RrdException, IOException {
-    	boolean check = cmdScanner.getBooleanOption("r", "range-check");
-		String[] words = cmdScanner.getRemainingWords();
+    	boolean check = getBooleanOption("r", "range-check");
+		String[] words = getRemainingWords();
 		if(words.length != 3) {
 			throw new RrdException("Invalid rrdrestore syntax");
 		}

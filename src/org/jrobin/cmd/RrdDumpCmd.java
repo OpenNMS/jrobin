@@ -31,16 +31,12 @@ import org.jrobin.core.RrdDb;
 import java.io.IOException;
 
 class RrdDumpCmd extends RrdToolCmd {
-	RrdDumpCmd(RrdCmdScanner cmdScanner) {
-		super(cmdScanner);
-	}
-
 	String getCmdType() {
 		return "dump";
 	}
 
 	Object execute() throws RrdException, IOException {
-		String[] words = cmdScanner.getRemainingWords();
+		String[] words = getRemainingWords();
 		if(words.length != 2) {
 			throw new RrdException("Invalid rrddump syntax");
 		}

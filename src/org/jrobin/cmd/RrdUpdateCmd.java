@@ -28,7 +28,7 @@ package org.jrobin.cmd;
 import org.jrobin.core.*;
 import java.io.IOException;
 
-class RrdUpdateCommand extends RrdToolCmd {
+class RrdUpdateCmd extends RrdToolCmd {
 	private String[] dsNames;
 
 	String getCmdType() {

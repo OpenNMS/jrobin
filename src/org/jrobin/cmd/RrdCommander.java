@@ -30,6 +30,7 @@ import org.jrobin.core.RrdException;
 import java.io.IOException;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.io.File;
 
 /**
  * Class to be used to execute various RRDTool commands (original syntax of RRDTool must be used).
@@ -38,7 +39,12 @@ public class RrdCommander {
 	// just add all new commands here
 	private static final RrdToolCmd[] rrdCommands = {
 		new RrdCreateCmd(),
-		new RrdUpdateCommand()
+		new RrdUpdateCmd(),
+		new RrdLastCmd(),
+		new RrdFetchCmd(),
+		new RrdDumpCmd(),
+		new RrdRestoreCmd()
+
 	};
 
 	/**
@@ -120,11 +126,12 @@ public class RrdCommander {
 		throw new RrdException("Unknown RRDTool command: " + command);
 	}
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 		System.out.println("== JRobin's RRDTool commander ==");
 		System.out.println("Type a RRDTool command after the dollar sign and press Enter.");
 		System.out.println("Start your RRDTool command with 'create', 'update', 'fetch' etc.");
 		System.out.println("Use any word starting with a dot '.' to bail out");
+		System.out.println("Current directory is: " + new File(".").getCanonicalPath());
 		System.out.println("================================");
 		RrdToolCmd.setRrdDbPoolUsed(false);
 		BufferedReader r = new BufferedReader(new InputStreamReader(System.in));
@@ -133,7 +140,7 @@ public class RrdCommander {
 				System.out.print("$ ");
 				String s = r.readLine();
 				if(s.startsWith(".")) {
-					System.exit(0);
+					return;
 				}
 				execute(s);
 			} catch (IOException e) {

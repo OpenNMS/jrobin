@@ -31,69 +31,55 @@ import org.jrobin.graph.ExportData;
 
 import java.io.IOException;
 
-/**
- * <p>Description</p>
- * 
- * @author Arne Vandamme (cobralord@jrobin.org)
- */
-public class RrdXportCmd extends RrdToolCmd
-{
-	static final String DEFAULT_START 	= "end-1day";
-	static final String DEFAULT_END 	= "now";
-
-	static
-	{
-		keywords = new String[]	{ "DEF", "CDEF", "XPORT" };
-	}
-
-	public RrdXportCmd( RrdCmdScanner cmdScanner ) {
-		super(cmdScanner);
-	}
+class RrdXportCmd extends RrdToolCmd {
+	static final String DEFAULT_START = "end-1day";
+	static final String DEFAULT_END = "now";
 
 	String getCmdType() {
 		return "xport";
 	}
 
-	Object execute() throws RrdException, IOException
-	{
+	Object execute() throws RrdException, IOException {
 		// --start
-		String startStr			= cmdScanner.getOptionValue( "s", "start", DEFAULT_START );
-		TimeSpec spec1 			= new TimeParser(startStr).parse();
+		String startStr = getOptionValue("s", "start", DEFAULT_START);
+		TimeSpec spec1 = new TimeParser(startStr).parse();
 
 		// --end
-		String endStr 			= cmdScanner.getOptionValue( "e", "end", DEFAULT_END );
-		TimeSpec spec2 			= new TimeParser(endStr).parse();
-		long[] timestamps 		= TimeSpec.getTimestamps(spec1, spec2);
+		String endStr = getOptionValue("e", "end", DEFAULT_END);
+		TimeSpec spec2 = new TimeParser(endStr).parse();
+		long[] timestamps = TimeSpec.getTimestamps(spec1, spec2);
 
 		// --step
-		String resolutionStr 	= cmdScanner.getOptionValue( "step", null, "1" );		// Smallest step possible is default
-		long resolution 		= parseLong( resolutionStr );
+		String resolutionStr = getOptionValue("step", null, "1");		// Smallest step possible is default
+		long resolution = parseLong(resolutionStr);
 
 		// --maxrows
-		String maxrowsStr		= cmdScanner.getOptionValue( "m", "maxrows", "400" );
-		int maxRows				= parseInt( maxrowsStr );
+		String maxrowsStr = getOptionValue("m", "maxrows", "400");
+		int maxRows = parseInt(maxrowsStr);
 
-		RrdExportDef exportDef	= new RrdExportDef( timestamps[0], timestamps[1] );
-		exportDef.setResolution( resolution );
-		exportDef.setStrictExport( true );												// Always use strict export in case of RrdTool command
+		RrdExportDef exportDef = new RrdExportDef(timestamps[0], timestamps[1]);
+		exportDef.setResolution(resolution);
+		exportDef.setStrictExport(true);												// Always use strict export in case of RrdTool command
 
-		String[] words 			= cmdScanner.getRemainingWords();
+		String[] words = getRemainingWords();
 
-		for ( int i = 0; i < words.length; i++ )
-		{
-			if ( words[i].startsWith("DEF:") )
-				parseDef( words[i], exportDef );
-			else if ( words[i].startsWith("CDEF:") )
-				parseCdef( words[i], exportDef );
-			else if ( words[i].startsWith("XPORT:") )
-				parseXport( words[i], exportDef );
+		for (int i = 0; i < words.length; i++) {
+			if (words[i].startsWith("DEF:"))
+				parseDef(words[i], exportDef);
+			else if (words[i].startsWith("CDEF:"))
+				parseCdef(words[i], exportDef);
+			else if (words[i].startsWith("XPORT:"))
+				parseXport(words[i], exportDef);
+			else {
+				throw new RrdException("Invalid xport syntax: " + words[i]);
+			}
 		}
 
 		// Now create the export data
-		RrdExport export		= new RrdExport( exportDef );
-		ExportData data			= export.fetch( maxRows );
+		RrdExport export = new RrdExport(exportDef);
+		ExportData data = export.fetch(maxRows);
 
-		System.out.println( data.exportXml() );
+		System.out.println(data.exportXml());
 
 		return data;
 	}
@@ -101,62 +87,59 @@ public class RrdXportCmd extends RrdToolCmd
 	/**
 	 * DEF:vname=rrd:ds-name:CF
 	 */
-	private void parseDef( String word, RrdExportDef def ) throws RrdException
-	{
+	private void parseDef(String word, RrdExportDef def) throws RrdException {
 		String[] tokens = word.split(":");
 
-		if ( tokens.length != 4 )
-			throw new RrdException( "Invalid DEF command: " + word );
+		if (tokens.length != 4)
+			throw new RrdException("Invalid DEF command: " + word);
 
-		String[] token1	= tokens[1].split("=");
+		String[] token1 = tokens[1].split("=");
 
-		if ( token1.length != 2 )
-			throw new RrdException( "Invalid DEF command: " + word );
+		if (token1.length != 2)
+			throw new RrdException("Invalid DEF command: " + word);
 
-		def.datasource( token1[0], token1[1], tokens[2], tokens[3] );
+		def.datasource(token1[0], token1[1], tokens[2], tokens[3]);
 	}
 
 	/**
 	 * CDEF:vname=rpn-expression
 	 */
-	private void parseCdef( String word, RrdExportDef def ) throws RrdException
-	{
+	private void parseCdef(String word, RrdExportDef def) throws RrdException {
 		String[] tokens = word.split(":");
 
-		if ( tokens.length != 2 )
-			throw new RrdException( "Invalid CDEF command: " + word );
+		if (tokens.length != 2)
+			throw new RrdException("Invalid CDEF command: " + word);
 
-		String[] token1	= tokens[1].split("=");
+		String[] token1 = tokens[1].split("=");
 
-		if ( token1.length != 2 )
-			throw new RrdException( "Invalid CDEF command: " + word );
+		if (token1.length != 2)
+			throw new RrdException("Invalid CDEF command: " + word);
 
-		def.datasource( token1[0], token1[1] );
+		def.datasource(token1[0], token1[1]);
 	}
 
 	/**
 	 * XPORT:vname:legend
 	 */
-	private void parseXport( String word, RrdExportDef def ) throws RrdException
-	{
+	private void parseXport(String word, RrdExportDef def) throws RrdException {
 		String[] tokens = word.split(":");
 
-		if ( tokens.length < 2 || tokens.length > 3 )
-			throw new RrdException( "Invalid XPORT command: " + word );
+		if (tokens.length < 2 || tokens.length > 3)
+			throw new RrdException("Invalid XPORT command: " + word);
 
-		if ( tokens.length == 2 )
-			def.export( tokens[1] );
+		if (tokens.length == 2)
+			def.export(tokens[1]);
 		else
-			def.export( tokens[1], tokens[2] );
+			def.export(tokens[1], tokens[2]);
 	}
-
-	public static void main( String[] args ) throws Exception
-	{
+	/*
+	public static void main(String[] args) throws Exception {
 		String cmd = "xport --start now-1h --end now DEF:xx=host-inout.lo.rrd:output:AVERAGE DEF:yy=host-inout.lo.rrd:input:AVERAGE CDEF:aa=xx,yy,+,8,* "
-			+ "XPORT:xx:\"out bytes\" XPORT:aa:\"in and out bits\"";
+				+ "XPORT:xx:\"out bytes\" XPORT:aa:\"in and out bits\"";
 
 		cmd = "xport --start now-1h --end now -m 10 DEF:xx=/code/idea-projects/jrobin/res/demo/eth0.rrd:ifOutOctets:AVERAGE XPORT:xx:outgoing traffic";
 
-		RrdCommander.execute( cmd );
+		RrdCommander.execute(cmd);
 	}
+	*/
 }
