@@ -32,7 +32,7 @@ import java.util.Vector;
 class Timer extends Thread implements MrtgConstants {
 	private volatile boolean active = true;
 
-	public Timer() {
+	Timer() {
 		start();
 	}
 

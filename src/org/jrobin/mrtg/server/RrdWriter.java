@@ -144,19 +144,19 @@ class RrdWriter extends Thread implements MrtgConstants {
 		}
 	}
 
-	public int getSampleCount() {
+	int getSampleCount() {
 		return sampleCount;
 	}
 
-	public int getBadSavesCount() {
+	int getBadSavesCount() {
 		return badSavesCount;
 	}
 
-	public int getGoodSavesCount() {
+	int getGoodSavesCount() {
 		return goodSavesCount;
 	}
 
-	public int getSavesCount() {
+	int getSavesCount() {
 		return getGoodSavesCount() + getBadSavesCount();
 	}
 

@@ -36,67 +36,67 @@ class RawSample {
 	private long sysUpTime;
 	private int ifOperStatus;
 
-	public String getHost() {
+	String getHost() {
 		return host;
 	}
 
-	public void setHost(String host) {
+	void setHost(String host) {
 		this.host = host;
 	}
 
-	public String getIfDescr() {
+	String getIfDescr() {
 		return ifDescr;
 	}
 
-	public void setIfDescr(String ifDescr) {
+	void setIfDescr(String ifDescr) {
 		this.ifDescr = ifDescr;
 	}
 
-	public boolean isValid() {
+	boolean isValid() {
 		return valid;
 	}
 
-	public void setValid(boolean valid) {
+	void setValid(boolean valid) {
 		this.valid = valid;
 	}
 
-	public long getTimestamp() {
+	long getTimestamp() {
 		return timestamp;
 	}
 
-	public void setTimestamp(long timestamp) {
+	void setTimestamp(long timestamp) {
 		this.timestamp = timestamp;
 	}
 
-	public long getIfInOctets() {
+	long getIfInOctets() {
 		return ifInOctets;
 	}
 
-	public void setIfInOctets(long ifInOctets) {
+	void setIfInOctets(long ifInOctets) {
 		this.ifInOctets = ifInOctets;
 	}
 
-	public long getIfOutOctets() {
+	long getIfOutOctets() {
 		return ifOutOctets;
 	}
 
-	public void setIfOutOctets(long ifOutOctets) {
+	void setIfOutOctets(long ifOutOctets) {
 		this.ifOutOctets = ifOutOctets;
 	}
 
-	public long getSysUpTime() {
+	long getSysUpTime() {
 		return sysUpTime;
 	}
 
-	public void setSysUpTime(long sysUpTime) {
+	void setSysUpTime(long sysUpTime) {
 		this.sysUpTime = sysUpTime;
 	}
 
-	public int getIfOperStatus() {
+	int getIfOperStatus() {
 		return ifOperStatus;
 	}
 
-	public void setIfOperStatus(int ifOperStatus) {
+	void setIfOperStatus(int ifOperStatus) {
 		this.ifOperStatus = ifOperStatus;
 	}
 

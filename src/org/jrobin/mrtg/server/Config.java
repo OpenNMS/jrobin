@@ -61,11 +61,11 @@ class Config implements MrtgConstants {
         return HARDWARE_FILE;
 	}
 
-	public static String getRrdTemplateFile() {
+	static String getRrdTemplateFile() {
 		return RRD_DEF_TEMPLATE_FILE;
 	}
 
-	public static String getGraphTemplateFile() {
+	static String getGraphTemplateFile() {
 		return RRD_GRAPH_DEF_TEMPLATE_FILE;
 	}
 }

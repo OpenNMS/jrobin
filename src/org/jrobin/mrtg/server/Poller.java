@@ -54,7 +54,7 @@ class Poller {
 	// state variables
 	private SNMPv1CommunicationInterface comm;
 
-    public Poller(String host, String community)
+    Poller(String host, String community)
 		throws IOException {
 		// check for port information
 		String snmpHost = host;
@@ -71,7 +71,7 @@ class Poller {
 		comm.setSocketTimeout(SNMP_TIMEOUT * 1000);
     }
 
-    public String getNumericOid(String oid) {
+    String getNumericOid(String oid) {
     	int n = OIDS.length;
     	for(int i = 0; i < n; i++) {
     		String name = OIDS[i][0], value = OIDS[i][1];
@@ -83,7 +83,7 @@ class Poller {
     	return oid;
     }
 
-	public String get(String oid) throws IOException {
+	String get(String oid) throws IOException {
 		String numericOid = getNumericOid(oid);
 		try {
 	    	SNMPVarBindList newVars = comm.getMIBEntry(numericOid);
@@ -99,11 +99,11 @@ class Poller {
 		}
 	}
 
-	public String get(String oid, int index) throws IOException {
+	String get(String oid, int index) throws IOException {
 		return get(oid + "." + index);
 	}
 
-	public String[] get(String[] oids) throws IOException {
+	String[] get(String[] oids) throws IOException {
 		int count = oids.length;
 		String[] result = new String[count];
 		for(int i = 0; i < count; i++) {
@@ -112,7 +112,7 @@ class Poller {
 		return result;
 	}
 
-	public SortedMap walk(String base) throws IOException {
+	SortedMap walk(String base) throws IOException {
 		SortedMap map = new TreeMap();
 		String baseOid = getNumericOid(base);
 		String currentOid = baseOid;
@@ -140,7 +140,7 @@ class Poller {
 		return map;
 	}
 
-	public SortedMap walkIfDescr() throws IOException {
+	SortedMap walkIfDescr() throws IOException {
 		SortedMap rawInterfacesMap = walk("ifDescr");
 		SortedMap enumeratedInterfacesMap = new TreeMap();
 		Collection enumeratedInterfaces = enumeratedInterfacesMap.values();
@@ -162,7 +162,7 @@ class Poller {
 		return enumeratedInterfacesMap;
 	}
 
-	public int getIfIndexByIfDescr(String ifDescr) throws IOException {
+	int getIfIndexByIfDescr(String ifDescr) throws IOException {
 		SortedMap map = walkIfDescr();
 		Iterator it = map.keySet().iterator();
 		while(it.hasNext()) {
@@ -175,7 +175,7 @@ class Poller {
 		return -1;
 	}
 
-	public void close() {
+	void close() {
 		if(comm != null) {
 			try {
 				comm.closeConnection();
