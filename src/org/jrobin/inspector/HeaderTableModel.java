@@ -36,7 +36,7 @@ import java.io.File;
 
 class HeaderTableModel extends AbstractTableModel {
 	private static final Object[] DESCRIPTIONS = {"path", "signature", "step", "last timestamp",
-		"datasources", "archives", "size"};
+												  "datasources", "archives", "size"};
 	private static final String[] COLUMN_NAMES = {"description", "value"};
 
 	private File file;
@@ -46,19 +46,17 @@ class HeaderTableModel extends AbstractTableModel {
 		return DESCRIPTIONS.length;
 	}
 
-    public int getColumnCount() {
+	public int getColumnCount() {
 		return COLUMN_NAMES.length;
 	}
 
 	public Object getValueAt(int rowIndex, int columnIndex) {
-		if(columnIndex == 0) {
+		if (columnIndex == 0) {
 			return DESCRIPTIONS[rowIndex];
-		}
-		else if(columnIndex == 1) {
-			if(values != null) {
+		} else if (columnIndex == 1) {
+			if (values != null) {
 				return values[rowIndex];
-			}
-			else {
+			} else {
 				return "--";
 			}
 		}
@@ -70,30 +68,28 @@ class HeaderTableModel extends AbstractTableModel {
 	}
 
 	void setFile(File newFile) {
-		if(file == null || !file.getAbsolutePath().equals(newFile.getAbsolutePath())) {
-			try {
-				file = newFile;
-				values = null;
-				String path = file.getAbsolutePath();
-				RrdDb rrd = new RrdDb(path);
-				Header header = rrd.getHeader();
-				String signature = header.getSignature();
-				String step = "" + header.getStep();
-				String lastTimestamp = header.getLastUpdateTime() + " [" +
-					new Date(header.getLastUpdateTime() * 1000L) + "]";
-				String datasources = "" + header.getDsCount();
-				String archives = "" + header.getArcCount();
-				String size = rrd.getRrdFile().getFileSize() + " bytes";
-				rrd.close();
-				values = new Object[] {
-					path, signature, step, lastTimestamp, datasources, archives, size
-				};
-				fireTableDataChanged();
-			}
-			catch (IOException e) {
-			}
-			catch (RrdException e) {
-			}
+		try {
+			file = newFile;
+			values = null;
+			String path = file.getAbsolutePath();
+			RrdDb rrd = new RrdDb(path);
+			Header header = rrd.getHeader();
+			String signature = header.getSignature();
+			String step = "" + header.getStep();
+			String lastTimestamp = header.getLastUpdateTime() + " [" +
+				new Date(header.getLastUpdateTime() * 1000L) + "]";
+			String datasources = "" + header.getDsCount();
+			String archives = "" + header.getArcCount();
+			String size = rrd.getRrdFile().getFileSize() + " bytes";
+			rrd.close();
+			values = new Object[]{
+				path, signature, step, lastTimestamp, datasources, archives, size
+			};
+			fireTableDataChanged();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (RrdException e) {
+			e.printStackTrace();
 		}
 	}
 }

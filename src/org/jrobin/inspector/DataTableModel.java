@@ -64,10 +64,8 @@ class DataTableModel extends AbstractTableModel {
 	}
 
 	void setFile(File newFile) {
-		if (file == null || !file.getAbsolutePath().equals(newFile.getAbsolutePath())) {
-			file = newFile;
-			setIndex(-1, -1);
-		}
+		file = newFile;
+		setIndex(-1, -1);
 	}
 
 	void setIndex(int newDsIndex, int newArcIndex) {

@@ -34,6 +34,7 @@ import java.awt.event.WindowEvent;
 
 class AboutDialog extends JDialog {
 	static final String TITLE = "About JRobin";
+	static final String EMAIL = "saxon@eunet.yu";
 	static final String LOGO = "mrtg-res/logo.png";
 	private static final int GAP = 3;
 
@@ -78,7 +79,7 @@ class AboutDialog extends JDialog {
 		copyrightLabel.setMaximumSize(logoLabel.getPreferredSize());
 		box.add(copyrightLabel);
 		box.add(Box.createVerticalStrut(GAP));
-		JLabel emailLabel = new JLabel("saxon@jrobin.org");
+		JLabel emailLabel = new JLabel(EMAIL);
 		emailLabel.setHorizontalAlignment(JLabel.CENTER);
 		emailLabel.setAlignmentX(0.5F);
 		emailLabel.setMaximumSize(logoLabel.getPreferredSize());

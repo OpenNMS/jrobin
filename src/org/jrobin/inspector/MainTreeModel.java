@@ -43,33 +43,31 @@ class MainTreeModel extends DefaultTreeModel {
 		super(INVALID_NODE);
 	}
 
-	void setFile(File newFile) {
-		if (file == null || !file.getAbsolutePath().equals(newFile.getAbsolutePath())) {
-			try {
-				file = newFile;
-				RrdDb rrd = new RrdDb(file.getAbsolutePath());
-				DefaultMutableTreeNode root = new DefaultMutableTreeNode(new RrdNode(rrd));
-				int dsCount = rrd.getRrdDef().getDsCount();
-				int arcCount = rrd.getRrdDef().getArcCount();
-				for (int dsIndex = 0; dsIndex < dsCount; dsIndex++) {
-					DefaultMutableTreeNode dsNode =
-						new DefaultMutableTreeNode(new RrdNode(rrd, dsIndex));
-					for (int arcIndex = 0; arcIndex < arcCount; arcIndex++) {
-						DefaultMutableTreeNode arcNode =
-							new DefaultMutableTreeNode(new RrdNode(rrd, dsIndex, arcIndex));
-						dsNode.add(arcNode);
-					}
-					root.add(dsNode);
+	boolean setFile(File newFile) {
+		try {
+			file = newFile;
+			RrdDb rrd = new RrdDb(file.getAbsolutePath());
+			DefaultMutableTreeNode root = new DefaultMutableTreeNode(new RrdNode(rrd));
+			int dsCount = rrd.getRrdDef().getDsCount();
+			int arcCount = rrd.getRrdDef().getArcCount();
+			for (int dsIndex = 0; dsIndex < dsCount; dsIndex++) {
+				DefaultMutableTreeNode dsNode =
+					new DefaultMutableTreeNode(new RrdNode(rrd, dsIndex));
+				for (int arcIndex = 0; arcIndex < arcCount; arcIndex++) {
+					DefaultMutableTreeNode arcNode =
+						new DefaultMutableTreeNode(new RrdNode(rrd, dsIndex, arcIndex));
+					dsNode.add(arcNode);
 				}
-				rrd.close();
-				setRoot(root);
+				root.add(dsNode);
 			}
-			catch (IOException e) {
-				setRoot(INVALID_NODE);
-			}
-			catch (RrdException e) {
-				setRoot(INVALID_NODE);
-			}
+			rrd.close();
+			setRoot(root);
+			return true;
+		} catch (IOException e) {
+			setRoot(INVALID_NODE);
+		} catch (RrdException e) {
+			setRoot(INVALID_NODE);
 		}
+		return false;
 	}
 }

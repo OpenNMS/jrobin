@@ -34,7 +34,7 @@ import java.io.*;
 
 class HostDialog extends JDialog {
 	private static final String HOST_FILENAME = System.getProperty("user.home") +
-		System.getProperty("file.separator") + "last-mrtg-host";
+		System.getProperty("file.separator") + ".last-mrtg-host";
 	private static final String DEFAULT_HOST = "localhost";
 	private static final String TITLE = "Select JRobin-MRTG host";
 

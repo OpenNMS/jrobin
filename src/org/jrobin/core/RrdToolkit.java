@@ -267,24 +267,100 @@ public class RrdToolkit {
 		}
 	}
 
+	/**
+	 * Sets datasource heartbeat to a new value.
+	 * @param sourcePath Path to exisiting RRD file (will be updated)
+	 * @param datasourceName Name of the datasource in the specified RRD file
+	 * @param newHeartbeat New datasource heartbeat
+	 * @throws RrdException Thrown in case of JRobin specific error
+	 * @throws IOException Thrown in case of I/O error
+	 */
+	public void setDsHeartbeat(String sourcePath, String datasourceName,
+		long newHeartbeat) throws RrdException, IOException {
+		RrdDb rrd = new RrdDb(sourcePath);
+		Datasource ds = rrd.getDatasource(datasourceName);
+		ds.setHeartbeat(newHeartbeat);
+		rrd.close();
+	}
+
+	/**
+	 * Sets datasource min value to a new value
+	 * @param sourcePath Path to exisiting RRD file (will be updated)
+	 * @param datasourceName Name of the datasource in the specified RRD file
+	 * @param newMinValue New min value for the datasource
+	 * @param filterArchivedValues set to <code>true</code> if archived values less than
+	 * <code>newMinValue</code> should be set to NaN; set to false, otherwise.
+	 * @throws RrdException Thrown in case of JRobin specific error
+	 * @throws IOException Thrown in case of I/O error
+	 */
+	public void setDsMinValue(String sourcePath, String datasourceName,
+		double newMinValue, boolean filterArchivedValues) throws RrdException, IOException {
+		RrdDb rrd = new RrdDb(sourcePath);
+		Datasource ds = rrd.getDatasource(datasourceName);
+		ds.setMinValue(newMinValue, filterArchivedValues);
+		rrd.close();
+	}
+
+	/**
+	 * Sets datasource max value to a new value.
+	 * @param sourcePath Path to exisiting RRD file (will be updated)
+	 * @param datasourceName Name of the datasource in the specified RRD file
+	 * @param newMaxValue New max value for the datasource
+	 * @param filterArchivedValues set to <code>true</code> if archived values greater than
+	 * <code>newMaxValue</code> should be set to NaN; set to false, otherwise.
+	 * @throws RrdException Thrown in case of JRobin specific error
+	 * @throws IOException Thrown in case of I/O error
+	 */
+	public void setDsMaxValue(String sourcePath, String datasourceName,
+		double newMaxValue, boolean filterArchivedValues) throws RrdException, IOException {
+		RrdDb rrd = new RrdDb(sourcePath);
+		Datasource ds = rrd.getDatasource(datasourceName);
+		ds.setMaxValue(newMaxValue, filterArchivedValues);
+		rrd.close();
+	}
+
+	/**
+	 * Updates valid value range for the given datasource.
+	 * @param sourcePath Path to exisiting RRD file (will be updated)
+	 * @param datasourceName Name of the datasource in the specified RRD file
+	 * @param newMinValue New min value for the datasource
+	 * @param newMaxValue New max value for the datasource
+	 * @param filterArchivedValues set to <code>true</code> if archived values outside
+	 * of the specified min/max range should be replaced with NaNs.
+	 * @throws RrdException Thrown in case of JRobin specific error
+	 * @throws IOException Thrown in case of I/O error
+	 */
+	public void setDsMinMaxValue(String sourcePath, String datasourceName,
+		double newMinValue, double newMaxValue, boolean filterArchivedValues)
+		throws RrdException, IOException {
+		RrdDb rrd = new RrdDb(sourcePath);
+		Datasource ds = rrd.getDatasource(datasourceName);
+		ds.setMinMaxValue(newMinValue, newMaxValue, filterArchivedValues);
+		rrd.close();
+	}
+
+	/**
+	 * Sets single archive's X-files factor to a new value.
+	 * @param sourcePath Path to existing RRD file (will be updated)
+	 * @param consolFun Consolidation function of the target archive
+	 * @param steps Number of sptes of the target archive
+	 * @param newXff New X-files factor for the target archive
+	 * @throws RrdException Thrown in case of JRobin specific error
+	 * @throws IOException Thrown in case of I/O error
+	 */
+	public void setArcXff(String sourcePath, String consolFun, int steps,
+		double newXff) throws RrdException, IOException {
+        RrdDb rrd = new RrdDb(sourcePath);
+		Archive arc = rrd.getArchive(consolFun, steps);
+		arc.setXff(newXff);
+		rrd.close();
+	}
+
 	private static void deleteFile(File file) throws IOException {
 		if(file.exists() && !file.delete()) {
 			throw new IOException("Could not delete file: " + file.getCanonicalPath());
 		}
 	}
 
-    public static void main(String[] args) throws RrdException, IOException {
-		String file = "c:/test.rrd";
-		RrdToolkit tool = RrdToolkit.getInstance();
-		DsDef dsDef1 = new DsDef("XXX", "GAUGE", 666, -1, Double.NaN);
-		DsDef dsDef2 = new DsDef("YYY", "GAUGE", 777, +1, Double.NaN);
-		tool.addDatasource(file, dsDef1, true);
-		tool.addDatasource(file, dsDef2, false);
-		tool.removeDatasource(file, "ftpUsers", false);
-		tool.removeDatasource(file, "XXX", false);
-		ArcDef arcDef1 = new ArcDef("LAST", 0.22222, 13, 567);
-		tool.addArchive(file, arcDef1, false);
-		tool.removeArchive(file, "MAX", 6, false);
-	}
 }
 
