@@ -32,17 +32,13 @@ import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.GregorianCalendar;
 
 class Demo {
 	static final String HOME = Util.getJRobinDemoDirectory();
 	static final String FILE = "demo";
-	static final GregorianCalendar START = new GregorianCalendar(2003, 4, 1);
-	static final GregorianCalendar END = new GregorianCalendar(2003, 5, 1);
+	static final long START = Util.getTimestamp(2003, 4, 1);
+	static final long END = Util.getTimestamp(2003, 5, 1);
 	static final int MAX_STEP = 240;
-
-	// increase this to get better flaming graph...
-	static final int GRADIENT_COLOR_STEPS = 20;
 
 	public static void main(String[] args) throws RrdException, IOException {
 		// setup
@@ -50,8 +46,8 @@ class Demo {
 		RrdDb.setLockMode(RrdDb.NO_LOCKS);
 
 		long startMillis = System.currentTimeMillis();
-		long start = START.getTime().getTime() / 1000L;
-		long end = END.getTime().getTime() / 1000L;
+		long start = START;
+		long end = END;
 		String rrdPath = getFullPath(FILE + ".rrd");
 		String xmlPath = getFullPath(FILE + ".xml");
 		String rrdRestoredPath = getFullPath(FILE + "_restored.rrd");
@@ -118,12 +114,13 @@ class Demo {
 		rrdDb.dumpXml(xmlPath);
 		println("==Creating RRD file " + rrdRestoredPath + " from XML file " + xmlPath);
 		RrdDb rrdRestoredDb = new RrdDb(rrdRestoredPath, xmlPath);
+
 		// close files
 		println("==Closing both RRD files");
 		rrdDb.close();
 		rrdRestoredDb.close();
 
-		// creating graph
+		// create graph
 		println("==Creating graph from the second file");
 		RrdGraphDef gDef = new RrdGraphDef();
 		gDef.setTimePeriod(start, end);
@@ -133,23 +130,13 @@ class Demo {
 		gDef.datasource("shade", rrdRestoredPath, "shade", "AVERAGE");
 		gDef.datasource("median", "sun,shade,+,2,/");
 		gDef.datasource("diff", "sun,shade,-,ABS,-1,*");
-		// gradient color datasources
-		for(int i = 1; i < GRADIENT_COLOR_STEPS; i++) {
-			double factor = i / (double) GRADIENT_COLOR_STEPS;
-			gDef.datasource("diff" + i, "diff," + factor + ",*");
-		}
 		gDef.datasource("sine", "TIME," + start + ",-," + (end - start) +
 			",/,2,PI,*,*,SIN,1000,*");
 		gDef.line("sun", Color.GREEN, "sun temp");
 		gDef.line("shade", Color.BLUE, "shade temp");
 		gDef.line("median", Color.MAGENTA, "median value@L");
-		gDef.area("diff", Color.RED, "difference@r");
-		// gradient color areas
-		for(int i = GRADIENT_COLOR_STEPS - 1; i >= 1; i--) {
-			gDef.area("diff" + i,
-				new Color(255, 255 - 255 * i / GRADIENT_COLOR_STEPS, 0),
-				null);
-		}
+		gDef.area("diff", Color.YELLOW, "difference@r");
+		gDef.line("diff", Color.RED, null);
 		gDef.line("sine", Color.CYAN, "sine function demo@L");
 		gDef.gprint("sun", "MAX", "maxSun = @3@s");
 		gDef.gprint("sun", "AVERAGE", "avgSun = @3@S@r");
