@@ -305,7 +305,18 @@ public class RrdDb implements RrdUpdater {
 	public RrdDb(String rrdPath, String xmlPath, RrdBackendFactory factory)
 			throws IOException, RrdException {
 		backend = factory.open(rrdPath, false, lockMode);
-		XmlReader reader = new XmlReader(xmlPath);
+		DataImporter reader;
+		if(xmlPath.startsWith("rrdtool:/")) {
+			String rrdToolPath = xmlPath.substring("rrdtool:/".length());
+			reader = new RrdToolReader(rrdToolPath);
+		}
+		else if(xmlPath.startsWith("xml:/")) {
+			xmlPath = xmlPath.substring("xml:/".length());
+			reader = new XmlReader(xmlPath);
+		}
+		else {
+			reader = new XmlReader(xmlPath);
+		}
 		backend.setLength(reader.getEstimatedSize());
 		// create header
 		header = new Header(this, reader);
@@ -319,6 +330,7 @@ public class RrdDb implements RrdUpdater {
 		for(int i = 0; i < archives.length; i++) {
 			archives[i] = new Archive(this, reader, i);
 		}
+		reader.release();
 		// XMLReader is a rather huge DOM tree, release memory ASAP
 		reader = null;
 		backend.afterCreate();

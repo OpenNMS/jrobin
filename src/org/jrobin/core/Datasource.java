@@ -74,7 +74,7 @@ public class Datasource implements RrdUpdater {
 		}
 	}
 
-	Datasource(RrdDb parentDb, XmlReader reader, int dsIndex) throws IOException, RrdException {
+	Datasource(RrdDb parentDb, DataImporter reader, int dsIndex) throws IOException, RrdException {
 		this(parentDb, null);
 		dsName.set(reader.getDsName(dsIndex));
 		dsType.set(reader.getDsType(dsIndex));

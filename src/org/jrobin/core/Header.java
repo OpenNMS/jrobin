@@ -65,7 +65,7 @@ public class Header implements RrdUpdater {
 		}
 	}
 
-	Header(RrdDb parentDb, XmlReader reader) throws IOException, RrdException {
+	Header(RrdDb parentDb, DataImporter reader) throws IOException, RrdException {
 		this(parentDb, (RrdDef) null);
 		String version = reader.getVersion();
 		if(!version.equals(RRDTOOL_VERSION)) {

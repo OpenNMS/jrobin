@@ -71,7 +71,7 @@ public class Archive implements RrdUpdater {
 	}
 
 	// read from XML
-	Archive(RrdDb parentDb, XmlReader reader, int arcIndex) throws IOException, RrdException {
+	Archive(RrdDb parentDb, DataImporter reader, int arcIndex) throws IOException, RrdException {
 		this(parentDb, new ArcDef(
 			reader.getConsolFun(arcIndex), reader.getXff(arcIndex),
 			reader.getSteps(arcIndex), reader.getRows(arcIndex)));

@@ -69,4 +69,8 @@ abstract class DataImporter {
 		return RrdDef.calculateSize(dsCount, arcCount, rowCount);
 	}
 
+	void release() throws RrdException, IOException {
+		// NOP
+	}
+
 }
