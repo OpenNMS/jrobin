@@ -25,8 +25,8 @@
 
 package org.jrobin.core;
 
-import org.jrobin.data.Aggregator;
 import org.jrobin.data.Aggregates;
+import org.jrobin.data.DataProcessor;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -57,14 +57,22 @@ import java.io.ByteArrayOutputStream;
  *
  */
 public class FetchData implements RrdDataSet, ConsolFuns {
+	// anything fuuny will do
+	private static final String RPN_SOURCE_NAME = "WHERE THE SPEECHLES UNITE IN A SILENT ACCORD";
+
 	private FetchRequest request;
-	private Archive matchingArchive;
 	private String[] dsNames;
 	private long[] timestamps;
 	private double[][] values;
 
+	private Archive matchingArchive;
+	private long arcStep;
+	private long arcEndTime;
+
 	FetchData(Archive matchingArchive, FetchRequest request) throws IOException {
 		this.matchingArchive = matchingArchive;
+		this.arcStep = matchingArchive.getArcStep();
+		this.arcEndTime = matchingArchive.getEndTime();
 		this.dsNames = request.getFilter();
 		if (this.dsNames == null) {
 			this.dsNames = matchingArchive.getParentDb().getDsNames();
@@ -177,6 +185,20 @@ public class FetchData implements RrdDataSet, ConsolFuns {
 			}
 		}
 		throw new RrdException("Datasource [" + dsName + "] not found");
+	}
+
+	/**
+	 * Returns a set of values created by applying RPN expression to the fetched data.
+	 * For example, if you have two datasources named <code>x</code> and <code>y</code>
+	 * in this FetchData and you want to calculate values for <code>(x+y)/2<code> use something like: <p>
+	 * <code>getRpnValues("x,y,+,2,/");</code><p>
+	 * @param rpnExpression RRDTool-like RPN expression
+	 * @return Calculated values
+	 * @throws RrdException Thrown if invalid RPN expression is supplied
+	 */
+	public double[] getRpnValues(String rpnExpression) throws RrdException {
+		DataProcessor dataProcessor = createDataProcessor(rpnExpression);
+		return dataProcessor.getValues(RPN_SOURCE_NAME);
 	}
 
 	/**
@@ -310,9 +332,45 @@ public class FetchData implements RrdDataSet, ConsolFuns {
 	 * @throws RrdException Thrown if the given datasource name cannot be found in fetched data.
 	 */
 	public double getAggregate(String dsName, String consolFun)	throws RrdException {
-		Aggregator aggregator = new Aggregator(getTimestamps(), getValues(dsName));
-		Aggregates agg = aggregator.getAggregates(request.getFetchStart(), request.getFetchEnd());
-		return agg.getAggregate(consolFun);
+		DataProcessor dp = createDataProcessor(null);
+		return dp.getAggregate(dsName, consolFun);
+	}
+
+	/**
+	 * Returns aggregated value from the fetched data for a single datasource.
+	 * Before applying aggregation functions, specified RPN expression is applied to fetched data.
+	 * For example, if you have a gauge datasource named 'foots' but you want to find the maximum
+	 * fetched value in meters use something like: <p>
+	 * <code>getAggregate("foots", "MAX", "foots,0.3048,*");</code><p>
+	 * @param dsName Datasource name
+	 * @param consolFun Consolidation function (MIN, MAX, LAST, FIRST, AVERAGE or TOTAL)
+	 * @param rpnExpression RRDTool-like RPN expression
+	 * @return Aggregated value
+	 * @throws RrdException Thrown if the given datasource name cannot be found in fetched data, or if
+	 * invalid RPN expression is supplied
+	 * @throws IOException Thrown in case of I/O error (unlikely to happen)
+	 * @deprecated This method is preserved just for backward compatibility.
+	 */
+	public double getAggregate(String dsName, String consolFun, String rpnExpression)
+			throws RrdException, IOException {
+		// for backward compatibility
+		rpnExpression = rpnExpression.replaceAll("value", dsName);
+		return getRpnAggregate(rpnExpression, consolFun);
+	}
+
+	/**
+	 * Returns aggregated value for a set of values calculated by applying an RPN expression to the
+	 * fetched data. For example, if you have two datasources named <code>x</code> and <code>y</code>
+	 * in this FetchData and you want to calculate MAX value of <code>(x+y)/2<code> use something like: <p>
+	 * <code>getRpnAggregate("x,y,+,2,/", "MAX");</code><p>
+	 * @param rpnExpression RRDTool-like RPN expression
+	 * @param consolFun Consolidation function (MIN, MAX, LAST, FIRST, AVERAGE or TOTAL)
+	 * @return Aggregated value
+	 * @throws RrdException Thrown if invalid RPN expression is supplied
+	 */
+	public double getRpnAggregate(String rpnExpression, String consolFun) throws RrdException {
+		DataProcessor dataProcessor = createDataProcessor(rpnExpression);
+		return dataProcessor.getAggregate(RPN_SOURCE_NAME, consolFun);
 	}
 
 	/**
@@ -324,9 +382,23 @@ public class FetchData implements RrdDataSet, ConsolFuns {
 	 * @throws RrdException Thrown if the given datasource name cannot be found in the fetched data.
 	 */
 	public Aggregates getAggregates(String dsName) throws RrdException {
-		Aggregator aggregator = new Aggregator(getTimestamps(), getValues(dsName));
-		Aggregates agg = aggregator.getAggregates(request.getFetchStart(), request.getFetchEnd());
-		return agg;
+		DataProcessor dataProcessor = createDataProcessor(null);
+		return dataProcessor.getAggregates(dsName);
+	}
+
+	/**
+	 * Returns all aggregated values for a set of values calculated by applying an RPN expression to the
+	 * fetched data. For example, if you have two datasources named <code>x</code> and <code>y</code>
+	 * in this FetchData and you want to calculate MIN, MAX, LAST, FIRST, AVERAGE and TOTAL value
+	 * of <code>(x+y)/2<code> use something like: <p>
+	 * <code>getRpnAggregates("x,y,+,2,/");</code><p>
+	 * @param rpnExpression RRDTool-like RPN expression
+	 * @return Object containing all aggregated values
+	 * @throws RrdException Thrown if invalid RPN expression is supplied
+	 */
+	public Aggregates getRpnAggregates(String rpnExpression) throws RrdException, IOException {
+		DataProcessor dataProcessor = createDataProcessor(rpnExpression);
+		return dataProcessor.getAggregates(RPN_SOURCE_NAME);
 	}
 
 	/**
@@ -345,8 +417,20 @@ public class FetchData implements RrdDataSet, ConsolFuns {
 	 * @throws RrdException Thrown if invalid source name is supplied
 	 */
 	public double get95Percentile(String dsName) throws RrdException {
-		Aggregator aggregator = new Aggregator(getTimestamps(), getValues(dsName));
-		return aggregator.get95Percentile(request.getFetchStart(), request.getFetchEnd());
+		DataProcessor dataProcessor = createDataProcessor(null);
+		return dataProcessor.get95Percentile(dsName);
+	}
+
+	/**
+	 * Same as {@link #get95Percentile(String)}, but for a set of values calculated with the given
+	 * RPN expression.
+	 * @param rpnExpression RRDTool-like RPN expression
+	 * @return 95-percentile
+	 * @throws RrdException Thrown if invalid RPN expression is supplied
+	 */
+	public double getRpn95Percentile(String rpnExpression) throws RrdException {
+		DataProcessor dataProcessor = createDataProcessor(rpnExpression);
+		return dataProcessor.get95Percentile(RPN_SOURCE_NAME);
 	}
 
 	/**
@@ -418,5 +502,39 @@ public class FetchData implements RrdDataSet, ConsolFuns {
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 		exportXml(outputStream);
 		return outputStream.toString();
+	}
+
+	/**
+	 * Returns the step of the corresponding RRA archive
+	 * @return Archive step in seconds
+	 */
+	public long getArcStep() {
+		return arcStep;
+	}
+
+	/**
+	 * Returns the timestamp of the last populated slot in the corresponding RRA archive
+	 * @return Timestamp in seconds
+	 */
+	public long getArcEndTime() {
+		return arcEndTime;
+	}
+
+	private DataProcessor createDataProcessor(String rpnExpression) throws RrdException {
+		DataProcessor dataProcessor = new DataProcessor(request.getFetchStart(), request.getFetchEnd());
+		for(int i = 0; i < dsNames.length; i++) {
+			dataProcessor.addDatasource(dsNames[i], this);
+		}
+		if(rpnExpression != null) {
+			dataProcessor.addDatasource(RPN_SOURCE_NAME, rpnExpression);
+			try {
+				dataProcessor.processData();
+			}
+			catch(IOException ioe) {
+				// highly unlikely, since all datasources have already calculated values
+				throw new RuntimeException("Impossible error: " + ioe);
+			}
+		}
+		return dataProcessor;
 	}
 }

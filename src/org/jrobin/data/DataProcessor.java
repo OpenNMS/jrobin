@@ -464,6 +464,22 @@ public class DataProcessor implements ConsolFuns {
 	}
 
 	/**
+	 * Adds DEF datasource with datasource values already available in the FetchData object. This method is
+	 * used internally by JRobin and probably has no purpose outside of it.
+	 *
+	 * @param name Source name.
+	 * @param fetchData Fetched data containing values for the given source name.
+	 */
+	public void addDatasource(String name, FetchData fetchData) {
+		Def def = new Def(name, fetchData);
+		sources.put(name, def);
+	}
+
+	/////////////////////////////////////////////////////////////////
+	// CALCULATIONS
+	/////////////////////////////////////////////////////////////////
+
+	/**
 	 * Method that should be called once all datasources are defined. Data will be fetched from
 	 * RRD files, RPN expressions will be calculated, etc.
 	 *
@@ -605,7 +621,7 @@ public class DataProcessor implements ConsolFuns {
 	private void fetchRrdData() throws IOException, RrdException {
 		long tEndFixed = (tEnd == 0) ? Util.getTime() : tEnd;
 		for (int i = 0; i < defSources.length; i++) {
-			if (defSources[i].getValues() == null) {
+			if (!defSources[i].isLoaded()) {
 				// not fetched yet
 				Set dsNames = new HashSet();
 				dsNames.add(defSources[i].getDsName());
@@ -643,9 +659,9 @@ public class DataProcessor implements ConsolFuns {
 			if (defSources.length == 0) {
 				throw new RrdException("Could not adjust zero ending timestamp, no DEF source provided");
 			}
-			tEnd = defSources[0].getLastValidTimestamp();
+			tEnd = defSources[0].getArchiveEndTime();
 			for (int i = 1; i < defSources.length; i++) {
-				tEnd = Math.min(tEnd, defSources[i].getLastValidTimestamp());
+				tEnd = Math.min(tEnd, defSources[i].getArchiveEndTime());
 			}
 			if (tEnd <= tStart) {
 				throw new RrdException("Could not resolve zero ending timestamp.");
