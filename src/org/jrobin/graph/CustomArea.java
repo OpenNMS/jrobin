@@ -28,6 +28,7 @@ import java.awt.Color;
 import java.util.HashMap;
 
 import org.jrobin.core.RrdException;
+import org.jrobin.core.XmlWriter;
 
 /**
  * <p>Class used to represent an area defined by two points in a graph.  The area is drawn as a rectangle 
@@ -168,18 +169,14 @@ class CustomArea extends PlotDef
 	void setSource( Source[] sources, HashMap sourceIndex ) throws RrdException {
 	}
 	
-	String getXml( String legend )
-	{
-		StringBuffer xml = new StringBuffer();
-
-		xml.append( "\t\t<custom-area>\n" );
-		xml.append( "\t\t\t<datasource>" + sourceName + "</datasource>\n" );
-		if ( color != null )
-			xml.append( "\t\t\t<color r=\"" + color.getRed() + "\" g=\"" + color.getGreen() + "\" b=\"" + color.getBlue() + "\" />\n" );
-		if ( legend != null )
-			xml.append( "\t\t\t<legend>" + legend + "</legend>\n" );
-		xml.append( "\t\t</custom-area>\n" );
-
-		return xml.toString();
+	void exportXmlTemplate( XmlWriter xml, String legend ) {
+		xml.startTag("area");
+		xml.writeTag("time1", xVal1);
+		xml.writeTag("value1", yVal1);
+		xml.writeTag("time2", xVal2);
+		xml.writeTag("value2", yVal2);
+		xml.writeTag("color", color);
+		xml.writeTag("legend", legend);
+		xml.closeTag(); //area
 	}
 }

@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.StringTokenizer;
 
 import org.jrobin.core.RrdException;
+import org.jrobin.core.XmlWriter;
 
 /**
  * <p>Represents a 'calculated' datasource for a graph.  A calculated datasource is always based on a RPN
@@ -220,15 +221,6 @@ class Cdef extends Source
 		return tmpStr.toString();
 	}
 	
-	public String getXml()
-	{
-		StringBuffer xml = new StringBuffer( "" );
-		
-		xml.append( "\t\t<cdef name=\"" + this.getName() + "\">" + getRpnString() + "</cdef>\n");
-		
-		return xml.toString();
-	}
-	
 	// ================================================================
 	// -- Private methods
 	// ================================================================
@@ -248,5 +240,12 @@ class Cdef extends Source
 		catch (NumberFormatException nfe) {
 			return false;
 		}
+	}
+
+	void exportXml(XmlWriter xml) {
+		xml.startTag("def");
+		xml.writeTag("name", getName());
+		xml.writeTag("rpn", getRpnString());
+		xml.closeTag(); // def
 	}
 }

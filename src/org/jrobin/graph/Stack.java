@@ -27,6 +27,7 @@ package org.jrobin.graph;
 import java.awt.Color;
 
 import org.jrobin.core.RrdException;
+import org.jrobin.core.XmlWriter;
 
 /**
  * <p>Class used to represent a stacked datasource plotted in a graph.  The datasource
@@ -82,21 +83,11 @@ class Stack extends PlotDef
 	
 	}
 	
-	/**
-	 * 
-	 */
-	String getXml( String legend )
-	{
-		StringBuffer xml = new StringBuffer();
-
-		xml.append( "\t\t<stack>\n" );
-		xml.append( "\t\t\t<datasource>" + sourceName + "</datasource>\n" );
-		if ( color != null )
-			xml.append( "\t\t\t<color r=\"" + color.getRed() + "\" g=\"" + color.getGreen() + "\" b=\"" + color.getBlue() + "\" />\n" );
-		if ( legend != null )
-			xml.append( "\t\t\t<legend>" + legend + "</legend>\n" );
-		xml.append( "\t\t</stack>\n" );
-
-		return xml.toString();
+	void exportXmlTemplate( XmlWriter xml, String legend ) {
+		xml.startTag("stack");
+		xml.writeTag("datasource", sourceName);
+		xml.writeTag("color", color);
+		xml.writeTag("legend", legend);
+		xml.closeTag(); // stack
 	}
 }

@@ -28,6 +28,7 @@ import java.awt.Color;
 import java.awt.BasicStroke;
 
 import org.jrobin.core.RrdException;
+import org.jrobin.core.XmlWriter;
 
 /**
  * <p>Class used to represent a datasource plotted as a line in a graph.</p>
@@ -131,19 +132,13 @@ class Line extends PlotDef
 		return lineWidth;
 	}
 	
-	String getXml( String legend )
+	void exportXmlTemplate( XmlWriter xml, String legend )
 	{
-		StringBuffer xml = new StringBuffer();
-	
-		xml.append( "\t\t<line>\n" );
-		xml.append( "\t\t\t<datasource>" + sourceName + "</datasource>\n" );
-		if ( color != null )
-			xml.append( "\t\t\t<color r=\"" + color.getRed() + "\" g=\"" + color.getGreen() + "\" b=\"" + color.getBlue() + "\" />\n" );
-		if ( legend != null )
-			xml.append( "\t\t\t<legend>" + legend + "</legend>\n" );
-		xml.append( "\t\t\t<width>" + lineWidth + "</width>\n" );
-		xml.append( "\t\t</line>\n" );
-	
-		return xml.toString();
+		xml.startTag("line");
+		xml.writeTag("datasource", sourceName);
+		xml.writeTag("color", color);
+		xml.writeTag("legend", legend);
+		xml.writeTag("width", lineWidth);
+		xml.closeTag(); // area
 	}
 }

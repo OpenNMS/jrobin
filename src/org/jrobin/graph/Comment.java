@@ -27,6 +27,7 @@ package org.jrobin.graph;
 import java.util.Vector;
 
 import org.jrobin.core.RrdException;
+import org.jrobin.core.XmlWriter;
 
 /**
  * <p>Represent a piece of aligned text to be drawn on the graph.</p>
@@ -248,13 +249,12 @@ class Comment
 	boolean trimString() {
 		return trimString;
 	}
-	
-	String getXml() 
-	{
-		StringBuffer xml = new StringBuffer();
-		
-		xml.append( "\t\t<comment>" + text + "</comment>\n" );
-		
-		return xml.toString();
+
+	String getText() {
+		return text;
+	}
+
+	void exportXmlTemplate(XmlWriter xml) {
+		xml.writeTag("comment", getText());
 	}
 }

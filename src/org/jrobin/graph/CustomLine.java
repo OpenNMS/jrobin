@@ -29,6 +29,7 @@ import java.awt.BasicStroke;
 import java.util.HashMap;
 
 import org.jrobin.core.RrdException;
+import org.jrobin.core.XmlWriter;
 
 /**
  * <p>Class used to represent a line defined by two points in a graph.  The line is drawn between those two points.</p>
@@ -204,5 +205,38 @@ class CustomLine extends Line
 	
 	// Stubbed method, irrelevant for this PlotDef
 	void setSource( Source[] sources, HashMap sourceIndex ) throws RrdException	{
+	}
+
+	void exportXmlTemplate( XmlWriter xml, String legend ) {
+		if(yVal1 == yVal2 && xVal1 != xVal2) {
+			// hrule
+			xml.startTag("hrule");
+			xml.writeTag("value", yVal1);
+			xml.writeTag("color", color);
+			xml.writeTag("legend", legend);
+			xml.writeTag("width", lineWidth);
+			xml.closeTag(); // hrule
+		}
+		else if(yVal1 != yVal2 && xVal1 == xVal2) {
+			// vrule
+			xml.startTag("vrule");
+			xml.writeTag("time", xVal1);
+			xml.writeTag("color", color);
+			xml.writeTag("legend", legend);
+			xml.writeTag("width", lineWidth);
+			xml.closeTag(); // vrule
+		}
+		else if(yVal1 != yVal2 && xVal1 != xVal2) {
+			// general line
+			xml.startTag("line");
+			xml.writeTag("time1", xVal1);
+			xml.writeTag("value1", yVal1);
+			xml.writeTag("time2", xVal2);
+			xml.writeTag("value2", yVal2);
+			xml.writeTag("color", color);
+			xml.writeTag("legend", legend);
+			xml.writeTag("width", lineWidth);
+			xml.closeTag(); //line
+		}
 	}
 }

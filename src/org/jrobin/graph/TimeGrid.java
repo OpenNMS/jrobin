@@ -84,7 +84,7 @@ class TimeGrid
 	}
 
 	boolean centerLabels() {
-		return tAxis.centerLabels();
+		return tAxis.getCenterLabels();
 	}	
 	
 	

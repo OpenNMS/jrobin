@@ -27,10 +27,7 @@ package org.jrobin.graph;
 import java.util.Vector;
 import java.io.IOException;
 
-import org.jrobin.core.RrdDb;
-import org.jrobin.core.FetchData;
-import org.jrobin.core.FetchRequest;
-import org.jrobin.core.RrdException;
+import org.jrobin.core.*;
 
 /**
  * <p>Class used to group datasources per RRD db, for faster fetching.
@@ -89,27 +86,6 @@ class FetchSource
 	{
 		this( rrdFile );
 		addSource( consolFunc, dsName, name );	
-	}
-	
-	public String getXml()
-	{
-		StringBuffer xml = new StringBuffer( "" );
-		
-		for ( int i = 0; i < datasources.length; i++ ) {
-			for ( int j = 0; j < datasources[i].size(); j++ ) {
-				String[] pair = (String[]) datasources[i].elementAt(j);
-				
-				xml.append( "\t\t<def name=\"" + pair[1] + "\">\n" );
-				xml.append( "\t\t\t<file>" + rrdFile + "</file>\n" );
-				xml.append( "\t\t\t<ds-name>" + pair[0] + "</ds-name>\n" );
-				xml.append( "\t\t\t<cf>" + cfNames[i] + "</cf>\n" );
-				xml.append( "\t\t</def>\n" );
-				//<file>test.rrd</file>
-				//<ds-name>ifInOctets</ds-name>
-				//<cf>AVERAGE</cf>
-			}
-		}
-		return xml.toString();
 	}
 	
 	// ================================================================
@@ -187,5 +163,19 @@ class FetchSource
 
 	protected String getRrdFile() {
 		return rrdFile;
-	}	
+	}
+
+	public void exportXml(XmlWriter xml) {
+		for ( int i = 0; i < datasources.length; i++ ) {
+			for ( int j = 0; j < datasources[i].size(); j++ ) {
+				String[] pair = (String[]) datasources[i].elementAt(j);
+				xml.startTag("def");
+				xml.writeTag("name", pair[1]);
+				xml.writeTag("rrd", rrdFile);
+				xml.writeTag("source", pair[0]);
+				xml.writeTag("cf", cfNames[i]);
+				xml.closeTag(); // def
+			}
+		}
+	}
 }

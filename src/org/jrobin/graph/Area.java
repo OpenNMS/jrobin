@@ -24,6 +24,8 @@
  */
 package org.jrobin.graph;
 
+import org.jrobin.core.XmlWriter;
+
 import java.awt.Color;
 
 /**
@@ -122,18 +124,12 @@ class Area extends PlotDef
 		}
 	}
 	
-	String getXml( String legend )
+	void exportXmlTemplate( XmlWriter xml, String legend )
 	{
-		StringBuffer xml = new StringBuffer();
-		
-		xml.append( "\t\t<area>\n" );
-		xml.append( "\t\t\t<datasource>" + sourceName + "</datasource>\n" );
-		if ( color != null )
-			xml.append( "\t\t\t<color r=\"" + color.getRed() + "\" g=\"" + color.getGreen() + "\" b=\"" + color.getBlue() + "\" />\n" );
-		if ( legend != null )
-			xml.append( "\t\t\t<legend>" + legend + "</legend>\n" );
-		xml.append( "\t\t</area>\n" );
-		
-		return xml.toString();
+		xml.startTag("area");
+		xml.writeTag("datasource", sourceName);
+		xml.writeTag("color", color);
+		xml.writeTag("legend", legend);
+		xml.closeTag(); // area
 	}
 }

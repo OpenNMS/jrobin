@@ -554,7 +554,7 @@ public class RrdGraphDefTemplate extends XmlTemplate {
 			// DEFAULT FONT
 			else if(option.equals("default_font")) {
 				Font f = resolveFont(optionNode);
-				rrdGraphDef.setTitleFont(f);
+				rrdGraphDef.setDefaultFont(f);
 			}
 			// DEFAULT FONT COLOR
 			else if(option.equals("default_font_color")) {
@@ -753,9 +753,10 @@ public class RrdGraphDefTemplate extends XmlTemplate {
 	}
 
 	public static void main(String[] args) throws IOException, RrdException {
-		File f = new File("work/test2.xml");
-		RrdGraphDefTemplate t = new RrdGraphDefTemplate(f);
-		t.setVariable("date", new Date());
-		t.getRrdGraphDef();
+		File fileTemplate = new File("work/test2.xml");
+		RrdGraphDefTemplate template = new RrdGraphDefTemplate(fileTemplate);
+		String stringTemplate = template.getRrdGraphDef().exportXmlTemplate();
+		template = new RrdGraphDefTemplate(stringTemplate);
+		System.out.println(template.getRrdGraphDef().exportXmlTemplate());
 	}
 }

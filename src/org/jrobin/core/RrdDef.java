@@ -387,7 +387,7 @@ public class RrdDef {
 			xml.closeTag(); // archive
 		}
 		xml.closeTag(); // rrd_def
-		xml.finish();
+		xml.flush();
 	}
 
 	/**

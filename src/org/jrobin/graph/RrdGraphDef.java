@@ -24,8 +24,7 @@
  */
 package org.jrobin.graph;
 
-import java.io.File;
-import java.io.Serializable;
+import java.io.*;
 import java.awt.Font;
 import java.awt.Color;
 import java.awt.BasicStroke;
@@ -38,6 +37,7 @@ import java.text.SimpleDateFormat;
 
 import org.jrobin.core.Util;
 import org.jrobin.core.RrdException;
+import org.jrobin.core.XmlWriter;
 
 /**
  * <p>Class used to collect information for a JRobin graph. JRobin graphs have many
@@ -542,6 +542,10 @@ public class RrdGraphDef implements Serializable
 		this.scaleIndex = (6 - e / 3);	// Index in the scale table
 	}
 
+	int getUnitsExponent() {
+		return (6 - scaleIndex) * 3;
+	}
+
 	/**
 	 * Sets value range that will be presented in the graph. If not set, graph limits will be autoscaled.
 	 * @param lower Lower limit.
@@ -898,111 +902,140 @@ public class RrdGraphDef implements Serializable
 	{
 		addComment( new Gprint(sourceName, consolFun, format) );
 	}
-		
-/*
-	public String getJRobinXml()
-	{
-		StringBuffer xml = new StringBuffer( "" );
-		
-		// -- Create the general block
-		xml.append( "\t<general>\n" );
-		
-		// Time period
-		xml.append( "\t\t<period>\n" );
-		xml.append( "\t\t\t<start>" + startTime + "</start>\n" );
-		xml.append( "\t\t\t<end>" + endTime + "</end>\n" );
-		xml.append( "\t\t</period>\n" );
-		
-		// Labels
-		if ( title != null || valueAxisLabel != null || timeAxisLabel != null  )
-		{	
-			xml.append( "\t\t<labels>\n" );
-			if ( title != null )
-				xml.append( "\t\t\t<title>" + title.text + "</title>\n" );
-			if ( valueAxisLabel != null )
-				xml.append( "\t\t\t<vertical-label>" + valueAxisLabel + "</vertical-label>\n" );
-			if ( timeAxisLabel != null )
-				xml.append( "\t\t\t<horizontal-label>" + timeAxisLabel.text + "</horizontal-label>\n" );
-			xml.append( "\t\t</labels>\n" );
+
+	/**
+	 * Exports RrdGraphDef (graph definition) object in XML format to output stream.
+	 * Generated code can be parsed with {@link RrdGraphDefTemplate} class.
+	 * @param stream Output stream to send XML code to
+	 */
+	public void exportXmlTemplate(OutputStream stream) {
+		XmlWriter xml = new XmlWriter(stream);
+		xml.startTag("rrd_graph_def");
+        // SPAN
+		xml.startTag("span");
+		xml.writeTag("start", startTime);
+		xml.writeTag("end", endTime);
+		xml.closeTag(); // span
+		// OPTIONS
+		xml.startTag("options");
+		xml.writeTag("anti_aliasing", antiAliasing);
+		xml.writeTag("arrow_color", arrowColor);
+		xml.writeTag("axis_color", axisColor);
+		xml.writeTag("back_color", backColor);
+		if(background != null) {
+			xml.writeTag("background", background);
 		}
-		
-		// General colors
-		xml.append( "\t\t<colors>\n" );
-		xml.append( "\t\t\t<background r=\"" + backColor.getRed() + "\" g=\"" + backColor.getGreen() + "\" b=\"" + backColor.getBlue() + "\" />\n" );
-		xml.append( "\t\t\t<canvas r=\"" + canvasColor.getRed() + "\" g=\"" + canvasColor.getGreen() + "\" b=\"" + canvasColor.getBlue() + "\" />\n" );
-		xml.append( "\t\t</colors>\n" );
-		
-		// General data information
-		
-		// General visual options
-		xml.append( "\t\t<visual>\n" );
-		xml.append( "\t\t\t<show-legend>" + (showLegend ? "yes" : "no") + "</show-legend>\n" );
-		if ( background != null )
-			xml.append( "\t\t\t<background-image>" + background.getAbsolutePath() + "</background-image>\n" );
-		if ( overlay != null )
-			xml.append( "\t\t\t<overlay-image>" + overlay.getAbsolutePath() + "</overlay-image>\n" );
-		if ( borderStroke != null )
-		{	
-			xml.append( "\t\t\t<image-border>\n" );
-			xml.append( "\t\t\t\t<width>" + borderStroke.getLineWidth() + "</width>\n" );
-			xml.append( "\t\t\t\t<color r=\"" + borderColor.getRed() + "\" g=\"" + borderColor.getGreen() + "\" b=\"" + borderColor.getBlue() + "\" />\n" );
-			xml.append( "\t\t\t</image-border>\n" );
+		xml.writeTag("base_value", baseValue);
+        xml.writeTag("canvas", canvasColor);
+		xml.writeTag("left_padding", chart_lpadding);
+		if(normalFont != null) {
+			xml.writeTag("default_font", normalFont);
 		}
-		if ( gridRange != null )
-		{
-			xml.append( "\t\t\t<grid>\n" );
-			xml.append( "\t\t\t\t<lower>" + gridRange.getLowerValue() + "</lower>\n" );
-			xml.append( "\t\t\t\t<upper>" + gridRange.getUpperValue() + "</upper>\n" );
-			xml.append( "\t\t\t\t<rigid>" + (gridRange.isRigid() ? "yes" : "no") + "</rigid>\n" );
-			xml.append( "\t\t\t</grid>\n" );
+		xml.writeTag("default_font_color", normalFontColor);
+		xml.writeTag("frame_color", frameColor);
+		xml.writeTag("front_grid", frontGrid);
+		if(gridRange != null) {
+			gridRange.exportXmlTemplate(xml);
 		}
-		//xml.append( "\t\t\t<canvas r=\"" + canvasColor.getRed() + "\" g=\"" + canvasColor.getGreen() + "\" b=\"" + canvasColor.getBlue() + "\" />\n" );
-		xml.append( "\t\t</visual>\n" );
-		
-		xml.append( "\t</general>\n" );
-		// -------------------------------------------------------------
-		
-		
-		// -- Create the datasources block
-		xml.append( "\t<datasources>\n" );
-		
-		// Add all defs
+		xml.writeTag("grid_x", gridX);
+		xml.writeTag("grid_y", gridY);
+		if(borderStroke != null) {
+			xml.startTag("border");
+			xml.writeTag("color", borderColor);
+			xml.writeTag("width", (int)borderStroke.getLineWidth());
+			xml.closeTag(); // border
+		}
+		xml.writeTag("major_grid_color", majorGridColor);
+		xml.writeTag("major_grid_x", majorGridX);
+		xml.writeTag("major_grid_y", majorGridY);
+		xml.writeTag("minor_grid_color", minorGridColor);
+		xml.writeTag("minor_grid_x", minorGridX);
+		xml.writeTag("minor_grid_y", minorGridY);
+		if(overlay != null) {
+			xml.writeTag("overlay", overlay);
+		}
+        xml.writeTag("show_legend", showLegend);
+		xml.writeTag("show_signature", drawSignature);
+		if(tAxis != null) {
+			tAxis.exportXmlTemplate(xml);
+		}
+		if(timeAxisLabel != null) {
+			timeAxisLabel.exportXmlTemplate(xml);
+		}
+		if(title != null) {
+			title.exportXmlTemplate(xml);
+		}
+		if(titleFont != null) {
+			xml.writeTag("title_font", titleFont);
+		}
+        xml.writeTag("title_font_color", titleFontColor);
+		if(scaleIndex != ValueFormatter.NO_SCALE) {
+			xml.writeTag("units_exponent", getUnitsExponent());
+		}
+		if(vAxis != null) {
+			vAxis.exportXmlTemplate(xml);
+		}
+		if(valueAxisLabel != null) {
+            xml.writeTag("vertical_label", valueAxisLabel);
+		}
+		xml.closeTag(); // options
+		// DATASOURCES
+		xml.startTag("datasources");
+		// defs
 		Iterator fsIterator = fetchSources.values().iterator();
-		while ( fsIterator.hasNext() )
-			xml.append( ((FetchSource) fsIterator.next()).getXml() );
-		
-		// Add all cdefs
-		for ( int i = 0; i < cdefList.size(); i++ )
-			xml.append( ((Cdef) cdefList.elementAt(i)).getXml() );
-		
-		xml.append( "\t</datasources>\n" );
-		// -------------------------------------------------------------
-		
-		
-		// -- Create the graphing block
-		// Run through the comments, if its a legend or nolegend, get the plotdef xml
-		// else get the comment or gprint xml
-		xml.append( "\t<graphing>\n" );
+		while (fsIterator.hasNext()) {
+			FetchSource fs = (FetchSource) fsIterator.next();
+			fs.exportXml(xml);
+		}
+		// cdefs
+		for (int i = 0; i < cdefList.size(); i++ ) {
+			Cdef cdef = (Cdef) cdefList.elementAt(i);
+			cdef.exportXml(xml);
+		}
+		xml.closeTag(); // datasources
+		xml.startTag("graph");
 		for ( int i = 0; i < comments.size(); i++ )
 		{
 			Comment cmt = (Comment) comments.elementAt(i);
-			if ( cmt.commentType == Comment.CMT_LEGEND || cmt.commentType == Comment.CMT_NOLEGEND ) 
+			if ( cmt.commentType == Comment.CMT_LEGEND || cmt.commentType == Comment.CMT_NOLEGEND)
 			{
 				PlotDef pDef = (PlotDef) plotDefs.elementAt( ((Legend) cmt).getPlofDefIndex() );
-				xml.append( pDef.getXml(cmt.text) );
+				pDef.exportXmlTemplate(xml, cmt.text);
 			}
-			else
-				xml.append( cmt.getXml() );
+			else if(cmt instanceof TimeAxisLabel) {
+				// NOP: already exported in the options section
+			}
+			else {
+				cmt.exportXmlTemplate(xml);
+			}
 		}
-		xml.append( "\t</graphing>\n" );
-		// -------------------------------------------------------------
-		
-		xml.insert( 0, "<jrobin-graph>\n");
-		xml.append( "</jrobin-graph>\n" );
-		
-		return xml.toString();
+		xml.closeTag(); // graph
+		xml.closeTag(); // rrd_graph_def
+		xml.flush();
 	}
-*/
+
+	/**
+	 * Exports RrdGraphDef (graph definition) object in XML format to string.
+	 * Generated code can be parsed with {@link RrdGraphDefTemplate} class.
+	 * @return String representing graph definition in XML format
+	 */
+	public String exportXmlTemplate() {
+		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+		exportXmlTemplate(outputStream);
+		return outputStream.toString();
+	}
+
+	/**
+	 * Exports RrdGraphDef (graph definition) object in XML format to file.
+	 * Generated code can be parsed with {@link RrdGraphDefTemplate} class.
+	 * @param filePath destination file
+	 */
+	public void exportXmlTemplate(String filePath) throws IOException {
+		FileOutputStream outputStream = new FileOutputStream(filePath, false);
+		exportXmlTemplate(outputStream);
+		outputStream.close();
+	}
+
 	// ================================================================
 	// -- Protected (package) methods
 	// ================================================================

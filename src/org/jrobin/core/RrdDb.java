@@ -512,7 +512,7 @@ public class RrdDb implements RrdUpdater {
 			archives[i].appendXml(writer);
 		}
 		writer.closeTag();
-		writer.finish();
+		writer.flush();
 	}
 
 	/**

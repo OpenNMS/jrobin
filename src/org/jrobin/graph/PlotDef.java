@@ -28,6 +28,7 @@ import java.awt.Color;
 import java.util.HashMap;
 
 import org.jrobin.core.RrdException;
+import org.jrobin.core.XmlWriter;
 
 /**
  * <p>Class used to represent a drawn datasource in the graph.
@@ -128,12 +129,6 @@ abstract class PlotDef
 	 */
 	abstract void draw( ChartGraphics g, int[] xValues, int[] stackValues, int lastPlotType ) throws RrdException;
 	
-	/**
-	 * Abstract getXml method, must be implemented in all child classes.
-	 * This method is reponsible for returning a corresponding JRobin XML string for the PlotDef.
-	 */
-	abstract String getXml( String legend );
-	
 	Source getSource() {
 		return source;
 	}
@@ -148,5 +143,9 @@ abstract class PlotDef
 	
 	Color getColor() {
 		return color;
+	}
+
+	void exportXmlTemplate(XmlWriter xml, String legend) {
+
 	}
 }

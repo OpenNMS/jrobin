@@ -27,6 +27,8 @@
  */
 package org.jrobin.graph;
 
+import org.jrobin.core.XmlWriter;
+
 import java.util.*;
 
 /**
@@ -39,12 +41,9 @@ class ValueAxisUnit
 	// ================================================================
 	// -- Members
 	// ================================================================	
-	private double labelStep 	= 2;
-	private double markStep		= 1;
-	private int roundStep 		= 2;
-	
+
 	private double gridStep		= 2;
-	private double mGridStep	= 10;
+	private double labelStep	= 10;
 	
 	
 	// ================================================================
@@ -60,10 +59,18 @@ class ValueAxisUnit
 	ValueAxisUnit( double gridStep, double labelStep )
 	{
 		this.gridStep	= gridStep;
-		this.mGridStep	= labelStep;
+		this.labelStep	= labelStep;
 	}
-	
-	
+
+	double getGridStep() {
+		return gridStep;
+	}
+
+	double getLabelStep() {
+		return labelStep;
+	}
+
+
 	// ================================================================
 	// -- Protected methods
 	// ================================================================
@@ -82,13 +89,13 @@ class ValueAxisUnit
 		// Find the first visible gridpoint
 		if ( lower > 0 ) {
 			while ( minPoint < lower ) minPoint += gridStep;
-			while ( majPoint < lower ) majPoint += mGridStep;
+			while ( majPoint < lower ) majPoint += labelStep;
 		} else {
 			while ( minPoint > lower ) minPoint -= gridStep;
-			while ( majPoint > lower ) majPoint -= mGridStep;
+			while ( majPoint > lower ) majPoint -= labelStep;
 			// Go one up to make it visible
 			if (minPoint != lower ) minPoint += gridStep;
-			if (majPoint != lower ) majPoint += mGridStep;
+			if (majPoint != lower ) majPoint += labelStep;
 		}
 		
 		// Now get all time markers.
@@ -108,12 +115,12 @@ class ValueAxisUnit
 				{
 					markerList.add( new ValueMarker(majPoint, true) );
 					minPoint = round( minPoint + gridStep );
-					majPoint = round( majPoint + mGridStep );
+					majPoint = round( majPoint + labelStep );
 				}
 				else
 				{
 					markerList.add( new ValueMarker(majPoint, true) );
-					majPoint = round( majPoint + mGridStep );
+					majPoint = round( majPoint + labelStep );
 				}
 			}
 		}
@@ -127,7 +134,7 @@ class ValueAxisUnit
 		while ( majPoint <= upper )
 		{
 			markerList.add( new ValueMarker(majPoint, true) );
-			majPoint = round( majPoint + mGridStep );
+			majPoint = round( majPoint + labelStep );
 		}
 		
 		return (ValueMarker[]) markerList.toArray( new ValueMarker[0] );
@@ -146,7 +153,7 @@ class ValueAxisUnit
 		double mGridFactor	= 1.0;
 		
 		double gridStep		= this.gridStep;
-		double mGridStep	= this.mGridStep;
+		double mGridStep	= this.labelStep;
 		
 		if ( gridStep < 1.0 ) {
 			gridStep		*= 100;
@@ -163,7 +170,7 @@ class ValueAxisUnit
 		int roundStep		= new Double(gridStep).intValue();
 		if ( roundStep == 0 ) roundStep = 1;
 		int num 			= valueInt / roundStep; 
-		int mod 			= valueInt % roundStep;
+		// int mod 			= valueInt % roundStep;
 		double gridValue	= (roundStep * num) * 1.0d;
 		if ( gridValue > value )
 			gridValue		-= roundStep;
@@ -177,7 +184,7 @@ class ValueAxisUnit
 		roundStep			= new Double(mGridStep).intValue();
 		if ( roundStep == 0 ) roundStep = 1;
 		num					= valueInt / roundStep;
-		mod					= valueInt % roundStep;
+		// mod					= valueInt % roundStep;
 		double mGridValue	= (roundStep * num) * 1.0d;
 		if ( mGridValue > value )
 			mGridValue		-= roundStep;
@@ -206,7 +213,7 @@ class ValueAxisUnit
 		double mGridFactor	= 1.0;
 		
 		double gridStep		= this.gridStep;
-		double mGridStep	= this.mGridStep;
+		double mGridStep	= this.labelStep;
 		
 		if ( gridStep < 1.0 ) {
 			gridStep 		*= 100;
@@ -223,7 +230,7 @@ class ValueAxisUnit
 		int roundStep		= new Double(gridStep).intValue();
 		if ( roundStep == 0 ) roundStep = 1;
 		int num 			= valueInt / roundStep; 
-		int mod 			= valueInt % roundStep;
+		// int mod 			= valueInt % roundStep;
 		double gridValue	= (roundStep * (num + 1)) * 1.0d;
 		if ( gridValue - value < (gridStep) / 8 )
 			gridValue		+= roundStep;
@@ -232,7 +239,7 @@ class ValueAxisUnit
 		roundStep			= new Double(mGridStep).intValue();
 		if ( roundStep == 0 ) roundStep = 1;
 		num					= valueInt / roundStep;
-		mod					= valueInt % roundStep;
+		// mod					= valueInt % roundStep;
 		double mGridValue	= (roundStep * (num + 1)) * 1.0d;
 		
 		if ( value != 0.0d )
@@ -270,5 +277,12 @@ class ValueAxisUnit
 	private double round( double value, int numDecs )
 	{
 		return new java.math.BigDecimal(value).setScale(numDecs , java.math.BigDecimal.ROUND_HALF_EVEN).doubleValue();
+	}
+
+	void exportXmlTemplate(XmlWriter xml) {
+		xml.startTag("value_axis");
+		xml.writeTag("grid_step", getGridStep());
+		xml.writeTag("label_step", getLabelStep());
+		xml.closeTag(); // value_axis
 	}
 }

@@ -25,6 +25,7 @@
 package org.jrobin.graph;
 
 import org.jrobin.core.RrdException;
+import org.jrobin.core.XmlWriter;
 
 /**
  * <p>Represents the TimeAxis label used in the graph.  The TimeAxisLabel object has the same alignment
@@ -59,8 +60,9 @@ public class TimeAxisLabel extends Comment
 			this.lineCount += 2;
 		}
 	}
-	
-	String getXml() {
-		return "";
+
+	void exportXmlTemplate(XmlWriter xml) {
+		xml.writeTag("time_axis_label", getText());
 	}
+
 }

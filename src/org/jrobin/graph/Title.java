@@ -25,6 +25,7 @@
 package org.jrobin.graph;
 
 import org.jrobin.core.RrdException;
+import org.jrobin.core.XmlWriter;
 
 /**
  * <p>Represents the Title used in the graph.  The title object has the same alignment
@@ -47,5 +48,9 @@ class Title extends Comment
 		this.text 	= text;
 		lfToken		= Comment.TKN_ACF; 
 		super.parseComment();	
+	}
+
+	void exportXmlTemplate(XmlWriter xml) {
+		xml.writeTag("title", getText());
 	}
 }

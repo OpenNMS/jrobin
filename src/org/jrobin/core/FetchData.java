@@ -380,7 +380,7 @@ public class FetchData {
 		}
 		writer.closeTag(); // data
 		writer.closeTag(); // fetch_data
-		writer.finish();
+		writer.flush();
 	}
 
 	/**

@@ -29,6 +29,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.jrobin.core.RrdException;
+import org.jrobin.core.XmlWriter;
 
 /**
  * <p>Represents a piece of aligned text (containing a retrieved datasource value) to be drawn on the graph.</p>
@@ -174,20 +175,12 @@ class Gprint extends Comment
 			throw new RrdException( "Could not find where to place value. No @ placeholder found." );
 	}
 	
-	/**
-	 * 
-	 */
-	String getXml() 
-	{
-		StringBuffer xml = new StringBuffer();
-	
-		xml.append( "\t\t<gprint>\n" );
-		xml.append( "\t\t\t<datasource>" + sourceName + "</datasource>\n" );
-		xml.append( "\t\t\t<cf>" + Source.aggregates[aggregate] + "</cf>\n" );
-		xml.append( "\t\t\t<text>" + text + "</text>\n" );
-		xml.append( "\t\t</gprint>\n" );
-	
-		return xml.toString();
+	void exportXmlTemplate(XmlWriter xml) {
+		xml.startTag("gprint");
+		xml.writeTag("datasource", sourceName);
+		xml.writeTag("cf", Source.aggregates[aggregate]);
+		xml.writeTag("format", text);
+		xml.closeTag(); // gprint
 	}
-	
+
 }
