@@ -35,17 +35,17 @@ public class RrdNioBackendFactory extends RrdFileBackendFactory{
 	/** factory name, "NIO" */
 	public static final String NAME = "NIO";
 
-	/** See {@link #setSyncMode(int) for explanation }  */
+	/** See {@link #setSyncMode(int)} for explanation  */
 	public static final int SYNC_ONCLOSE = 0; // will sync() only on close()
-	/** See {@link #setSyncMode(int) for explanation }  */
+	/** See {@link #setSyncMode(int)} for explanation  */
 	public static final int SYNC_BEFOREUPDATE = 1;
-	/** See {@link #setSyncMode(int) for explanation }  */
+	/** See {@link #setSyncMode(int)} for explanation  */
 	public static final int SYNC_AFTERUPDATE = 2;
-	/** See {@link #setSyncMode(int) for explanation }  */
+	/** See {@link #setSyncMode(int)} for explanation  */
 	public static final int SYNC_BEFOREFETCH = 3;
-	/** See {@link #setSyncMode(int) for explanation }  */
+	/** See {@link #setSyncMode(int)} for explanation  */
 	public static final int SYNC_AFTERFETCH = 4;
-	/** See {@link #setSyncMode(int) for explanation }  */
+	/** See {@link #setSyncMode(int)} for explanation  */
 	public static final int SYNC_BACKGROUND = 5;
 	/**
 	 * Period in seconds between consecutive synchronizations when

@@ -147,7 +147,7 @@ public class LinearInterpolator extends Plottable {
 	 * @param interpolationMethod Should be <code>INTERPOLATE_LEFT</code>,
 	 * <code>INTERPOLATE_RIGHT</code>, <code>INTERPOLATE_LINEAR</code> or
 	 * <code>INTERPOLATE_REGRESSION</code>. Any other value will be interpreted as
-	 * INTERPOLATE_LINEAR.
+	 * INTERPOLATE_LINEAR (default).
 	 */
 	public void setInterpolationMethod(int interpolationMethod) {
 		switch(interpolationMethod) {
