@@ -30,6 +30,7 @@ import java.io.RandomAccessFile;
 import java.io.File;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
+import java.util.HashSet;
 
 /**
  * JRobin backend which is used to store RRD data to ordinary files on the disk. This was the
@@ -40,16 +41,32 @@ import java.nio.channels.FileLock;
 public class RrdFileBackend extends RrdBackend {
 	static final long LOCK_DELAY = 100; // 0.1sec
 
+	private static HashSet openFiles = new HashSet();
+
 	protected RandomAccessFile file;
 	protected FileLock fileLock;
 
 	protected RrdFileBackend(String path, boolean readOnly, int lockMode) throws IOException {
 		super(path);
+		if(!readOnly) {
+			registerWriter(path);
+		}
 		file = new RandomAccessFile(path, readOnly? "r": "rw");
 		// We'll try to lock the file only in "rw" mode
 		// locks are meaningless for read-only access
 		if(!readOnly) {
 			lockFile(lockMode);
+		}
+	}
+
+	private static synchronized void registerWriter(String path) throws IOException {
+		String canonicalPath = getCanonicalPath(path);
+		if(openFiles.contains(canonicalPath)) {
+			throw new IOException("File \"" + path + "\" already open for R/W access. " +
+					"You cannot open the same file for R/W access twice");
+		}
+		else {
+			openFiles.add(canonicalPath);
 		}
 	}
 
@@ -85,6 +102,12 @@ public class RrdFileBackend extends RrdBackend {
 		super.close(); // calls sync()
 		unlockFile();
 		file.close();
+		unregisterWriter(getPath());
+	}
+
+	private static synchronized void unregisterWriter(String path) throws IOException {
+		String canonicalPath = getCanonicalPath(path);
+		openFiles.remove(canonicalPath);
 	}
 
 	private void unlockFile() throws IOException {
