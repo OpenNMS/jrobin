@@ -47,31 +47,27 @@ class RrdExporter
 	protected long[] timestamps;
 	protected Source[] sources;
 	protected HashMap sourceIndex;
-	protected FetchSourceList fetchSources;
 
 	RrdExporter( RrdExportDef def )
 	{
-		rrdOpener = new RrdOpener( false, true );
+		setRrdOpener( new RrdOpener( false, true ) );
 		setExportDef( def );
 	}
 
 	RrdExporter( RrdExportDef def, RrdOpener rrdOpener )
 	{
-		this.rrdOpener	= rrdOpener;
+		setRrdOpener( rrdOpener );
 		setExportDef( def );
 	}
 
 	void setExportDef( RrdExportDef def )
 	{
 		this.def 			= def;
-		this.fetchSources	= def.getFetchSources();
-		fetchSources.setRrdOpener( rrdOpener );
 	}
 
 	void setRrdOpener( RrdOpener rrdOpener )
 	{
-		if ( fetchSources != null )
-			fetchSources.setRrdOpener( rrdOpener );
+		this.rrdOpener = rrdOpener;
 	}
 
 	/**
@@ -86,9 +82,13 @@ class RrdExporter
 	 */
 	protected void calculateSeries( int maxRows ) throws RrdException, IOException
 	{
+		FetchSourceList fetchSources;
 		ValueExtractor ve;
 		FetchSource src;
 		String[] varList;
+
+		fetchSources			= def.getFetchSources();
+		fetchSources.setRrdOpener( rrdOpener );
 
 		long finalEndTime 		= Long.MAX_VALUE;
 		boolean changingEndTime = false;

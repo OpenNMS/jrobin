@@ -284,6 +284,8 @@ class Grapher extends RrdExporter
 	 */
 	protected boolean shouldGenerate( long prevGenTime ) throws RrdException, IOException
 	{
+		FetchSourceList fetchSources = graphDef.getFetchSources();
+
 		fetchSources.openAll();
 
 		if ( graphDef.isLazy() && fetchSources.getLastUpdateTime() * 1000 < prevGenTime )

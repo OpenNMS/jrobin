@@ -49,6 +49,7 @@ public class FetchSourceList
 	private int defCount;
 
 	private boolean persistent;
+	private boolean openerLocked;
 	private boolean opened;
 
 	private RrdOpener rrdOpener;
@@ -68,7 +69,7 @@ public class FetchSourceList
 	 */
 	public FetchSourceList( int defaultSize )
 	{
-		this( defaultSize, false );
+		this( defaultSize, false, false );
 	}
 
 	/**
@@ -81,13 +82,14 @@ public class FetchSourceList
 	 * @param defaultSize Default size of the FetchSourceList.
 	 * @param persistent True if the list is persistent, false if not.
 	 */
-	public FetchSourceList( int defaultSize, boolean persistent )
+	public FetchSourceList( int defaultSize, boolean persistent, boolean lockOpener )
 	{
-		map				= new HashMap( defaultSize );
-		list			= new ArrayList( defaultSize );
+		map					= new HashMap( defaultSize );
+		list				= new ArrayList( defaultSize );
 
-		opened			= false;
-		this.persistent	= persistent;
+		opened				= false;
+		this.persistent		= persistent;
+		this.openerLocked	= lockOpener;
 	}
 
 	/**
@@ -102,9 +104,9 @@ public class FetchSourceList
 	 * @param rrdOpener Reference to the RrdOpener object that will be used
 	 * 					for RrdDb retrieval.
 	 */
-	public FetchSourceList( int defaultSize, boolean persistent, RrdOpener rrdOpener )
+	public FetchSourceList( int defaultSize, boolean persistent, boolean lockOpener, RrdOpener rrdOpener )
 	{
-		this( defaultSize, persistent );
+		this( defaultSize, persistent , lockOpener);
 
 		this.rrdOpener	= rrdOpener;
 	}
@@ -121,7 +123,7 @@ public class FetchSourceList
 	public void setRrdOpener( RrdOpener rrdOpener )
 	{
 		// Only allow RrdOpener change if not persistent
-		if ( !persistent )
+		if ( !persistent && !openerLocked )
 			this.rrdOpener	= rrdOpener;
 	}
 
@@ -142,8 +144,25 @@ public class FetchSourceList
 	 *
 	 * @param persistent True if the list should behave as persistent.
 	 */
-	public void setPersistent( boolean persistent ) {
+	public void setPersistent( boolean persistent )
+	{
 		this.persistent = persistent;
+	}
+
+	/**
+	 * This locks the RrdOpener in the FetchSourceList.  Subsequent call so
+	 * setRrdOpener() will be ignored until it is unlocked.
+	 */
+	public void lockOpener() {
+		openerLocked = true;
+	}
+
+	/**
+	 * Unlocks the RrdOpener object, means calls to setRrdOpener() can change
+	 * the internal rrdOpener object.
+	 */
+	public void unlockOpener() {
+		openerLocked = false;
 	}
 
 	/**
