@@ -36,18 +36,6 @@ import java.util.Timer;
  * by using java.nio.* package. This is the default backend engine since JRobin 1.4.0.
  */
 public class RrdNioBackend extends RrdFileBackend {
-	/**
-	 * Defines if the <code>System.gc()</code> method should be executed when the backend is closed.
-	 * NIO backend uses large in-memory buffer to cache file data. The buffer remains 'active'
-	 * (by prohibiting file re-creation, for example) as long as it is not garbage collected.
-	 * By forcing <code>gc()</code> after the file is closed memory gets freed sooner and file
-	 * re-creation won't fail.<p>
-	 *
-	 * The constant is set to false initially and currently there is no API to change it
-	 * during runtime.<p>
-	 */
-	public static final boolean SHOULD_GC_AFTER_CLOSE = false;
-
 	private static final Timer syncTimer = new Timer(true);
 
 	private int syncMode;
@@ -122,10 +110,6 @@ public class RrdNioBackend extends RrdFileBackend {
 		super.close(); // calls sync() eventually
 		// release the buffer, make it eligible for GC as soon as possible
 		byteBuffer = null;
-		if(SHOULD_GC_AFTER_CLOSE) {
-			// I am not happy with this, but it might be necessary in the future
-			System.gc();
-		}
 	}
 
 	/**
