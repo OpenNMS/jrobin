@@ -98,7 +98,6 @@ class Demo {
 			sample.setValue("shade", shadeSource.getValue());
 			log.println(sample.dump());
 			sample.update();
-			
 			t += RANDOM.nextDouble() * MAX_STEP + 1;
 			if(((++n) % 1000) == 0) {
 				System.out.print("*");
@@ -107,6 +106,11 @@ class Demo {
 		println("");
 		println("== Finished. RRD file updated " + n + " times");
 		println("== Last update time was: " + rrdDb.getLastUpdateTime());
+		rrdDb.close();
+
+		// test read-only access!
+		rrdDb = new RrdDb(rrdPath, true);
+		println("File reopen in read-only mode");
 
 		// fetch data
 		println("== Fetching data for the whole month");
