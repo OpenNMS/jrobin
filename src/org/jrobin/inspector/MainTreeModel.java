@@ -46,7 +46,7 @@ class MainTreeModel extends DefaultTreeModel {
 	boolean setFile(File newFile) {
 		try {
 			file = newFile;
-			RrdDb rrd = new RrdDb(file.getAbsolutePath());
+			RrdDb rrd = new RrdDb(file.getAbsolutePath(), true);
 			DefaultMutableTreeNode root = new DefaultMutableTreeNode(new RrdNode(rrd));
 			int dsCount = rrd.getRrdDef().getDsCount();
 			int arcCount = rrd.getRrdDef().getArcCount();

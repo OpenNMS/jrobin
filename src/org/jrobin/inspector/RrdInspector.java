@@ -249,23 +249,25 @@ class RrdInspector extends JFrame {
 	private void selectFile() {
 		JFileChooser chooser = new JFileChooser(lastDirectory);
 		FileFilter filter = new FileFilter() {
-			public boolean accept(File f) {
-				return f.isDirectory() ? true :
-					f.getAbsolutePath().toLowerCase().endsWith(".rrd");
+			public boolean accept(File file) {
+				String path = file.getAbsolutePath().toLowerCase();
+				return file.isDirectory() || path.endsWith(".rrd") ||
+					path.endsWith(".jrb") || path.endsWith(".jrobin");
 			}
-
 			public String getDescription() {
-				return "JRobin RRD files";
+				return "JRobin RRD files (*.rrd;*.jrb;*.jrobin)";
 			}
 		};
 		chooser.setFileFilter(filter);
 		int returnVal = chooser.showOpenDialog(this);
 		if (returnVal == JFileChooser.APPROVE_OPTION) {
 			File file = chooser.getSelectedFile();
-			lastDirectory = file.getParent();
-			//inspectorModel.setFile(file);
-			//tabbedPane.setSelectedIndex(0);
-			loadFile(file);
+			if(file != null) {
+				lastDirectory = file.getParent();
+				//inspectorModel.setFile(file);
+				//tabbedPane.setSelectedIndex(0);
+				loadFile(file);
+			}
 		}
 	}
 
@@ -332,7 +334,7 @@ class RrdInspector extends JFrame {
 		}
 		try {
 			String sourcePath = inspectorModel.getFile().getCanonicalPath();
-			RrdDb rrd = new RrdDb(sourcePath);
+			RrdDb rrd = new RrdDb(sourcePath, true);
 			DsDef dsDef = rrd.getRrdDef().getDsDefs()[dsIndex];
 			rrd.close();
 			DsDef newDsDef = new EditDatasourceDialog(this, dsDef).getDsDef();
@@ -367,7 +369,7 @@ class RrdInspector extends JFrame {
 		}
 		try {
 			String sourcePath = inspectorModel.getFile().getCanonicalPath();
-			RrdDb rrd = new RrdDb(sourcePath);
+			RrdDb rrd = new RrdDb(sourcePath, true);
 			ArcDef arcDef = rrd.getRrdDef().getArcDefs()[arcIndex];
 			rrd.close();
 			ArcDef newArcDef = new EditArchiveDialog(this, arcDef).getArcDef();
@@ -404,7 +406,7 @@ class RrdInspector extends JFrame {
 		}
 		try {
 			String sourcePath = inspectorModel.getFile().getCanonicalPath();
-			RrdDb rrd = new RrdDb(sourcePath);
+			RrdDb rrd = new RrdDb(sourcePath, true);
 			String dsName = rrd.getRrdDef().getDsDefs()[dsIndex].getDsName();
 			rrd.close();
 			RrdToolkit toolkit = RrdToolkit.getInstance();
@@ -431,7 +433,7 @@ class RrdInspector extends JFrame {
 		}
 		try {
 			String sourcePath = inspectorModel.getFile().getCanonicalPath();
-			RrdDb rrd = new RrdDb(sourcePath);
+			RrdDb rrd = new RrdDb(sourcePath, true);
 			ArcDef arcDef = rrd.getRrdDef().getArcDefs()[arcIndex];
 			String consolFun = arcDef.getConsolFun();
 			int steps = arcDef.getSteps();

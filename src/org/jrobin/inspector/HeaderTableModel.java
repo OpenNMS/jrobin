@@ -72,7 +72,7 @@ class HeaderTableModel extends AbstractTableModel {
 			file = newFile;
 			values = null;
 			String path = file.getAbsolutePath();
-			RrdDb rrd = new RrdDb(path);
+			RrdDb rrd = new RrdDb(path, true);
 			Header header = rrd.getHeader();
 			String signature = header.getSignature();
 			String step = "" + header.getStep();

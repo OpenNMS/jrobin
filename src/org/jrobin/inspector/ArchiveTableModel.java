@@ -81,7 +81,7 @@ class ArchiveTableModel extends AbstractTableModel {
 			values = null;
 			if(dsIndex >= 0 && arcIndex >= 0) {
 				try {
-					RrdDb rrd = new RrdDb(file.getAbsolutePath());
+					RrdDb rrd = new RrdDb(file.getAbsolutePath(), true);
 					Archive arc = rrd.getArchive(arcIndex);
 					ArcState state = arc.getArcState(dsIndex);
 					values = new Object[]{
