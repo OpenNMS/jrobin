@@ -906,7 +906,7 @@ public class RrdGraphDef implements Serializable
 	 *
 	 * @param sourceName Graph source name
 	 * @param consolFun Consolidation function to be used for calculation ("AVERAGE",
-	 * "MIN", "MAX" or "LAST")
+	 * "MIN", "MAX", "LAST" or "TOTAL" (since 1.3.1)
 	 * @param format Format string. For example: "speed is @5.2 @sbits/sec@c",
 	 * "temperature = @0 degrees"
 	 * @throws RrdException Thrown in case of JRobin specific error
@@ -924,7 +924,8 @@ public class RrdGraphDef implements Serializable
 	 * </p> 
 	 * 
 	 * @param sourceName Graph source name
-	 * @param consolFun Consolidation function to be used for calculation ("AVERAGE", "MIN", "MAX" or "LAST")
+	 * @param consolFun Consolidation function to be used for calculation ("AVERAGE", "MIN", "MAX", "LAST"
+	 * or "TOTAL" (since 1.3.1)
 	 * @param format Format string. For example: "speed is @5.2 @sbits/sec@c", "temperature = @0 degrees"
 	 * @param base Base value for the formatting, defaults to the graphing base value
 	 * @throws RrdException Thrown in case of JRobin specific error
