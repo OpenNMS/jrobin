@@ -37,12 +37,14 @@ import java.io.IOException;
  *
  * @author <a href="mailto:saxon@jrobin.org">Sasa Markovic</a>
  */
+
 public class Datasource implements RrdUpdater {
 	private RrdDb parentDb;
 	// definition
 	private RrdString dsName, dsType;
 	private RrdLong heartbeat;
 	private RrdDouble minValue, maxValue;
+
 	// state variables
     private RrdDouble lastValue;
 	private RrdLong nanSeconds;
@@ -124,6 +126,7 @@ public class Datasource implements RrdUpdater {
 	 *
 	 * @return Datasource heartbeat
 	 */
+
 	public long getHeartbeat() {
 		return heartbeat.get();
 	}
@@ -341,6 +344,7 @@ public class Datasource implements RrdUpdater {
 	 * @throws IOException Thrown in case of I/O error
 	 * @throws RrdException Thrown if invalid minValue was supplied (not less then maxValue)
 	 */
+
 	public void setMinValue(double minValue, boolean filterArchivedValues)
 		throws IOException, RrdException {
 		double maxValue = this.maxValue.get();
@@ -413,3 +417,4 @@ public class Datasource implements RrdUpdater {
 		}
 	}
 }
+

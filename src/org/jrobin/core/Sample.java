@@ -49,7 +49,7 @@ import java.util.StringTokenizer;
  * 'unknown' values too, use <code>Double.NaN</code>.</p>
  *
  * @author <a href="mailto:saxon@jrobin.org">Sasa Markovic</a>
- */
+ */ 
 public class Sample {
 	private RrdDb parentDb;
 	private long time;

@@ -1,7 +1,7 @@
 /* ============================================================
  * JRobin : Pure java implementation of RRDTool's functionality
  * ============================================================
- *
+ *  
  * Project Info:  http://www.jrobin.org
  * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
@@ -43,7 +43,7 @@ public class Archive implements RrdUpdater {
 	// definition
 	private RrdString consolFun;
 	private RrdDouble xff;
-	private RrdInt steps, rows;
+	private RrdInt steps, rows; 
 	// state
 	private Robin[] robins;
 	private ArcState[] states;
@@ -113,7 +113,7 @@ public class Archive implements RrdUpdater {
 	public long getArcStep() {
 		long step = parentDb.getHeader().getStep();
 		return step * steps.get();
-	}
+	} 
 
 	String dump() throws IOException {
 		StringBuffer buffer = new StringBuffer("== ARCHIVE ==\n");

@@ -23,7 +23,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-package org.jrobin.core;
+package org.jrobin.core; 
 
 import java.io.IOException;
 
@@ -128,4 +128,4 @@ public class ArcState implements RrdUpdater {
 		arcState.accumValue.set(accumValue.get());
 		arcState.nanSteps.set(nanSteps.get());
 	}
-}
+} 

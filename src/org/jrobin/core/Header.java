@@ -170,7 +170,7 @@ public class Header implements RrdUpdater {
 			throw new RrdException(
 				"Cannot copy Header object to " + other.getClass().getName());
 		}
-		Header header = (Header) other;
+		Header header = (Header) other; 
 		header.lastUpdateTime.set(lastUpdateTime.get());
 	}
 }

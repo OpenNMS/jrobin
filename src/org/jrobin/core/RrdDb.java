@@ -720,4 +720,4 @@ public class RrdDb implements RrdUpdater {
 			return null;
 		}
 	}
-}
+} 
