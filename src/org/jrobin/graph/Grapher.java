@@ -26,10 +26,7 @@ package org.jrobin.graph;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Vector;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
+import java.util.*;
 import javax.imageio.ImageIO;
 import java.awt.Font;
 import java.awt.Color;
@@ -89,11 +86,11 @@ class Grapher
 	private int graphOriginX, graphOriginY, x_offset, y_offset;
 	
 	private RrdGraphDef graphDef;
-	private RrdGraph rrdGraph;
-	
+
+	private long[] timestamps;
 	private Source[] sources;
 	private HashMap sourceIndex;
-	private long[] timestamps;
+	private FetchSourceList fetchSources;
 
 	private ValueFormatter valueFormat;
 	private BasicStroke	defaultStroke;
@@ -115,7 +112,6 @@ class Grapher
 	Grapher( RrdGraphDef graphDef, RrdGraph rrdGraph )
 	{
 		this.graphDef = graphDef;
-		this.rrdGraph = rrdGraph;
 		
 		// Set font dimension specifics
 		if ( graphDef.getDefaultFont() != null )
@@ -136,6 +132,10 @@ class Grapher
 		
 		// Set default graph stroke
 		defaultStroke	= new BasicStroke();
+
+		// Get the fetch sources list
+		fetchSources	= graphDef.getFetchSources();
+		fetchSources.setRrdOpener( rrdGraph );				// Set the RrdOpener
 	}
 	
 	
@@ -280,6 +280,33 @@ class Grapher
 	}
 
 	/**
+	 * If the lazy flag of the GraphDef has been set, this method will
+	 * check the most recent update stamp of the FetchSources, and return
+	 * true if the update timestamp is larger than the timestamp of the
+	 * previous graph generation (passed on as a parameter).
+	 *
+	 * @param prevGenTime Timestamp of the previous graph generation.
+	 * @return True if the graph should be generated, false if not.
+	 */
+	protected boolean shouldGenerate( long prevGenTime ) throws RrdException, IOException
+	{
+		fetchSources.openAll();
+
+		if ( graphDef.isLazy() && fetchSources.getLastUpdateTime() * 1000 < prevGenTime )
+		{
+			// Should not generate, release immediately
+			fetchSources.releaseAll();
+
+			return false;
+		}
+
+		return true;
+	}
+
+	// ================================================================
+	// -- Private methods
+	// ================================================================
+	/**
 	 * Renders the actual graph onto the specified Graphics2D object
 	 * @param graphics The handle to the Graphics2D object to render the graph on.
 	 * @throws RrdException Thrown in case of a JRobin specific error.
@@ -304,9 +331,6 @@ class Grapher
 		graphics.dispose();
 	}
 
-	// ================================================================
-	// -- Private methods
-	// ================================================================
 	/**
 	 * Fetches and calculates all datasources used in the graph.
 	 * @throws RrdException Thrown in case of a JRobin specific error.
@@ -321,17 +345,17 @@ class Grapher
 
 		long finalEndTime 		= 0;
 		boolean changingEndTime = false;
-		
+
 		long startTime 			= graphDef.getStartTime();
 		long endTime			= graphDef.getEndTime();
 		changingEndTime			= (endTime == 0);
-	
+
 		int numDefs				= graphDef.getNumDefs();
 		int numSdefs			= graphDef.getNumSdefs();
 
 		Cdef[] cdefList			= graphDef.getCdefs();
 		int numCdefs			= cdefList.length;
-		
+
 		Pdef[] pdefList			= graphDef.getPdefs();
 		int numPdefs			= pdefList.length;
 
@@ -340,47 +364,49 @@ class Grapher
 		sourceIndex 			= new HashMap( numDefs + numCdefs + numPdefs );
 		int tblPos				= 0;
 		int vePos				= 0;
-	
-		ValueExtractor[] veList	= new ValueExtractor[ graphDef.getFetchSources().size() ];
-		Iterator fetchSources 	= graphDef.getFetchSources().values().iterator();
-		
-		while ( fetchSources.hasNext() )
+
+		ValueExtractor[] veList	= new ValueExtractor[ fetchSources.size() ];
+
+		// Open all datasources
+		try
 		{
-			// Get the rrdDb
-			src 				= (FetchSource) fetchSources.next();
-			String rrdFile 		= src.getRrdFile();
-			rrd					= rrdGraph.getRrd( rrdFile, src.getRrdBackendFactory() );
-			
-			// If the endtime is 0, use the last time a database was updated
-			if ( changingEndTime )
+			fetchSources.openAll();
+
+			for ( int i = 0; i < fetchSources.size(); i++ )
 			{
-				long step 	= rrd.getRrdDef().getStep();
-				endTime 	= rrd.getLastUpdateTime() - (endTime % step) - step;
+				src	= fetchSources.get( i );
 
-				if ( endTime > finalEndTime )
-					finalEndTime = endTime;
+				if ( changingEndTime )
+				{
+					endTime		= src.getLastSampleTime( endTime );
+
+					if ( endTime > finalEndTime )
+						finalEndTime = endTime;
+				}
+
+				// Fetch all required datasources
+				ve 		= src.fetch( startTime, endTime, graphDef.getResolution() );
+				varList = ve.getNames();
+
+				for (int j= 0; j < varList.length; j++) {
+					sources[tblPos]	= new Def(varList[j], numPoints);
+					sourceIndex.put( varList[j], new Integer(tblPos++) );
+				}
+
+				veList[ vePos++ ] = ve;
 			}
-			
-			// Fetch all required datasources
-			ve 		= src.fetch( rrd, startTime, endTime, graphDef.getResolution() );
-			varList = ve.getNames();
-
-			// BUGFIX: Release the rrdDb
-			rrdGraph.releaseRrd(rrd);
-
-			for (int i= 0; i < varList.length; i++) {
-				sources[tblPos]	= new Def(varList[i], numPoints);
-				sourceIndex.put( varList[i], new Integer(tblPos++) );
-			}
-			
-			veList[ vePos++ ] = ve;
 		}
-		
+		finally
+		{
+			// Release all datasources again
+			fetchSources.releaseAll();
+		}
+
 		// Add all Pdefs to the source table
 		for ( int i = 0; i < pdefList.length; i++ )
 		{
 			pdefList[i].prepare( numPoints );
-			
+
 			sources[tblPos] = pdefList[i];
 			sourceIndex.put( pdefList[i].getName(), new Integer(tblPos++) );
 		}
@@ -392,9 +418,9 @@ class Grapher
 		for ( int i = 0; i < cdefList.length; i++ )
 		{
 			cdefList[i].prepare( sourceIndex, numPoints );
-		
+
 			sources[tblPos]	= cdefList[i];
-			sourceIndex.put( cdefList[i].getName(), new Integer(tblPos++) );	
+			sourceIndex.put( cdefList[i].getName(), new Integer(tblPos++) );
 		}
 
 		// Fill the array for all datasources
@@ -873,12 +899,12 @@ class Grapher
 			else if ( clist[i].commentType == Comment.CMT_GPRINT )
 				((Gprint) clist[i]).setValue( sources, sourceIndex, valueFormat );
 			
-			Vector tknpairs = clist[i].getTokens();
+			ArrayList tknpairs = clist[i].getTokens();
 			
 			for (int j = 0; j < tknpairs.size(); j++)
 			{
-				String str 	= (String) tknpairs.elementAt(j++);
-				Byte tkn	= (Byte) tknpairs.elementAt(j);
+				String str 	= (String) tknpairs.get(j++);
+				Byte tkn	= (Byte) tknpairs.get(j);
 				
 				if ( clist[i].trimString() )
 					tmpStr.append( str.trim() );
@@ -1018,11 +1044,11 @@ class Grapher
 		StringBuffer tmpStr	= new StringBuffer("");
 		boolean newLine		= false;
 
-		Vector tknpairs = graphTitle.getTokens();
+		ArrayList tknpairs = graphTitle.getTokens();
 		for (int j = 0; j < tknpairs.size(); j++)
 		{
-			String str 	= (String) tknpairs.elementAt(j++);
-			Byte tkn	= (Byte) tknpairs.elementAt(j);
+			String str 	= (String) tknpairs.get(j++);
+			Byte tkn	= (Byte) tknpairs.get(j);
 
 			tmpStr.append( str );
 			if ( tkn != Comment.TKN_NULL )

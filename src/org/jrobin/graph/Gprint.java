@@ -25,6 +25,7 @@
 package org.jrobin.graph;
 
 import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -54,8 +55,10 @@ class Gprint extends Comment
 	private double baseValue							= -1;		// Default: use global base value
 	private boolean normalScale							= false;
 	private boolean uniformScale						= false;
-	
-	
+
+	protected ArrayList parsedList;
+
+
 	// ================================================================
 	// -- Constructors
 	// ================================================================
@@ -74,7 +77,7 @@ class Gprint extends Comment
 		this.text = text;
 		checkValuePlacement();		// First see if this GPRINT is valid
 		super.parseComment();
-		
+
 		this.commentType = Comment.CMT_GPRINT;
 		this.sourceName = sourceName;
 		
@@ -142,17 +145,20 @@ class Gprint extends Comment
 			
 			String valueStr = vFormat.getFormattedValue();
 			String prefix	= vFormat.getPrefix();
-			
+
+			// Create a copy of the token/pair list
+			parsedList		= new ArrayList( oList );
+
 			// Replace all values
 			for (int i = 0; i < oList.size(); i += 2 )
 			{
-				String str = (String) oList.elementAt(i);
+				String str = (String) oList.get(i);
 				
 				str = str.replaceAll(VALUE_MARKER, valueStr);
 				if ( normalScale ) str = str.replaceAll(SCALE_MARKER, prefix);
 				if ( uniformScale ) str = str.replaceAll(UNIFORM_SCALE_MARKER, prefix);
 				
-				oList.set( i, str );
+				parsedList.set( i, str );
 			}
 			
 			// Reset the base value of the formatter
@@ -163,8 +169,17 @@ class Gprint extends Comment
 			throw new RrdException( "Could not find datasource: " + sourceName );
 		}
 	}
-	
-	
+
+	/**
+	 * Retrieves a <code>ArrayList</code> containing all string/token pairs in order of <code>String</code> - <code>Byte</code>.
+	 * @return ArrayList containing all string/token pairs of this Comment.
+	 */
+	ArrayList getTokens()
+	{
+		return parsedList;
+	}
+
+
 	// ================================================================
 	// -- Private methods
 	// ================================================================

@@ -51,17 +51,14 @@ import org.jrobin.core.RrdBackendFactory;
  * @author Arne Vandamme (cobralord@jrobin.org)
  * @author Sasa Markovic (saxon@jrobin.org)
  */
-public class RrdGraph implements Serializable
+public class RrdGraph extends RrdOpener implements Serializable
 {
 	// ================================================================
 	// -- Members
 	// ================================================================
-
 	private Grapher grapher;
 	private BufferedImage img;
 
-	private RrdDbPool pool;
-		
 	private boolean useImageSize		= false;
 	
 	
@@ -72,7 +69,8 @@ public class RrdGraph implements Serializable
 	 * Constructs a new JRobin graph object, without a shared database pool.
 	 */
 	public RrdGraph() 
-	{	
+	{
+		super( false, true );
 	}
 
 	/**
@@ -81,8 +79,7 @@ public class RrdGraph implements Serializable
 	 */
 	public RrdGraph( boolean usePool )
 	{
-		if ( usePool )
-			this.pool = RrdDbPool.getInstance();
+		super( usePool, true );
 	}
 
 	/**
@@ -101,8 +98,7 @@ public class RrdGraph implements Serializable
 	 */
 	public RrdGraph( RrdGraphDef graphDef, boolean usePool )
 	{
-		if ( usePool )
-			this.pool = RrdDbPool.getInstance();
+		super( usePool, true );
 		grapher		= new Grapher( graphDef, this );
 	}
 	
@@ -155,9 +151,12 @@ public class RrdGraph implements Serializable
 	 */
 	public void saveAsPNG( String path, int width, int height ) throws RrdException, IOException
 	{
-		ImageIO.write( getBufferedImage(width, height, BufferedImage.TYPE_INT_RGB), "png", new File(path) );
+		File imgFile = new File( path );
+
+		if ( shouldGenerate(imgFile) )
+			ImageIO.write( getBufferedImage(width, height, BufferedImage.TYPE_INT_RGB), "png", imgFile );
 	}
-	
+
 	/**
 	 * Creates and saves a graph image with default dimensions as a GIF file.
 	 * By default the chart area is 400 by 100 pixels, the size of the entire image is dependant
@@ -182,12 +181,17 @@ public class RrdGraph implements Serializable
 	 */
 	public void saveAsGIF(String path, int width, int height) throws RrdException, IOException
 	{
-		GifEncoder gifEncoder 		= new GifEncoder( getBufferedImage(width, height, BufferedImage.TYPE_BYTE_INDEXED) );
-		FileOutputStream stream 	= new FileOutputStream( path, false );
-		
-		gifEncoder.encode(stream);
-		
-		stream.close();
+		File imgFile = new File( path );
+
+		if ( shouldGenerate(imgFile) )
+		{
+			GifEncoder gifEncoder 		= new GifEncoder( getBufferedImage(width, height, BufferedImage.TYPE_BYTE_INDEXED) );
+			FileOutputStream stream 	= new FileOutputStream( path, false );
+
+			gifEncoder.encode(stream);
+
+			stream.close();
+		}
 	}
 
 	/**
@@ -214,6 +218,11 @@ public class RrdGraph implements Serializable
 	 */
 	public void saveAsJPEG( String path, int width, int height, float quality ) throws RrdException, IOException
 	{
+		File imgFile = new File( path );
+
+		if ( !shouldGenerate(imgFile) )
+			return;
+
 		// Based on http://javaalmanac.com/egs/javax.imageio/JpegWrite.html?l=rel
 		// Retrieve jpg image to be compressed
 		RenderedImage rndImage	= getBufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
@@ -264,8 +273,7 @@ public class RrdGraph implements Serializable
 	{
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 		
-		ImageIO.write(getBufferedImage(width, height, BufferedImage.TYPE_INT_RGB),
-			"png", outputStream );
+		ImageIO.write(getBufferedImage(width, height, BufferedImage.TYPE_INT_RGB), "png", outputStream );
 				
 		return outputStream.toByteArray();
 	}
@@ -395,27 +403,25 @@ public class RrdGraph implements Serializable
 	}
 
 	// ================================================================
-	// -- Protected (package) methods
-	// ================================================================
-	RrdDb getRrd( String rrdFile, RrdBackendFactory backendFactory  ) throws IOException, RrdException
-	{
-		if ( pool != null )
-			return pool.requestRrdDb( rrdFile );
-		else
-			return new RrdDb( rrdFile, true, backendFactory );
-	}
-
-	void releaseRrd(RrdDb rrdDb) throws RrdException, IOException 
-	{
-		if ( pool != null )
-			pool.release(rrdDb);
-		else
-			rrdDb.close();
-	}
-
-	// ================================================================
 	// -- Private methods
 	// ================================================================
+	/**
+	 * This method checks if the graph should be generated.  This would be the case if the requested
+	 * image file does not yet exist, or (in case the generation is set to be lazy) the last modified
+	 * timestamp of the image file is before the last updated timestamp of the used datasources.
+	 * @param imgFile Image file to check against.
+	 * @return True if graph generation should be done, false if not.
+	 * @throws IOException Thrown in case of I/O error.
+	 * @throws RrdException Thrown in case of JRobin specific error.
+	 */
+	private boolean shouldGenerate( File imgFile ) throws RrdException, IOException
+	{
+		if ( !imgFile.exists() )
+			return true;
+
+		return grapher.shouldGenerate( imgFile.lastModified() );
+	}
+
 	private BufferedImage getBufferedImage(int width, int height, int colorType) throws RrdException, IOException
 	{
 		// Always regenerate graph

@@ -25,6 +25,7 @@
 package org.jrobin.graph;
 
 import java.util.Vector;
+import java.util.ArrayList;
 
 import org.jrobin.core.RrdException;
 import org.jrobin.core.XmlWriter;
@@ -60,7 +61,7 @@ class Comment
 	protected Byte lfToken					= TKN_ALF;
 	
 	protected String text;
-	protected Vector oList 					= new Vector();
+	protected ArrayList oList 				= new ArrayList(3);
 
 
 	// ================================================================
@@ -225,10 +226,10 @@ class Comment
 	}
 	
 	/**
-	 * Retrieves a <code>Vector</code> containing all string/token pairs in order of <code>String</code> - <code>Byte</code>.
-	 * @return Vector containing all string/token pairs of this Comment.
+	 * Retrieves a <code>ArrayList</code> containing all string/token pairs in order of <code>String</code> - <code>Byte</code>.
+	 * @return ArrayList containing all string/token pairs of this Comment.
 	 */
-	Vector getTokens()
+	ArrayList getTokens()
 	{
 		return oList;
 	}

@@ -60,65 +60,66 @@ public class RrdGraphDef implements Serializable
 	// ================================================================
 	// -- Members
 	// ================================================================
-	private long endTime				= Util.getTime();					// default time span of the last 24 hours
-	private long startTime				= Util.getTime() - 86400L;
-	private long resolution				= 1;								// resolution to fetch from the RRD databases
+	private long endTime					= Util.getTime();					// default time span of the last 24 hours
+	private long startTime					= Util.getTime() - 86400L;
+	private long resolution					= 1;								// resolution to fetch from the RRD databases
 
-	private Title title					= null;								// no title
-	private String valueAxisLabel		= null;								// no vertical label
-	private TimeAxisLabel timeAxisLabel = null;								// no horizontal label
-	
-	private boolean gridX				= true;								// hide entire X axis grid (default: no)
-	private boolean gridY				= true;								// hide entire Y axis grid (default: no)
-	private boolean minorGridX			= true;								// hide minor X axis grid (default: no)
-	private boolean minorGridY			= true;								// hide minor Y axis grid (default: no)
-	private boolean majorGridX			= true;								// hide major X axis grid with labels (default: no)
-	private boolean majorGridY			= true;								// hide major Y axis grid with labels (default: no)
-	private boolean frontGrid			= true;								// show grid in front of the chart (default: yes)
-	private boolean antiAliasing		= true;								// use anti-aliasing for the chart (default: yes)
-	private boolean showLegend			= true;								// show legend and comments (default: yes)
-	private boolean drawSignature		= true;								// show JRobin url signature (default: yes)
+	private Title title						= null;								// no title
+	private String valueAxisLabel			= null;								// no vertical label
+	private TimeAxisLabel timeAxisLabel 	= null;								// no horizontal label
+
+	private boolean lazyGeneration			= false;							// generate only if the file is outdated
+	private boolean gridX					= true;								// hide entire X axis grid (default: no)
+	private boolean gridY					= true;								// hide entire Y axis grid (default: no)
+	private boolean minorGridX				= true;								// hide minor X axis grid (default: no)
+	private boolean minorGridY				= true;								// hide minor Y axis grid (default: no)
+	private boolean majorGridX				= true;								// hide major X axis grid with labels (default: no)
+	private boolean majorGridY				= true;								// hide major Y axis grid with labels (default: no)
+	private boolean frontGrid				= true;								// show grid in front of the chart (default: yes)
+	private boolean antiAliasing			= true;								// use anti-aliasing for the chart (default: yes)
+	private boolean showLegend				= true;								// show legend and comments (default: yes)
+	private boolean drawSignature			= true;								// show JRobin url signature (default: yes)
 		
-	private Color backColor				= new Color( 245, 245, 245 );		// variation of light gray
-	private Color canvasColor			= Color.WHITE;						// white
-	private Color borderColor			= Color.LIGHT_GRAY;					// light gray, only applicable with a borderStroke
-	private Color normalFontColor		= Color.BLACK;						// black
-	private Color titleFontColor		= Color.BLACK;						// black
-	private Color majorGridColor		= new Color(130,30,30);				// variation of dark red
-	private Color minorGridColor		= new Color(140,140,140);			// variation of gray
-	private Color axisColor				= new Color(130,30,30);				// variation of dark red
-	private Color arrowColor			= Color.RED;						// red
-	private Color frameColor			= Color.LIGHT_GRAY;					// light gray
+	private Color backColor					= new Color( 245, 245, 245 );		// variation of light gray
+	private Color canvasColor				= Color.WHITE;						// white
+	private Color borderColor				= Color.LIGHT_GRAY;					// light gray, only applicable with a borderStroke
+	private Color normalFontColor			= Color.BLACK;						// black
+	private Color titleFontColor			= Color.BLACK;						// black
+	private Color majorGridColor			= new Color(130,30,30);				// variation of dark red
+	private Color minorGridColor			= new Color(140,140,140);			// variation of gray
+	private Color axisColor					= new Color(130,30,30);				// variation of dark red
+	private Color arrowColor				= Color.RED;						// red
+	private Color frameColor				= Color.LIGHT_GRAY;					// light gray
 	
-	private Font titleFont 				= null;								// use default 'grapher' font
-	private Font normalFont 			= null;								// use default 'grapher' font
+	private Font titleFont 					= null;								// use default 'grapher' font
+	private Font normalFont 				= null;								// use default 'grapher' font
 	
-	private File background				= null;								// no background image by default
-	private File overlay				= null;								// no overlay image by default
+	private File background					= null;								// no background image by default
+	private File overlay					= null;								// no overlay image by default
 	
-	private int chart_lpadding			= Grapher.CHART_LPADDING;			// padding space on the left of the chart area
+	private int chart_lpadding				= Grapher.CHART_LPADDING;			// padding space on the left of the chart area
 	
-	private int firstDayOfWeek			= TimeAxisUnit.MONDAY;				// first day of a calendar week, default: monday
+	private int firstDayOfWeek				= TimeAxisUnit.MONDAY;				// first day of a calendar week, default: monday
 	
-	private double baseValue			= ValueFormatter.DEFAULT_BASE;		// unit base value to use (default: 1000)
-	private int scaleIndex				= ValueFormatter.NO_SCALE;			// fixed units exponent value to use
+	private double baseValue				= ValueFormatter.DEFAULT_BASE;		// unit base value to use (default: 1000)
+	private int scaleIndex					= ValueFormatter.NO_SCALE;			// fixed units exponent value to use
 	
-	private BasicStroke borderStroke	= null;								// defaults to standard beveled border
-	private TimeAxisUnit tAxis			= null;								// custom time axis grid, defaults to no custom
-	private ValueAxisUnit vAxis			= null;								// custom value axis grid, defaults to no custom
-	private GridRange gridRange			= null;								// custom value range definition, defaults to auto-scale
+	private BasicStroke borderStroke		= null;								// defaults to standard beveled border
+	private TimeAxisUnit tAxis				= null;								// custom time axis grid, defaults to no custom
+	private ValueAxisUnit vAxis				= null;								// custom value axis grid, defaults to no custom
+	private GridRange gridRange				= null;								// custom value range definition, defaults to auto-scale
 	
 	// -- Non-settable members
-	private int numSdefs				= 0;
-	private int numDefs					= 0;								// number of Def datasources added
-	private int commentLines			= 0;								// number of complete lines in the list of comment items
-	private int commentLineShift		= 0;								// modifier to add to get minimum one complete line of comments
+	private int numSdefs					= 0;
+	private int numDefs						= 0;								// number of Def datasources added
+	private int commentLines				= 0;								// number of complete lines in the list of comment items
+	private int commentLineShift			= 0;								// modifier to add to get minimum one complete line of comments
 	
-	private HashMap fetchSources		= new HashMap( 10 );				// holds the list of FetchSources
-	private ArrayList cdefList			= new ArrayList( 10 );				// holds the list of Cdef datasources
-	private ArrayList pdefList			= new ArrayList( 10 );				// holds the list of Plottable datasources
-	private ArrayList plotDefs			= new ArrayList( 10 );				// holds the list of PlotDefs
-	private ArrayList comments			= new ArrayList( 10 );				// holds the list of comment items
+	private FetchSourceList fetchSources	= new FetchSourceList( 10 );		// holds the list of FetchSources
+	private ArrayList cdefList				= new ArrayList( 10 );				// holds the list of Cdef datasources
+	private ArrayList pdefList				= new ArrayList( 10 );				// holds the list of Plottable datasources
+	private ArrayList plotDefs				= new ArrayList( 10 );				// holds the list of PlotDefs
+	private ArrayList comments				= new ArrayList( 10 );				// holds the list of comment items
 	
 		
 	// ================================================================
@@ -206,6 +207,19 @@ public class RrdGraphDef implements Serializable
 	public void setTimePeriod( GregorianCalendar start, GregorianCalendar end ) throws RrdException 
 	{
 		setTimePeriod( start.getTime(), end.getTime() );
+	}
+
+	/**
+	 * Sets the 'lazy' flag for this GraphDef.  This means that upon graph generation and saving to a file,
+	 * JRobin will first check that if that file already exists, the 'last modified' timestamp
+	 * of the file is smaller than 'last update' timestamp of the used datasources.  Only if that is indeed
+	 * the case and the image file is outdated, will the graph be generated.
+	 *
+	 * @param lazyGeneration True if the script should only generate.
+	 */
+	public void setLazy( boolean lazyGeneration )
+	{
+		this.lazyGeneration = lazyGeneration;
 	}
 
 	/**
@@ -655,12 +669,7 @@ public class RrdGraphDef implements Serializable
 	 */
 	public void datasource( String name, String file, String dsName, String consolFunc ) throws RrdException
 	{
-		if ( fetchSources.containsKey(file) ) {
-			FetchSource rf = (FetchSource) fetchSources.get(file);
-			rf.addSource( consolFunc, dsName, name );	
-		}
-		else
-			fetchSources.put( file, new FetchSource(file, consolFunc, dsName, name) );
+		fetchSources.add( name, file, dsName, consolFunc );
 		
 		numDefs++;
 	}
@@ -686,16 +695,22 @@ public class RrdGraphDef implements Serializable
 	 */
 	public void datasource( String name, String file, String dsName, String consolFunc, String backend ) throws RrdException
 	{
-		if ( fetchSources.containsKey(file) )
-		{
-			FetchSource rf = (FetchSource) fetchSources.get(file);
-			rf.setBackendFactory( backend );
-			rf.addSource( consolFunc, dsName, name );
-		}
-		else
-			fetchSources.put( file, new FetchSource(file, consolFunc, dsName, name, backend ) );
+		fetchSources.add( name, file, dsName, consolFunc, backend );
 
 		numDefs++;
+	}
+
+	/**
+	 * <p>Clears the list of RRD datasources for this GraphDef and sets it to the FetchSourceList
+	 * passed as aparameter.  This does not alter any Cdef, Sdef or Pdef definitions.  The datasources
+	 * should be passed on as a FetchSourceList {@see FetchSourceList}.</p>
+	 * @param datasourceList FetchSourceList of the datasources to use.
+	 */
+	public void setDatasources( FetchSourceList datasourceList )
+	{
+		fetchSources	= datasourceList;
+
+		numDefs			= fetchSources.defCount();
 	}
 
 	/**
@@ -1085,11 +1100,8 @@ public class RrdGraphDef implements Serializable
 		// DATASOURCES
 		xml.startTag("datasources");
 		// defs
-		Iterator fsIterator = fetchSources.values().iterator();
-		while (fsIterator.hasNext()) {
-			FetchSource fs = (FetchSource) fsIterator.next();
-			fs.exportXml(xml);
-		}
+		for ( int i = 0; i < fetchSources.size(); i++ )
+			fetchSources.get( i ).exportXml(xml);
 		// cdefs and sdefs
 		for (int i = 0; i < cdefList.size(); i++ ) {
 			Cdef cdef = (Cdef) cdefList.get(i);
@@ -1164,6 +1176,10 @@ public class RrdGraphDef implements Serializable
 
 	protected long getResolution() {
 		return resolution;
+	}
+
+	protected boolean isLazy() {
+		return lazyGeneration;
 	}
 
 	protected Title getTitle() {
@@ -1349,7 +1365,7 @@ public class RrdGraphDef implements Serializable
 		return numSdefs;
 	}
 
-	protected HashMap getFetchSources()
+	protected FetchSourceList getFetchSources()
 	{
 		return fetchSources;
 	}
