@@ -36,12 +36,20 @@ import java.io.IOException;
  * Factory classes are used to create concrete {@link RrdBackend} implementations.
  * Each factory creates unlimited number of specific backend objects.
  *
- * JRobin supports three different backend types (backend factories) out of the box:<p>
+ * JRobin supports four different backend types (backend factories) out of the box:<p>
  * <ul>
  * <li>{@link RrdFileBackend}: objects of this class are created from the
  * {@link RrdFileBackendFactory} class. This was the default backend used in all
  * JRobin releases before 1.4.0 release. It uses java.io.* package and RandomAccessFile class to store
  * RRD data in files on the disk.
+ *
+ * <li>{@link RrdSafeFileBackend}: objects of this class are created from the
+ * {@link RrdSafeFileBackendFactory} class. It uses java.io.* package and RandomAccessFile class to store
+ * RRD data in files on the disk. This backend is SAFE:
+ * it locks the underlying RRD file during update/fetch operations, and caches only static
+ * parts of a RRD file in memory. Therefore, this backend is safe to be used when RRD files should
+ * be shared <b>between several JVMs</b> at the same time. However, this backend is *slow* since it does
+ * not use fast java.nio.* package (it's still based on the RandomAccessFile class).
  *
  * <li>{@link RrdNioBackend}: objects of this class are created from the
  * {@link RrdNioBackendFactory} class. The backend uses java.io.* and java.nio.*
@@ -71,6 +79,8 @@ public abstract class RrdBackendFactory {
 			registerFactory(memoryFactory);
 			RrdNioBackendFactory nioFactory = new RrdNioBackendFactory();
 			registerFactory(nioFactory);
+			RrdSafeFileBackendFactory safeFactory = new RrdSafeFileBackendFactory();
+			registerFactory(safeFactory);
 
 			// Here is the default backend factory
 			defaultFactory = nioFactory;
@@ -86,6 +96,10 @@ public abstract class RrdBackendFactory {
 	 * <ul>
 	 * <li><b>FILE</b>: Default factory which creates backends based on the
 	 * java.io.* package. RRD data is stored in files on the disk
+	 * <li><b>SAFE</b>: Default factory which creates backends based on the
+	 * java.io.* package. RRD data is stored in files on the disk. This backend
+	 * is "safe". Being safe means that RRD files can be safely shared between
+	 * several JVM's.
 	 * <li><b>NIO</b>: Factory which creates backends based on the
 	 * java.nio.* package. RRD data is stored in files on the disk
 	 * <li><b>MEMORY</b>: Factory which creates memory-oriented backends.
@@ -148,9 +162,10 @@ public abstract class RrdBackendFactory {
 	/**
 	 * Replaces the default backend factory with a new one. This method must be called before
 	 * the first RRD gets created. <p>
-	 * @param factoryName Name of the default factory. Out of the box, JRobin supports three
-	 * different RRD backends: "FILE" (java.io.* based), "NIO" (java.nio.* based) and "MEMORY"
-	 * (byte[] based).
+	 * @param factoryName Name of the default factory. Out of the box, JRobin supports four
+	 * different RRD backends: "FILE" (java.io.* based), "SAFE" (java.io.* based - use this
+	 * backend if RRD files may be accessed from several JVMs at the same time),
+	 * "NIO" (java.nio.* based) and "MEMORY" (byte[] based).
 	 * @throws RrdException Thrown if invalid factory name is supplied or not called before
 	 * the first RRD is created.
 	 */

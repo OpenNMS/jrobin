@@ -35,15 +35,17 @@ abstract class RrdPrimitive {
 	private RrdBackend backend;
 	private int byteCount;
 	private final long pointer;
+	private final boolean cachingAllowed;
 
-	RrdPrimitive(RrdUpdater updater, int type) throws IOException {
-		this(updater, type, 1);
+	RrdPrimitive(RrdUpdater updater, int type, boolean isConstant) throws IOException {
+		this(updater, type, 1, isConstant);
 	}
 
-	RrdPrimitive(RrdUpdater updater, int type, int count) throws IOException {
+	RrdPrimitive(RrdUpdater updater, int type, int count, boolean isConstant) throws IOException {
 		this.backend = updater.getRrdBackend();
 		this.byteCount = RRD_PRIM_SIZES[type] * count;
 		this.pointer = updater.getRrdAllocator().allocate(byteCount);
+		this.cachingAllowed = isConstant || backend.isCachingAllowed();
 	}
 	
 	final byte[] readBytes() throws IOException {
@@ -110,6 +112,6 @@ abstract class RrdPrimitive {
 	}
 
 	final boolean isCachingAllowed() {
-		return backend.isCachingAllowed();
+		return cachingAllowed;
 	}
 }

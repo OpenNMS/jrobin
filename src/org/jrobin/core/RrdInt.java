@@ -31,10 +31,14 @@ class RrdInt extends RrdPrimitive {
 	private int cache;
 	private boolean cached = false;
 
-	RrdInt(RrdUpdater updater) throws IOException {
-		super(updater,  RrdPrimitive.RRD_INT);
+	RrdInt(RrdUpdater updater, boolean isConstant) throws IOException {
+		super(updater,  RrdPrimitive.RRD_INT, isConstant);
 	}
-	
+
+	RrdInt(RrdUpdater updater) throws IOException {
+		this(updater, false);
+	}
+
 	void set(int value) throws IOException {
 		if(!isCachingAllowed()) {
 			writeInt(value);

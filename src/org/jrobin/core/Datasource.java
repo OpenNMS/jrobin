@@ -53,8 +53,8 @@ public class Datasource implements RrdUpdater, DsTypes {
 	Datasource(RrdDb parentDb, DsDef dsDef) throws IOException {
 		boolean shouldInitialize = dsDef != null;
 		this.parentDb = parentDb;
-		dsName = new RrdString(this);
-		dsType = new RrdString(this);
+		dsName = new RrdString(this, true); 	// constant, may be cached
+		dsType = new RrdString(this, true);		// constant, may be cached
 		heartbeat = new RrdLong(this);
 		minValue = new RrdDouble(this);
 		maxValue = new RrdDouble(this);

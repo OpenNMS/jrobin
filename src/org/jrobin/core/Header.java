@@ -51,10 +51,10 @@ public class Header implements RrdUpdater {
 	Header(RrdDb parentDb, RrdDef rrdDef) throws IOException {
 		boolean shouldInitialize = rrdDef != null;
 		this.parentDb = parentDb;
-		signature = new RrdString(this);
-		step = new RrdLong(this);
-		dsCount = new RrdInt(this);
-		arcCount = new RrdInt(this);
+		signature = new RrdString(this, true); 		// constant, may be cached
+		step = new RrdLong(this, true); 			// constant, may be cached
+		dsCount = new RrdInt(this, true); 			// constant, may be cached
+		arcCount = new RrdInt(this, true); 			// constant, may be cached
 		lastUpdateTime = new RrdLong(this);
 		if(shouldInitialize) {
 			signature.set(SIGNATURE);

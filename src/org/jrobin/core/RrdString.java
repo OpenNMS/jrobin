@@ -30,8 +30,12 @@ import java.io.IOException;
 class RrdString extends RrdPrimitive {
 	private String cache;
 
+	RrdString(RrdUpdater updater, boolean isConstant) throws IOException {
+		super(updater, RrdPrimitive.RRD_STRING, isConstant);
+	}
+
 	RrdString(RrdUpdater updater) throws IOException {
-		super(updater, RrdPrimitive.RRD_STRING);
+		this(updater, false);
 	}
 
 	void set(String value) throws IOException {

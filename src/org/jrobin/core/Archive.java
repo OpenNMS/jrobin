@@ -51,10 +51,10 @@ public class Archive implements RrdUpdater, ConsolFuns {
 	Archive(RrdDb parentDb, ArcDef arcDef) throws IOException {
 		boolean shouldInitialize = arcDef != null;
 		this.parentDb = parentDb;
-		consolFun = new RrdString(this);
+		consolFun = new RrdString(this, true);  // constant, may be cached
 		xff = new RrdDouble(this);
-		steps = new RrdInt(this);
-		rows = new RrdInt(this);
+		steps = new RrdInt(this, true);			// constant, may be cached
+		rows = new RrdInt(this, true);			// constant, may be cached
 		if(shouldInitialize) {
 			consolFun.set(arcDef.getConsolFun());
 			xff.set(arcDef.getXff());

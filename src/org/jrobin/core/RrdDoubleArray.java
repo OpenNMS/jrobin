@@ -31,7 +31,7 @@ class RrdDoubleArray extends RrdPrimitive {
 	private int length;
 
 	RrdDoubleArray(RrdUpdater updater, int length) throws IOException {
-		super(updater, RrdPrimitive.RRD_DOUBLE, length);
+		super(updater, RrdPrimitive.RRD_DOUBLE, length, false);
 		this.length = length;
 	}
 
