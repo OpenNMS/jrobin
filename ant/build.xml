@@ -70,6 +70,7 @@
 				<include name="${libs}/${lib-mrtg-server}" />
 				<include name="${libs}/${lib-inspector}" />
 				<include name="${libs}/${lib-convertor}" />
+				<include name="${libs}/${lib-demo}" />
 			</fileset>
 		</delete>
 	</target>
@@ -160,6 +161,7 @@
 		<javadoc author="false" version="false"
 			destdir="${cwd}/${javadoc}"
 			packagenames="org.jrobin.core.*,org.jrobin.graph.*"
+			excludepackagenames="org.jrobin.core.jrrd.*"
 			source="1.4"
 			sourcepath="${cwd}/${src}"
 			classpath="${classpath}"
