@@ -204,8 +204,7 @@ public class Util {
 		return file1.getCanonicalPath().equals(file2.getCanonicalPath());
 	}
 
-	static int getMatchingDatasourceIndex(RrdDb rrd1, int dsIndex, RrdDb rrd2)
-		throws IOException {
+	static int getMatchingDatasourceIndex(RrdDb rrd1, int dsIndex, RrdDb rrd2) {
 		String dsName = rrd1.getDatasource(dsIndex).getDsName();
 		try {
 			return rrd2.getDsIndex(dsName);
