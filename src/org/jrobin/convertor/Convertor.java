@@ -26,11 +26,14 @@
 package org.jrobin.convertor;
 
 import org.jrobin.core.RrdDb;
+import org.jrobin.core.RrdException;
+
 import java.io.*;
 import java.text.DecimalFormat;
 import java.util.Date;
 
 class Convertor {
+	private static final String FACTORY_NAME = "FILE";
 	private static final String SUFFIX = ".jrb";
 	private static final DecimalFormat secondsFormatter = new DecimalFormat("##0.000");
 	private static final DecimalFormat countFormatter = new DecimalFormat("0000");
@@ -39,6 +42,13 @@ class Convertor {
 	private int totalCount, badCount, goodCount;
 
 	private Convertor(String[] files) {
+		try {
+			RrdDb.setDefaultFactory(FACTORY_NAME);
+		}
+		catch (RrdException e) {
+			e.printStackTrace();
+			System.exit(-1);
+		}
 		this.files = files;
 	}
 
