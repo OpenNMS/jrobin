@@ -34,6 +34,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 import java.awt.*;
 
 /**
@@ -45,6 +47,9 @@ import java.awt.*;
  * values are collected. You have to extend this class to do something more useful.<p>
  */
 public abstract class XmlTemplate {
+	private static final String PATTERN_STRING = "\\$\\{(\\w+)\\}";
+	private static final Pattern PATTERN = Pattern.compile(PATTERN_STRING);
+
 	protected Element root;
 	private HashMap valueMap = new HashMap();
 	private HashSet validatedNodes = new HashSet();
@@ -182,21 +187,24 @@ public abstract class XmlTemplate {
 		return resolveMappings(value);
 	}
 
-	private String resolveMappings(String value) {
-		if(value != null && value.startsWith("${") && value.endsWith("}")) {
-			// template variable found, remove leading "${" and trailing "}"
-			String var = value.substring(2, value.length() - 1);
+	private String resolveMappings(String templateValue) {
+		Matcher matcher = PATTERN.matcher(templateValue);
+		StringBuffer result = new StringBuffer();
+		while(matcher.find()) {
+			String var = matcher.group(1);
 			if(valueMap.containsKey(var)) {
 				// mapping found
-				value = valueMap.get(var).toString();
+                matcher.appendReplacement(result, valueMap.get(var).toString());
 			}
 			else {
 				// no mapping found - this is illegal
+				// throw runtime exception
 				throw new IllegalArgumentException(
-					"No mapping found for template variable " + value);
+					"No mapping found for template variable ${" + var + "}");
 			}
 		}
-		return value;
+        matcher.appendTail(result);
+		return result.toString();
 	}
 
 	protected int getChildValueAsInt(Node parentNode, String childName)	throws RrdException {

@@ -25,8 +25,8 @@
 package org.jrobin.mrtg.server;
 
 import org.jrobin.core.RrdDb;
-import org.jrobin.core.RrdDbPool;
 import org.jrobin.mrtg.MrtgException;
+import org.jrobin.mrtg.MrtgConstants;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -41,11 +41,12 @@ import javax.xml.transform.stream.StreamResult;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.FileWriter;
 import java.util.Date;
 import java.util.Hashtable;
 import java.util.Vector;
 
-public class Server {
+public class Server implements MrtgConstants {
 	private static Server instance;
 
 	private DeviceList deviceList;
@@ -73,6 +74,15 @@ public class Server {
 		if(active) {
 			throw new MrtgException("Cannot start Server, already started");
 		}
+		// create template files
+		try {
+			createXmlTemplateIfNecessary(Config.getRrdTemplateFile(), RRD_TEMPLATE_STR);
+			createXmlTemplateIfNecessary(Config.getGraphTemplateFile(), GRAPH_TEMPLATE_STR);
+		}
+		catch(IOException ioe) {
+			throw new MrtgException(ioe);
+		}
+		// load configuration
 		String hwFile = Config.getHardwareFile();
 		if(new File(hwFile).exists()) {
 			loadHardware();
@@ -86,6 +96,17 @@ public class Server {
 		listener = new Listener(acceptedClients);
 		startDate = new Date();
 		active = true;
+	}
+
+	private void createXmlTemplateIfNecessary(String filePath, String fileContent)
+		throws IOException {
+		File file = new File(filePath);
+		if(!file.exists()) {
+			FileWriter writer = new FileWriter(filePath, false);
+			writer.write(fileContent);
+			writer.flush();
+			writer.close();
+		}
 	}
 
 	public synchronized void stop() throws MrtgException {

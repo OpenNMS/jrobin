@@ -24,16 +24,20 @@
  */
 package org.jrobin.mrtg.server;
 
+import org.jrobin.mrtg.MrtgConstants;
+
 import java.io.File;
 
-class Config {
+class Config implements MrtgConstants {
+	// various paths
 	private static final String DELIM = System.getProperty("file.separator");
-
 	private static final String HOME_DIR = System.getProperty("user.home") + DELIM +
 		"mrtg" + DELIM;
 	private static final String CONF_DIR = HOME_DIR + "conf" + DELIM;
 	private static final String RRD_DIR  = HOME_DIR + "rrd" + DELIM;
 	private static final String HARDWARE_FILE = CONF_DIR + "mrtg.dat";
+	private static final String RRD_DEF_TEMPLATE_FILE = CONF_DIR + "rrd_template.xml";
+	private static final String RRD_GRAPH_DEF_TEMPLATE_FILE = CONF_DIR + "graph_template.xml";
 
 	static {
 		// create directories if not found
@@ -55,5 +59,13 @@ class Config {
 
 	static String getHardwareFile() {
         return HARDWARE_FILE;
+	}
+
+	public static String getRrdTemplateFile() {
+		return RRD_DEF_TEMPLATE_FILE;
+	}
+
+	public static String getGraphTemplateFile() {
+		return RRD_GRAPH_DEF_TEMPLATE_FILE;
 	}
 }

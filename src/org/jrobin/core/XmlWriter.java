@@ -194,8 +194,4 @@ public class XmlWriter {
 	private static String escape(String s) {
 		return s.replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 	}
-
-	public static void main(String[] args) {
-		System.out.println(escape("<->"));
-	}
 }

@@ -34,7 +34,6 @@ import java.io.IOException;
 import java.io.File;
 import java.awt.*;
 import java.util.GregorianCalendar;
-import java.util.Date;
 
 /**
  * Class used to create an arbitrary number of RrdGraphDef (graph definition) objects
@@ -752,11 +751,13 @@ public class RrdGraphDefTemplate extends XmlTemplate {
 		return new Font(name, stl, size);
 	}
 
+/*
 	public static void main(String[] args) throws IOException, RrdException {
 		File fileTemplate = new File("work/test2.xml");
 		RrdGraphDefTemplate template = new RrdGraphDefTemplate(fileTemplate);
-		String stringTemplate = template.getRrdGraphDef().exportXmlTemplate();
-		template = new RrdGraphDefTemplate(stringTemplate);
+		template.setVariable("comment1", "[comment 1]");
+		template.setVariable("comment2", "[comment 2]");
 		System.out.println(template.getRrdGraphDef().exportXmlTemplate());
 	}
+*/
 }

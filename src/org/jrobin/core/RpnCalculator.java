@@ -396,9 +396,11 @@ class RpnCalculator {
 		}
 	}
 
+/*
 	public static void main(String[] args) throws RrdException {
 		RpnCalculator c = new RpnCalculator("2,3,/,value,+");
 		c.setValue(5);
 		System.out.println(c.calculate());
 	}
+*/
 }
