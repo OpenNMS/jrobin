@@ -33,9 +33,13 @@ import java.io.IOException;
 import java.io.File;
 
 class DatasourceTableModel extends AbstractTableModel {
-	private static final Object[] DESCRIPTIONS = {"name", "type", "heartbeat", "min value",
-										   "max value", "last value", "accum. value", "NaN seconds"};
-	private static final String[] COLUMN_NAMES = {"description", "value"};
+	private static final Object[] DESCRIPTIONS = {
+		"name", "type", "heartbeat", "min value",
+		"max value", "last value", "accum. value", "NaN seconds"
+	};
+	private static final String[] COLUMN_NAMES = {
+		"description", "value"
+	};
 
 	private File file;
 	private Object[] values;
@@ -68,6 +72,10 @@ class DatasourceTableModel extends AbstractTableModel {
 		return COLUMN_NAMES[column];
 	}
 
+	public boolean isCellEditable(int rowIndex, int columnIndex) {
+		return false;
+	}
+
 	void setFile(File newFile) {
 		file = newFile;
 		setIndex(-1);
@@ -94,10 +102,10 @@ class DatasourceTableModel extends AbstractTableModel {
 					rrd.close();
 				}
 				catch (IOException e) {
-					e.printStackTrace();
+					Util.error(null, e);
 				}
 				catch (RrdException e) {
-					e.printStackTrace();
+					Util.error(null, e);
 				}
 			}
 			fireTableDataChanged();

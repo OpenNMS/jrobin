@@ -146,6 +146,17 @@ public class Robin implements RrdUpdater {
 		return values.get(arrayIndex);
 	}
 
+	/**
+	 * Sets the i-th value in the Robin archive.
+	 * @param index index in the archive (the oldest value has zero index)
+	 * @param value value to be stored
+	 * @throws IOException Thrown in case of I/O specific error.
+	 */
+	public void setValue(int index, double value) throws IOException {
+		int arrayIndex = (pointer.get() + index) % rows;
+		values.set(arrayIndex, value);
+	}
+
 	double[] getValues(int index, int count) throws IOException {
 		assert count <= rows: "Too many values requested: " + count + " rows=" + rows;
 		int startIndex = (pointer.get() + index) % rows;

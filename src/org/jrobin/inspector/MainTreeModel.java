@@ -65,8 +65,10 @@ class MainTreeModel extends DefaultTreeModel {
 			return true;
 		} catch (IOException e) {
 			setRoot(INVALID_NODE);
+			Util.error(null, e);
 		} catch (RrdException e) {
 			setRoot(INVALID_NODE);
+			Util.error(null, e);
 		}
 		return false;
 	}

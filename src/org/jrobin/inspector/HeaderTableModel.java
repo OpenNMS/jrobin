@@ -67,6 +67,8 @@ class HeaderTableModel extends AbstractTableModel {
 		return COLUMN_NAMES[column];
 	}
 
+
+
 	void setFile(File newFile) {
 		try {
 			file = newFile;
@@ -87,9 +89,9 @@ class HeaderTableModel extends AbstractTableModel {
 			};
 			fireTableDataChanged();
 		} catch (IOException e) {
-			e.printStackTrace();
+			Util.error(null, e);
 		} catch (RrdException e) {
-			e.printStackTrace();
+			Util.error(null, e);
 		}
 	}
 }

@@ -189,7 +189,7 @@ class EditArchiveDialog extends JDialog {
 		}
 		catch(RrdException e) {
 			// should not be hear ever!
-			e.printStackTrace();
+			Util.error(this, e);
 			return null;
 		}
 	}

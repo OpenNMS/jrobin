@@ -63,6 +63,33 @@ class DataTableModel extends AbstractTableModel {
 		return COLUMN_NAMES[column];
 	}
 
+	public boolean isCellEditable(int rowIndex, int columnIndex) {
+		return columnIndex == 2;
+	}
+
+	public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
+		assert columnIndex == 2: "Column " + columnIndex + " is not editable!";
+		double value;
+		try {
+			value = Double.parseDouble(aValue.toString());
+		}
+		catch (NumberFormatException nfe) {
+			value = Double.NaN;
+		}
+		if(dsIndex >= 0 && arcIndex >= 0 && file != null) {
+			try {
+				RrdDb rrd = new RrdDb(file.getAbsolutePath());
+				Robin robin = rrd.getArchive(arcIndex).getRobin(dsIndex);
+				robin.setValue(rowIndex, value);
+				values[rowIndex][2] = InspectorModel.formatDouble(robin.getValue(rowIndex));
+				rrd.close();
+			}
+			catch(Exception e) {
+				Util.error(null, e);
+			}
+		}
+	}
+
 	void setFile(File newFile) {
 		file = newFile;
 		setIndex(-1, -1);
@@ -93,10 +120,10 @@ class DataTableModel extends AbstractTableModel {
 					rrd.close();
 				}
 				catch (IOException e) {
-					e.printStackTrace();
+					Util.error(null, e);
 				}
 				catch (RrdException e) {
-					e.printStackTrace();
+					Util.error(null, e);
 				}
 			}
 			fireTableDataChanged();

@@ -145,10 +145,16 @@ class TimeGrid
 			tAxis = new TimeAxisUnit( TimeAxisUnit.DAY, 1, TimeAxisUnit.WEEK, 1, new SimpleDateFormat("'week' ww"), true, firstDayOfWeek );
 		}
 		else if ( days <= 157 ) {
-			tAxis = new TimeAxisUnit( TimeAxisUnit.WEEK, 1, TimeAxisUnit.WEEK, 1, new SimpleDateFormat("ww"), true, firstDayOfWeek );
+			tAxis = new TimeAxisUnit( TimeAxisUnit.WEEK, 1, TimeAxisUnit.WEEK, 1, new SimpleDateFormat("'wk'ww"), true, firstDayOfWeek );
+		}
+		else if ( days <= 370 ) {
+			tAxis = new TimeAxisUnit( TimeAxisUnit.MONTH, 1, TimeAxisUnit.MONTH, 1, new SimpleDateFormat("MMM"), true, firstDayOfWeek );
+		}
+		else if ( days <= 735 ) {
+			tAxis = new TimeAxisUnit( TimeAxisUnit.MONTH, 1, TimeAxisUnit.MONTH, 1, new SimpleDateFormat("MM"), true, firstDayOfWeek );
 		}
 		else {
-			tAxis = new TimeAxisUnit( TimeAxisUnit.MONTH, 1, TimeAxisUnit.MONTH, 1, new SimpleDateFormat("MMM"), true, firstDayOfWeek );
+			tAxis = new TimeAxisUnit( TimeAxisUnit.MONTH, 1, TimeAxisUnit.YEAR, 1, new SimpleDateFormat("yyyy"), true, firstDayOfWeek );
 		}
 	}
 }

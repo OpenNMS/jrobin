@@ -97,10 +97,10 @@ class ArchiveTableModel extends AbstractTableModel {
 					rrd.close();
 				}
 				catch (IOException e) {
-					e.printStackTrace();
+					Util.error(null, e);
 				}
 				catch (RrdException e) {
-					e.printStackTrace();
+					Util.error(null, e);
 				}
 			}
 			fireTableDataChanged();

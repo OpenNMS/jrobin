@@ -293,6 +293,22 @@ public class RrdToolkit {
 	}
 
 	/**
+	 * Sets datasource heartbeat to a new value.
+	 * @param sourcePath Path to exisiting RRD file (will be updated)
+	 * @param dsIndex Index of the datasource in the specified RRD file
+	 * @param newHeartbeat New datasource heartbeat
+	 * @throws RrdException Thrown in case of JRobin specific error
+	 * @throws IOException Thrown in case of I/O error
+	 */
+	public void setDsHeartbeat(String sourcePath, int dsIndex, long newHeartbeat)
+		throws RrdException, IOException {
+		RrdDb rrd = new RrdDb(sourcePath);
+		Datasource ds = rrd.getDatasource(dsIndex);
+		ds.setHeartbeat(newHeartbeat);
+		rrd.close();
+	}
+
+	/**
 	 * Sets datasource min value to a new value
 	 * @param sourcePath Path to exisiting RRD file (will be updated)
 	 * @param datasourceName Name of the datasource in the specified RRD file
