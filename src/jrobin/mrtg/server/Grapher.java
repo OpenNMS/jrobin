@@ -64,8 +64,8 @@ class Grapher {
 			gDef.datasource("out", filename, "out", "AVERAGE");
 			gDef.datasource("in8", "in,8,*");
 			gDef.datasource("out8", "out,8,*");
-			gDef.area("in8", Color.GREEN, "input traffic");
-			gDef.line("out8", Color.BLUE, "output traffic\n");
+			gDef.area("out8", Color.GREEN, "output traffic\n");
+			gDef.line("in8", Color.BLUE, "input traffic");
 			gDef.comment("\n");
 			gDef.gprint("in8", "AVERAGE", "Average input: @7.2 @sbits/s");
 			gDef.gprint("in8", "MAX", "Maximum input: @7.2 @Sbits/s\n");
