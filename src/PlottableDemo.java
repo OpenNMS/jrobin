@@ -60,6 +60,14 @@ class PlottableDemo {
 		createGraph3();
 		createGraph4();
 		createGraph5();
+		createGraph6();
+		createGraph7();
+		createGraph8();
+		createGraph9();
+		createGraph10();
+		createGraph11();
+		createGraph12();
+		createGraph13();
 	}
 
 	private void createGraph1() throws RrdException, IOException {
@@ -190,6 +198,213 @@ class PlottableDemo {
 		String filename = Util.getJRobinDemoPath("plottable5.png");
 		graph.saveAsPNG(filename, 400, 200);
 		System.out.println("Graph5 saved to " + filename);
+	}
+
+	private void createGraph6() throws RrdException, IOException {
+		CubicSplineInterpolator hitsInterpolator =
+				new CubicSplineInterpolator(SF_TIMESTAMPS, SF_PAGE_HITS);
+		RrdGraphDef gDef = new RrdGraphDef(SF_TIMESTAMPS[0],
+			SF_TIMESTAMPS[SF_TIMESTAMPS.length - 1]);
+		gDef.setTitle("Trick graph 1");
+		gDef.setTimeAxisLabel("month");
+		gDef.setVerticalLabel("hits");
+		gDef.datasource("hits", hitsInterpolator);
+		gDef.datasource("hits2", "hits,1000,-");
+		gDef.datasource("invisible", "hits2,0,GE,hits2,0,IF");
+		gDef.datasource("margin", "hits,invisible,-");
+		gDef.area("invisible", null, null);
+		gDef.stack("margin", Color.YELLOW, "yellow margin");
+		gDef.line("hits", Color.RED, "page hits", 3);
+		gDef.line("hits", Color.WHITE, null, 1);
+		gDef.setTimeAxis(TimeAxisUnit.MONTH, 1, TimeAxisUnit.MONTH, 1, "MMM", false);
+		RrdGraph graph = new RrdGraph(gDef);
+		String filename = Util.getJRobinDemoPath("plottable6.png");
+		graph.saveAsPNG(filename, 400, 200);
+		System.out.println("Graph6 saved to " + filename);
+	}
+
+	private void createGraph7() throws RrdException, IOException {
+		CubicSplineInterpolator hitsInterpolator =
+				new CubicSplineInterpolator(SF_TIMESTAMPS, SF_PAGE_HITS);
+		RrdGraphDef gDef = new RrdGraphDef(SF_TIMESTAMPS[0],
+			SF_TIMESTAMPS[SF_TIMESTAMPS.length - 1]);
+		gDef.setTitle("Trick graph 2");
+		gDef.setTimeAxisLabel("month");
+		gDef.setVerticalLabel("hits");
+		gDef.datasource("hits", hitsInterpolator);
+		gDef.datasource("avg", "hits", "AVERAGE");
+		gDef.datasource("diff", "avg,hits,-");
+		gDef.datasource("diffpos", "diff,0,GE,diff,0,IF");
+		gDef.datasource("diffneg", "diff,0,LT,diff,0,IF");
+		gDef.area("hits", null, null);
+		gDef.stack("diffpos", Color.RED, "bad");
+		gDef.stack("diffneg", Color.GREEN,  "good");
+		gDef.line("hits", Color.BLUE, "hits", 3);
+		gDef.line("hits", Color.WHITE, null, 1);
+		gDef.line("avg", Color.MAGENTA, "average@L", 3);
+		gDef.line("avg", Color.WHITE, null, 1);
+		gDef.setTimeAxis(TimeAxisUnit.MONTH, 1, TimeAxisUnit.MONTH, 1, "MMM", false);
+		gDef.gprint("hits", "AVERAGE", "Average: @0@r");
+		RrdGraph graph = new RrdGraph(gDef);
+		String filename = Util.getJRobinDemoPath("plottable7.png");
+		graph.saveAsPNG(filename, 400, 200);
+		System.out.println("Graph7 saved to " + filename);
+	}
+
+	private void createGraph8() throws RrdException, IOException {
+		GregorianCalendar[] times = { SF_TIMESTAMPS[0], SF_TIMESTAMPS[SF_TIMESTAMPS.length - 1] };
+		double[] values = { SF_PAGE_HITS[0], SF_PAGE_HITS[SF_PAGE_HITS.length - 1] };
+		LinearInterpolator trendLine = new LinearInterpolator(times, values);
+		CubicSplineInterpolator hitsInterpolator =
+				new CubicSplineInterpolator(SF_TIMESTAMPS, SF_PAGE_HITS);
+		RrdGraphDef gDef = new RrdGraphDef(SF_TIMESTAMPS[0],
+			SF_TIMESTAMPS[SF_TIMESTAMPS.length - 1]);
+		gDef.setTitle("Trick graph 3");
+		gDef.setTimeAxisLabel("month");
+		gDef.setVerticalLabel("hits");
+		gDef.datasource("hits", hitsInterpolator);
+		gDef.datasource("trend", trendLine);
+		gDef.datasource("diff", "trend,hits,-");
+		gDef.area("hits", null, null);
+		gDef.stack("diff", Color.YELLOW, "difference");
+		gDef.line("hits", Color.BLUE, "hits");
+		gDef.line("trend", Color.RED, "trend@L");
+		gDef.setTimeAxis(TimeAxisUnit.MONTH, 1, TimeAxisUnit.MONTH, 1, "MMM", false);
+		RrdGraph graph = new RrdGraph(gDef);
+		String filename = Util.getJRobinDemoPath("plottable8.png");
+		graph.saveAsPNG(filename, 400, 200);
+		System.out.println("Graph8 saved to " + filename);
+	}
+
+	private void createGraph9() throws RrdException, IOException {
+		final int GRADIENT_STEPS = 30;
+		final Color color1 = Color.RED, color2 = Color.YELLOW;
+		CubicSplineInterpolator hitsInterpolator =
+				new CubicSplineInterpolator(SF_TIMESTAMPS, SF_PAGE_HITS);
+		RrdGraphDef gDef = new RrdGraphDef(SF_TIMESTAMPS[0], SF_TIMESTAMPS[SF_TIMESTAMPS.length - 1]);
+		gDef.setTitle("Trick graph 4");
+		gDef.setTimeAxisLabel("month");
+		gDef.setVerticalLabel("hits");
+		gDef.datasource("hits", hitsInterpolator);
+		for(int i = 0; i <= GRADIENT_STEPS; i++) {
+			gDef.datasource("hits" + i, "hits," + i + ",*," + GRADIENT_STEPS + ",/");
+		}
+		for(int i = GRADIENT_STEPS; i >=0 ; i--) {
+			Color c = interpolateColor(color1, color2, i / (double) GRADIENT_STEPS);
+			gDef.area("hits" + i, c, null);
+		}
+		gDef.line("hits", Color.BLACK, "Number of page hits");
+		gDef.setTimeAxis(TimeAxisUnit.MONTH, 1, TimeAxisUnit.MONTH, 1, "MMM", false);
+		RrdGraph graph = new RrdGraph(gDef);
+		String filename = Util.getJRobinDemoPath("plottable9.png");
+		graph.saveAsPNG(filename, 400, 200);
+		System.out.println("Graph9 saved to " + filename);
+	}
+
+	private void createGraph10() throws RrdException, IOException {
+		final int GRADIENT_STEPS = 30;
+		final Color color1 = Color.RED, color2 = Color.YELLOW;
+		CubicSplineInterpolator hitsInterpolator =
+				new CubicSplineInterpolator(SF_TIMESTAMPS, SF_PAGE_HITS);
+		RrdGraphDef gDef = new RrdGraphDef(SF_TIMESTAMPS[0], SF_TIMESTAMPS[SF_TIMESTAMPS.length - 1]);
+		gDef.setTitle("Trick graph 5");
+		gDef.setTimeAxisLabel("month");
+		gDef.setVerticalLabel("hits");
+		gDef.datasource("hits", hitsInterpolator);
+		for(int i = 0; i <= GRADIENT_STEPS; i++) {
+			gDef.datasource("hits" + i, "hits," + i + ",*," + GRADIENT_STEPS + ",/");
+		}
+		for(int i = GRADIENT_STEPS; i >= 0 ; i--) {
+			Color c = interpolateColor(color1, color2, i / (double) GRADIENT_STEPS);
+			gDef.area("hits" + i, c, null);
+		}
+		gDef.line("hits", color2, "Estimated number of page hits");
+		gDef.setTimeAxis(TimeAxisUnit.MONTH, 1, TimeAxisUnit.MONTH, 1, "MMM", false);
+		gDef.setCanvasColor(color1);
+		RrdGraph graph = new RrdGraph(gDef);
+		String filename = Util.getJRobinDemoPath("plottable10.png");
+		graph.saveAsPNG(filename, 400, 200);
+		System.out.println("Graph10 saved to " + filename);
+	}
+
+	private void createGraph11() throws RrdException, IOException {
+		final int GRADIENT_STEPS = 30;
+		final Color color1 = Color.YELLOW, color2 = Color.RED;
+		CubicSplineInterpolator hitsInterpolator =
+				new CubicSplineInterpolator(SF_TIMESTAMPS, SF_PAGE_HITS);
+		RrdGraphDef gDef = new RrdGraphDef(SF_TIMESTAMPS[0], SF_TIMESTAMPS[SF_TIMESTAMPS.length - 1]);
+		gDef.setTitle("Trick graph 6");
+		gDef.setTimeAxisLabel("month");
+		gDef.setVerticalLabel("hits");
+		gDef.datasource("hits", hitsInterpolator);
+		gDef.datasource("top", "hits", "MAX");
+		for(int i = 1; i <= GRADIENT_STEPS; i++) {
+			gDef.datasource("hits" + i, "hits,top," + i + ",*," + GRADIENT_STEPS + ",/,MIN");
+		}
+		for(int i = GRADIENT_STEPS; i >= 1 ; i--) {
+			Color c = i % 2 == 0? color1: color2;
+			gDef.area("hits" + i, c, null);
+		}
+		gDef.line("hits", color2, "Estimated number of page hits");
+		gDef.setTimeAxis(TimeAxisUnit.MONTH, 1, TimeAxisUnit.MONTH, 1, "MMM", false);
+		RrdGraph graph = new RrdGraph(gDef);
+		String filename = Util.getJRobinDemoPath("plottable11.png");
+		graph.saveAsPNG(filename, 400, 200);
+		System.out.println("Graph11 saved to " + filename);
+	}
+
+	private void createGraph12() throws RrdException, IOException {
+		final int GRADIENT_STEPS = 15;
+		final Color color1 = Color.LIGHT_GRAY, color2 = Color.WHITE;
+		CubicSplineInterpolator hitsInterpolator =
+				new CubicSplineInterpolator(SF_TIMESTAMPS, SF_PAGE_HITS);
+		RrdGraphDef gDef = new RrdGraphDef(SF_TIMESTAMPS[0], SF_TIMESTAMPS[SF_TIMESTAMPS.length - 1]);
+		gDef.setTitle("Trick graph 7");
+		gDef.setTimeAxisLabel("month");
+		gDef.setVerticalLabel("hits");
+		gDef.datasource("hits", hitsInterpolator);
+		for(int i = GRADIENT_STEPS; i >= 1 ; i--) {
+			Color c = interpolateColor(color1, color2, i / (double) GRADIENT_STEPS);
+			gDef.line("hits", c, null, i);
+		}
+		gDef.line("hits", color1, "Estimated number of page hits");
+		gDef.setTimeAxis(TimeAxisUnit.MONTH, 1, TimeAxisUnit.MONTH, 1, "MMM", false);
+		RrdGraph graph = new RrdGraph(gDef);
+		String filename = Util.getJRobinDemoPath("plottable12.png");
+		graph.saveAsPNG(filename, 400, 200);
+		System.out.println("Graph12 saved to " + filename);
+	}
+
+	private void createGraph13() throws RrdException, IOException {
+		final int GRADIENT_STEPS = 20;
+		final double GRADIENT_WIDTH = 2000.0;
+		final Color color1 = Color.RED, color2 = Color.WHITE;
+		CubicSplineInterpolator hitsInterpolator =
+				new CubicSplineInterpolator(SF_TIMESTAMPS, SF_PAGE_HITS);
+		RrdGraphDef gDef = new RrdGraphDef(SF_TIMESTAMPS[0], SF_TIMESTAMPS[SF_TIMESTAMPS.length - 1]);
+		gDef.setTitle("Trick graph 8");
+		gDef.setTimeAxisLabel("month");
+		gDef.setVerticalLabel("hits");
+		gDef.datasource("hits", hitsInterpolator);
+		for(int i = 0; i <= GRADIENT_STEPS; i++) {
+			gDef.datasource("hits" + i,
+				"hits," + GRADIENT_WIDTH + "," + i + ",*," + GRADIENT_STEPS + ",/,-,0,MAX");
+		}
+		for(int i = 0; i <= GRADIENT_STEPS; i++) {
+			gDef.area("hits" + i, interpolateColor(color1, color2, i / (double) GRADIENT_STEPS), null);
+		}
+		gDef.setTimeAxis(TimeAxisUnit.MONTH, 1, TimeAxisUnit.MONTH, 1, "MMM", false);
+		RrdGraph graph = new RrdGraph(gDef);
+		String filename = Util.getJRobinDemoPath("plottable13.png");
+		graph.saveAsPNG(filename, 400, 200);
+		System.out.println("Graph13 saved to " + filename);
+	}
+
+    private Color interpolateColor(Color c1, Color c2, double factor) {
+		int r = c1.getRed() + (int)((c2.getRed() - c1.getRed()) * factor);
+		int g = c1.getGreen() + (int)((c2.getGreen() - c1.getGreen()) * factor);
+		int b = c1.getBlue() + (int)((c2.getBlue() - c1.getBlue()) * factor);
+		return new Color(r, g, b);
 	}
 
 	public static void main(String[] args) throws RrdException, IOException {
