@@ -35,7 +35,7 @@ import java.io.PrintWriter;
 import java.util.Random;
 
 class Demo {
-	static final String FACTORY_NAME = "FILE";
+	// static final String FACTORY_NAME = "NIO";
 
 	static final long SEED = 1909752002L;
 	static final Random RANDOM = new Random(SEED);
@@ -46,7 +46,7 @@ class Demo {
 	static final int MAX_STEP = 300;
 
 	public static void main(String[] args) throws RrdException, IOException {
-		RrdDb.setDefaultFactory(FACTORY_NAME);
+		// RrdDb.setDefaultFactory(FACTORY_NAME);
 		// setup
 		println("== Starting demo");
 		RrdDb.setLockMode(RrdDb.NO_LOCKS);

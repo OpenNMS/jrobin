@@ -32,7 +32,8 @@ import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 
 /**
- * Default JRobin backend which is used to store RRD data to ordinary files on the disk.<p>
+ * JRobin backend which is used to store RRD data to ordinary files on the disk. This was the
+ * default factory before 1.4.0 version<p>
  *
  * This backend is based on the RandomAccessFile class (java.io.* package).
  */
@@ -81,7 +82,7 @@ public class RrdFileBackend extends RrdBackend {
 	 * @throws IOException Thrown in case of I/O error
 	 */
 	public void close() throws IOException {
-		sync();
+		super.close(); // calls sync()
 		unlockFile();
 		file.close();
 	}

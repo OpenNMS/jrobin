@@ -39,13 +39,14 @@ import java.io.IOException;
  * JRobin supports three different backend types (backend factories) out of the box:<p>
  * <ul>
  * <li>{@link RrdFileBackend}: objects of this class are created from the
- * {@link RrdFileBackendFactory} class. This is the default backend used in all
- * JRobin releases. It uses java.io.* package and RandomAccessFile class to store
+ * {@link RrdFileBackendFactory} class. This was the default backend used in all
+ * JRobin releases before 1.4.0 release. It uses java.io.* package and RandomAccessFile class to store
  * RRD data in files on the disk.
  *
  * <li>{@link RrdNioBackend}: objects of this class are created from the
  * {@link RrdNioBackendFactory} class. The backend uses java.io.* and java.nio.*
- * classes (mapped ByteBuffer) to store RRD data in files on the disk.
+ * classes (mapped ByteBuffer) to store RRD data in files on the disk. This is the default backend
+ * since 1.4.0 release.
  *
  * <li>{@link RrdMemoryBackend}: objects of this class are created from the
  * {@link RrdMemoryBackendFactory} class. This backend stores all data in memory. Once
@@ -72,7 +73,7 @@ public abstract class RrdBackendFactory {
 			registerFactory(nioFactory);
 
 			// Here is the default backend factory
-			defaultFactory = fileFactory;
+			defaultFactory = nioFactory;
 
 		} catch (RrdException e) {
 			throw new RuntimeException("FATAL: Cannot register RRD backend factories: " + e);
@@ -120,6 +121,19 @@ public abstract class RrdBackendFactory {
 			throw new RrdException("Backend factory of this name2 (" + name +
 				") already exists and cannot be registered");
 		}
+	}
+
+	/**
+	 * Registers new (custom) backend factory within the JRobin framework and sets this
+	 * factory as the default.
+	 * @param factory Factory to be registered and set as default
+	 * @throws RrdException Thrown if the name of the specified factory is already
+	 * used.
+	 */
+	public static synchronized void registerAndSetAsDefaultFactory(RrdBackendFactory factory)
+			throws RrdException {
+		registerFactory(factory);
+		setDefaultFactory(factory.getFactoryName());
 	}
 
 	/**

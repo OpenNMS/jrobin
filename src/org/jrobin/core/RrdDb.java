@@ -88,7 +88,7 @@ public class RrdDb implements RrdUpdater {
 
 	/**
 	 * <p>Constructor used to create new RRD object from the definition. This RRD object will be backed
-	 * with a storage (backend) of the default type. Initially, storage type defaults to "FILE"
+	 * with a storage (backend) of the default type. Initially, storage type defaults to "NIO"
 	 * (RRD bytes will be put in a file on the disk). Default storage type can be changed with a static
 	 * {@link RrdBackendFactory#setDefaultFactory(String)} method call.</p>
 	 *

@@ -28,7 +28,8 @@ package org.jrobin.core;
 import java.io.IOException;
 
 /**
- * Factory class which creates actual {@link RrdNioBackend} objects.
+ * Factory class which creates actual {@link RrdNioBackend} objects. This is the default factory since
+ * 1.4.0 version
  */
 public class RrdNioBackendFactory extends RrdFileBackendFactory{
 	/** factory name, "NIO" */

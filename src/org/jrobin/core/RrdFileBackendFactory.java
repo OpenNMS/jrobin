@@ -29,8 +29,8 @@ import java.io.IOException;
 import java.io.File;
 
 /**
- * Factory class which creates actual {@link RrdFileBackend} objects. This is the default
- * backend factory in JRobin.
+ * Factory class which creates actual {@link RrdFileBackend} objects. This was the default
+ * backend factory in JRobin before 1.4.0 release.
  */
 public class RrdFileBackendFactory extends RrdBackendFactory {
 	/** factory name, "FILE" */

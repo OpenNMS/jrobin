@@ -34,15 +34,15 @@ import java.io.IOException;
  * three different bakcends out of the box:</p>
  * <ul>
  * <li>{@link RrdFileBackend}: objects of this class are created from the
- * {@link RrdFileBackendFactory} class. This is the default backend used in all
- * JRobin releases. It uses java.io.* package and RandomAccessFile class to store
- * RRD data in files on the disk.
+ * {@link RrdFileBackendFactory} class. This was the default backend used in all
+ * JRobin releases prior to 1.4.0. It uses java.io.* package and
+ * RandomAccessFile class to store RRD data in files on the disk.
  *
  * <li>{@link RrdNioBackend}: objects of this class are created from the
  * {@link RrdNioBackendFactory} class. The backend uses java.io.* and java.nio.*
  * classes (mapped ByteBuffer) to store RRD data in files on the disk. This backend is fast, very fast,
  * but consumes a lot of memory (borrowed not from the JVM but from the underlying operating system
- * directly).
+ * directly). <b>This is the default backend used in JRobin since 1.4.0 release.</b>
  *
  * <li>{@link RrdMemoryBackend}: objects of this class are created from the
  * {@link RrdMemoryBackendFactory} class. This backend stores all data in memory. Once
@@ -136,10 +136,12 @@ public abstract class RrdBackend {
 	protected abstract void setLength(long length) throws IOException;
 
 	/**
-	 * Closes the storage.
+	 * Closes the storage. Calls sync() implicitly.
 	 * @throws IOException Thrown in case of I/O error
 	 */
-	public abstract void close() throws IOException;
+	public void close() throws IOException {
+		sync();
+	}
 
 	/**
 	 * Method called by the framework immediatelly before RRD update operation starts. This method
