@@ -42,7 +42,8 @@
 	<property name="ant" value="ant" />
 	<property name="lib-snmp" value="snmp-1.3.jar"/>
 	<property name="lib-xmlrpc" value="xmlrpc-1.2-b1.jar"/>
-	<property name="lib-jrobin" value="JRobin-${version}.jar"/>
+	<property name="lib-jrobin" value="jrobin-${version}.jar"/>
+	<property name="lib-demo" value="jrobin-demo-${version}.jar"/>
 	<property name="lib-mrtg-client" value="mrtg-client-${version}.jar"/>
 	<property name="lib-mrtg-server" value="mrtg-server-${version}.jar"/>
 	<property name="lib-inspector" value="inspector-${version}.jar"/>
@@ -50,8 +51,8 @@
 	<property name="res" value="res"/>
 	<property name="res-mrtg" value="${res}/mrtg"/>
 	<property name="classpath" value="${cwd}/${libs}/${lib-snmp}:${cwd}/${libs}/${lib-xmlrpc}"/>
-	<property name="tarfile" value="JRobin-${version}.tar"/>
-	<property name="tgzfile" value="JRobin-${version}.tar.gz"/>
+	<property name="tarfile" value="jrobin-${version}.tar"/>
+	<property name="tgzfile" value="jrobin-${version}.tar.gz"/>
 
 	<!-- TARGETS -->
 	<target name="init">
@@ -62,7 +63,7 @@
 		<delete includeemptydirs="true">
 			<fileset dir="${cwd}" >
 				<include name="${classes}/**/*"/>
-				<include name="${dist}/JRobin*.tar.gz"/>
+				<include name="${dist}/jrobin*.tar.gz"/>
 				<include name="${javadoc}/**/*"/>
 				<include name="${libs}/${lib-jrobin}" />
 				<include name="${libs}/${lib-mrtg-client}" />
@@ -86,11 +87,21 @@
 		<delete file="${cwd}/${libs}/${lib-jrobin}" />
 		<jar jarfile="${cwd}/${libs}/${lib-jrobin}" basedir="${cwd}/${classes}">
 			<manifest>
-				<attribute name="Main-Class" value="Demo"/>
+				<attribute name="Main-Class" value="org.jrobin.core.RrdDb"/>
 			</manifest>
 			<include name="org/jrobin/core/**/*.class"/>
 			<include name="org/jrobin/graph/**/*.class"/>
-			<include name="*.class"/>
+		</jar>
+	</target>
+
+	<target name="demo-lib" depends="core-lib">
+		<delete file="${cwd}/${libs}/${lib-demo}" />
+		<jar jarfile="${cwd}/${libs}/${lib-demo}" basedir="${cwd}/${classes}">
+			<manifest>
+				<attribute name="Main-Class" value="org.jrobin.demo.Demo"/>
+				<attribute name="Class-Path" value="${lib-jrobin}"/>
+			</manifest>
+			<include name="org/jrobin/demo/**/*.class"/>
 		</jar>
 	</target>
 
@@ -143,7 +154,7 @@
 		</jar>
 	</target>
 
-	<target name="all-libs" depends="core-lib,mrtg-server-lib,mrtg-client-lib,inspector-lib,convertor-lib"/>
+	<target name="all-libs" depends="core-lib,demo-lib,mrtg-server-lib,mrtg-client-lib,inspector-lib,convertor-lib"/>
 
 	<target name="javadoc" depends="compile">
 		<javadoc author="false" version="false"
@@ -169,7 +180,7 @@
     			<include name="*.jar"/>
   			</tarfileset>
 			<tarfileset dir="${cwd}/${src}" prefix="${prefix}/${src}">
-				<exclude name="**/test/**/*"/> 
+				<exclude name="**/test/**/*"/>
     			<include name="**/*.java"/>
   			</tarfileset>
 			<tarfileset dir="${cwd}/${res}" prefix="${prefix}/${res}">
