@@ -29,7 +29,6 @@ import org.jrobin.mrtg.Debug;
 import org.jrobin.mrtg.MrtgConstants;
 import org.jrobin.mrtg.MrtgException;
 
-import java.io.IOException;
 import java.util.Date;
 import java.util.Hashtable;
 import java.util.Vector;
@@ -37,30 +36,22 @@ import java.util.Vector;
 class Listener implements MrtgConstants {
 	private WebServer webServer;
 
-	Listener() throws MrtgException {
-		start();
-	}
-
-	private void start() throws MrtgException {
-		try {
-			webServer = new WebServer(SERVER_PORT);
-			webServer.addHandler("mrtg", new EventHandler());
-			Debug.print("XmlRpcServer started on port " + SERVER_PORT);
-		} catch (IOException e) {
-			throw new MrtgException(e);
+	Listener(String[] clients) throws MrtgException {
+		webServer = new WebServer(SERVER_PORT);
+		webServer.addHandler("mrtg", new EventHandler());
+		if(clients != null && clients.length > 0) {
+			webServer.setParanoid(true);
+			for(int i = 0; i < clients.length; i++) {
+				webServer.acceptClient(clients[i]);
+			}
 		}
+		webServer.start();
+		Debug.print("XmlRpcServer started on port " + SERVER_PORT);
 	}
 
 	void terminate() {
 		if(webServer != null) {
 			webServer.shutdown();
-			/*
-			// HACK: this takes some time - wait a few seconds before proceeding
-			try {
-				Thread.sleep(5000L);
-			} catch (InterruptedException e) {
-			}
-			*/
 			Debug.print("XmlRpcServer closed");
 			webServer = null;
 		}
@@ -68,15 +59,6 @@ class Listener implements MrtgConstants {
 
 	protected void finalize() {
 		terminate();
-	}
-
-	void setParanoid(String[] clients) {
-		if(clients.length > 0 && webServer != null) {
-			webServer.setParanoid(true);
-			for(int i = 0; i < clients.length; i++) {
-				webServer.acceptClient(clients[i]);
-			}
-		}
 	}
 
 	public class EventHandler {

@@ -67,7 +67,7 @@ public class Server {
 		RrdDb.setLockMode(RrdDb.NO_LOCKS);
 	}
 
-	public synchronized void start() throws MrtgException {
+	public synchronized void start(String[] acceptedClients) throws MrtgException {
 		if(active) {
 			throw new MrtgException("Cannot start Server, already started");
 		}
@@ -81,7 +81,7 @@ public class Server {
 		// create threads
 		rrdWriter = new RrdWriter();
 		timer = new Timer();
-		listener = new Listener();
+		listener = new Listener(acceptedClients);
 		startDate = new Date();
 		active = true;
 	}
@@ -192,6 +192,9 @@ public class Server {
 	synchronized int removeLink(String host, String ifDescr) throws MrtgException {
 		int retCode = deviceList.removeLink(host, ifDescr);
 		saveHardware();
+		// remove the underlying RRD file
+        String rrdFile = RrdWriter.getRrdFilename(host, ifDescr);
+		new File(rrdFile).delete();
 		return retCode;
 	}
 
@@ -241,17 +244,9 @@ public class Server {
 		return hash;
 	}
 
-	public void setParanoid(String[] clients) {
-		listener.setParanoid(clients);
-	}
-
-	public static void main(String[] args) throws Exception {
+	public static void main(String[] acceptedClients) throws Exception {
         Server s = Server.getInstance();
-		s.start();
-		s.setParanoid(args);
-		// this will end the server process
-		// System.out.println("Exiting");
-		// s.stop();
+		s.start(acceptedClients);
 	}
 }
 
