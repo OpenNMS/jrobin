@@ -26,6 +26,7 @@
 package org.jrobin.core;
 
 import java.io.IOException;
+import java.util.Set;
 
 /**
  * Class to represent fetch request. For the complete explanation of all
@@ -67,6 +68,19 @@ public class FetchRequest {
 	 */
 	public void setFilter(String[] filter) {
 		this.filter = filter;
+	}
+
+	/**
+	 * Sets request filter in order to fetch data only for
+	 * the specified set of datasources (datasource names).
+	 * If the filter is not set (or set to null), fetched data will
+	 * containt values of all datasources defined in the corresponding RRD.
+	 * To fetch data only from selected
+	 * datasources, specify a set of datasource names as method argument.
+	 * @param filter Set of datsource names to fetch data for.
+	 */
+	public void setFilter(Set filter) {
+		this.filter = (String[]) filter.toArray(new String[0]);
 	}
 
 	/**

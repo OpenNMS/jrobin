@@ -135,10 +135,6 @@ class Demo {
 		println(fetchData.toString());
 		println("== Dumping fetched data to XML format");
 		println(fetchData.exportXml());
-		println("== Dumping fetch statistics for datasource 'sun'");
-		println(fetchData.getStats("sun").dump());
-		println("== Dumping fetch statistics for datasource 'shade'");
-		println(fetchData.getStats("shade").dump());
 		println("== Fetch completed");
 
 		// dump to XML file

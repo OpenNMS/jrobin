@@ -141,6 +141,16 @@ public class Util {
 	}
 
 	/**
+	 * Formats double as a string using exponential notation. Used for debugging
+	 * throught the project.
+	 * @param x value to be formatted
+	 * @return string like "+1.234567E+02"
+	 */
+	public static String formatDouble(double x) {
+		return formatDouble(x, true);
+	}
+
+	/**
 	 * Returns <code>Date</code> object for the given timestamp (in seconds, without
 	 * milliseconds)
 	 * @param timestamp Timestamp in seconds.

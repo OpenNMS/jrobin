@@ -25,14 +25,10 @@
 
 package org.jrobin.core;
 
-import org.jrobin.data.DataStats;
-import org.jrobin.data.RpnCalculator;
-
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.FileOutputStream;
 import java.io.ByteArrayOutputStream;
-import java.text.DecimalFormat;
 
 /**
  * Class used to represent data fetched from the RRD.
@@ -56,7 +52,6 @@ import java.text.DecimalFormat;
  * all values for the i-th datasource. Returned datasource values correspond to
  * the values returned with {@link #getTimestamps() getTimestamps()} method.<p>
  *
- * Use {@link #getStats(String, String)} method to calculate aggregates for the fetched data<p>
  */
 public class FetchData implements RrdDataSet, ConsolFuns {
 	private FetchRequest request;
@@ -247,12 +242,20 @@ public class FetchData implements RrdDataSet, ConsolFuns {
 	}
 
 	/**
-	 * Dumps the content of the whole FetchData object to stdout. Useful for debugging.
+	 * Dumps the content of the whole FetchData object. Useful for debugging.
 	 */
-	public void dump() {
-		for (int i = 0; i < getRowCount(); i++) {
-			System.out.println(getRow(i).dump());
+	public String dump() {
+		StringBuffer buffer = new StringBuffer("");
+		for (int row = 0; row < getRowCount(); row++) {
+			buffer.append(timestamps[row]);
+			buffer.append(":  ");
+			for(int dsIndex = 0; dsIndex < getColumnCount(); dsIndex++) {
+				buffer.append(Util.formatDouble(values[dsIndex][row], true));
+				buffer.append("  ");
+			}
+			buffer.append("\n");
 		}
+		return buffer.toString();
 	}
 
 	/**
@@ -261,7 +264,6 @@ public class FetchData implements RrdDataSet, ConsolFuns {
 	 * @return Fetched data as a string in a rrdfetch-like output form.
 	 */
 	public String toString() {
-		final DecimalFormat df = new DecimalFormat("+0.0000000000E00");
 		// print header row
 		StringBuffer buff = new StringBuffer();
 		buff.append(padWithBlanks("", 10));
@@ -275,7 +277,7 @@ public class FetchData implements RrdDataSet, ConsolFuns {
 			buff.append(":");
 			for (int j = 0; j < dsNames.length; j++) {
 				double value = values[j][i];
-				String valueStr = Double.isNaN(value) ? "nan" : df.format(value);
+				String valueStr = Double.isNaN(value) ? "nan" : Util.formatDouble(value);
 				buff.append(padWithBlanks(valueStr, 18));
 			}
 			buff.append("\n");
@@ -298,102 +300,89 @@ public class FetchData implements RrdDataSet, ConsolFuns {
 	 *
 	 * @param dsName    Datasource name
 	 * @param consolFun Consolidation function to be applied to fetched datasource values.
-	 *                  Valid consolidation functions are "MIN", "MAX", "LAST" and "AVERAGE"
-	 *                  (these string constants are conveniently defined in the {@link ConsolFuns} class).
-	 * @return MIN, MAX, LAST or AVERAGE value calculated from the fetched data
-	 *         for the given datasource name
-	 * @throws RrdException Thrown if the given datasource name cannot be found in fetched data.
-	 * @deprecated Use {@link #getStats(String) getStats(dsName)} method instead.
-	 */
-	public double getAggregate(String dsName, String consolFun) throws RrdException {
-		return getAggregate(dsName, consolFun, null);
-	}
-
-	/**
-	 * Returns aggregated value from the fetched data for a single datasource.
-	 * Before applying aggrregation functions, specified RPN expression is applied to fetched
-	 * data. For example, if you have a GAUGE datasource named 'feet' but you want to
-	 * find the maximum fetched value in meters use something like:</p>
-	 * <code>getAggregate("feet", ConsolFuns.MAX, "value,0.3048,*");</code>
-	 * Note that 'value' in the RPN expression is a reserved word and stands for the
-	 * original value (value fetched from the RRD)</p>
-	 *
-	 * @param dsName    Datasource name
-	 * @param consolFun Consolidation function to be applied to fetched datasource values.
 	 *                  Valid consolidation functions are "MIN", "MAX", "LAST", "FIRST", "AVERAGE" and "TOTAL"
 	 *                  (these string constants are conveniently defined in the {@link ConsolFuns} class)
 	 * @return MIN, MAX, LAST, FIRST, AVERAGE or TOTAL value calculated from the fetched data
 	 *         for the given datasource name
 	 * @throws RrdException Thrown if the given datasource name cannot be found in fetched data.
-	 * @deprecated Use {@link #getStats(String, String) getStats(dsName, rpnExpression)} method instead.
+	 * @deprecated This method may calculate averages slightly different from values displayed in the
+	 * corresponding graph. Use {@link org.jrobin.data.DataProcessor DataAnalyzer} class instead.
 	 */
-	public double getAggregate(String dsName, String consolFun, String rpnExpression)
-			throws RrdException {
-		DataStats stats = getStats(dsName, rpnExpression);
-		if (consolFun.equals(CF_MAX)) {
-			return stats.getMax();
+	public double getAggregate(String dsName, String consolFun)	throws RrdException {
+		if(consolFun.equals(CF_MAX)) {
+			return getMax(dsName);
 		}
-		else if (consolFun.equals(CF_MIN)) {
-			return stats.getMin();
+		else if(consolFun.equals(CF_MIN)) {
+			return getMin(dsName);
 		}
-		else if (consolFun.equals(CF_LAST)) {
-			return stats.getLast();
+		else if(consolFun.equals(CF_LAST)) {
+			return getLast(dsName);
 		}
-		else if (consolFun.equals(CF_FIRST)) {
-			return stats.getFirst();
+		else if(consolFun.equals(CF_FIRST)) {
+			return getFirst(dsName);
 		}
-		else if (consolFun.equals(CF_AVERAGE)) {
-			return stats.getAverage();
+		else if(consolFun.equals(CF_AVERAGE)) {
+			return getAverage(dsName);
 		}
-		else if (consolFun.equals(CF_TOTAL)) {
-			return stats.getTotal();
+		else if(consolFun.equals(CF_TOTAL)) {
+			return getTotal(dsName);
 		}
 		else {
 			throw new RrdException("Unsupported consolidation function [" + consolFun + "]");
 		}
 	}
 
-	/**
-	 * Returns all aggregated values from the fetched data for a single datasource.
-	 *
-	 * @param dsName    Datasource name
-	 * @return Object containing MIN, MAX, LAST, FIRST, AVERAGE and TOTAL values calculated from the fetched data
-	 *         for the given datasource name
-	 * @throws RrdException Thrown if the given datasource name cannot be found in fetched data.
-	 */
-	public DataStats getStats(String dsName) throws RrdException {
-		return getStats(dsName, null);
+	private double getMax(String dsName) throws RrdException {
+		double values[] = getValues(dsName), max = Double.NaN;
+		for(int i = 1; i < values.length; i++) {
+			max = Util.max(max, values[i]);
+		}
+		return max;
 	}
 
-	/**
-	 * Returns all aggregated values from the fetched data for a single datasource.
-	 * Before applying aggrregation functions, specified RPN expression is applied to fetched
-	 * data. For example, if you have a GAUGE datasource named 'feet' but you want to
-	 * calculate aggregates in meters use something like:<p>
-	 * <pre>
-	 * getStats("feet", "value,0.3048,*");
-	 * </pre>
-	 * Note that the placeholder 'value' in the RPN expression is a reserved word and stands for the
-	 * original value (value fetched from the RRD)
-	 *
-	 * @param dsName    Datasource name
-	 * @return Object containing MIN, MAX, LAST, FIRST, AVERAGE and TOTAL values calculated from the fetched data
-	 *         for the given datasource name and a given RPN expression
-	 * @throws RrdException Thrown if the given datasource name cannot be found in fetched data
-	 */
-	public DataStats getStats(String dsName, String rpnExpression) throws RrdException {
-		double[] values = getValues(dsName), calculatedValues = values;
-		if (rpnExpression != null) {
-			calculatedValues = new double[values.length];
-			RpnCalculator rpnCalculator = new RpnCalculator(rpnExpression);
-			for (int i = 0; i < values.length; i++) {
-				rpnCalculator.setValue(values[i]);
-				rpnCalculator.setTimestamp(timestamps[i]);
-				calculatedValues[i] = rpnCalculator.calculate();
+	private double getMin(String dsName) throws RrdException {
+		double values[] = getValues(dsName), min = Double.NaN;
+		for(int i = 1; i < values.length; i++) {
+			min = Util.min(min, values[i]);
+		}
+		return min;
+	}
+
+	private double getLast(String dsName) throws RrdException {
+		double values[] = getValues(dsName);
+		return values[values.length - 1];
+	}
+
+	private double getFirst(String dsName) throws RrdException {
+		double values[] = getValues(dsName);
+		return values[1];
+	}
+
+	private double getAverage(String dsName) throws RrdException {
+		double values[] = getValues(dsName), totalVal = 0D;
+		long tStart = request.getFetchStart(), tEnd = request.getFetchEnd(), totalSecs = 0;
+		for(int i = 1; i < values.length; i++) {
+			long t1 = Math.max(tStart, timestamps[i - 1]), t2 = Math.min(tEnd, timestamps[i]);
+			double value = values[i];
+			if(!Double.isNaN(value)) {
+                totalSecs += (t2 - t1);
+				totalVal += (t2 - t1) * value;
 			}
 		}
-		return new DataStats(timestamps, calculatedValues,
-				request.getFetchStart(), request.getFetchEnd());
+		return totalSecs > 0? totalVal / totalSecs: Double.NaN;
+	}
+
+	private double getTotal(String dsName) throws RrdException {
+		double vals[] = getValues(dsName), totalVal = 0D;
+		long tStart = request.getFetchStart(), tEnd = request.getFetchEnd();
+		for(int i = 1; i < vals.length; i++) {
+			long t1 = Math.max(tStart, timestamps[i - 1]), t2 = Math.min(tEnd, timestamps[i]);
+			double value = vals[i];
+			if(!Double.isNaN(value)) {
+				totalVal += (t2 - t1) * value;
+			}
+		}
+		return totalVal;
 	}
 
 	/**
