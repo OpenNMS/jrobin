@@ -172,7 +172,7 @@ public class RrdDbPool implements Runnable {
 				// already open, use it!
 				reportUsage(canonicalPath, rrdEntry);
 				poolHitsCount++;
-				debug("CACHED: " + rrdEntry.dump());
+//				debug("CACHED: " + rrdEntry.dump());
 				return rrdEntry.getRrdDb();
 			}
 			else if(!limitedCapacity || rrdMap.size() < capacity) {
@@ -180,7 +180,7 @@ public class RrdDbPool implements Runnable {
 				RrdDb rrdDb = createRrdDb(path, null);
 				rrdEntry = new RrdEntry(rrdDb);
 				addRrdEntry(canonicalPath, rrdEntry);
-				debug("ADDED: " + rrdEntry.dump());
+//				debug("ADDED: " + rrdEntry.dump());
 				return rrdDb;
 			}
 			else {
@@ -237,7 +237,7 @@ public class RrdDbPool implements Runnable {
 				RrdDb rrdDb = createRrdDb(path, creationDef);
 				RrdEntry newRrdEntry = new RrdEntry(rrdDb);
 				addRrdEntry(canonicalPath, newRrdEntry);
-				debug("ADDED: " + newRrdEntry.dump());
+//				debug("ADDED: " + newRrdEntry.dump());
 				return rrdDb;
 			}
 			else {
@@ -301,7 +301,7 @@ public class RrdDbPool implements Runnable {
 					"File '" + canonicalPath + "' already in use");
 		} else {
 			// open but released... safe to close it
-			debug("WILL BE RECREATED: " + rrdEntry.dump());
+//			debug("WILL BE RECREATED: " + rrdEntry.dump());
 			removeRrdEntry(canonicalPath, rrdEntry);
 		}
 	}
@@ -310,7 +310,7 @@ public class RrdDbPool implements Runnable {
 		rrdEntry.closeRrdDb();
 		rrdMap.remove(canonicalPath);
 		rrdIdleMap.remove(canonicalPath);
-		debug("REMOVED: " + rrdEntry.dump());
+//		debug("REMOVED: " + rrdEntry.dump());
 	}
 
 	/**
@@ -335,7 +335,7 @@ public class RrdDbPool implements Runnable {
 		if (rrdMap.containsKey(canonicalPath)) {
 			RrdEntry rrdEntry = (RrdEntry) rrdMap.get(canonicalPath);
 			reportRelease(canonicalPath, rrdEntry);
-			debug("RELEASED: " + rrdEntry.dump());
+//			debug("RELEASED: " + rrdEntry.dump());
 		} else {
 			throw new RrdException("RRD file " + rrdDb.getPath() + " not in the pool");
 		}
@@ -351,14 +351,14 @@ public class RrdDbPool implements Runnable {
 	 * Never call this method directly.
 	 */
 	public void run() {
-		debug("GC: started");
+//		debug("GC: started");
 		for (; ;) {
 			synchronized (this) {
 				if (rrdMap.size() >= capacity && rrdIdleMap.size() > 0) {
 					try {
 						String canonicalPath = (String) rrdIdleMap.keySet().iterator().next();
 						RrdEntry rrdEntry = (RrdEntry) rrdIdleMap.get(canonicalPath);
-						debug("GC: closing " + rrdEntry.dump());
+//						debug("GC: closing " + rrdEntry.dump());
 						removeRrdEntry(canonicalPath, rrdEntry);
 					} catch (IOException e) {
 						e.printStackTrace();
@@ -367,17 +367,14 @@ public class RrdDbPool implements Runnable {
 				}
 				else {
 					try {
-						debug("GC: waiting: " + rrdMap.size() + " open, " + rrdIdleMap.size() +
-							" released, " +	"capacity = " + capacity + ", " + "hits = " +
-							poolHitsCount + ", " +	"requests = " + poolRequestsCount);
+//						debug("GC: waiting");
 						wait();
-						debug("GC: running");
+//						debug("GC: running");
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
 				}
 			}
-//			Thread.yield();
 		}
 	}
 
@@ -398,14 +395,14 @@ public class RrdDbPool implements Runnable {
 		}
 		rrdMap.clear();
 		rrdIdleMap.clear();
-		debug("Nothing left in the pool");
+//		debug("Pool cleared");
 	}
 
 	private static String getCanonicalPath(String path) throws IOException {
 		return RrdFileBackend.getCanonicalPath(path);
 	}
 
-	private static void debug(String msg) {
+	static void debug(String msg) {
 		if (DEBUG) {
 			System.out.println("POOL: " + msg);
 		}
@@ -482,7 +479,7 @@ public class RrdDbPool implements Runnable {
 	 */
 	public synchronized void setCapacity(int capacity) {
 		this.capacity = capacity;
-		debug("Capacity set to: " + capacity);
+//		debug("Capacity set to: " + capacity);
 	}
 
 	private RrdBackendFactory getFactory() throws RrdException {
@@ -528,7 +525,7 @@ public class RrdDbPool implements Runnable {
 		}
 
 		String dump() throws IOException {
-			String canonicalPath = rrdDb.getCanonicalPath();
+			String canonicalPath = getCanonicalPath(rrdDb.getPath());
 			return canonicalPath + " [" + usageCount + "]";
 		}
 	}
