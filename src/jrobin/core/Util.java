@@ -23,7 +23,9 @@
 package jrobin.core;
 
 import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.Date;
+import java.util.Locale;
 
 /**
  * Class defines various utility functions used in JRobin. 
@@ -31,10 +33,13 @@ import java.util.Date;
  * @author <a href="mailto:saxon@eunet.yu">Sasa Markovic</a>
  */
 public class Util {
-	private static String DOUBLE_FORMAT = "0.0000000000E00";
-	private static final DecimalFormat df = new DecimalFormat(DOUBLE_FORMAT);
-
-	private Util() { };
+	// pattern RRDTool uses to format doubles in XML files
+	static final String PATTERN = "0.0000000000E00";
+	static final DecimalFormat df;
+	static {
+		df = (DecimalFormat) NumberFormat.getNumberInstance(Locale.ENGLISH);
+		df.applyPattern(PATTERN);
+	}
 
 	/**
 	 * Returns current timestamp in seconds (without milliseconds). Returned timestamp
@@ -79,18 +84,15 @@ public class Util {
 		return Double.isNaN(x)? y: Double.isNaN(y)? x: x + y;
 	}
 
-	static String formatDouble(double x, boolean translateNans) {
+	static String formatDouble(double x, String nanString) {
 		if(Double.isNaN(x)) {
-			return translateNans? "U": "" + Double.NaN;
-		}
-		if(x >= Long.MIN_VALUE && x <= Long.MAX_VALUE && Math.round(x) == x) {
-			return "" + (long) x;
+			return nanString;
 		}
 		return df.format(x);
 	}
 
 	static String formatDouble(double x) {
-		return formatDouble(x, false);
+		return formatDouble(x, "" + Double.NaN);
 	}
 
 	static void debug(String message) {
@@ -109,13 +111,12 @@ public class Util {
 		return new Date(timestamp * 1000L);
 	}
 
-	public static double parseDouble(String valueStr) {
+	static double parseDouble(String valueStr) {
 		double value;
 		try {
 			value = Double.parseDouble(valueStr);
 		}
 		catch(NumberFormatException nfe) {
-			// Arne Vandamme fixed bug on UNKN value from Windows
 			value = Double.NaN;
 		}
 		return value;

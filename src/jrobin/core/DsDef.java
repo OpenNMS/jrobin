@@ -149,8 +149,8 @@ public class DsDef {
 	 */
 	public String dump() {
 		return "DS:" + dsName + ":" + dsType + ":" + heartbeat +
-			":" + Util.formatDouble(minValue, true) +
-			":" + Util.formatDouble(maxValue, true);
+			":" + Util.formatDouble(minValue, "U") +
+			":" + Util.formatDouble(maxValue, "U");
 	}
 
 	/**
