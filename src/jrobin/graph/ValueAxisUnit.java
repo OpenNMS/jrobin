@@ -62,7 +62,7 @@ public class ValueAxisUnit
 		this.gridParts	= gridParts;
 		this.mGridUnit	= mGridUnit;
 		this.mGridParts	= mGridParts;
-		
+				
 		gridStep		= gridUnit * gridParts;
 		mGridStep		= mGridUnit * mGridParts;		
 	}
@@ -85,7 +85,6 @@ public class ValueAxisUnit
 			majPoint += mGridStep;
 		}
 		
-		System.out.println( gridStep + "::" + mGridStep );
 		// Now get all time markers.
 		// Again we choose to use a series of loops as to avoid unnecessary drawing.		
 		ArrayList markerList	= new ArrayList();
@@ -146,6 +145,30 @@ public class ValueAxisUnit
 	
 	public double getNiceLower( double value )
 	{
+		int valueInt		= new Double(value).intValue();
+		int roundStep		= new Double(gridUnit * gridParts).intValue();
+		int num 			= valueInt / roundStep; 
+		int mod 			= valueInt % roundStep;
+		double gridValue	= (roundStep * (num - 1)) * 1.0d;
+		if ( gridValue - value < (gridParts * gridUnit) / 4 )
+			gridValue		-= roundStep;
+		
+		roundStep			= new Double(mGridUnit * mGridParts).intValue();
+		num					= valueInt / roundStep;
+		mod					= valueInt % roundStep;
+		double mGridValue	= (roundStep * (num - 1)) * 1.0d;
+
+		if ( value != 0.0d )
+		{
+			if ( mGridValue - gridValue < (mGridParts * mGridUnit) / 2)
+				return mGridValue;
+			else
+				return gridValue;
+		}
+
+		return value;
+		
+		/*
 		int valueInt	= new Double(value).intValue();
 		int num 		= valueInt / roundStep; 
 		int mod 		= valueInt % roundStep;
@@ -154,16 +177,31 @@ public class ValueAxisUnit
 			return (roundStep * (num - 1)) * 1.0d;
 		
 		return value;
+		*/
 	}
 	
 	public double getNiceHigher( double value )
 	{
-		int valueInt	= new Double(value).intValue();
-		int num 		= valueInt / roundStep; 
-		int mod 		= valueInt % roundStep;
+		int valueInt		= new Double(value).intValue();
+		int roundStep		= new Double(gridUnit * gridParts).intValue();
+		int num 			= valueInt / roundStep; 
+		int mod 			= valueInt % roundStep;
+		double gridValue	= (roundStep * (num + 1)) * 1.0d;
+		if ( gridValue - value < (gridParts * gridUnit) / 4 )
+			gridValue		+= roundStep;
+		
+		roundStep			= new Double(mGridUnit * mGridParts).intValue();
+		num					= valueInt / roundStep;
+		mod					= valueInt % roundStep;
+		double mGridValue	= (roundStep * (num + 1)) * 1.0d;
 		
 		if ( value != 0.0d )
-			return (roundStep * (num + 1)) * 1.0d;
+		{
+			if ( mGridValue - gridValue < (mGridParts * mGridUnit) / 2)
+				return mGridValue;
+			else
+				return gridValue;
+		}
 		
 		return value;
 	}

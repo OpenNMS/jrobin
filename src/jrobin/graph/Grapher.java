@@ -52,7 +52,7 @@ class Grapher
 	private static final int CHART_LPADDING		= 50;
 	
 	private static final int LINE_PADDING		= 4;
-		
+			
 	static final Font TITLE_FONT 				= new Font("Lucida Sans Typewriter", Font.BOLD, 12);
 	static final Font SUBTITLE_FONT 			= new Font("Lucida Sans Typewriter", Font.PLAIN, 10);
 	static final Color BACK_COLOR				= new Color(240, 240, 240);
@@ -60,7 +60,10 @@ class Grapher
 	// make it harder to find :) then let's not call it SIGNATURE
 	static final String GRAPH_RESPECT 			= "niboRJ htiw detaerC";
 	private int numPoints 						= GRAPH_RESOLUTION;
-	
+
+	private boolean vLabelCentered				= false;
+	private long vLabelGridWidth				= 0; 
+		
 	private int imgWidth, imgHeight;				// Dimensions of the entire image
 	private int chartWidth, chartHeight;			// Dimensions of the chart area within the image	
 	private int font_width, font_height, tfont_width, tfont_height;
@@ -68,6 +71,7 @@ class Grapher
 		
 	private int graphOriginX, graphOriginY, x_offset, y_offset;
 	private double lowerValue = 0.0d, upperValue = 0.0d;
+	
 	
 	private RrdGraphDef graphDef;
 	
@@ -97,6 +101,8 @@ class Grapher
 		// Set chart dimensions if not given
 		chartWidth		= ( cWidth == 0 ? DEFAULT_WIDTH : cWidth );
 		chartHeight		= ( cHeight == 0 ? DEFAULT_HEIGHT : cHeight );
+		
+		if ( cWidth > GRAPH_RESOLUTION ) numPoints = cWidth;
 		
 		// Calculate the complete image dimensions for the creation of the bufferedimage
 		font_height 	= SUBTITLE_FONT.getSize();		// Determine font dimensions for regular comment font
@@ -136,7 +142,8 @@ class Grapher
 		}
 		catch (Exception e)
 		{
-			throw new RrdException( e.getMessage() );
+			//throw new RrdException( e.getMessage() );
+			e.printStackTrace();
 		}
 		
 		return bImg;
@@ -168,13 +175,17 @@ class Grapher
 		g.drawLine( tmpx + 4, tmpy - 3, tmpx + 9, tmpy);
 		g.drawLine( tmpx + 4, tmpy + 3, tmpx + 9, tmpy);
 		
+		int pixWidth = 0;
+		if (vLabelCentered)
+			pixWidth = (chartGraph.getX( vLabelGridWidth ) - chartGraph.getX( 0 ));
+		
 		for (int i = 0; i < timeList.length; i++)
 		{
-			secTime = timeList[i].timestamp / 1000;
-			int posRel = chartGraph.getX(secTime);
-			int pos = lux + posRel;
+			secTime 	= timeList[i].timestamp / 1000;
+			int posRel 	= chartGraph.getX(secTime);
+			int pos 	= lux + posRel;
 		
-			if ( posRel > 2 ) {
+			if ( posRel >= 0 ) {
 				if ( timeList[i].isLabel() )
 				{
 					g.setColor( new Color(130,30,30) );
@@ -186,7 +197,15 @@ class Grapher
 					// Only draw label itself if we are far enough from the side axis
 					// Use extra 2 pixel padding (3 pixels from border total at least)
 					int txtDistance = (timeList[i].text.length() * font_width) / 2;
-					if ( (pos - lux > txtDistance + 2) && (pos + txtDistance + 2 < lux + chartWidth) )	
+					
+					if ( vLabelCentered )
+					{
+						if ( pos + pixWidth <= lux + chartWidth ) {
+							g.setColor( Color.BLACK );
+							g.drawString( timeList[i].text, pos + 2 + pixWidth/2 - txtDistance, luy + chartHeight + font_height + LINE_PADDING );
+						}
+					}
+					else if ( (pos - lux > txtDistance + 2) && (pos + txtDistance + 2 < lux + chartWidth) )	
 					{ 
 						g.setColor( Color.BLACK );
 						g.drawString( timeList[i].text, pos - txtDistance, luy + chartHeight + font_height + LINE_PADDING );
@@ -363,7 +382,7 @@ class Grapher
 	
 		g.setYRange( lowerValue, upperValue );
 
-		plotChartGrid( g, tlist, vlist );
+		//plotChartGrid( g, tlist, vlist );
 	
 		graphics.setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON );
 	
@@ -379,12 +398,14 @@ class Grapher
 			Source source = plotDefs[i].getSource();
 					
 			g.setColor( plotDefs[i].getColor() );
-		
+						
 			switch ( plotDefs[i].getType() )
 			{
 				case PlotDef.PLOT_LINE:
+					graphics.setStroke( new BasicStroke(plotDefs[i].getLineWidth()) );
 					drawLine( g, parentSeries, source, false );
 					lastPlotType = PlotDef.PLOT_LINE;
+					graphics.setStroke( new BasicStroke() );
 					break;
 				case PlotDef.PLOT_AREA:
 					drawArea( g, parentSeries, source, false );
@@ -403,6 +424,8 @@ class Grapher
 		graphics.translate( -graphOriginX, -graphOriginY );
 		graphics.setClip( 0, 0, imgWidth, imgHeight);
 		graphics.setRenderingHint( RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF );
+		
+		plotChartGrid( g, tlist, vlist );
 	}
 	
 	/**
@@ -415,10 +438,10 @@ class Grapher
 	{
 		int ax = 0, ay = 0;
 		int nx = 0, ny = 0, last = -1;
-	
+		
 		RrdSecond[] times 	= (RrdSecond[]) s.getSeries().times.toArray( new RrdSecond[0] );
 		Double[] values 	= (Double[]) s.getSeries().values.toArray( new Double[0] );
-	
+		
 		for (int i = 0; i < times.length; i++)
 		{
 			nx = g.getX( times[i].timestamp );
@@ -426,7 +449,8 @@ class Grapher
 			if ( stack )
 				ny += p[i];
 		
-			g.drawLine( ax, ay, nx, ny );
+			if ( ax != 0 && ay != Integer.MIN_VALUE && ny != Integer.MIN_VALUE )
+				g.drawLine( ax, ay, nx, ny );
 		
 			p[i] 	= ny;
 			ax 		= nx;
@@ -460,7 +484,8 @@ class Grapher
 				ny += p[i];
 			}
 		
-			g.drawLine( nx, py, nx, ny );
+			if ( ax != 0 && py != Integer.MIN_VALUE && ny != Integer.MIN_VALUE )
+				g.drawLine( nx, py, nx, ny );
 		
 			p[i]	= ny;
 			ax 		= nx;
@@ -778,13 +803,13 @@ class Grapher
 		long startTime = graphDef.getStartTime();
 		long endTime = graphDef.getEndTime();
 		double days = (endTime - startTime) / 86400.0;
+		
+		vLabelCentered = false;
 		if(days <= 2.0 / 24.0) {
 			t = new TimeAxisUnit( TimeAxisUnit.MINUTE, 10, new SimpleDateFormat("mm"));
 		}
-		else if (days <= 1) {
-			//t = new TimeAxisUnit( TimeAxisUnit.HOUR, 6, new SimpleDateFormat("HH:mm"));
+		else if (days <= 1)
 			t = new TimeAxisUnit( TimeAxisUnit.HOUR, 1, TimeAxisUnit.HOUR, 6, new SimpleDateFormat("HH:mm"));
-		}
 		else if(days <= 2) {
 			t = new TimeAxisUnit( TimeAxisUnit.HOUR, 2, new SimpleDateFormat("HH"));
 		}
@@ -794,11 +819,14 @@ class Grapher
 		else if(days <= 8) {
 			t = new TimeAxisUnit( TimeAxisUnit.DAY, 1, new SimpleDateFormat("EEE dd MMM"));
 		}
-		else if(days <= 32) {
-			t = new TimeAxisUnit( TimeAxisUnit.WEEK, 1, new SimpleDateFormat("'week' ww"));
-		}
+		else if (days <= 32) {
+			//t = new TimeAxisUnit( TimeAxisUnit.HOUR, 24, TimeAxisUnit.DAY, 1, new SimpleDateFormat("dd"));
+			t = new TimeAxisUnit( TimeAxisUnit.DAY, 1, TimeAxisUnit.WEEK, 1, new SimpleDateFormat("'week' ww"));
+			vLabelCentered = true;
+		}	
 		else if(days <= 63) {
-			t = new TimeAxisUnit( TimeAxisUnit.WEEK, 2, new SimpleDateFormat("dd"));
+			t = new TimeAxisUnit( TimeAxisUnit.DAY, 1, TimeAxisUnit.WEEK, 1, new SimpleDateFormat("'week' ww"));
+			//t = new TimeAxisUnit( TimeAxisUnit.WEEK, 2, new SimpleDateFormat("dd"));
 		}
 		else if(days <= 120) {
 			t = new TimeAxisUnit( TimeAxisUnit.WEEK, 4, new SimpleDateFormat("dd"));
@@ -806,7 +834,9 @@ class Grapher
 		else {
 			t = new TimeAxisUnit( TimeAxisUnit.MONTH, 1, new SimpleDateFormat("MMM"));
 		}
-	
+		
+		vLabelGridWidth	= t.getMajorGridWidth();
+			
 		return t.getTimeMarkers( graphDef.getStartTime(), graphDef.getEndTime() );
 	}
 	
@@ -814,30 +844,31 @@ class Grapher
 	{
 		ValueAxisUnit v = null;
 	
-		int shifted = 1;
 		double range = upperValue - lowerValue;
 		
-		if ( range <= 5 )
-			v = new ValueAxisUnit( 1, 1, 1 );
-		else if ( range <= 20 )
-			v = new ValueAxisUnit( 5d, 2.5, 5 );
-		else if ( range <= 40 )
-			v = new ValueAxisUnit( 5d, 2.5, 5 );
-		else if ( range <= 80 )
-			v = new ValueAxisUnit( 20d, 10d, 20 );
-		else if ( range <= 100 )
-			v = new ValueAxisUnit( 1, 10d, 5, 10d );
-			//v = new ValueAxisUnit( 25d, 12.5, 20 );
-		else if ( range <= 2500 )
-			v = new ValueAxisUnit( 500d, 250d, 500 );
-		else if ( range <= 5000 )
-			v = new ValueAxisUnit( 500d, 125d, 500 );
-		else
-			v = new ValueAxisUnit( 1000d, 500d, 1000 );
+		double shifted 	= ( Math.abs(upperValue) > Math.abs(lowerValue) ? Math.abs(upperValue) : Math.abs(lowerValue) );
+		double mod		= 1.0;
+		while ( shifted > 10 ) {
+			shifted /= 10;
+			mod		*= 10;
+		}
+		while ( shifted < 1 ) {
+			shifted *= 10;
+			mod		/= 10;
+		}
 		
-		upperValue = v.getNiceHigher( upperValue );
-		lowerValue = v.getNiceLower( lowerValue );
-	
+		if ( shifted <= 3 )
+			v = new ValueAxisUnit( 1, 0.2*mod, 1, 1.0*mod );
+		else if ( shifted <= 5 )
+		v = new ValueAxisUnit( 1, 0.5*mod, 1, 1.0*mod );
+		else if ( shifted <= 9 )
+			v = new ValueAxisUnit( 1, 0.5*mod, 1, 2.0*mod );
+		else
+			v = new ValueAxisUnit( 1, 1.0*mod, 1, 5.0*mod );
+
+		upperValue 		= v.getNiceHigher( upperValue );
+		lowerValue 		= v.getNiceLower( lowerValue );
+		
 		return v.getValueMarkers( lowerValue, upperValue );
 	}
 }

@@ -91,6 +91,8 @@ public class ChartGraphics
 	
 	int getY( double value )
 	{
+		if ( Double.isNaN(value) ) return Integer.MIN_VALUE;
+		
 		int tmp = new Double(value * heightDelta).intValue();
 		return ( tmp > value * heightDelta ? tmp - 1 : tmp ); 
 	}

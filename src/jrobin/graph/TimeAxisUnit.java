@@ -42,7 +42,7 @@ class TimeAxisUnit
 					Calendar.MONTH,
 					Calendar.YEAR	
 				};
-	final String[] bla = {"second", "minute", "hour", "day", "week", "month", "year"};
+
 	// Indices in the calendarUnit table
 	static final int SECOND		= 0;
 	static final int MINUTE		= 1;
@@ -105,9 +105,13 @@ class TimeAxisUnit
 		setStartPoint(cMin, gridTime, start);
 		
 		// Find first visible grid point
-		long minPoint, majPoint;
-		while ( (majPoint = getNextPoint(cMaj, mGridTime, mGridUnits)) < start );
-		while ( (minPoint = getNextPoint(cMin, gridTime, gridUnits)) < start );
+		long minPoint = cMin.getTimeInMillis();
+		long majPoint = cMaj.getTimeInMillis();
+		
+		while ( majPoint < start )
+			majPoint = getNextPoint(cMaj, mGridTime, mGridUnits);
+		while ( minPoint < start )
+			minPoint = getNextPoint(cMin, gridTime, gridUnits);
 		
 		ArrayList markerList = new ArrayList();
 				
@@ -117,7 +121,7 @@ class TimeAxisUnit
 		// this way of calculating the markers. 
 		//
 		// In short: the first while() loop is not *necessary* to get correct results
-		while ( minPoint < stop && majPoint < stop )
+		while ( minPoint <= stop && majPoint <= stop )
 		{
 			if ( minPoint < majPoint )
 			{
@@ -137,18 +141,29 @@ class TimeAxisUnit
 			}
 		}
 
-		while ( minPoint < stop )
+		while ( minPoint <= stop )
 		{
 			markerList.add( new TimeMarker( minPoint, "", false ) );
 			minPoint = getNextPoint( cMin, gridTime, gridUnits );
 		}
 		
-		while ( majPoint < stop )
+		while ( majPoint <= stop )
 		{
 			markerList.add( new TimeMarker( majPoint, df.format(cMaj.getTime()), true ) );
 			majPoint = getNextPoint( cMaj, mGridTime, mGridUnits );
 		}
 		
 		return (TimeMarker[]) markerList.toArray( new TimeMarker[0] );
+	}
+	
+	
+	public long getMajorGridWidth()
+	{
+		Calendar c 	= Calendar.getInstance();
+		long now 	= c.getTimeInMillis() / 1000;
+		
+		c.add( calendarUnit[mGridTime], mGridUnits );
+		
+		return (c.getTimeInMillis() / 1000) - now;
 	}
 }

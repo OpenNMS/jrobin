@@ -47,7 +47,6 @@ class PlotDef {
 		this.source = source;
 		this.color 	= color;
 		this.legend = legend;
-		System.out.println( legend );
 	}
 	
 	int getType() {

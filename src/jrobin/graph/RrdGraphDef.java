@@ -217,7 +217,8 @@ public class RrdGraphDef
 		plotDefs.add(plotDef);
 		graphs.add(new OverlayGraph(plotDef));
 		// Add comment line for the legend
-		addComment( new Legend(plotDef.getColor(), plotDef.getLegend()) );
+		if ( plotDef.getLegend() != null )
+			addComment( new Legend(plotDef.getColor(), plotDef.getLegend()) );
 	}
 
 	void addPlot(Stack plotDef) throws RrdException {
@@ -234,6 +235,8 @@ public class RrdGraphDef
 		plotDefs.add(hruleDef);
 		graphs.add(new OverlayGraph(hruleDef));
 		sources.add(hruleDef.getSource());
+		if ( hruleDef.getLegend() != null )
+			addComment( new Legend(hruleDef.getColor(), hruleDef.getLegend()) );
 	}
 
 	private OverlayGraph getLastGraph() {
