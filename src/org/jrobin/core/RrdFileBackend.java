@@ -52,8 +52,8 @@ public class RrdFileBackend extends RrdBackend {
 		file = new RandomAccessFile(path, readOnly? "r": "rw");
 		channel = file.getChannel();
 		if(!readOnly) {
-			lockFile(lockMode);
 			// We'll try to lock the file only in "rw" mode
+			lockFile(lockMode);
 			registerWriter(path);
 		}
 	}
