@@ -27,7 +27,6 @@ package org.jrobin.inspector;
 
 import org.jrobin.core.RrdDb;
 import org.jrobin.core.RrdException;
-import org.jrobin.core.RrdDbPool;
 
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -37,7 +36,6 @@ import java.io.File;
 class MainTreeModel extends DefaultTreeModel {
 	private static final DefaultMutableTreeNode INVALID_NODE =
 		new DefaultMutableTreeNode("No valid RRD file specified");
-	private static final RrdDbPool pool = RrdDbPool.getInstance();
 
 	private File file;
 
@@ -49,7 +47,7 @@ class MainTreeModel extends DefaultTreeModel {
 		if (file == null || !file.getAbsolutePath().equals(newFile.getAbsolutePath())) {
 			try {
 				file = newFile;
-				RrdDb rrd = pool.requestRrdDb(file.getAbsolutePath());
+				RrdDb rrd = new RrdDb(file.getAbsolutePath());
 				DefaultMutableTreeNode root = new DefaultMutableTreeNode(new RrdNode(rrd));
 				int dsCount = rrd.getRrdDef().getDsCount();
 				int arcCount = rrd.getRrdDef().getArcCount();
@@ -63,7 +61,7 @@ class MainTreeModel extends DefaultTreeModel {
 					}
 					root.add(dsNode);
 				}
-				pool.release(rrd);
+				rrd.close();
 				setRoot(root);
 			}
 			catch (IOException e) {

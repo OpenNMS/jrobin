@@ -37,7 +37,6 @@ class ArchiveTableModel extends AbstractTableModel {
 		"consolidation", "xff", "steps", "rows", "accum. value", "NaN steps", "start", "end"
 	};
 	private static final String[] COLUMN_NAMES = {"description", "value"};
-	private static final RrdDbPool pool = RrdDbPool.getInstance();
 
 	private File file;
 	private Object[] values;
@@ -84,7 +83,7 @@ class ArchiveTableModel extends AbstractTableModel {
 			values = null;
 			if(dsIndex >= 0 && arcIndex >= 0) {
 				try {
-					RrdDb rrd = pool.requestRrdDb(file.getAbsolutePath());
+					RrdDb rrd = new RrdDb(file.getAbsolutePath());
 					Archive arc = rrd.getArchive(arcIndex);
 					ArcState state = arc.getArcState(dsIndex);
 					values = new Object[]{
@@ -97,11 +96,13 @@ class ArchiveTableModel extends AbstractTableModel {
 						"" + arc.getStartTime() + " [" + new Date(arc.getStartTime() * 1000L) + "]",
 						"" + arc.getEndTime() + " [" + new Date(arc.getEndTime() * 1000L) + "]"
 					};
-					pool.release(rrd);
+					rrd.close();
 				}
 				catch (IOException e) {
+					e.printStackTrace();
 				}
 				catch (RrdException e) {
+					e.printStackTrace();
 				}
 			}
 			fireTableDataChanged();

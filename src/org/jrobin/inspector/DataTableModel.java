@@ -34,7 +34,6 @@ import java.util.Date;
 
 class DataTableModel extends AbstractTableModel {
 	private static final String[] COLUMN_NAMES = {"timestamp", "date", "value"};
-	private static final RrdDbPool pool = RrdDbPool.getInstance();
 
 	private File file;
 	private Object[][] values;
@@ -78,7 +77,7 @@ class DataTableModel extends AbstractTableModel {
 			values = null;
 			if(dsIndex >= 0 && arcIndex >= 0) {
 				try {
-					RrdDb rrd = pool.requestRrdDb(file.getAbsolutePath());
+					RrdDb rrd = new RrdDb(file.getAbsolutePath());
 					Archive arc = rrd.getArchive(arcIndex);
 					Robin robin = arc.getRobin(dsIndex);
 					long start = arc.getStartTime();
@@ -93,11 +92,13 @@ class DataTableModel extends AbstractTableModel {
 							"" + timestamp,	date, value
 						};
 					}
-					pool.release(rrd);
+					rrd.close();
 				}
 				catch (IOException e) {
+					e.printStackTrace();
 				}
 				catch (RrdException e) {
+					e.printStackTrace();
 				}
 			}
 			fireTableDataChanged();

@@ -27,7 +27,6 @@ package org.jrobin.inspector;
 import org.jrobin.core.RrdDb;
 import org.jrobin.core.Datasource;
 import org.jrobin.core.RrdException;
-import org.jrobin.core.RrdDbPool;
 
 import javax.swing.table.AbstractTableModel;
 import java.io.IOException;
@@ -37,7 +36,6 @@ class DatasourceTableModel extends AbstractTableModel {
 	private static final Object[] DESCRIPTIONS = {"name", "type", "heartbeat", "min value",
 										   "max value", "last value", "accum. value", "NaN seconds"};
 	private static final String[] COLUMN_NAMES = {"description", "value"};
-	private static final RrdDbPool pool = RrdDbPool.getInstance();
 
 	private File file;
 	private Object[] values;
@@ -83,7 +81,7 @@ class DatasourceTableModel extends AbstractTableModel {
 			values = null;
 			if(dsIndex >= 0) {
 				try {
-					RrdDb rrd = pool.requestRrdDb(file.getAbsolutePath());
+					RrdDb rrd = new RrdDb(file.getAbsolutePath());
 					Datasource ds = rrd.getDatasource(dsIndex);
 					values = new Object[]{
 						ds.getDsName(),
@@ -95,11 +93,13 @@ class DatasourceTableModel extends AbstractTableModel {
 						InspectorModel.formatDouble(ds.getAccumValue()),
 						"" + ds.getNanSeconds()
 					};
-					pool.release(rrd);
+					rrd.close();
 				}
 				catch (IOException e) {
+					e.printStackTrace();
 				}
 				catch (RrdException e) {
+					e.printStackTrace();
 				}
 			}
 			fireTableDataChanged();

@@ -28,7 +28,6 @@ package org.jrobin.inspector;
 import org.jrobin.core.RrdDb;
 import org.jrobin.core.Header;
 import org.jrobin.core.RrdException;
-import org.jrobin.core.RrdDbPool;
 
 import javax.swing.table.AbstractTableModel;
 import java.util.Date;
@@ -39,7 +38,6 @@ class HeaderTableModel extends AbstractTableModel {
 	private static final Object[] DESCRIPTIONS = {"path", "signature", "step", "last timestamp",
 		"datasources", "archives", "size"};
 	private static final String[] COLUMN_NAMES = {"description", "value"};
-	private static final RrdDbPool pool = RrdDbPool.getInstance();
 
 	private File file;
 	private Object[] values;
@@ -77,7 +75,7 @@ class HeaderTableModel extends AbstractTableModel {
 				file = newFile;
 				values = null;
 				String path = file.getAbsolutePath();
-				RrdDb rrd = pool.requestRrdDb(path);
+				RrdDb rrd = new RrdDb(path);
 				Header header = rrd.getHeader();
 				String signature = header.getSignature();
 				String step = "" + header.getStep();
@@ -86,7 +84,7 @@ class HeaderTableModel extends AbstractTableModel {
 				String datasources = "" + header.getDsCount();
 				String archives = "" + header.getArcCount();
 				String size = rrd.getRrdFile().getFileSize() + " bytes";
-				pool.release(rrd);
+				rrd.close();
 				values = new Object[] {
 					path, signature, step, lastTimestamp, datasources, archives, size
 				};
