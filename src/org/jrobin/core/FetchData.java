@@ -25,6 +25,9 @@
 
 package org.jrobin.core;
 
+import org.jrobin.data.Aggregator;
+import org.jrobin.data.Aggregates;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.FileOutputStream;
@@ -296,7 +299,7 @@ public class FetchData implements RrdDataSet, ConsolFuns {
 	}
 
 	/**
-	 * Returns aggregated value from the fetched data for a single datasource.
+	 * Returns single aggregated value from the fetched data for a single datasource.
 	 *
 	 * @param dsName    Datasource name
 	 * @param consolFun Consolidation function to be applied to fetched datasource values.
@@ -305,84 +308,45 @@ public class FetchData implements RrdDataSet, ConsolFuns {
 	 * @return MIN, MAX, LAST, FIRST, AVERAGE or TOTAL value calculated from the fetched data
 	 *         for the given datasource name
 	 * @throws RrdException Thrown if the given datasource name cannot be found in fetched data.
-	 * @deprecated This method may calculate averages slightly different from values displayed in the
-	 * corresponding graph. Use {@link org.jrobin.data.DataProcessor DataProcessor} class instead.
 	 */
 	public double getAggregate(String dsName, String consolFun)	throws RrdException {
-		if(consolFun.equals(CF_MAX)) {
-			return getMax(dsName);
-		}
-		else if(consolFun.equals(CF_MIN)) {
-			return getMin(dsName);
-		}
-		else if(consolFun.equals(CF_LAST)) {
-			return getLast(dsName);
-		}
-		else if(consolFun.equals(CF_FIRST)) {
-			return getFirst(dsName);
-		}
-		else if(consolFun.equals(CF_AVERAGE)) {
-			return getAverage(dsName);
-		}
-		else if(consolFun.equals(CF_TOTAL)) {
-			return getTotal(dsName);
-		}
-		else {
-			throw new RrdException("Unsupported consolidation function [" + consolFun + "]");
-		}
+		Aggregator aggregator = new Aggregator(getTimestamps(), getValues(dsName));
+		Aggregates agg = aggregator.getAggregates(request.getFetchStart(), request.getFetchEnd());
+		return agg.getAggregate(consolFun);
 	}
 
-	private double getMax(String dsName) throws RrdException {
-		double values[] = getValues(dsName), max = Double.NaN;
-		for(int i = 1; i < values.length; i++) {
-			max = Util.max(max, values[i]);
-		}
-		return max;
+	/**
+	 * Returns all aggregated values (MIN, MAX, LAST, FIRST, AVERAGE or TOTAL) calculated from the fetched data
+	 * for a single datasource.
+	 *
+	 * @param dsName Datasource name.
+	 * @return Simple object containing all aggregated values.
+	 * @throws RrdException Thrown if the given datasource name cannot be found in the fetched data.
+	 */
+	public Aggregates getAggregates(String dsName) throws RrdException {
+		Aggregator aggregator = new Aggregator(getTimestamps(), getValues(dsName));
+		Aggregates agg = aggregator.getAggregates(request.getFetchStart(), request.getFetchEnd());
+		return agg;
 	}
 
-	private double getMin(String dsName) throws RrdException {
-		double values[] = getValues(dsName), min = Double.NaN;
-		for(int i = 1; i < values.length; i++) {
-			min = Util.min(min, values[i]);
-		}
-		return min;
-	}
-
-	private double getLast(String dsName) throws RrdException {
-		double values[] = getValues(dsName);
-		return values[values.length - 1];
-	}
-
-	private double getFirst(String dsName) throws RrdException {
-		double values[] = getValues(dsName);
-		return values[1];
-	}
-
-	private double getAverage(String dsName) throws RrdException {
-		double values[] = getValues(dsName), totalVal = 0D;
-		long tStart = request.getFetchStart(), tEnd = request.getFetchEnd(), totalSecs = 0;
-		for(int i = 1; i < values.length; i++) {
-			long t1 = Math.max(tStart, timestamps[i - 1]), t2 = Math.min(tEnd, timestamps[i]);
-			double value = values[i];
-			if(!Double.isNaN(value)) {
-                totalSecs += (t2 - t1);
-				totalVal += (t2 - t1) * value;
-			}
-		}
-		return totalSecs > 0? totalVal / totalSecs: Double.NaN;
-	}
-
-	private double getTotal(String dsName) throws RrdException {
-		double vals[] = getValues(dsName), totalVal = 0D;
-		long tStart = request.getFetchStart(), tEnd = request.getFetchEnd();
-		for(int i = 1; i < vals.length; i++) {
-			long t1 = Math.max(tStart, timestamps[i - 1]), t2 = Math.min(tEnd, timestamps[i]);
-			double value = vals[i];
-			if(!Double.isNaN(value)) {
-				totalVal += (t2 - t1) * value;
-			}
-		}
-		return totalVal;
+	/**
+	 * Used by ISPs which charge for bandwidth utilization on a "95th percentile" basis.<p>
+	 *
+	 * The 95th percentile is the highest source value left when the top 5% of a numerically sorted set
+	 * of source data is discarded. It is used as a measure of the peak value used when one discounts
+	 * a fair amount for transitory spikes. This makes it markedly different from the average.<p>
+	 *
+	 * Read more about this topic at:<p>
+	 * <a href="http://www.red.net/support/resourcecentre/leasedline/percentile.php">Rednet</a> or<br>
+	 * <a href="http://www.bytemark.co.uk/support/tech/95thpercentile.html">Bytemark</a>.
+	 *
+	 * @param dsName Datasource name
+	 * @return 95th percentile of fetched source values
+	 * @throws RrdException Thrown if invalid source name is supplied
+	 */
+	public double get95Percentile(String dsName) throws RrdException {
+		Aggregator aggregator = new Aggregator(getTimestamps(), getValues(dsName));
+		return aggregator.get95Percentile(request.getFetchStart(), request.getFetchEnd());
 	}
 
 	/**

@@ -89,7 +89,7 @@ public class Util {
 	/**
 	 * Rounds the given timestamp to the nearest whole &quote;step&quote;. Rounded value is obtained
 	 * from the following expression:<p>
-	 * <code>timestamp - timestamp % step;</code>
+	 * <code>timestamp - timestamp % step;</code><p>
 	 * @param timestamp Timestamp in seconds
 	 * @param step Step in seconds
 	 * @return "Rounded" timestamp
@@ -122,7 +122,13 @@ public class Util {
 		return Double.isNaN(x)? y: Double.isNaN(y)? x: Math.min(x, y);
 	}
 
-	static double sum(double x, double y) {
+	/**
+	 * Calculates sum of two doubles, but treats NaNs as zeros.
+	 * @param x First double
+	 * @param y Second double
+	 * @return Sum(x,y) calculated as <code>Double.isNaN(x)? y: Double.isNaN(y)? x: x + y;</code>
+	 */
+	public static double sum(double x, double y) {
 		return Double.isNaN(x)? y: Double.isNaN(y)? x: x + y;
 	}
 
@@ -141,7 +147,7 @@ public class Util {
 	}
 
 	/**
-	 * Formats double as a string using exponential notation. Used for debugging
+	 * Formats double as a string using exponential notation (RRDTool like). Used for debugging
 	 * throught the project.
 	 * @param x value to be formatted
 	 * @return string like "+1.234567E+02"
