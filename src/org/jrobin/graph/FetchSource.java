@@ -91,6 +91,26 @@ class FetchSource
 		addSource( consolFunc, dsName, name );	
 	}
 	
+	public String getXml()
+	{
+		StringBuffer xml = new StringBuffer( "" );
+		
+		for ( int i = 0; i < datasources.length; i++ ) {
+			for ( int j = 0; j < datasources[i].size(); j++ ) {
+				String[] pair = (String[]) datasources[i].elementAt(j);
+				
+				xml.append( "\t\t<def name=\"" + pair[1] + "\">\n" );
+				xml.append( "\t\t\t<file>" + rrdFile + "</file>\n" );
+				xml.append( "\t\t\t<ds-name>" + pair[0] + "</ds-name>\n" );
+				xml.append( "\t\t\t<cf>" + cfNames[i] + "</cf>\n" );
+				xml.append( "\t\t</def>\n" );
+				//<file>test.rrd</file>
+				//<ds-name>ifInOctets</ds-name>
+				//<cf>AVERAGE</cf>
+			}
+		}
+		return xml.toString();
+	}
 	
 	// ================================================================
 	// -- Protected methods

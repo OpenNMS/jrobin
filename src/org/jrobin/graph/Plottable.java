@@ -24,43 +24,37 @@
  */
 package org.jrobin.graph;
 
-import org.jrobin.core.RrdException;
-
 /**
- * <p>Represents the TimeAxis label used in the graph.  The TimeAxisLabel object has the same alignment
- * possibilities as all other text/comment objects in a graph.</p>
+ * <p>Interface to be used for custom datasources.
+ * If you wish to use a custom datasource in a graph, you should create a class implementing this interface
+ * that represents that datasource, and then pass this class on to the RrdGraphDef.
+ * </p>
  * 
- * @author Arne Vandamme (cobralord@jrobin.org)
+ * @author Arne Vandamme <cobralord@cherrymon.org>
  */
-public class TimeAxisLabel extends Comment
+public interface Plottable 
 {
-	// ================================================================
-	// -- Constructors
-	// ================================================================	
 	/**
-	 * Constructs a TimeAxisLabel object based on a text string.
-	 * @param text Text string with alignment markers representing the label.
-	 * @throws RrdException Thrown in case of a JRobin specific error.
+	 * Retrieves datapoint value based on a given timestamp.
+	 * Use this method if you only have one series of data in this class.
+	 * @param timestamp Timestamp in seconds for the datapoint.
+	 * @return Double value of the datapoint.
 	 */
-	TimeAxisLabel( String text ) throws RrdException
-	{
-		this.text 	= text;
-		lfToken		= Comment.TKN_ACF; 
-		super.parseComment();
-		
-		// If there's no line end, add centered-line end
-		if ( !super.isCompleteLine() ) {
-			oList.add( "" );
-			oList.add( super.TKN_ACF );
-		
-			oList.add( "" );
-			oList.add( super.TKN_ALF );
-			
-			this.lineCount += 2;
-		}
-	}
+	public double getValue( long timestamp );
 	
-	String getXml() {
-		return "";
-	}
+	/**
+	 * Retrieves datapoint value based on a given timestamp.
+	 * @param timestamp Timestamp in seconds for the datapoint.
+	 * @param index Integer referring to the series containing the specific datapoint.
+	 * @return Double value of the datapoint.
+	 */
+	public double getValue( long timestamp, int index );
+	
+	/**
+	 * Retrieves datapoint value based on a given timestamp.
+	 * @param timestamp Timestamp in seconds for the datapoint.
+	 * @param fieldName String that refers to the series containing the datapoint.
+	 * @return Double value of the datapoint.
+	 */
+	public double getValue( long timestamp, String fieldName );
 }

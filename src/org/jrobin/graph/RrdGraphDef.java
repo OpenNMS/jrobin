@@ -32,6 +32,7 @@ import java.awt.BasicStroke;
 import java.util.Date;
 import java.util.Vector;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.GregorianCalendar;
 import java.text.SimpleDateFormat;
 
@@ -68,6 +69,7 @@ public class RrdGraphDef implements Serializable
 	
 	private Title title					= null;								// no title
 	private String valueAxisLabel		= null;								// no vertical label
+	private TimeAxisLabel timeAxisLabel = null;								// no horizontal label
 	
 	private boolean gridX				= true;								// hide entire X axis grid (default: no)
 	private boolean gridY				= true;								// hide entire Y axis grid (default: no)
@@ -114,6 +116,7 @@ public class RrdGraphDef implements Serializable
 	
 	private HashMap fetchSources		= new HashMap();					// holds the list of FetchSources
 	private Vector cdefList				= new Vector();						// holds the list of Cdef datasources
+	private Vector pdefList				= new Vector();						// holds the list of Plottable datasources
 	private Vector plotDefs				= new Vector();						// holds the list of PlotDefs
 	private Vector comments				= new Vector();						// holds the list of comment items
 	
@@ -125,6 +128,11 @@ public class RrdGraphDef implements Serializable
 	 * Constructs a new default JRobin graph object. 
 	 */
 	public RrdGraphDef() {
+	}
+	
+	public RrdGraphDef( String jrobinXml ) throws RrdException
+	{
+		new XmlGraphDefConvertor( jrobinXml, this );
 	}
 
 	/**
@@ -169,13 +177,14 @@ public class RrdGraphDef implements Serializable
 	// ================================================================
 	/**
 	 * Sets time span to be presented on the graph using timestamps in number of seconds.
+	 * An end time of 0 means JRobin will try to use the last available update time.
 	 * @param startTime Starting timestamp in seconds.
 	 * @param endTime Ending timestamp in secons.
 	 * @throws RrdException Thrown if invalid parameters are supplied.
 	 */
 	public void setTimePeriod( long startTime, long endTime ) throws RrdException 
 	{
-		if ( startTime < 0 || endTime <= startTime )
+		if ( startTime < 0 || ( endTime != 0 && endTime <= startTime ) )
 			throw new RrdException( "Invalid graph start/end time: " + startTime + "/" + endTime );
 		
 		this.startTime 	= startTime;
@@ -241,11 +250,11 @@ public class RrdGraphDef implements Serializable
 	{
 		if ( label != null )
 		{	
-			TimeAxisLabel cmt	= new TimeAxisLabel( label );
-			commentLines 		+= cmt.getLineCount();
-			commentLineShift	= (cmt.isCompleteLine() ? 0 : 1); 
+			timeAxisLabel		= new TimeAxisLabel( label );
+			commentLines 		+= timeAxisLabel.getLineCount();
+			commentLineShift	= (timeAxisLabel.isCompleteLine() ? 0 : 1); 
 			
-			comments.add( 0, cmt );
+			comments.add( 0, timeAxisLabel );
 		}
 	}
 	
@@ -650,6 +659,44 @@ public class RrdGraphDef implements Serializable
 	}
 	
 	/**
+	 * <p>Adds a custom graph source with the given name to the graph definition.
+	 * The datapoints should be made available by a class implementing the Plottable interface.</p>
+	 * 
+	 * @param name Graph source name.
+	 * @param plottable Class that implements plottable interface and is suited for graphing.
+	 */
+	public void datasource( String name, Plottable plottable )
+	{
+		pdefList.add( new Pdef(name, plottable) );
+	}
+	
+	/**
+	 * <p>Adds a custom graph source with the given name to the graph definition.
+	 * The datapoints should be made available by a class implementing the Plottable interface.</p>
+	 * 
+	 * @param name Graph source name.
+	 * @param plottable Class that implements plottable interface and is suited for graphing.
+	 * @param index Integer referring to the datasource in the Plottable class.
+	 */
+	public void datasource( String name, Plottable plottable, int index )
+	{
+		pdefList.add( new Pdef(name, plottable, index) );
+	}
+	
+	/**
+	 * <p>Adds a custom graph source with the given name to the graph definition.
+	 * The datapoints should be made available by a class implementing the Plottable interface.</p>
+	 * 
+	 * @param name Graph source name.
+	 * @param plottable Class that implements plottable interface and is suited for graphing.
+	 * @param sourceName String name referring to the datasource in the Plottable class.
+	 */
+	public void datasource( String name, Plottable plottable, String sourceName )
+	{
+		pdefList.add( new Pdef(name, plottable, sourceName) );
+	}
+	
+	/**
 	 * Adds line plot to the graph definition, using the specified color and legend. This method
 	 * takes exactly the same parameters as RRDTool's LINE1 directive (line width
 	 * is set to 1).  The legend allows for the same
@@ -856,7 +903,113 @@ public class RrdGraphDef implements Serializable
 	{
 		addComment( new Gprint(sourceName, consolFun, format) );
 	}
-	
+		
+	/**
+	 * 
+	 * @return
+	 */
+	public String getJRobinXml()
+	{
+		StringBuffer xml = new StringBuffer( "" );
+		
+		// -- Create the general block
+		xml.append( "\t<general>\n" );
+		
+		// Time period
+		xml.append( "\t\t<period>\n" );
+		xml.append( "\t\t\t<start>" + startTime + "</start>\n" );
+		xml.append( "\t\t\t<end>" + endTime + "</end>\n" );
+		xml.append( "\t\t</period>\n" );
+		
+		// Labels
+		if ( title != null || valueAxisLabel != null || timeAxisLabel != null  )
+		{	
+			xml.append( "\t\t<labels>\n" );
+			if ( title != null )
+				xml.append( "\t\t\t<title>" + title.text + "</title>\n" );
+			if ( valueAxisLabel != null )
+				xml.append( "\t\t\t<vertical-label>" + valueAxisLabel + "</vertical-label>\n" );
+			if ( timeAxisLabel != null )
+				xml.append( "\t\t\t<horizontal-label>" + timeAxisLabel.text + "</horizontal-label>\n" );
+			xml.append( "\t\t</labels>\n" );
+		}
+		
+		// General colors
+		xml.append( "\t\t<colors>\n" );
+		xml.append( "\t\t\t<background r=\"" + backColor.getRed() + "\" g=\"" + backColor.getGreen() + "\" b=\"" + backColor.getBlue() + "\" />\n" );
+		xml.append( "\t\t\t<canvas r=\"" + canvasColor.getRed() + "\" g=\"" + canvasColor.getGreen() + "\" b=\"" + canvasColor.getBlue() + "\" />\n" );
+		xml.append( "\t\t</colors>\n" );
+		
+		// General data information
+		
+		// General visual options
+		xml.append( "\t\t<visual>\n" );
+		xml.append( "\t\t\t<show-legend>" + (showLegend ? "yes" : "no") + "</show-legend>\n" );
+		if ( background != null )
+			xml.append( "\t\t\t<background-image>" + background.getAbsolutePath() + "</background-image>\n" );
+		if ( overlay != null )
+			xml.append( "\t\t\t<overlay-image>" + overlay.getAbsolutePath() + "</overlay-image>\n" );
+		if ( borderStroke != null )
+		{	
+			xml.append( "\t\t\t<image-border>\n" );
+			xml.append( "\t\t\t\t<width>" + borderStroke.getLineWidth() + "</width>\n" );
+			xml.append( "\t\t\t\t<color r=\"" + borderColor.getRed() + "\" g=\"" + borderColor.getGreen() + "\" b=\"" + borderColor.getBlue() + "\" />\n" );
+			xml.append( "\t\t\t</image-border>\n" );
+		}
+		if ( gridRange != null )
+		{
+			xml.append( "\t\t\t<grid>\n" );
+			xml.append( "\t\t\t\t<lower>" + gridRange.getLowerValue() + "</lower>\n" );
+			xml.append( "\t\t\t\t<upper>" + gridRange.getUpperValue() + "</upper>\n" );
+			xml.append( "\t\t\t\t<rigid>" + (gridRange.isRigid() ? "yes" : "no") + "</rigid>\n" );
+			xml.append( "\t\t\t</grid>\n" );
+		}
+		//xml.append( "\t\t\t<canvas r=\"" + canvasColor.getRed() + "\" g=\"" + canvasColor.getGreen() + "\" b=\"" + canvasColor.getBlue() + "\" />\n" );
+		xml.append( "\t\t</visual>\n" );
+		
+		xml.append( "\t</general>\n" );
+		// -------------------------------------------------------------
+		
+		
+		// -- Create the datasources block
+		xml.append( "\t<datasources>\n" );
+		
+		// Add all defs
+		Iterator fsIterator = fetchSources.values().iterator();
+		while ( fsIterator.hasNext() )
+			xml.append( ((FetchSource) fsIterator.next()).getXml() );
+		
+		// Add all cdefs
+		for ( int i = 0; i < cdefList.size(); i++ )
+			xml.append( ((Cdef) cdefList.elementAt(i)).getXml() );
+		
+		xml.append( "\t</datasources>\n" );
+		// -------------------------------------------------------------
+		
+		
+		// -- Create the graphing block
+		// Run through the comments, if its a legend or nolegend, get the plotdef xml
+		// else get the comment or gprint xml
+		xml.append( "\t<graphing>\n" );
+		for ( int i = 0; i < comments.size(); i++ )
+		{
+			Comment cmt = (Comment) comments.elementAt(i);
+			if ( cmt.commentType == Comment.CMT_LEGEND || cmt.commentType == Comment.CMT_NOLEGEND ) 
+			{
+				PlotDef pDef = (PlotDef) plotDefs.elementAt( ((Legend) cmt).getPlofDefIndex() );
+				xml.append( pDef.getXml(cmt.text) );
+			}
+			else
+				xml.append( cmt.getXml() );
+		}
+		xml.append( "\t</graphing>\n" );
+		// -------------------------------------------------------------
+		
+		xml.insert( 0, "<jrobin-graph>\n");
+		xml.append( "</jrobin-graph>\n" );
+		
+		return xml.toString();
+	}
 		
 	// ================================================================
 	// -- Protected (package) methods
@@ -1038,6 +1191,11 @@ public class RrdGraphDef implements Serializable
 		return (Cdef[]) cdefList.toArray( new Cdef[] {} );		
 	}
 	
+	protected Pdef[] getPdefs()
+	{
+		return (Pdef[]) pdefList.toArray( new Pdef[] {} );
+	}
+	
 	protected HashMap getFetchSources()
 	{
 		return fetchSources;
@@ -1056,7 +1214,8 @@ public class RrdGraphDef implements Serializable
 	
 	private void addLegend( String legend, Color color ) throws RrdException
 	{
-		if ( legend != null && color != null )
-			addComment( new Legend(legend, color) );
+		// Always add the item, even if it's empty, always add the index 
+		// of the graph this legend is for
+		addComment( new Legend(legend, color, plotDefs.size() - 1 ) );
 	}
 }

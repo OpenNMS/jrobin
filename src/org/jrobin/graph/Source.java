@@ -42,6 +42,7 @@ class Source
 	protected static final int AGG_FIRST	= 3;
 	protected static final int AGG_LAST		= 4;
 	
+	protected static final String[] aggregates = { "MINIMUM", "MAXIMUM", "AVERAGE", "FIRST", "LAST" };
 	private String name;
 	protected double[] values;
 	

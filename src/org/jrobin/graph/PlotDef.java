@@ -128,6 +128,12 @@ abstract class PlotDef
 	 */
 	abstract void draw( ChartGraphics g, int[] xValues, int[] stackValues, int lastPlotType ) throws RrdException;
 	
+	/**
+	 * Abstract getXml method, must be implemented in all child classes.
+	 * This method is reponsible for returning a corresponding JRobin XML string for the PlotDef.
+	 */
+	abstract String getXml( String legend );
+	
 	Source getSource() {
 		return source;
 	}

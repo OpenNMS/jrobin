@@ -100,6 +100,8 @@ class Grapher
 	private ValueGrid vGrid;
 	private TimeGrid tGrid;
 	
+	private long calculatedEndTime;
+	
 	
 	// ================================================================
 	// -- Constructors
@@ -276,18 +278,24 @@ class Grapher
 		FetchSource src;
 		RrdDb rrd;
 		String[] varList;
+		long finalEndTime 		= 0;
+		boolean changingEndTime = false;
 		
 		long startTime 			= graphDef.getStartTime();
 		long endTime			= graphDef.getEndTime();
+		changingEndTime			= (endTime == 0);
 	
 		int numDefs				= graphDef.getNumDefs();
 		
 		Cdef[] cdefList			= graphDef.getCdefs();
 		int numCdefs			= cdefList.length;
+		
+		Pdef[] pdefList			= graphDef.getPdefs();
+		int numPdefs			= pdefList.length;
 	
-		// Set up the array with all datasources (both Def and Cdef)
-		sources 				= new Source[ numDefs + numCdefs ];
-		sourceIndex 			= new HashMap( numDefs + numCdefs );
+		// Set up the array with all datasources (both Def, Cdef and Pdef)
+		sources 				= new Source[ numDefs + numCdefs + numPdefs ];
+		sourceIndex 			= new HashMap( numDefs + numCdefs + numPdefs );
 		int tblPos				= 0;
 		int vePos				= 0;
 	
@@ -298,8 +306,17 @@ class Grapher
 		{
 			// Get the rrdDb
 			src 	= (FetchSource) fetchSources.next();
-			rrd		= rrdGraph.getRrd( src.getRrdFile() ); 
-		
+			rrd		= rrdGraph.getRrd( src.getRrdFile() );
+			
+			// If the endtime is 0, use the last time a database was updated
+			if ( changingEndTime ) {
+				endTime = rrd.getLastUpdateTime();
+				endTime	-= (endTime % rrd.getHeader().getStep());
+				
+				if ( endTime > finalEndTime )
+					finalEndTime = endTime;
+			}
+			
 			// Fetch all required datasources
 			ve 		= src.fetch( rrd, startTime,  endTime );
 			varList = ve.getNames();
@@ -312,6 +329,15 @@ class Grapher
 			veList[ vePos++ ] = ve;
 		}
 	
+		// Add all Pdefs to the source table
+		for ( int i = 0; i < pdefList.length; i++ )
+		{
+			pdefList[i].prepare( numPoints );
+			
+			sources[tblPos] = pdefList[i];
+			sourceIndex.put( pdefList[i].getName(), new Integer(tblPos++) );
+		}
+		
 		// Add all Cdefs to the source table		
 		// Reparse all RPN datasources to use indices of the correct variables
 		for ( int i = 0; i < cdefList.length; i++ )
@@ -327,7 +353,12 @@ class Grapher
 	
 		// Fill the array for all datasources
 		timestamps 				= new long[numPoints];
-	
+		
+		if ( changingEndTime ) {
+			endTime 			= finalEndTime;
+			calculatedEndTime 	= endTime;
+		}
+		
 		for (int i = 0; i < numPoints; i++) 
 		{
 			long t 	= (long) (startTime + i * ((endTime - startTime) / (double)(numPoints - 1)));
@@ -336,7 +367,12 @@ class Grapher
 			// Get all fetched datasources
 			for (int j = 0; j < veList.length; j++)
 				pos = veList[j].extract( t, sources, i, pos );
-		
+
+			// Get all custom datasources
+			for (int j = pos; j < pos + numPdefs; j++)
+				((Pdef) sources[j]).set( i, t );
+			pos += numPdefs;
+			
 			// Get all combined datasources
 			for (int j = pos; j < sources.length; j++)
 				sources[j].set(i, t, rpnCalc.evaluate( (Cdef) sources[j], i, t ) );
@@ -481,7 +517,7 @@ class Grapher
 		}
 		
 		vGrid 			= new ValueGrid( range, lowerValue, upperValue, graphDef.getValueAxis() );
-		tGrid			= new TimeGrid( graphDef.getStartTime(), graphDef.getEndTime(), graphDef.getTimeAxis() );
+		tGrid			= new TimeGrid( graphDef.getStartTime(), ( graphDef.getEndTime() != 0 ? graphDef.getEndTime() : calculatedEndTime ), graphDef.getTimeAxis() );
 		
 		lowerValue		= vGrid.getLowerValue();
 		upperValue		= vGrid.getUpperValue();
@@ -740,6 +776,7 @@ class Grapher
 								
 				// Plot the string
 				if ( drawText ) {
+					
 					graphString( g, tmpStr.toString(), posx, posy );
 					tmpStr		= new StringBuffer(""); 
 					drawText	= false;

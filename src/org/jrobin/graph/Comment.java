@@ -41,6 +41,7 @@ class Comment
 	protected static final int CMT_DEFAULT	= 0;
 	protected static final int CMT_LEGEND	= 1;
 	protected static final int CMT_GPRINT	= 2;
+	protected static final int CMT_NOLEGEND	= 3;
 	
 	protected static final Byte TKN_ALF		= new Byte( (byte) 1);		// Align left with Linefeed
 	protected static final Byte TKN_ARF		= new Byte( (byte) 2);		// Align right with linefeed
@@ -77,7 +78,9 @@ class Comment
 	Comment( String text ) throws RrdException
 	{
 		this.text = text;
-		parseComment();		
+		
+		if ( text != null )
+			parseComment();
 	}
 
 
@@ -244,5 +247,14 @@ class Comment
 	
 	boolean trimString() {
 		return trimString;
+	}
+	
+	String getXml() 
+	{
+		StringBuffer xml = new StringBuffer();
+		
+		xml.append( "\t\t<comment>" + text + "</comment>\n" );
+		
+		return xml.toString();
 	}
 }

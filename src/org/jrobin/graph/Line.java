@@ -130,4 +130,20 @@ class Line extends PlotDef
 	int getLineWidth() {
 		return lineWidth;
 	}
+	
+	String getXml( String legend )
+	{
+		StringBuffer xml = new StringBuffer();
+	
+		xml.append( "\t\t<line>\n" );
+		xml.append( "\t\t\t<datasource>" + sourceName + "</datasource>\n" );
+		if ( color != null )
+			xml.append( "\t\t\t<color r=\"" + color.getRed() + "\" g=\"" + color.getGreen() + "\" b=\"" + color.getBlue() + "\" />\n" );
+		if ( legend != null )
+			xml.append( "\t\t\t<legend>" + legend + "</legend>\n" );
+		xml.append( "\t\t\t<width>" + lineWidth + "</width>\n" );
+		xml.append( "\t\t</line>\n" );
+	
+		return xml.toString();
+	}
 }

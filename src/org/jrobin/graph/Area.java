@@ -121,4 +121,19 @@ class Area extends PlotDef
 			ay 				= ny;
 		}
 	}
+	
+	String getXml( String legend )
+	{
+		StringBuffer xml = new StringBuffer();
+		
+		xml.append( "\t\t<area>\n" );
+		xml.append( "\t\t\t<datasource>" + sourceName + "</datasource>\n" );
+		if ( color != null )
+			xml.append( "\t\t\t<color r=\"" + color.getRed() + "\" g=\"" + color.getGreen() + "\" b=\"" + color.getBlue() + "\" />\n" );
+		if ( legend != null )
+			xml.append( "\t\t\t<legend>" + legend + "</legend>\n" );
+		xml.append( "\t\t</area>\n" );
+		
+		return xml.toString();
+	}
 }

@@ -207,6 +207,27 @@ class Cdef extends Source
 		return dsIndices;
 	}
 	
+	String getRpnString()
+	{
+		StringBuffer tmpStr = new StringBuffer("");
+		for (int i = 0; i < strTokens.length - 1; i++) {
+			tmpStr.append( strTokens[i] );
+			tmpStr.append( ',' );
+		}
+		if ( strTokens.length > 0 )
+			tmpStr.append( strTokens[strTokens.length - 1] );
+		
+		return tmpStr.toString();
+	}
+	
+	public String getXml()
+	{
+		StringBuffer xml = new StringBuffer( "" );
+		
+		xml.append( "\t\t<cdef name=\"" + this.getName() + "\">" + getRpnString() + "</cdef>\n");
+		
+		return xml.toString();
+	}
 	
 	// ================================================================
 	// -- Private methods

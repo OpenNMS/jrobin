@@ -174,4 +174,20 @@ class Gprint extends Comment
 			throw new RrdException( "Could not find where to place value. No @ placeholder found." );
 	}
 	
+	/**
+	 * 
+	 */
+	String getXml() 
+	{
+		StringBuffer xml = new StringBuffer();
+	
+		xml.append( "\t\t<gprint>\n" );
+		xml.append( "\t\t\t<datasource>" + sourceName + "</datasource>\n" );
+		xml.append( "\t\t\t<cf>" + Source.aggregates[aggregate] + "</cf>\n" );
+		xml.append( "\t\t\t<text>" + text + "</text>\n" );
+		xml.append( "\t\t</gprint>\n" );
+	
+		return xml.toString();
+	}
+	
 }
