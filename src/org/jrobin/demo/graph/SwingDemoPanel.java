@@ -37,6 +37,7 @@ import org.jrobin.graph.RrdGraph;
 public class SwingDemoPanel extends JPanel
 {
 	private RrdGraph graph;
+	private int width, height;
 
 	SwingDemoPanel( RrdGraph graph )
 	{
@@ -49,10 +50,18 @@ public class SwingDemoPanel extends JPanel
 		{
 			// Render the image directly on the Graphics object of the JPanel
 			// Width and height of 0 means autoscale the graph
-			graph.renderImage( (Graphics2D) g, 0, 0 );
+			graph.specifyImageSize(true);
+			graph.renderImage( (Graphics2D) g, width, height );
+
 		}
 		catch ( Exception e ) {
 			e.printStackTrace();
 		}
+	}
+
+	void setGraphDimension(Dimension d) {
+		width = d.width;
+		height = d.height;
+		repaint();
 	}
 }

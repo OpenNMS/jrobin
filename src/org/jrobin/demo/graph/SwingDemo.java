@@ -31,6 +31,8 @@ import org.jrobin.graph.RrdGraph;
 import javax.swing.*;
 import java.io.IOException;
 import java.awt.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.util.Date;
 
 /**
@@ -40,10 +42,10 @@ import java.util.Date;
  */
 public class SwingDemo
 {
-	static JFrame frame				= null;
-	static JPanel demoPanel			= null;
-	static RrdGraph graph			= null;
-	static RrdGraphDef gDef			= null;
+	static JFrame frame				 = null;
+	static SwingDemoPanel demoPanel  = null;
+	static RrdGraph graph			 = null;
+	static RrdGraphDef gDef			 = null;
 
 	static final String rrd			= "SwingDemo.rrd";
 	static final long START 		= Util.getTimestamp( 2004, 1, 1 );
@@ -79,7 +81,7 @@ public class SwingDemo
 		gDef.line("avg", Color.RED,  "Average" );
 		gDef.time( "@l@lTime period: @t", "MMM dd, yyyy   HH:mm:ss", START );
 		gDef.time( "to  @t@l", "HH:mm:ss", end );
-		gDef.time("@l@lGenerated: @t@c", "HH:mm:ss" );
+		gDef.time("@lGenerated: @t@c", "HH:mm:ss" );
 
 		// create graph finally
 		graph 				= new RrdGraph(gDef);
@@ -92,6 +94,13 @@ public class SwingDemo
 		frame.getContentPane().add( demoPanel );
 
 		frame.pack();
+
+		frame.addComponentListener(new ComponentAdapter() {
+			public void componentResized(ComponentEvent e) {
+				Dimension d = frame.getContentPane().getSize();
+				demoPanel.setGraphDimension(d);
+			}
+		});
 		frame.setBounds( 10, 10, 504, 303 );
 		frame.show();
 	}
