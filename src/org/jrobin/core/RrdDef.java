@@ -28,6 +28,7 @@ package org.jrobin.core;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.StringTokenizer;
 import java.io.*;
 
 /**
@@ -208,6 +209,66 @@ public class RrdDef {
 	}
 
 	/**
+	 * Adds single datasource to RRD definition from a RRDTool-like
+	 * datasource definition string. The string must have six elements separated with colons
+	 * (:) in the following order:<p>
+	 * <pre>
+	 * DS:name:type:heartbeat:minValue:maxValue
+	 * </pre>
+	 * For example:</p>
+	 * <pre>
+	 * DS:input:COUNTER:600:0:U
+	 * </pre>
+	 * For more information on datasource definition parameters see <code>rrdcreate</code>
+	 * man page.<p>
+	 * @param rrdToolDsDef Datasource definition string with the syntax borrowed from RRDTool.
+	 * @throws RrdException Thrown if invalid string is supplied.
+	 */
+	public void addDatasource(String rrdToolDsDef) throws RrdException {
+		RrdException rrdException = new RrdException(
+			"Wrong rrdtool-like datasource definition: " + rrdToolDsDef);
+		StringTokenizer tokenizer = new StringTokenizer(rrdToolDsDef, ":");
+		if (tokenizer.countTokens() != 6) {
+			throw rrdException;
+		}
+		String[] tokens = new String[6];
+		for (int curTok = 0; tokenizer.hasMoreTokens(); curTok++) {
+			tokens[curTok] = tokenizer.nextToken();
+		}
+		if (!tokens[0].equalsIgnoreCase("DS")) {
+			throw rrdException;
+		}
+		String dsName = tokens[1];
+		String dsType = tokens[2];
+		long dsHeartbeat;
+		try {
+			dsHeartbeat = Long.parseLong(tokens[3]);
+		}
+		catch(NumberFormatException nfe) {
+			throw rrdException;
+		}
+		double minValue = Double.NaN;
+		if(!tokens[4].equalsIgnoreCase("U")) {
+			try {
+				minValue = Double.parseDouble(tokens[4]);
+			}
+			catch(NumberFormatException nfe) {
+				throw rrdException;
+			}
+		}
+		double maxValue = Double.NaN;
+		if(!tokens[5].equalsIgnoreCase("U")) {
+			try {
+				maxValue = Double.parseDouble(tokens[5]);
+			}
+			catch(NumberFormatException nfe) {
+				throw rrdException;
+			}
+		}
+		addDatasource(new DsDef(dsName, dsType, dsHeartbeat, minValue, maxValue));
+	}
+
+	/**
 	 * Adds data source definitions to RRD definition in bulk.
 	 * @param dsDefs Array of data source definition objects.
 	 * @throws RrdException Thrown if duplicate data source name is used.
@@ -258,6 +319,61 @@ public class RrdDef {
 	 */
 	public void addArchive(String consolFun, double xff, int steps, int rows)
 		throws RrdException {
+		addArchive(new ArcDef(consolFun, xff, steps, rows));
+	}
+
+	/**
+	 * Adds single archive to RRD definition from a RRDTool-like
+	 * archive definition string. The string must have five elements separated with colons
+	 * (:) in the following order:<p>
+	 * <pre>
+	 * RRA:consolidationFunction:XFilesFactor:steps:rows
+	 * </pre>
+	 * For example:</p>
+	 * <pre>
+	 * RRA:AVERAGE:0.5:10:1000
+	 * </pre>
+	 * For more information on archive definition parameters see <code>rrdcreate</code>
+	 * man page.<p>
+	 * @param rrdToolArcDef Archive definition string with the syntax borrowed from RRDTool.
+	 * @throws RrdException Thrown if invalid string is supplied.
+	 */
+	public void addArchive(String rrdToolArcDef) throws RrdException {
+		RrdException rrdException = new RrdException(
+			"Wrong rrdtool-like archive definition: " + rrdToolArcDef);
+		StringTokenizer tokenizer = new StringTokenizer(rrdToolArcDef, ":");
+		if (tokenizer.countTokens() != 5) {
+			throw rrdException;
+		}
+		String[] tokens = new String[5];
+		for (int curTok = 0; tokenizer.hasMoreTokens(); curTok++) {
+			tokens[curTok] = tokenizer.nextToken();
+		}
+		if (!tokens[0].equalsIgnoreCase("RRA")) {
+			throw rrdException;
+		}
+		String consolFun = tokens[1];
+		double xff;
+		try {
+			xff = Double.parseDouble(tokens[2]);
+		}
+		catch(NumberFormatException nfe) {
+			throw rrdException;
+		}
+		int steps;
+		try {
+			steps = Integer.parseInt(tokens[3]);
+		}
+		catch(NumberFormatException nfe) {
+			throw rrdException;
+		}
+		int rows;
+		try {
+			rows = Integer.parseInt(tokens[4]);
+		}
+		catch(NumberFormatException nfe) {
+			throw rrdException;
+		}
 		addArchive(new ArcDef(consolFun, xff, steps, rows));
 	}
 
