@@ -86,6 +86,7 @@ class Gprint extends Comment
 					scaleIndex = scaler.getScaleIndex();
 				}
 				else if(!shouldScale() && shouldUniformScale()) {
+					
 					ValueScaler scaler = new ValueScaler(value, scaleIndex, base);
 					valueStr = df.format(scaler.getScaledValue());
 					uniformPrefixStr = scaler.getPrefix();

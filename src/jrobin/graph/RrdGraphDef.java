@@ -241,6 +241,9 @@ public class RrdGraphDef
 
 	void addPlot(Stack plotDef) throws RrdException {
 		plotDefs.add(plotDef);
+		// Add comment line for the legend
+		if ( plotDef.getLegend() != null )
+			addComment( new Legend(plotDef.getColor(), plotDef.getLegend()) );
 		OverlayGraph lastGraph = getLastGraph();
 		if(lastGraph != null) {
 			lastGraph.addPlotDef(plotDef);
@@ -387,7 +390,7 @@ public class RrdGraphDef
 	 */
 	public void stack(String sourceName, Color color, String legend) throws RrdException {
 		Source source = findSourceByName(sourceName);
-		addPlot(new Stack(source, color, legend));
+		addPlot( new Stack(source, color, legend) );
 	}
 
 	/**
@@ -397,8 +400,20 @@ public class RrdGraphDef
 	 * @param legend Legend to be added to the graph.
 	 * @throws RrdException Thrown in case of JRobin specific error.
 	 */
-	public void rule(double value, Color color, String legend) throws RrdException {
+	public void hrule(double value, Color color, String legend) throws RrdException {
 		addPlot( new Hrule(value, color, legend) );
+	}
+	
+	/**
+	 * Adds horizontal rule to the graph definition.
+	 * @param value Rule posiotion.
+	 * @param color Rule color.
+	 * @param legend Legend to be added to the graph.
+	 * @param lineWidth Width of the hrule line in pixels.
+	 * @throws RrdException Thrown in case of JRobin specific error.
+	 */
+	public void hrule(double value, Color color, String legend, float lineWidth) throws RrdException {
+		addPlot( new Hrule(value, color, legend, lineWidth) );
 	}
 	
 	/**

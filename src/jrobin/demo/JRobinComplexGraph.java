@@ -66,11 +66,12 @@ public class JRobinComplexGraph {
 			gDef.datasource("p90t100", "busy,90,GT,load,0,IF");
 			gDef.comment("CPU utilization (%)\n");
 			gDef.comment("  ");
+			gDef.hrule( 7.0, Color.YELLOW, null, 10f);
 			gDef.area("load", new Color(0x66,0x99,0xcc), " 0 - 25%");
 			gDef.area("p25t50", new Color(0x00,0x66,0x99), "25 - 50%");
 			gDef.comment("             ");
 			gDef.gprint("busy", "MIN", "Minimum:@5.1@s%");
-			gDef.gprint("busy", "MAX", "Maximum: @5.1@s%");
+			gDef.gprint("busy", "MAX", "Maximum: @5.1@S%");
 			gDef.comment("\n");
 			gDef.comment("  ");
 			gDef.area("p50t75", new Color(0x66,0x66,0x00), "50 - 75%");
@@ -85,7 +86,7 @@ public class JRobinComplexGraph {
 			gDef.comment("  ");
 			gDef.line("load", new Color(0x00,0x00,0x00), "Load average (5 min)" );
 			//gDef.area("load", Color.RED, " hmm \n");
-			//gDef.stack("p75t90", Color.GREEN, " hmm \n");
+			//gDef.stack("p75t90", Color.GREEN, " hmm");
 			gDef.comment("             ");
 			gDef.gprint("load", "MIN", " Minimum: @5.2@s");
 			gDef.gprint("load", "MAX", "Maximum: @6.2@s");
@@ -97,7 +98,7 @@ public class JRobinComplexGraph {
 			gDef.comment("\n");
 			gDef.comment("\n");
 			gDef.comment("-------------------------------------------------------------------------------@c");
-			gDef.vrule( new GregorianCalendar(2003, 7, 24, 9, 00), Color.BLUE, "9am", 3f );
+			gDef.vrule( new GregorianCalendar(2003, 7, 24, 9, 00), Color.BLUE, "9am", 2f );
 			gDef.vrule( new GregorianCalendar(2003, 7, 24, 17, 00), Color.BLUE, "5pm", 3f );
 			gDef.comment("Generated: " + new Date() + "@r");
 			gDef.setBackColor( Color.DARK_GRAY );
@@ -114,7 +115,7 @@ public class JRobinComplexGraph {
 			gDef.setFrameColor( Color.BLACK );
 			gDef.setAxisColor( Color.RED );
 			gDef.setArrowColor( Color.GREEN );
-			gDef.setChartLeftPadding( 40 );
+			//gDef.setChartLeftPadding( 40 );
 			//gDef.setAntiAliasing(false);
 			//gDef.setTimeAxis( TimeAxisUnit.HOUR, 6, TimeAxisUnit.DAY, 1, "EEEEE dd MMM", true );
 			//gDef.setValueAxis( 2.5, 5 );
@@ -136,6 +137,8 @@ public class JRobinComplexGraph {
 			gd.datasource("out", "out2,8,*");
 			gd.area("in", Color.GREEN, null);
 			gd.line("out", Color.BLUE, null);
+			gd.gprint("out", "AVERAGE", " Minimum: @5.2@s");
+			gd.gprint("in", "AVERAGE", "Maximum: @6.2@s");
 			gd.setRigidGrid(true);			
 			RrdGraph graph2 = new RrdGraph(gd);
 			graph2.saveAsPNG("/traff.png", 0, 0);
