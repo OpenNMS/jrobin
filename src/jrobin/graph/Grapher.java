@@ -24,9 +24,11 @@ package jrobin.graph;
 
 import jrobin.core.RrdException;
 
+import jrobin.core.*;
+
 import java.awt.*;
 import java.awt.image.*;
-
+import java.util.*;
 import java.io.*;
 import javax.imageio.*;
 
@@ -574,13 +576,77 @@ class Grapher
 		Source[] sources 	= graphDef.getSources();
 		long startTime 		= graphDef.getStartTime();
 		long endTime 		= graphDef.getEndTime();
-	
+		
+		long s1, s2, s3;
+		long t1, t2, t3;
+		
+		// Optimizing of fetch, reparse
+		s1 = Calendar.getInstance().getTimeInMillis();
+		
+		String[] cfName = new String[] { "AVERAGE", "MAX", "MIN" };
+
 		if(endTime - startTime + 1 < numPoints)
 			numPoints = (int)(endTime - startTime + 1);
+		
+		/*
+		// -------------------------------------------------------		
+		// Experimental test code, faster fetching research
+		Iterator bla = graphDef.rrdFiles.keySet().iterator();
+		while ( bla.hasNext() )
+		{
+			String s 	= (String) bla.next();
+			RrdFile d 	= (RrdFile) graphDef.rrdFiles.get(s);
+			
+			RrdDb rrd = new RrdDb(s);
+			long rrdStep = rrd.getRrdDef().getStep();
+			
+			for (int z = 0; z < 3; z++) {
+				if ( d.cfDataSources[z].size() > 0 )
+				{
+					t1 = Calendar.getInstance().getTimeInMillis();
+					
+					int[] indices 		= new int[d.cfDataSources[0].size()];
+					String[][] names 	= new String[d.cfDataSources[0].size()][2];
+					
+					for (int i = 0; i < d.cfDataSources[0].size(); i++) {
+						names[i]	= (String[]) d.cfDataSources[0].get(i);
+						indices[i] 	= rrd.getDsIndex( names[i][0] );
+					}
+					
+					FetchRequest request 		= rrd.createFetchRequest(cfName[z], startTime, endTime + rrdStep);
+					FetchPoint[] fetchPoints 	= request.fetch();
+					
+					t2 = Calendar.getInstance().getTimeInMillis();
+					
+					for(int i = 0; i < sources.length; i++) {
+						for (int j = 0; j < names.length; j++)
+							if ( names[j][1].equalsIgnoreCase(sources[i].name) )
+								sources[i].setValues( fetchPoints, indices[j] );
+					}
+					
+					t3 = Calendar.getInstance().getTimeInMillis();
+					
+					System.err.println( "FETCHING FINISHED: " + (t3 - t1) + " ms (intermediate reached: " + (t2 - t1) +" ms)");
 	
+				}
+			}
+			rrd.close();
+		
+			
+			
+		}
+		// -------------------------------------------------------
+		*/
+		
+		// -------------------------------------------------------
+		// Old fetching code
 		for(int i = 0; i < sources.length; i++)
 			sources[i].setIntervalInternal(startTime, endTime);
-	
+		// -------------------------------------------------------
+		
+
+		s3 = Calendar.getInstance().getTimeInMillis();		
+		
 		for (int i = 0; i < numPoints; i++) 
 		{
 			long t = (long)(startTime + i * ((endTime - startTime) / (double)(numPoints - 1)));
@@ -588,6 +654,10 @@ class Grapher
 			for (int j = 0; j < sources.length; j++)
 				sources[j].getValueInternal(t, valueCollection);
 		}
+		
+		s2 = Calendar.getInstance().getTimeInMillis();
+		
+		System.err.println( "CALCULATING FINISHED: " + (s2 - s1) + " ms (intermediate reached: " + (s3 - s1) +" ms)");
 	}
 	
 	private void drawString( Graphics2D g, String str, int x, int y )

@@ -22,6 +22,8 @@
 
 package jrobin.graph;
 
+import java.util.*;
+
 import jrobin.core.FetchPoint;
 import jrobin.core.FetchRequest;
 import jrobin.core.RrdDb;
@@ -45,8 +47,29 @@ class Def extends Source {
 		this.dsName = dsName;
 		this.consolFun = consolFun;
 	}
+	
+	void setValues( FetchPoint[] fetchPoints, int index )
+	{
+		try {
+			
+		int numPoints = fetchPoints.length;
+		DataPoint[] points = new DataPoint[numPoints];
+		
+		for(int i = 0; i < numPoints; i++) {
+			long time 		= fetchPoints[i].getTime();
+			double value 	= fetchPoints[i].getValue(index);
+			points[i] 		= new DataPoint(time, value);
+		}
+
+		valueExtractor = new ValueExtractor(points);
+		
+		} catch(Exception e) { e.printStackTrace(); }
+	}
 
 	void setInterval(long start, long end) throws RrdException, IOException {
+		
+		long s1 = Calendar.getInstance().getTimeInMillis();
+		
 		RrdDb rrd = new RrdDb(rrdPath);
 		long rrdStep = rrd.getRrdDef().getStep();
 		FetchRequest request = rrd.createFetchRequest(consolFun, start, end + rrdStep);
@@ -54,13 +77,18 @@ class Def extends Source {
 		int numPoints = fetchPoints.length;
 		DataPoint[] points = new DataPoint[numPoints];
 		int dsIndex = rrd.getDsIndex(dsName);
+		
 		for(int i = 0; i < numPoints; i++) {
-			long time = fetchPoints[i].getTime();
-			double value = fetchPoints[i].getValue(dsIndex);
-			points[i] = new DataPoint(time, value);
+			long time 		= fetchPoints[i].getTime();
+			double value 	= fetchPoints[i].getValue(dsIndex);
+			points[i] 		= new DataPoint(time, value);
 		}
 		rrd.close();
 		valueExtractor = new ValueExtractor(points);
+		
+		long s2 = Calendar.getInstance().getTimeInMillis();
+		
+		//System.err.println( "Fetched " + dsName + " in " + (s2 - s1) + " ms (source: " + rrdPath + ")" );
 	}
 
 	public double getValue(long timestamp, ValueCollection values) throws RrdException {

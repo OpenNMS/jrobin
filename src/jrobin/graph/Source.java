@@ -22,6 +22,7 @@
 
 package jrobin.graph;
 
+import jrobin.core.*;
 import jrobin.core.RrdException;
 import jrobin.core.Util;
 
@@ -63,6 +64,12 @@ abstract class Source {
 		return value;
 	}
 
+	// Experimental, override in Def
+	void setValues( FetchPoint[] fetchPoints, int index )
+	{
+		
+	} 
+	
 	void setIntervalInternal(long startTime, long endTime) throws RrdException, IOException {
 		setInterval(startTime, endTime);
 		reset();

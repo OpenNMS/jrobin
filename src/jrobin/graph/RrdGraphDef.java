@@ -28,9 +28,7 @@ import jrobin.core.RrdException;
 import java.io.*;
 import java.awt.*;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.GregorianCalendar;
+import java.util.*;
 
 /**
  * <p>Class used to collect information for the new JRobin graph. JRobin graphs have many
@@ -163,6 +161,7 @@ public class RrdGraphDef
 	
 	private int chart_lpadding		= Grapher.CHART_LPADDING;
 
+	public HashMap rrdFiles			= new HashMap();
 	/**
 	 * Creates new RRD graph definition.
 	 */
@@ -453,6 +452,14 @@ public class RrdGraphDef
 	 * file ("AVERAGE", "MIN", "MAX" or "LAST").
 	 */
 	public void datasource(String name, String file, String dsName, String consolFun) {
+		// Experimental fetch code
+		if ( rrdFiles.containsKey(file) ) {
+			RrdFile rf = (RrdFile) rrdFiles.get(file);
+			rf.addSource( consolFun, dsName, name );	
+		}
+		else
+			rrdFiles.put( file, new RrdFile(consolFun, dsName, name) );
+		
 		addSource(new Def(name, file, dsName, consolFun));
 	}
 

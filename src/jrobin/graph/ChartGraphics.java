@@ -50,7 +50,12 @@ public class ChartGraphics
 	{
 		g.drawLine( x1, -y1, x2, -y2 );
 	}
-	
+
+	void fillRect(int x1, int y1, int x2, int y2)
+	{
+		g.fillRect( x1, -y1, x2 - x1, y2 - y1 );
+	}
+		
 	void setColor( Color c )
 	{
 		g.setColor( c );

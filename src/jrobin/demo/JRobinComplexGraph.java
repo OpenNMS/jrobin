@@ -43,7 +43,7 @@ public class JRobinComplexGraph {
 
 	public static void main(String[] args) 
 	{
-		GregorianCalendar start = new GregorianCalendar(2003, 7, 23, 0, 0);
+		GregorianCalendar start = new GregorianCalendar(2003, 7, 23, 23, 55);
 		GregorianCalendar end 	= new GregorianCalendar(2003, 7, 25, 0, 0);
 
 		RrdGraphDef gDef 		= new RrdGraphDef();
