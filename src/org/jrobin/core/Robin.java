@@ -90,12 +90,39 @@ public class Robin implements RrdUpdater {
 		}
 	}
 
-	// updates Robin values in bulk
 	void update(double[] newValues) throws IOException {
-		assert rows == newValues.length: "Invalid number of values supplied: " + newValues.length +
-			" rows=" + rows;
+		assert rows == newValues.length: "Invalid number of robin values supplied (" + newValues.length +
+				"), exactly " + rows + " needed";
 		pointer.set(0);
 		values.writeDouble(0, newValues);
+	}
+
+	/**
+	 * Updates archived values in bulk.
+	 * @param newValues Array of double values to be stored in the archive
+	 * @throws IOException Thrown in case of I/O error
+	 * @throws RrdException Thrown if the length of the input array is different from the length of
+	 * this archive
+	 */
+	public void setValues(double[] newValues) throws IOException, RrdException {
+		if(rows != newValues.length) {
+			throw new RrdException("Invalid number of robin values supplied (" + newValues.length +
+				"), exactly " + rows + " needed");
+		}
+		update(newValues);
+	}
+
+	/**
+	 * (Re)sets all values in this archive to the same value.
+	 * @param newValue New value
+	 * @throws IOException Thrown in case of I/O error
+	 */
+	public void setValues(double newValue) throws IOException {
+		double[] values = new double[rows];
+		for(int i = 0; i < values.length; i++) {
+			values[i] = newValue;
+		}
+		update(values);
 	}
 
 	String dump() throws IOException {
@@ -187,7 +214,15 @@ public class Robin implements RrdUpdater {
 		}
 	}
 
-	void filterValues(double minValue, double maxValue) throws IOException {
+	/**
+	 * Filters values stored in this archive based on the given boundary.
+	 * Archived values found to be outside of <code>[minValue, maxValue]</code> interval (inclusive)
+	 * will be silently replaced with <code>NaN</code>.
+	 * @param minValue lower boundary
+	 * @param maxValue upper boundary
+	 * @throws IOException Thrown in case of I/O error
+	 */
+	public void filterValues(double minValue, double maxValue) throws IOException {
 		for(int i = 0; i < rows; i++) {
 			double value = values.get(i);
 			if(!Double.isNaN(minValue) && !Double.isNaN(value) && minValue > value) {
