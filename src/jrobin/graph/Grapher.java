@@ -492,6 +492,12 @@ class Grapher
 					else
 						drawLine( g, parentSeries, source, true );
 					break;
+				case PlotDef.PLOT_VRULE:
+					int pos = g.getX( ((VruleSource) source).getTime() );
+					graphics.setStroke( new BasicStroke(plotDefs[i].getLineWidth()) );
+					g.drawLine( pos, 0 - chartHeight, pos, 0 + chartHeight );
+					graphics.setStroke( new BasicStroke() );
+					break;
 			}
 		}
 	

@@ -248,6 +248,13 @@ public class RrdGraphDef
 		}
 		throw new RrdException("You have to STACK graph onto something...");
 	}
+	
+	void addPlot(Vrule vruleDef) throws RrdException {
+		plotDefs.add(vruleDef);
+		sources.add( vruleDef.getSource() );
+		if ( vruleDef.getLegend() != null )
+			addComment( new Legend(vruleDef.getColor(), vruleDef.getLegend()) );
+	}
 
 	void addPlot(Hrule hruleDef) throws RrdException {
 		plotDefs.add(hruleDef);
@@ -391,7 +398,28 @@ public class RrdGraphDef
 	 * @throws RrdException Thrown in case of JRobin specific error.
 	 */
 	public void rule(double value, Color color, String legend) throws RrdException {
-		addPlot(new Hrule(value, color, legend));
+		addPlot( new Hrule(value, color, legend) );
+	}
+	
+	/**
+	 * Adds a vertical rule to the graph definition.
+	 * @param timestamp Rule position (specific moment in time)
+	 * @param color Rule color.
+	 * @param legend Legend to be added to the graph.
+	 */
+	public void vrule( GregorianCalendar timestamp, Color color, String legend ) throws RrdException {
+		addPlot( new Vrule(timestamp.getTimeInMillis() / 1000, color, legend) );
+	}
+	
+	/**
+	 * Adds a vertical rule to the graph definition.
+	 * @param timestamp Rule position (specific moment in time)
+	 * @param color Rule color.
+	 * @param legend Legend to be added to the graph.
+	 * @param lineWidth Width of the vrule in pixels.
+	 */
+	public void vrule( GregorianCalendar timestamp, Color color, String legend, float lineWidth ) throws RrdException {
+		addPlot( new Vrule(timestamp.getTimeInMillis() / 1000, color, legend, lineWidth) );
 	}
 
 	/**

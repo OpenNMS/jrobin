@@ -19,72 +19,33 @@
  * library; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-
 package jrobin.graph;
 
-import java.awt.*;
-
 /**
+ * @author cbld
  *
+ * To change the template for this generated type comment go to
+ * Window - Preferences - Java - Code Generation - Code and Comments
  */
-class PlotDef {
-	public static final float DEFAULT_LINE_WIDTH = 1.0F;
-	
-	static final int PLOT_LINE 	= 0;
-	static final int PLOT_AREA 	= 1;
-	static final int PLOT_STACK	= 2;
-	static final int PLOT_VRULE	= 3;
-	
-	int plotType 				= PLOT_LINE;
-	
-	protected Source source;
-    protected Color color;
-	protected String legend;
-	protected PlotDef parent;
-	private RrdTimeSeries totalSeries;
-	private float lineWidth 	= DEFAULT_LINE_WIDTH;
-	
-	PlotDef(Source source, Color color, String legend) 
+public class VruleSource extends Source
+{
+	private long timestamp = 0;
+
+	VruleSource(long timestamp) 
 	{
-		this.source = source;
-		this.color 	= color;
-		this.legend = legend;
+		this.timestamp = timestamp;
+	}
+
+	public long getTime() 
+	{
+		return timestamp;
 	}
 	
-	int getType() {
-		return plotType;	
+	// Stub
+	void setInterval(long start, long end) {
 	}
 	
-	void stack(PlotDef parent) {
-		this.parent = parent;
+	public double getValue(long timestamp, ValueCollection values) {
+		return Double.NaN;
 	}
-
-	public Color getColor() {
-		return color;
-	}
-
-	public String getLegend() {
-		return legend;
-	}
-
-	public Source getSource() {
-		return source;
-	}
-
-	public String getSourceName() {
-		return source.getName();
-	}
-
-	public PlotDef getParent() {
-        return parent;
-	}
-
-	void setLineWidth(float lineWidth) {
-		this.lineWidth = lineWidth;
-	}
-
-	float getLineWidth() {
-		return lineWidth;
-	}
-
 }

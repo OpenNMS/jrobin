@@ -95,7 +95,7 @@ public class RrdGraph implements Serializable
 	{
 		ImageIO.write( (RenderedImage) getBufferedImage(width, height), "png", new File(path) );
 	}
-
+	
 	/**
 	 * Saves graph in JPEG format
 	 * @param path Path to JPEG file.

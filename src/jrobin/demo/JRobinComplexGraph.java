@@ -43,9 +43,9 @@ public class JRobinComplexGraph {
 
 	public static void main(String[] args) 
 	{
-		GregorianCalendar start = new GregorianCalendar(2003, 7, 24, 0, 0);
-		GregorianCalendar end 	= new GregorianCalendar(2003, 7, 25, 0, 0);
-
+		GregorianCalendar start = new GregorianCalendar(2003, 7, 24, 00, 00);
+		GregorianCalendar end 	= new GregorianCalendar(2003, 7, 25, 00, 00);
+		
 		RrdGraphDef gDef 		= new RrdGraphDef();
 		
 		try 
@@ -97,6 +97,8 @@ public class JRobinComplexGraph {
 			gDef.comment("\n");
 			gDef.comment("\n");
 			gDef.comment("-------------------------------------------------------------------------------@c");
+			gDef.vrule( new GregorianCalendar(2003, 7, 24, 9, 00), Color.BLUE, "9am", 3f );
+			gDef.vrule( new GregorianCalendar(2003, 7, 24, 17, 00), Color.BLUE, "5pm", 3f );
 			gDef.comment("Generated: " + new Date() + "@r");
 			gDef.setBackColor( Color.DARK_GRAY );
 			gDef.setCanvasColor( Color.LIGHT_GRAY );
@@ -119,7 +121,7 @@ public class JRobinComplexGraph {
 			// Create actual graph
 			RrdGraph graph = new RrdGraph(gDef);
 			graph.saveAsPNG("/zzzzzz.png", 0, 0);
-			//graph.saveAsJPEG("/zzzzzz.jpg", 0, 0, 1f);
+			graph.saveAsJPEG("/zzzzzz.jpg", 0, 0, 1f);
 			
 			//System.exit(0);
 			
