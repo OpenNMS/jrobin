@@ -33,7 +33,7 @@ import java.util.Timer;
 
 /**
  * JRobin backend which is used to store RRD data to ordinary files on the disk
- * by using java.nio.* package.
+ * by using java.nio.* package. This is the default backend engine since JRobin 1.4.0.
  */
 public class RrdNioBackend extends RrdFileBackend {
 	private static final Timer syncTimer = new Timer(true);
@@ -122,24 +122,44 @@ public class RrdNioBackend extends RrdFileBackend {
 		}
 	}
 
+	/**
+	 * Method called by the framework immediatelly before RRD update operation starts. This method
+	 * will synchronize in-memory cache with the disk content if synchronization mode is set to
+	 * {@link RrdNioBackendFactory#SYNC_BEFOREUPDATE}. Otherwise it does nothing.
+	 */
 	protected void beforeUpdate() {
 		if(syncMode == RrdNioBackendFactory.SYNC_BEFOREUPDATE) {
 			sync();
 		}
 	}
 
+	/**
+	 * Method called by the framework immediatelly after RRD update operation finishes. This method
+	 * will synchronize in-memory cache with the disk content if synchronization mode is set to
+	 * {@link RrdNioBackendFactory#SYNC_AFTERUPDATE}. Otherwise it does nothing.
+	 */
 	protected void afterUpdate() {
 		if(syncMode == RrdNioBackendFactory.SYNC_AFTERUPDATE) {
 			sync();
 		}
 	}
 
+	/**
+	 * Method called by the framework immediatelly before RRD fetch operation starts. This method
+	 * will synchronize in-memory cache with the disk content if synchronization mode is set to
+	 * {@link RrdNioBackendFactory#SYNC_BEFOREFETCH}. Otherwise it does nothing.
+	 */
 	protected void beforeFetch() {
 		if(syncMode == RrdNioBackendFactory.SYNC_BEFOREFETCH) {
 			sync();
 		}
 	}
 
+	/**
+	 * Method called by the framework immediatelly after RRD fetch operation finishes. This method
+	 * will synchronize in-memory cache with the disk content if synchronization mode is set to
+	 * {@link RrdNioBackendFactory#SYNC_AFTERFETCH}. Otherwise it does nothing.
+	 */
 	protected void afterFetch() {
 		if(syncMode == RrdNioBackendFactory.SYNC_AFTERFETCH) {
 			sync();

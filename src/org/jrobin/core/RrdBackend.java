@@ -136,7 +136,9 @@ public abstract class RrdBackend {
 	protected abstract void setLength(long length) throws IOException;
 
 	/**
-	 * Closes the storage. Calls sync() implicitly.
+	 * Closes the underlying storage. Calls sync() implicitly.
+	 * In other words, you don't have to call sync() before close() in order to preserve
+	 * data cached in memory.
 	 * @throws IOException Thrown in case of I/O error
 	 */
 	public void close() throws IOException {

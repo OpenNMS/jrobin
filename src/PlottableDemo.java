@@ -1,4 +1,28 @@
-
+/* ============================================================
+ * JRobin : Pure java implementation of RRDTool's functionality
+ * ============================================================
+ *
+ * Project Info:  http://www.jrobin.org
+ * Project Lead:  Sasa Markovic (saxon@jrobin.org);
+ *
+ * (C) Copyright 2003, by Sasa Markovic.
+ *
+ * This library is free software; you can redistribute it and/or modify it under the terms
+ * of the GNU Lesser General Public License as published by the Free Software Foundation;
+ * either version 2.1 of the License, or (at your option) any later version.
+ *
+ * Developers:    Sasa Markovic (saxon@jrobin.org)
+ *                Arne Vandamme (cobralord@jrobin.org)
+ *
+ * This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License along with this
+ * library; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
+ 
 import org.jrobin.graph.*;
 import org.jrobin.core.RrdException;
 import org.jrobin.core.Util;
@@ -10,14 +34,16 @@ import java.util.GregorianCalendar;
 import java.util.Calendar;
 
 class PlottableDemo {
-	static double[] SF_DOWNLOAD_COUNT = {
-		0, 0, 13, 34, 76, 72, 255, 144, 135, 194, 358, 304, 247
+	static final double[] SF_DOWNLOAD_COUNT = {
+		0, 0, 13, 34, 76, 72, 255, 144, 135, 194, 358, 304, 293
 	};
-	static double[] SF_PAGE_HITS = {
-		0, 1072, 517, 979, 2132, 2532, 5515, 3519, 3500, 4942, 7858, 7797, 5509
+	static final double[] SF_PAGE_HITS = {
+		0, 1072, 517, 979, 2132, 2532, 5515, 3519, 3500, 4942, 7858, 7797, 6570
 	};
-	static GregorianCalendar[] SF_TIMESTAMPS = new GregorianCalendar[SF_DOWNLOAD_COUNT.length];
-	static Date SF_START_DATE = new GregorianCalendar(2003, 4, 1).getTime(); // May 1st 2004.
+	static final GregorianCalendar[] SF_TIMESTAMPS = 
+		new GregorianCalendar[SF_DOWNLOAD_COUNT.length];
+	static final Date SF_START_DATE = 
+		new GregorianCalendar(2003, 4, 1).getTime(); // May 1st 2004.
 
 	static {
 		for(int i = 0; i < SF_TIMESTAMPS.length; i++) {
@@ -145,7 +171,8 @@ class PlottableDemo {
 				new LinearInterpolator(SF_TIMESTAMPS, SF_PAGE_HITS);
 		LinearInterpolator downloadsInterpolator =
 				new LinearInterpolator(SF_TIMESTAMPS, SF_DOWNLOAD_COUNT);
-		RrdGraphDef gDef = new RrdGraphDef(SF_TIMESTAMPS[0], SF_TIMESTAMPS[SF_TIMESTAMPS.length - 1]);
+		RrdGraphDef gDef = new RrdGraphDef(SF_TIMESTAMPS[0], 
+			SF_TIMESTAMPS[SF_TIMESTAMPS.length - 1]);
 		gDef.setTitle("JRobin statistics at SourceForge");
 		gDef.setTimeAxisLabel("month");
 		gDef.setVerticalLabel("hits/downloads");
