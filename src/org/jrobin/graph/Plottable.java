@@ -27,12 +27,11 @@ package org.jrobin.graph;
 /**
  * <p>Interface to be used for custom datasources.
  * If you wish to use a custom datasource in a graph, you should create a class implementing this interface
- * that represents that datasource, and then pass this class on to the RrdGraphDef.
- * </p>
+ * that represents that datasource, and then pass this class on to the RrdGraphDef.</p>
  * 
  * @author Arne Vandamme <cobralord@cherrymon.org>
  */
-public interface Plottable 
+public abstract class Plottable 
 {
 	/**
 	 * Retrieves datapoint value based on a given timestamp.
@@ -40,7 +39,9 @@ public interface Plottable
 	 * @param timestamp Timestamp in seconds for the datapoint.
 	 * @return Double value of the datapoint.
 	 */
-	public double getValue( long timestamp );
+	public double getValue( long timestamp ) {
+		return Double.NaN;
+	}
 	
 	/**
 	 * Retrieves datapoint value based on a given timestamp.
@@ -48,7 +49,9 @@ public interface Plottable
 	 * @param index Integer referring to the series containing the specific datapoint.
 	 * @return Double value of the datapoint.
 	 */
-	public double getValue( long timestamp, int index );
+	public double getValue( long timestamp, int index ) {
+		return Double.NaN;
+	}
 	
 	/**
 	 * Retrieves datapoint value based on a given timestamp.
@@ -56,5 +59,7 @@ public interface Plottable
 	 * @param fieldName String that refers to the series containing the datapoint.
 	 * @return Double value of the datapoint.
 	 */
-	public double getValue( long timestamp, String fieldName );
+	public double getValue( long timestamp, String fieldName ) {
+		return Double.NaN;
+	}
 }

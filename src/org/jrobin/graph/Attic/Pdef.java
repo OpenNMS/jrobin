@@ -27,7 +27,7 @@ package org.jrobin.graph;
 /**
  * <p>Plottable Def, reprents a custom datasource that can be graphed by JRobin.
  * All the Pdef needs, is a reference to a Plottable class, and it will get the datapoint values (based
- * on timestamps) from that external class.  Any class implementing the public Plottable interface will do,
+ * on timestamps) from that external class.  Any class extending the public Plottable class will do,
  * meaning that the class could get its values from ANY source... like a RDBMS for example.
  * </p>
  * 
@@ -46,7 +46,7 @@ class Pdef extends Source
 	 * Constructs a new Plottable Def: a custom external datasource 
 	 * (represented as a Plottable class) that can be graphed by JRobin.
 	 * @param name Name of the datasource in the graph definition.
-	 * @param plottable Reference to the class implementing the Plottable interface and providing the datapoints.
+	 * @param plottable Reference to the class extending Plottable and providing the datapoints.
 	 */
 	Pdef( String name, Plottable plottable ) 
 	{
@@ -58,7 +58,7 @@ class Pdef extends Source
 	 * Constructs a new Plottable Def: a custom external datasource 
 	 * (represented as a Plottable class) that can be graphed by JRobin.
 	 * @param name Name of the datasource in the graph definition.
-	 * @param plottable Reference to the class implementing the Plottable interface and providing the datapoints.
+	 * @param plottable Reference to the class extending Plottable and providing the datapoints.
 	 * @param index Integer number used for referring to the series of datapoints to use in the Plottable class.
 	 */
 	Pdef( String name, Plottable plottable, int index ) 
@@ -73,7 +73,7 @@ class Pdef extends Source
 	 * Constructs a new Plottable Def: a custom external datasource 
 	 * (represented as a Plottable class) that can be graphed by JRobin.
 	 * @param name Name of the datasource in the graph definition.
-	 * @param plottable Reference to the class implementing the Plottable interface and providing the datapoints.
+	 * @param plottable Reference to the class extending Plottable and providing the datapoints.
 	 * @param sourceName String used for referring to the series of datapoints to use in the Plottable class.
 	 */
 	Pdef( String name, Plottable plottable, String sourceName) 

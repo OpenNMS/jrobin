@@ -660,10 +660,10 @@ public class RrdGraphDef implements Serializable
 	
 	/**
 	 * <p>Adds a custom graph source with the given name to the graph definition.
-	 * The datapoints should be made available by a class implementing the Plottable interface.</p>
+	 * The datapoints should be made available by a class extending Plottable.</p>
 	 * 
 	 * @param name Graph source name.
-	 * @param plottable Class that implements plottable interface and is suited for graphing.
+	 * @param plottable Class that extends Plottable class and is suited for graphing.
 	 */
 	public void datasource( String name, Plottable plottable )
 	{
@@ -672,10 +672,10 @@ public class RrdGraphDef implements Serializable
 	
 	/**
 	 * <p>Adds a custom graph source with the given name to the graph definition.
-	 * The datapoints should be made available by a class implementing the Plottable interface.</p>
+	 * The datapoints should be made available by a class extending Plottable.</p>
 	 * 
 	 * @param name Graph source name.
-	 * @param plottable Class that implements plottable interface and is suited for graphing.
+	 * @param plottable Class that extends Plottable class and is suited for graphing.
 	 * @param index Integer referring to the datasource in the Plottable class.
 	 */
 	public void datasource( String name, Plottable plottable, int index )
@@ -685,10 +685,10 @@ public class RrdGraphDef implements Serializable
 	
 	/**
 	 * <p>Adds a custom graph source with the given name to the graph definition.
-	 * The datapoints should be made available by a class implementing the Plottable interface.</p>
+	 * The datapoints should be made available by a class extending Plottable.</p>
 	 * 
 	 * @param name Graph source name.
-	 * @param plottable Class that implements plottable interface and is suited for graphing.
+	 * @param plottable Class that extends Plottable class and is suited for graphing.
 	 * @param sourceName String name referring to the datasource in the Plottable class.
 	 */
 	public void datasource( String name, Plottable plottable, String sourceName )
