@@ -360,7 +360,7 @@ public class RrdDb implements RrdUpdater {
         return createFetchRequest(consolFun, fetchStart, fetchEnd, 1);
 	}
 
-	synchronized void store(Sample sample) throws IOException, RrdException {
+	void store(Sample sample) throws IOException, RrdException {
 		long newTime = sample.getTime();
 		long lastTime = header.getLastUpdateTime();
 		if(lastTime >= newTime) {
@@ -376,14 +376,14 @@ public class RrdDb implements RrdUpdater {
 		Util.debug(sample.getRrdToolCommand());
 	}
 
-	synchronized FetchPoint[] fetch(FetchRequest request) throws IOException, RrdException {
+	FetchPoint[] fetch(FetchRequest request) throws IOException, RrdException {
 		Archive archive = findMatchingArchive(request);
 		FetchPoint[] points = archive.fetch(request);
 		Util.debug(request.getRrdToolCommand());
 		return points;
 	}
 
-	synchronized FetchData fetchData(FetchRequest request) throws IOException, RrdException {
+	FetchData fetchData(FetchRequest request) throws IOException, RrdException {
 		Archive archive = findMatchingArchive(request);
 		FetchData fetchData = archive.fetchData(request);
 		Util.debug(request.getRrdToolCommand());

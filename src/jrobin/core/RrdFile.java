@@ -254,5 +254,3 @@ public class RrdFile {
 		RrdFile.lockMode = lockMode;
 	}
 }
-
-
