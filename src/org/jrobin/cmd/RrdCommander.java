@@ -102,7 +102,8 @@ public class RrdCommander {
 	 * @throws RrdException thrown for all other errors (parsing errors,
 	 * unknown RRDTool syntax/command/option, internal RRD errors...)
 	 */
-	public static synchronized Object execute(String command) throws IOException, RrdException {
+	public static synchronized Object execute(String command) throws IOException, RrdException
+	{
 		RrdCmdScanner cmdScanner = new RrdCmdScanner(command);
 		RrdToolCmd[] commanders = {
 			new RrdCreateCmd(cmdScanner),
@@ -120,6 +121,24 @@ public class RrdCommander {
 		}
 		throw new RrdException("Unknown RRDTool command: " + command);
 	}
+	/*public static synchronized Object execute(String command) throws IOException, RrdException {
+		RrdCmdScanner cmdScanner = new RrdCmdScanner(command);
+		RrdToolCmd[] commanders = {
+			new RrdCreateCmd(cmdScanner),
+			new RrdLastCmd(cmdScanner),
+			new RrdUpdateCommand(cmdScanner),
+			new RrdDumpCmd(cmdScanner),
+			new RrdFetchCmd(cmdScanner),
+			new RrdXportCmd(cmdScanner)
+		};
+		for(int i = 0; i < commanders.length; i++) {
+			Object result = commanders[i].go();
+			if(result != null) {
+				return result;
+			}
+		}
+		throw new RrdException("Unknown RRDTool command: " + command);
+	}*/
 
 	public static void main(String[] args) {
 		System.out.println("== JRobin's RRDTool commander ==");

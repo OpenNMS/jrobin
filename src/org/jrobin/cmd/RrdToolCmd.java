@@ -33,6 +33,10 @@ import org.jrobin.core.RrdDef;
 import java.io.IOException;
 
 abstract class RrdToolCmd {
+
+	// Holds the list of keywords
+	static String[] keywords = new String[0];
+
 	static boolean rrdDbPoolUsed = true;
 	static boolean standardOutUsed = true;
 
@@ -52,6 +56,7 @@ abstract class RrdToolCmd {
 		RrdToolCmd.standardOutUsed = standardOutUsed;
 	}
 
+
 	RrdCmdScanner cmdScanner;
 
 	RrdToolCmd(RrdCmdScanner cmdScanner) {
@@ -60,10 +65,15 @@ abstract class RrdToolCmd {
 
 	abstract String getCmdType();
 
-	Object go() throws IOException, RrdException {
+	Object go() throws IOException, RrdException
+	{
 		if(!getCmdType().equals(cmdScanner.getCmdType())) {
 			return null;
 		}
+
+		// Parse the command based on the keywords
+		cmdScanner.parse( keywords );
+
 		return execute();
 	}
 
