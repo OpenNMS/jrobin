@@ -330,6 +330,12 @@ class GraphFrame extends JFrame {
 			}
 			graphBytes = client.getPngGraph(routerInfo, linkInfo, start, end);
 			ImageIcon icon = new ImageIcon(graphBytes, "PNG graph");
+			if(icon.getIconWidth() != GRAPH_SIZE.getWidth() ||
+					icon.getIconHeight() != GRAPH_SIZE.getHeight()) {
+				GRAPH_SIZE = new Dimension(icon.getIconWidth(), icon.getIconHeight());
+				graphLabel.setPreferredSize(GRAPH_SIZE);
+				pack();
+			}
 			graphLabel.setIcon(icon);
 			if(start.getTime() <= now.getTime() && now.getTime() < end.getTime()) {
 				refresher = new Refresher();

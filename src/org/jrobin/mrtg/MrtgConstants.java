@@ -182,7 +182,7 @@ public interface MrtgConstants {
 		"        <area>                                                           \n" +
 		"            <datasource>out8</datasource>                                \n" +
 		"            <color>#00FF00</color>                                       \n" +
-		"            <legend>output traffic@l</legend>                            \n" +
+		"            <legend>output traffic</legend>                              \n" +
 		"        </area>                                                          \n" +
 		"        <line>                                                           \n" +
 		"            <datasource>in8</datasource>                                 \n" +
