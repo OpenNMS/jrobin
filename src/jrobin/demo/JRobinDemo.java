@@ -55,6 +55,9 @@ public class JRobinDemo {
 	static final GregorianCalendar END = new GregorianCalendar(2003, 5, 1);
 	static final int MAX_STEP = 240;
 
+	// increase this to get better flaming graph...
+	static final int GRADIENT_COLOR_STEPS = 20;
+
 /**
  * <p>Runs the demonstration.
  * Demonstration consists of the following steps: (all files will be
@@ -177,12 +180,21 @@ public class JRobinDemo {
 		gDef.datasource("shade", rrdRestoredPath, "shade", "AVERAGE");
 		gDef.datasource("median", "sun,shade,+,2,/");
 		gDef.datasource("diff", "sun,shade,-,ABS,-1,*");
+		// gradient color datasources
+		for(int i = 1; i < GRADIENT_COLOR_STEPS; i++) {
+			double factor = i / (double) GRADIENT_COLOR_STEPS;
+			gDef.datasource("diff" + i, "diff," + factor + ",*");
+		}
 		gDef.datasource("sine", "TIME," + start + ",-," + (end - start) +
 			",/,2,PI,*,*,SIN,1000,*");
-		gDef.line("sun", Color.RED, "sun temp");
+		gDef.line("sun", Color.GREEN, "sun temp");
 		gDef.line("shade", Color.BLUE, "shade temp");
-		gDef.line("median", Color.GREEN, "median value");
-		gDef.area("diff", new Color(255, 0, 0), null);
+		gDef.line("median", Color.DARK_GRAY, "median value");
+		gDef.area("diff", Color.RED, "difference");
+		// gradient color areas
+		for(int i = GRADIENT_COLOR_STEPS - 1; i >= 1; i--) {
+			gDef.area("diff" + i, new Color(255 * i / GRADIENT_COLOR_STEPS, 0, 0), null);
+		}
 		gDef.line("sine", Color.CYAN, "sine function demo");
 		gDef.gprint("sun", "MAX", "\nmaxSun = @3@s");
 		gDef.gprint("sun", "AVERAGE", "avgSun = @3@S@r");
