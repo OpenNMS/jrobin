@@ -32,11 +32,11 @@ import java.io.IOException;
  */
 abstract class Source {
 	protected String name = "";
-	private double min;
-	private double max;
-	private double last;
-	private double sum;
-	private int count;
+
+	private long lastTime, totalTime;
+	private double aggMin, aggMax, aggLast;
+	private double lastValue, totalValue;
+
 	private RrdTimeSeries series;
 
 	Source() {
@@ -58,7 +58,7 @@ abstract class Source {
 	double getValueInternal(long timestamp, ValueCollection values) throws RrdException {
 		double value = getValue(timestamp, values);
 		series.add(timestamp, value);
-		aggregate(value);
+		aggregate(timestamp, value);
 		values.add(name, value);
 		return value;
 	}
@@ -68,38 +68,40 @@ abstract class Source {
 		reset();
 	}
 
-	private void aggregate(double value) {
-		min = Util.min(min, value);
-		max = Util.max(max, value);
-		last = value;
-		if(!Double.isNaN(value)) {
-			sum += value;
-			count++;
+	private void aggregate(long time, double value) {
+		aggMin = Util.min(aggMin, value);
+		aggMax = Util.max(aggMax, value);
+		aggLast = value;
+		if(!Double.isNaN(lastValue) && !Double.isNaN(value)) {
+			long dt = time - lastTime;
+			totalValue += dt * (value + lastValue) / 2.0;
+			totalTime += dt;
 		}
+		lastTime = time;
+		lastValue = value;
 	}
 
     private void reset() {
-		min = Double.NaN;
-		max = Double.NaN;
-		last = Double.NaN;
-		sum = 0.0;
-		count = 0;
+		lastTime = totalTime = 0;
+		aggMin = aggMax = aggLast = lastValue = Double.NaN;
+		totalValue = 0.0;
+
 		series = new RrdTimeSeries(name);
 	}
 
 	double getAggregate(String consolFun) throws RrdException {
 		if(consolFun.equals("MAX")) {
-			return max;
+			return aggMax;
 		}
 		else if(consolFun.equals("MIN")) {
-			return min;
+			return aggMin;
 		}
 		else if(consolFun.equals("LAST")) {
-			return last;
+			return aggLast;
 		}
 		else if(consolFun.equals("AVERAGE")) {
-			if(count > 0) {
-				return sum / count;
+			if(totalTime > 0) {
+				return totalValue / totalTime;
 			}
 			else {
 				return Double.NaN;

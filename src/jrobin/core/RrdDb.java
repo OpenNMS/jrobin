@@ -552,7 +552,8 @@ public class RrdDb implements RrdUpdater {
 	 */
 
 	public synchronized void dumpXml(String filename) throws IOException, RrdException {
-        OutputStream destination = new BufferedOutputStream(new FileOutputStream(filename, false));
+        // OutputStream destination = new BufferedOutputStream(new FileOutputStream(filename, false));
+		OutputStream destination = new BufferedOutputStream(new FileOutputStream(filename, false));
 		dumpXml(destination);
 		destination.close();
 	}

@@ -26,11 +26,13 @@ import jrobin.core.RrdException;
 
 class ValueExtractor {
     private DataPoint[] points;
+	private int numPoints;
 	private int pos = 0;
 
 	ValueExtractor(DataPoint[] points) throws RrdException {
 		this.points = points;
-		if(points.length < 2) {
+		this.numPoints = points.length;
+		if(numPoints < 2) {
 			throw new RrdException("At least two datapoints are required");
 		}
 	}
@@ -39,7 +41,7 @@ class ValueExtractor {
 		if(timestamp < points[pos].getTime()) {
 			throw new RrdException("Backward reading not allowed");
 		}
-		while(pos < points.length - 1) {
+		while(pos < numPoints - 1) {
 			if(points[pos].getTime() <= timestamp && timestamp < points[pos + 1].getTime()) {
 				return points[pos + 1].getValue();
 			}

@@ -48,7 +48,8 @@ class Def extends Source {
 
 	void setInterval(long start, long end) throws RrdException, IOException {
 		RrdDb rrd = new RrdDb(rrdPath);
-		FetchRequest request = rrd.createFetchRequest(consolFun, start, end);
+		long rrdStep = rrd.getRrdDef().getStep();
+		FetchRequest request = rrd.createFetchRequest(consolFun, start, end + rrdStep);
 		FetchPoint[] fetchPoints = request.fetch();
 		int numPoints = fetchPoints.length;
 		DataPoint[] points = new DataPoint[numPoints];
