@@ -307,4 +307,15 @@ public class RrdDef {
 	String getRrdToolCommand() {
 		return dump();
 	}
+
+	void removeDatasource(String dsName) throws RrdException {
+		for(int i = 0; i < dsDefs.size(); i++) {
+			DsDef dsDef = (DsDef) dsDefs.get(i);
+			if(dsDef.getDsName().equals(dsName)) {
+				dsDefs.remove(i);
+				return;
+			}
+		}
+		throw new RrdException("Could not find datasource named '" + dsName + "'");
+	}
 }

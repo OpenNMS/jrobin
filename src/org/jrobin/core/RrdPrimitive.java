@@ -62,7 +62,7 @@ abstract class RrdPrimitive {
 		return parent.getRrdFile();
 	}
 	
-	byte[] getBytes() throws IOException {
+	byte[] readBytes() throws IOException {
 		byte[] b = new byte[byteCount];
 		RrdFile rrdFile = getRrdFile();
 		rrdFile.seek(pointer);

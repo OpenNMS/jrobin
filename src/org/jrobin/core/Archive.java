@@ -44,6 +44,7 @@ public class Archive implements RrdUpdater {
 	private RrdString consolFun;
 	private RrdDouble xff;
 	private RrdInt steps, rows;
+	// state
 	private Robin[] robins;
 	private ArcState[] states;
 
@@ -86,8 +87,8 @@ public class Archive implements RrdUpdater {
 		steps = new RrdInt(reader.getSteps(arcIndex), this);
 		rows = new RrdInt(reader.getRows(arcIndex), this);
 		int dsCount = reader.getDsCount();
-		robins = new Robin[dsCount];
 		states = new ArcState[dsCount];
+		robins = new Robin[dsCount];
 		for(int dsIndex = 0; dsIndex < dsCount; dsIndex++) {
 			// restore state
             states[dsIndex] = new ArcState(this);
@@ -385,4 +386,33 @@ public class Archive implements RrdUpdater {
 		writer.closeTag(); // rra
 	}
 
+	/**
+	 * Copies object's internal state to another Archive object.
+	 * @param other New Archive object to copy state to
+	 * @throws IOException Thrown in case of I/O error
+	 * @throws RrdException Thrown if supplied argument is not an Archive object
+	 */
+	public void copyStateTo(RrdUpdater other) throws IOException, RrdException {
+		if(!(other instanceof Archive)) {
+			throw new RrdException(
+				"Cannot copy Archive object to " + other.getClass().getName());
+		}
+		Archive arc = (Archive) other;
+		if(!arc.consolFun.get().equals(consolFun.get())) {
+			throw new RrdException("Incompatible consolidation functions");
+		}
+		if(arc.steps.get() != steps.get()) {
+			throw new RrdException("Incompatible number of steps");
+		}
+		if(arc.rows.get() != rows.get()) {
+			throw new RrdException("Incompatible number of rows");
+		}
+		int count = Math.min(
+			    parentDb.getHeader().getDsCount(),
+			arc.parentDb.getHeader().getDsCount());
+		for(int i = 0; i < count; i++) {
+			states[i].copyStateTo(arc.states[i]);
+			robins[i].copyStateTo(arc.robins[i]);
+		}
+	}
 }

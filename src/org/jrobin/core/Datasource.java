@@ -266,7 +266,7 @@ public class Datasource implements RrdUpdater {
 		}
 	}
 
-	private double calculateTotal(long startTime, long boundaryTime) throws IOException {
+	private double calculateTotal(long startTime, long boundaryTime) {
 		double totalValue = Double.NaN;
 		long validSeconds = boundaryTime - startTime - nanSeconds.get();
 		if(nanSeconds.get() <= heartbeat.get() && validSeconds > 0) {
@@ -287,6 +287,29 @@ public class Datasource implements RrdUpdater {
 		writer.writeTag("value", accumValue.get());
 		writer.writeTag("unknown_sec", nanSeconds.get());
 		writer.closeTag();  // ds
+	}
+
+	/**
+	 * Copies object's internal state to another Datasource object.
+	 * @param other New Datasource object to copy state to
+	 * @throws IOException Thrown in case of I/O error
+	 * @throws RrdException Thrown if supplied argument is not a Datasource object
+	 */
+	public void copyStateTo(RrdUpdater other) throws IOException, RrdException {
+		if(!(other instanceof Datasource)) {
+			throw new RrdException(
+				"Cannot copy Datasource object to " + other.getClass().getName());
+		}
+		Datasource datasource = (Datasource) other;
+		if(!datasource.dsName.get().equals(dsName.get())) {
+			throw new RrdException("Incomaptible datasource names");
+		}
+		if(!datasource.dsType.get().equals(dsType.get())) {
+			throw new RrdException("Incomaptible datasource types");
+		}
+		datasource.lastValue.set(lastValue.get());
+		datasource.nanSeconds.set(nanSeconds.get());
+		datasource.accumValue.set(accumValue.get());
 	}
 
 }

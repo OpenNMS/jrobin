@@ -164,4 +164,18 @@ public class Header implements RrdUpdater {
 		writer.writeTag("lastupdate", lastUpdateTime.get());
 	}
 
+	/**
+	 * Copies object's internal state to another Header object.
+	 * @param other New Header object to copy state to
+	 * @throws IOException Thrown in case of I/O error
+	 * @throws RrdException Thrown if supplied argument is not a Header object
+	 */
+	public void copyStateTo(RrdUpdater other) throws IOException, RrdException {
+		if(!(other instanceof Header)) {
+			throw new RrdException(
+				"Cannot copy Header object to " + other.getClass().getName());
+		}
+		Header header = (Header) other;
+		header.lastUpdateTime.set(lastUpdateTime.get());
+	}
 }

@@ -25,16 +25,26 @@
 
 package org.jrobin.core;
 
+import java.io.IOException;
+
 /**
  * Interface that has to be implemented for all classes which read from or write to
  * a RRD file.
  *
  * @author <a href="mailto:saxon@jrobin.org">Sasa Markovic</a>
  */
-public interface RrdUpdater {
+interface RrdUpdater {
 	/**
 	 * Returns associated RrdFile object.
 	 * @return RrdFile object.
 	 */
 	public RrdFile getRrdFile();
+
+	/**
+	 * Copies the internal object state to another object of the same type.
+	 * @param updater Object to copy the internal state to
+	 * @throws IOException Thrown in case of I/O error
+	 * @throws RrdException Thrown if supplied argument is not an object of a compatible class
+	 */
+	public void copyStateTo(RrdUpdater updater) throws IOException, RrdException;
 }

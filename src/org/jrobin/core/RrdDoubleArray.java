@@ -44,12 +44,18 @@ class RrdDoubleArray extends RrdPrimitive {
 	}
 
 	void set(int index, double value) throws IOException {
+		if(index >= length) {
+			throw new IOException("Invalid index supplied: " + index + ", max = " + length);
+		}
 		RrdFile rrdFile = getRrdFile();
 		rrdFile.seek(getPointer() + index * RrdDouble.SIZE);
 		rrdFile.writeDouble(value);
 	}
 
 	double get(int index) throws IOException {
+		if(index >= length) {
+			throw new IOException("Invalid index supplied: " + index + ", max = " + length);
+		}
 		RrdFile rrdFile = getRrdFile();
 		rrdFile.seek(getPointer() + index * RrdDouble.SIZE);
 		return rrdFile.readDouble();

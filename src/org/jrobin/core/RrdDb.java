@@ -648,17 +648,26 @@ public class RrdDb implements RrdUpdater {
 		close();
 	}
 
-    public static void main(String[] args) throws RrdException, IOException {
-		RrdDb rrd = new RrdDb("demo.rrd");
-		long t1 = Util.getTimestamp(2003, 4, 1);
-		long t2 = Util.getTimestamp(2003, 4, 2);
-		FetchData data = rrd.createFetchRequest("AVERAGE", t1, t2).fetchData();
-		data.dump();
-		System.out.println("MAX : " + data.getAggregate("sun", "MAX"));
-		System.out.println("MAX2: " + data.getAggregate("sun", "MAX", "value,2,*"));
-		System.out.println("MIN : " + data.getAggregate("sun", "MIN"));
-		System.out.println("MIN2: " + data.getAggregate("sun", "MIN", "value,2,*"));
-		System.out.println("AVG : " + data.getAggregate("sun", "AVERAGE"));
-		System.out.println("AVG2: " + data.getAggregate("sun", "AVERAGE", "value,2,*"));
+	/**
+	 * Copies object's internal state to another RrdDb object.
+	 * @param other New RrdDb object to copy state to
+	 * @throws IOException Thrown in case of I/O error
+	 * @throws RrdException Thrown if supplied argument is not a compatible RrdDb object
+	 */
+	public void copyStateTo(RrdUpdater other) throws IOException, RrdException {
+		if(!(other instanceof RrdDb)) {
+			throw new RrdException(
+				"Cannot copy RrdDb object to " + other.getClass().getName());
+		}
+		RrdDb rrd = (RrdDb) other;
+		header.copyStateTo(rrd.header);
+		int dsCount = Math.min(header.getDsCount(), rrd.header.getDsCount());
+		for(int i = 0; i < dsCount; i++) {
+			datasources[i].copyStateTo(rrd.datasources[i]);
+		}
+		int arcCount = Math.min(header.getArcCount(), rrd.header.getArcCount());
+		for(int i = 0; i < arcCount; i++) {
+			archives[i].copyStateTo(rrd.archives[i]);
+		}
 	}
 }

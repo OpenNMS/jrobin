@@ -124,4 +124,25 @@ public class Robin implements RrdUpdater {
 		return rows;
 	}
 
+	/**
+	 * Copies object's internal state to another Robin object.
+	 * @param other New Robin object to copy state to
+	 * @throws IOException Thrown in case of I/O error
+	 * @throws RrdException Thrown if supplied argument is not a Robin object or
+	 * is a Robin object with different number of rows
+	 */
+	public void copyStateTo(RrdUpdater other) throws IOException, RrdException {
+		if(!(other instanceof Robin)) {
+			throw new RrdException(
+				"Cannot copy Archive object to " + other.getClass().getName());
+		}
+		Robin robin = (Robin) other;
+		if(rows != robin.rows) {
+			throw new RrdException("Incompatible number of rows: " + rows +
+				" != " + robin.rows);
+		}
+		robin.pointer.set(pointer.get());
+		// BULK operation, will speed things up
+		robin.values.writeBytes(values.readBytes());
+	}
 }

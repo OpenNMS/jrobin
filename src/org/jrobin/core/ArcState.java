@@ -40,7 +40,6 @@ public class ArcState implements RrdUpdater {
 	private RrdDouble accumValue;
 	private RrdLong nanSteps;
 
-	// create for the first time
 	ArcState(Archive parentArc) throws IOException {
 		this.parentArc = parentArc;
 		if(getRrdFile().getMode() == RrdFile.MODE_CREATE) {
@@ -51,8 +50,8 @@ public class ArcState implements RrdUpdater {
 			long arcStep = parentArc.getArcStep();
 			long nan = (Util.normalize(lastUpdateTime, step) -
 				Util.normalize(lastUpdateTime, arcStep)) / step;
-			nanSteps = new RrdLong(nan, this);
 			accumValue = new RrdDouble(Double.NaN, this);
+			nanSteps = new RrdLong(nan, this);
 		}
 		else {
 			accumValue = new RrdDouble(this);
@@ -116,4 +115,19 @@ public class ArcState implements RrdUpdater {
 		writer.closeTag(); // ds
 	}
 
+	/**
+	 * Copies object's internal state to another ArcState object.
+	 * @param other New ArcState object to copy state to
+	 * @throws IOException Thrown in case of I/O error
+	 * @throws RrdException Thrown if supplied argument is not an ArcState object
+	 */
+	public void copyStateTo(RrdUpdater other) throws IOException, RrdException {
+		if(!(other instanceof ArcState)) {
+			throw new RrdException(
+				"Cannot copy ArcState object to " + other.getClass().getName());
+		}
+		ArcState arcState = (ArcState) other;
+		arcState.accumValue.set(accumValue.get());
+		arcState.nanSteps.set(nanSteps.get());
+	}
 }
