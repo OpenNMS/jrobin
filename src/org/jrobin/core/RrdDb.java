@@ -238,6 +238,14 @@ public class RrdDb implements RrdUpdater {
 	}
 
 	/**
+	 * Returns true if the underlying RRD file is closed.
+	 * @return true if closed, false otherwise
+	 */
+	public boolean isClosed() {
+		return file == null;
+	}
+
+	/**
 	 * <p>Returns underlying <code>RrdFile</code> object. <code>RrdFile</code> is a light
 	 * wrapper around <code>RandomAccessFile</code> class.
 	 * It is used for all I/O operations on RRD files.</p>

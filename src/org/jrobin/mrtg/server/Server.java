@@ -66,7 +66,7 @@ public class Server {
 
 	private Server() {
 		RrdDb.setLockMode(RrdDb.NO_LOCKS);
-		RrdDbPool.getInstance().setExclusiveMode(true);
+		//RrdDbPool.getInstance().setCapacity(500);
 	}
 
 	public synchronized void start(String[] acceptedClients) throws MrtgException {

@@ -74,39 +74,55 @@ import java.util.*;
  * If someone request the same RRD file again (before it gets closed), the same
  * reference will be returned again.<p>
  *
- * RrdDbPool has a 'garbage collector' which gets activated only when the number of open
- * RRD files is to big (> 50). Only RRD files with a reference count equal to zero
- * will be eligible for closing. Unreleased RrdDb references will be never invalidated.
+ * RrdDbPool has a 'garbage collector' which runs in a separate
+ * thread and gets activated only when the number of RRD files kept in the
+ * pool is too big (greater than number returned from {@link #getCapacity getCapacity()}).
+ * Only RRD files with a reference count equal to zero
+ * will be eligible for closing. Unreleased RrdDb references are never invalidated.
  * RrdDbPool object keeps track of the time when each RRD file
  * becomes eligible for closing so that the oldest RRD file gets closed first.<p>
  *
- * Never use close() method on the reference returned from the pool. When the reference
- * is no longer needed, return it to the pool with a {@link #release(RrdDb) release()}
- * method.<p>
+ * Initial RrdDbPool capacity is set to 50. Use {@link #setCapacity(int)} method to
+ * change it at any time.<p>
+ *
+ * <b>WARNING:</b>Never use close() method on the reference returned from the pool.
+ * When the reference is no longer needed, return it to the pool with the
+ * {@link #release(RrdDb) release()} method.<p>
  *
  * However, you are not forced to use RrdDbPool methods to obtain RrdDb references
  * to RRD files, 'ordinary' RrdDb constructors are still available. But RrdDbPool class
  * offers serious performance improvement especially in complex applications with many
  * threads and many simultaneously open RRD files.<p>
  *
- * RrdDbPool can be forced to block (force wait on) all threads requesting access
- * to a single RRD file which is already in use (not yet returned to the pool).
- * If you want such feature, call
- * {@link #setExclusiveMode setExclusiveMode()} method with a <code>true</code> argument.<p>
- *
  * The pool is thread-safe.<p>
  */
-public class RrdDbPool {
+public class RrdDbPool implements Runnable {
 	private static RrdDbPool ourInstance;
 	private static final boolean DEBUG = false;
+
+	private static final Comparator ENTRY_COMPARATOR = new Comparator() {
+		public int compare(Object o1, Object o2) {
+			RrdEntry r1 = (RrdEntry) o1, r2 = (RrdEntry) o2;
+			if (!r1.isReleased() && !r2.isReleased()) {
+				return 0;
+			} else if (r1.isReleased() && !r2.isReleased()) {
+				return -1;
+			} else if (!r1.isReleased() && r2.isReleased()) {
+				return +1;
+			} else {
+				// both released
+				long diff = r1.getReleaseDate().getTime() -
+					r2.getReleaseDate().getTime();
+				return diff < 0L ? -1 : (diff == 0L ? 0 : +1);
+			}
+		}
+	};
 	/**
 	 * Constant to represent the maximum number of internally open RRD files
 	 * which still does not force garbage collector to run.
 	 */
 	public static final int INITIAL_CAPACITY = 50;
-	private static int capacity = INITIAL_CAPACITY;
-
-	private boolean exclusiveMode = false;
+	private volatile int capacity = INITIAL_CAPACITY;
 
 	private HashMap rrdMap = new HashMap();
 
@@ -117,11 +133,18 @@ public class RrdDbPool {
 	public synchronized static RrdDbPool getInstance() {
 		if (ourInstance == null) {
 			ourInstance = new RrdDbPool();
+			ourInstance.startGarbageCollector();
 		}
 		return ourInstance;
 	}
 
 	private RrdDbPool() {
+	}
+
+	private void startGarbageCollector() {
+		Thread gcThread = new Thread(this);
+		gcThread.setDaemon(true);
+		gcThread.start();
 	}
 
 	/**
@@ -136,28 +159,17 @@ public class RrdDbPool {
 	 */
 	public synchronized RrdDb requestRrdDb(String path) throws IOException, RrdException {
 		String keypath = getCanonicalPath(path);
-		for (;;) { // ugly, but it works
-			if (rrdMap.containsKey(keypath)) {
-				// already open
-				RrdEntry rrdEntry = (RrdEntry) rrdMap.get(keypath);
-				if(exclusiveMode && rrdEntry.getUsageCount() > 0) {
-					// reference already in use, wait until the reference
-					// is returned to the pool
-					try {
-						wait();
-					} catch (InterruptedException e) { }
-					// try to obtain the same reference once again
-					continue;
-				}
-				rrdEntry.reportUsage();
-				debug("EXISTING: " + rrdEntry.dump());
-				return rrdEntry.getRrdDb();
-			} else {
-				// not found, open it
-				RrdDb rrdDb = new RrdDb(path);
-				put(keypath, rrdDb);
-				return rrdDb;
-			}
+		if (rrdMap.containsKey(keypath)) {
+			// already open
+			RrdEntry rrdEntry = (RrdEntry) rrdMap.get(keypath);
+			rrdEntry.reportUsage();
+			debug("EXISTING: " + rrdEntry.dump());
+			return rrdEntry.getRrdDb();
+		} else {
+			// not found, open it
+			RrdDb rrdDb = new RrdDb(path);
+			put(keypath, rrdDb);
+			return rrdDb;
 		}
 	}
 
@@ -197,11 +209,12 @@ public class RrdDbPool {
 		return rrdDb;
 	}
 
-	private void put(String keypath, RrdDb rrdDb) throws IOException {
+	private synchronized void put(String keypath, RrdDb rrdDb) throws IOException {
 		RrdEntry newEntry = new RrdEntry(rrdDb);
 		debug("NEW: " + newEntry.dump());
 		rrdMap.put(keypath, newEntry);
-		gc();
+		// notify garbage collector
+		notify();
 	}
 
 	private void validateInactive(String keypath) throws RrdException, IOException {
@@ -236,62 +249,62 @@ public class RrdDbPool {
 			// we don't want NullPointerException
 			return;
 		}
-		RrdFile rrdFile = rrdDb.getRrdFile();
-		if(rrdFile == null) {
+		if(rrdDb.isClosed()) {
 			throw new RrdException("Cannot release: already closed");
 		}
+		RrdFile rrdFile = rrdDb.getRrdFile();
 		String path = rrdFile.getFilePath();
 		String keypath = getCanonicalPath(path);
 		if(rrdMap.containsKey(keypath)) {
 			RrdEntry rrdEntry = (RrdEntry) rrdMap.get(keypath);
 			rrdEntry.release();
-			if(exclusiveMode) {
-				notifyAll();
-			}
 			debug("RELEASED: " + rrdEntry.dump());
 		}
 		else {
-			throw new RrdException("RrdDb with path " + keypath + " not in the pool");
+			throw new RrdException("RRD file " + keypath + " not in the pool");
 		}
-		gc();
+		// notify garbage collector
+		notify();
 	}
 
-	private void gc() throws IOException {
-		int mapSize = rrdMap.size();
-		if(mapSize <= capacity) {
-			// nothing to do
-			debug("GC: no need to run");
-			return;
-		}
-		// prepare collection of released entries
-		debug("GC: finding the oldest released entry");
-		Iterator valueIterator = rrdMap.values().iterator();
-		LinkedList releasedEntries = new LinkedList();
-		while(valueIterator.hasNext()) {
-			RrdEntry rrdEntry = (RrdEntry) valueIterator.next();
-			if(rrdEntry.isReleased()) {
-				releasedEntries.add(rrdEntry);
+	/**
+	 * This method runs garbage collector in a separate thread. If the number of
+	 * open RRD files kept in the pool is too big (greater than number
+	 * returned from {@link #getCapacity getCapacity()}), garbage collector will try
+	 * to close and remove RRD files with a reference count equal to zero.
+	 * Never call this method directly.
+	 */
+	public void run() {
+		debug("GC: started");
+		synchronized (this) {
+			for (;;) {
+				while (rrdMap.size() > capacity) {
+					debug("GC: should run: (" + rrdMap.size() + " > " + capacity + ")");
+					RrdEntry oldestEntry = (RrdEntry)
+						Collections.min(rrdMap.values(), ENTRY_COMPARATOR);
+					if (oldestEntry.isReleased()) {
+						try {
+							debug("GC: closing " + oldestEntry.dump());
+							oldestEntry.close();
+						} catch (IOException e) {
+							debug("GC error: " + e);
+							e.printStackTrace();
+						}
+						rrdMap.values().remove(oldestEntry);
+					} else {
+						// all references are used
+						debug("GC: NOP: all references are active (" + rrdMap.size() + ")");
+						break;
+					}
+				}
+				try {
+					// nothing to do
+					debug("GC: sleeping (" + rrdMap.size() + ")");
+					wait();
+					debug("GC: running");
+				} catch (InterruptedException e) { }
 			}
 		}
-		if(releasedEntries.size() == 0) {
-			debug("GC: no released entries found, nothing to do");
-			return;
-		}
-		debug("GC: found " + releasedEntries.size() + " released entries");
-		Comparator releaseDateComparator = new Comparator() {
-			public int compare(Object o1, Object o2) {
-				RrdEntry r1 = (RrdEntry) o1, r2 = (RrdEntry) o2;
-				long diff = r1.getReleaseDate().getTime() - r2.getReleaseDate().getTime();
-				return diff < 0? -1: (diff == 0? 0: +1);
-			}
-		};
-		RrdEntry oldestEntry = (RrdEntry)
-			Collections.min(releasedEntries, releaseDateComparator);
-		debug("GC: oldest released entry found: " + oldestEntry.dump());
-		oldestEntry.close();
-		rrdMap.values().remove(oldestEntry);
-		debug("GC: oldest entry closed and removed. ");
-		debug("GC: number of entries reduced from " + mapSize + " to " + rrdMap.size());
 	}
 
 	protected void finalize() throws IOException {
@@ -346,7 +359,7 @@ public class RrdDbPool {
 	 *
 	 * @return Desired nuber of open files held in the pool.
 	 */
-	public static int getCapacity() {
+	public int getCapacity() {
 		return capacity;
 	}
 
@@ -356,29 +369,8 @@ public class RrdDbPool {
 	 *
 	 * @param capacity Desired number of open files to hold in the pool
 	 */
-	public static void setCapacity(int capacity) {
-		RrdDbPool.capacity = capacity;
-	}
-
-	/**
-	 * Checks if RrdDbPool will return a reference to an already open RRD file if it is still
-	 * in use (not released, not returned to the pool). If true, simultaneous access
-	 * to the same RRD file will not be possible.
-	 * @return Current working mode of RrdDbPool (initial working mode is <code>false</code>)
-	 */
-	public boolean isExclusiveMode() {
-		return exclusiveMode;
-	}
-
-	/**
-	 * Method used to set the current working mode of RrdDbPool. If set to true, simultaneous
-	 * access to the same RRD file will not be possible. In case of several threads requesting
-	 * a reference to the same RRD file, one thread will get the reference, other threads will
-	 * block until the reference is returned to the pool.
-	 * @param exclusiveMode Working mode of RrdDbPool
-	 */
-	public void setExclusiveMode(boolean exclusiveMode) {
-		this.exclusiveMode = exclusiveMode;
+	public void setCapacity(int capacity) {
+		this.capacity = capacity;
 	}
 
 	private class RrdEntry {
