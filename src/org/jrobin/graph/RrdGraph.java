@@ -64,6 +64,7 @@ public class RrdGraph implements Serializable
 	private RrdDbPool pool;
 		
 	private int maxPoolSize				= DEFAULT_POOLSIZE;
+	private boolean useImageSize		= false;
 	
 	
 	// ================================================================
@@ -115,6 +116,17 @@ public class RrdGraph implements Serializable
 	// ================================================================
 	// -- Public mehods
 	// ================================================================
+	/**
+	 * Determines if graph creation should specify dimensions for the chart graphing
+	 * are, of for the entire image size.  Default is the only the chart graphing
+	 * area, this has an impact on the entire image size.
+	 * @param specImgSize True if the dimensions for the entire image will be specified, false if only for the chart area. 
+	 */
+	public void specifyImageSize( boolean specImgSize )
+	{
+		this.useImageSize = specImgSize;
+	}
+	
 	/**
 	 * Sets the graph definition to use for the graph construction.
 	 * @param graphDef Graph definition.
@@ -377,7 +389,10 @@ public class RrdGraph implements Serializable
 	private BufferedImage getBufferedImage(int width, int height, int colorType) throws RrdException, IOException
 	{
 		// Always regenerate graph
-		img = grapher.createImage( width, height, colorType );
+		if ( useImageSize )
+			img = grapher.createImageGlobal( width, height, colorType );
+		else
+			img = grapher.createImage( width, height, colorType );
 		
 		return img;
 	}

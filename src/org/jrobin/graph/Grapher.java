@@ -201,6 +201,66 @@ class Grapher
 		return bImg;
 	}
 	
+	/**
+	 * Creates the actual graph based on the GraphDef definition.
+	 * The graph is created as a <code>java.awt.image.BufferedImage</code>.
+	 * @param cWidth Width of the entire image in pixels.
+	 * @param cHeight Height of the entire image in pixels.
+	 * @return The created graph as a BufferedImage.
+	 * @throws RrdException Thrown in case of a JRobin specific error.
+	 * @throws IOException Thrown in case of a I/O related error.
+	 */
+	protected BufferedImage createImageGlobal( int cWidth, int cHeight, int colorType ) throws RrdException, IOException
+	{
+		imgWidth			= cWidth;
+		imgHeight			= cHeight;
+
+		if ( cWidth > 0 ) numPoints = cWidth;
+
+		// Padding depends on grid visibility
+		chart_lpadding 		= ( graphDef.showMajorGridY() ? graphDef.getChartLeftPadding() : CHART_LPADDING_NM );
+		chart_bpadding 		= ( graphDef.showMajorGridX() ? CHART_BPADDING : CHART_BPADDING_NM );
+	
+		// Size of all lines below chart
+		commentBlock		= 0;
+		if ( graphDef.showLegend() )
+			commentBlock 	= graphDef.getCommentLineCount() * (nfont_height + LINE_PADDING) - LINE_PADDING;		
+
+		// x_offset and y_offset define the starting corner of the actual graph 
+		x_offset			= LBORDER_SPACE;
+		if ( graphDef.getVerticalLabel() != null ) 
+			x_offset 		+= nfont_height + LINE_PADDING;
+		chartWidth			= imgWidth - x_offset - RBORDER_SPACE - chart_lpadding - CHART_RPADDING;
+	
+		y_offset			= UBORDER_SPACE;
+		if ( graphDef.getTitle() != null )			// Title *always* gets a extra LF automatically 
+			y_offset		+= ((tfont_height + LINE_PADDING) * graphDef.getTitle().getLineCount() + tfont_height) + LINE_PADDING;
+		chartHeight 		= imgHeight - commentBlock - y_offset - BBORDER_SPACE - CHART_UPADDING - CHART_BPADDING;
+	
+		// Create graphics object
+		BufferedImage bImg 	= new BufferedImage( imgWidth, imgHeight, colorType );
+		Graphics2D graphics	= (Graphics2D) bImg.getGraphics();
+	
+		// Do the actual graphing
+		calculateSeries();							// calculate all datasources
+					
+		plotImageBackground( graphics );			// draw the image background
+		
+		plotChart( graphics );						// draw the actual chart
+		
+		plotComments( graphics );					// draw all comment lines
+		
+		plotOverlay( graphics );					// draw a possible image overlay
+		
+		plotSignature( graphics );					// draw the JRobin signature
+
+	
+		// Dispose graphics context
+		graphics.dispose();
+	
+		return bImg;
+	}
+	
 	
 	// ================================================================
 	// -- Private methods
