@@ -152,7 +152,7 @@ class ComplexDemo {
 		graph.saveAsJPEG(jpgFile, 0.6F);
 
 		// Create ftp graph for a month
-		println("-- Creating graph 3: complexdemo3.png");
+		println("-- Creating graph 3");
 		start = new GregorianCalendar(2003, 7, 19, 12, 00);
 		stop = new GregorianCalendar(2003, 7, 20, 12, 00);
 

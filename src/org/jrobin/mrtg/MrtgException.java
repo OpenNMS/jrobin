@@ -25,9 +25,7 @@
 
 package org.jrobin.mrtg;
 
-import org.jrobin.core.RrdException;
-
-public class MrtgException extends RrdException {
+public class MrtgException extends Exception {
 	public MrtgException(String cause) {
 		super(cause);
 	}

@@ -37,8 +37,8 @@ import java.awt.event.*;
 import java.io.IOException;
 
 class Client extends JFrame {
-	static final String TITLE = "JRobin-MRTG client 1.1.0";
-	static final String SUBTITLE = "http://jrobin.sourceforge.net";
+	static final String TITLE = "JRobin-MRTG client 1.2.0";
+	static final String SUBTITLE = "http://www.jrobin.org";
 	static final String COPYRIGHT = "Copyright \u00A9 2003 Sasa Markovic";
 	static final String ICON = "res/icon.png";
 
