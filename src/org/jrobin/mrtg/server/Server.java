@@ -185,20 +185,26 @@ public class Server implements MrtgConstants {
 	synchronized int addRouter(String host, String community, String descr, boolean active)
 		throws MrtgException {
 		int retCode = deviceList.addRouter(host, community, descr, active);
-		saveHardware();
+		if(retCode == 0) {
+			saveHardware();
+		}
 		return retCode;
 	}
 
 	synchronized int updateRouter(String host, String community, String descr, boolean active)
 		throws MrtgException {
 		int retCode = deviceList.updateRouter(host, community, descr, active);
-		saveHardware();
+		if(retCode == 0) {
+			saveHardware();
+		}
 		return retCode;
 	}
 
 	synchronized int removeRouter(String host) throws MrtgException {
 		int retCode = deviceList.removeRouter(host);
-		saveHardware();
+		if(retCode == 0) {
+			saveHardware();
+		}
 		return retCode;
 	}
 
@@ -206,7 +212,9 @@ public class Server implements MrtgConstants {
 							 boolean active)
 		throws MrtgException {
 		int retCode = deviceList.addLink(host, ifDescr, descr, samplingInterval, active);
-		saveHardware();
+		if(retCode == 0) {
+			saveHardware();
+		}
 		return retCode;
 	}
 
@@ -214,17 +222,21 @@ public class Server implements MrtgConstants {
 								int samplingInterval, boolean active)
 		throws MrtgException {
 		int retCode = deviceList.updateLink(host, ifDescr, descr, samplingInterval, active);
-		saveHardware();
+		if(retCode == 0) {
+			saveHardware();
+		}
 		return retCode;
 	}
 
 	synchronized int removeLink(String host, String ifDescr) throws MrtgException {
 		int retCode = deviceList.removeLink(host, ifDescr);
-		saveHardware();
-		if(retCode == 0 && REMOVE_RRD_FOR_DEACTIVATED_LINK) {
-			// remove the underlying RRD file
-        	String rrdFile = RrdWriter.getRrdFilename(host, ifDescr);
-			new File(rrdFile).delete();
+		if(retCode == 0) {
+			saveHardware();
+			if(REMOVE_RRD_FOR_DEACTIVATED_LINK) {
+				// remove the underlying RRD file
+        		String rrdFile = RrdWriter.getRrdFilename(host, ifDescr);
+				new File(rrdFile).delete();
+			}
 		}
 		return retCode;
 	}

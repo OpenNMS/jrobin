@@ -194,6 +194,7 @@ class Port {
 			switchToIfIndex(-1);
 			return;
 		}
+		sample.setIfDescr(ifDescr);
 		if(lastSample != null && lastSample.getSysUpTime() >= sample.getSysUpTime() ) {
             // sysUpTime decreased
 			sample.setValid(false);
