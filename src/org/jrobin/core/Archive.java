@@ -58,7 +58,7 @@ public class Archive implements RrdUpdater {
 		robins = new Robin[n];
 		states = new ArcState[n];
 		for(int i = 0; i < n; i++) {
-            states[i] = new ArcState(this, true);
+            states[i] = new ArcState(this);
 			robins[i] = new Robin(this, rows.get());
 		}
 	}
@@ -74,7 +74,7 @@ public class Archive implements RrdUpdater {
 		states = new ArcState[n];
 		robins = new Robin[n];
 		for(int i = 0; i < n; i++) {
-			states[i] = new ArcState(this, false);
+			states[i] = new ArcState(this);
             robins[i] = new Robin(this, rows.get());
 		}
 	}
@@ -90,7 +90,7 @@ public class Archive implements RrdUpdater {
 		states = new ArcState[dsCount];
 		for(int dsIndex = 0; dsIndex < dsCount; dsIndex++) {
 			// restore state
-            states[dsIndex] = new ArcState(this, true);
+            states[dsIndex] = new ArcState(this);
 			states[dsIndex].setAccumValue(reader.getStateAccumValue(arcIndex, dsIndex));
 			states[dsIndex].setNanSteps(reader.getStateNanSteps(arcIndex, dsIndex));
 			// restore robins

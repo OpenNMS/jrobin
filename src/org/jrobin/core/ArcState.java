@@ -41,11 +41,9 @@ public class ArcState implements RrdUpdater {
 	private RrdLong nanSteps;
 
 	// create for the first time
-	ArcState(Archive parentArc, boolean newState) throws IOException {
+	ArcState(Archive parentArc) throws IOException {
 		this.parentArc = parentArc;
-		accumValue = new RrdDouble(this);
-		nanSteps = new RrdLong(this);
-		if(newState) {
+		if(getRrdFile().getMode() == RrdFile.MODE_CREATE) {
 			// should initialize
 			Header header = parentArc.getParentDb().getHeader();
 			long step = header.getStep();
@@ -53,8 +51,12 @@ public class ArcState implements RrdUpdater {
 			long arcStep = parentArc.getArcStep();
 			long nan = (Util.normalize(lastUpdateTime, step) -
 				Util.normalize(lastUpdateTime, arcStep)) / step;
-			nanSteps.set(nan);
-			accumValue.set(Double.NaN);
+			nanSteps = new RrdLong(nan, this);
+			accumValue = new RrdDouble(Double.NaN, this);
+		}
+		else {
+			accumValue = new RrdDouble(this);
+			nanSteps = new RrdLong(this);
 		}
 	}
 
