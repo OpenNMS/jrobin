@@ -84,7 +84,7 @@ import java.util.*;
  * RrdDbPool object keeps track of the time when each RRD file
  * becomes eligible for closing so that the oldest RRD file gets closed first.<p>
  *
- * Initial RrdDbPool capacity is set to 50. Use {@link #setCapacity(int)} method to
+ * Initial RrdDbPool capacity is set to {@link #INITIAL_CAPACITY}. Use {@link #setCapacity(int)} method to
  * change it at any time.<p>
  *
  * <b>WARNING:</b>Never use close() method on the reference returned from the pool.
@@ -104,14 +104,15 @@ public class RrdDbPool implements Runnable {
 
 	/**
 	 * Constant to represent the maximum number of internally open RRD files
-	 * which still does not force garbage collector to run.
+	 * which still does not force garbage collector (the process which closes RRD files) to run.
 	 */
-	public static final int INITIAL_CAPACITY = 50;
+	public static final int INITIAL_CAPACITY = 100;
 	private int capacity = INITIAL_CAPACITY;
 
 	private Map rrdMap = new HashMap();
 	private List rrdGcList = new LinkedList();
 	private RrdBackendFactory factory;
+	private int poolHitsCount, poolRequestsCount;
 
 	/**
 	 * Returns an instance to RrdDbPool object. Only one such object may exist in each JVM.
@@ -146,18 +147,22 @@ public class RrdDbPool implements Runnable {
 	 */
 	public synchronized RrdDb requestRrdDb(String path) throws IOException, RrdException {
 		String keypath = getCanonicalPath(path);
+		RrdDb rrdDbRequested;
 		if (rrdMap.containsKey(keypath)) {
 			// already open
 			RrdEntry rrdEntry = (RrdEntry) rrdMap.get(keypath);
 			reportUsage(rrdEntry);
 			debug("EXISTING: " + rrdEntry.dump());
-			return rrdEntry.getRrdDb();
+			rrdDbRequested = rrdEntry.getRrdDb();
+			poolHitsCount++;
 		} else {
 			// not found, open it
 			RrdDb rrdDb = new RrdDb(path, getFactory());
 			addRrdEntry(keypath, rrdDb);
-			return rrdDb;
+			rrdDbRequested = rrdDb;
 		}
+		poolRequestsCount++;
+		return rrdDbRequested;
 	}
 
 	/**
@@ -176,6 +181,7 @@ public class RrdDbPool implements Runnable {
 		prooveInactive(keypath);
 		RrdDb rrdDb = new RrdDb(path, xmlPath, getFactory());
 		addRrdEntry(keypath, rrdDb);
+		poolRequestsCount++;
 		return rrdDb;
 	}
 
@@ -193,6 +199,7 @@ public class RrdDbPool implements Runnable {
 		prooveInactive(keypath);
 		RrdDb rrdDb = new RrdDb(rrdDef, getFactory());
 		addRrdEntry(keypath, rrdDb);
+		poolRequestsCount++;
 		return rrdDb;
 	}
 
@@ -416,6 +423,38 @@ public class RrdDbPool implements Runnable {
 			String keypath = rrdDb.getCanonicalPath();
 			return keypath + " [" + usageCount + "]";
 		}
+	}
+
+	/**
+	 * Calculates pool's efficency ratio. The ratio is obtained by dividing the number of
+	 * RrdDb requests served from the internal pool of open RRD files
+	 * with the number of total RrdDb requests.
+	 * @return Pool's efficiency ratio as a double between 1 (best) and 0 (worst). If no RrdDb reference
+	 * was ever requested, 1 would be returned.
+	 */
+	public synchronized double getPoolEfficency() {
+		if(poolRequestsCount == 0) {
+			return 1.0;
+		}
+		double ratio = (double) poolHitsCount / (double) poolRequestsCount;
+		// round to 3 decimal digits
+		return Math.round(ratio * 1000.0) / 1000.0;
+	}
+
+	/**
+	 * Returns the number of RRD requests served from the internal pool of open RRD files
+	 * @return The number of pool "hits".
+	 */
+	public synchronized int getPoolHitsCount() {
+		return poolHitsCount;
+	}
+
+	/**
+	 * Returns the total number of RRD requests successfully served by this pool.
+	 * @return Total number of RRD requests
+	 */
+	public synchronized int getPoolRequestsCount() {
+		return poolRequestsCount;
 	}
 }
 

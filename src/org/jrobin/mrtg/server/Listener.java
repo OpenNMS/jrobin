@@ -36,7 +36,7 @@ import java.util.Vector;
 class Listener implements MrtgConstants {
 	private WebServer webServer;
 
-	Listener(String[] clients) throws MrtgException {
+	Listener(String[] clients) {
 		webServer = new WebServer(SERVER_PORT);
 		webServer.addHandler("mrtg", new EventHandler());
 		if(clients != null && clients.length > 0) {

@@ -219,6 +219,7 @@ class MrtgData {
 		info.setGoodSavesCount(Integer.parseInt(serverInfo.get("goodSavesCount").toString()));
 		info.setSavesCount(Integer.parseInt(serverInfo.get("savesCount").toString()));
 		info.setSampleCount(Integer.parseInt(serverInfo.get("sampleCount").toString()));
+		info.setPoolEfficency(Double.parseDouble(serverInfo.get("poolEfficency").toString()));
 		info.setStartDate((Date)serverInfo.get("startDate"));
 		return info;
 	}

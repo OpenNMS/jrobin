@@ -45,7 +45,7 @@ public interface MrtgConstants {
 	int SCHEDULER_DELAY = 20;
 
 	// number of open RRD files held in the pool
-	int POOL_CAPACITY = 50;
+	int POOL_CAPACITY = 100;
 
 	// graph dimensions
 	int GRAPH_WIDTH = 502, GRAPH_HEIGHT = 234;

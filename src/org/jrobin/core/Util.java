@@ -84,8 +84,8 @@ public class Util {
 	}
 
 	/**
-	 * Rounds the given timestamp to the nearest whole "step" by evaluating
-	 * the following expression:<p>
+	 * Rounds the given timestamp to the nearest whole &quote;step&quote;. Rounded value is obtained
+	 * from the following expression:<p>
 	 * <code>timestamp - timestamp % step;</code>
 	 * @param timestamp Timestamp in seconds
 	 * @param step Step in seconds
