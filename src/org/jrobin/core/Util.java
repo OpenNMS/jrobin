@@ -31,6 +31,7 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.GregorianCalendar;
 import java.io.File;
+import java.io.IOException;
 
 /**
  * Class defines various utility functions used in JRobin. 
@@ -195,6 +196,12 @@ public class Util {
 	 */
 	public static String getJRobinDemoDirectory() {
 		return (homeDirFile.exists() || homeDirFile.mkdirs())? homeDirPath: null;
+	}
+
+	static boolean sameFilePath(String path1, String path2) throws IOException {
+		File file1 = new File(path1);
+		File file2 = new File(path2);
+		return file1.getCanonicalPath().equals(file2.getCanonicalPath());
 	}
 
 }

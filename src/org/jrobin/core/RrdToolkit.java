@@ -34,13 +34,16 @@ public class RrdToolkit {
 	 * existing one (the original RRD file is not modified at all). All data from
 	 * the original RRD file is copied to the new one.
 	 * @param sourcePath path to a RRD file to import data from (will not be modified)
-	 * @param destPath path to new RRD file (will be created)
+	 * @param destPath path to a new RRD file (will be created)
 	 * @param newDatasource Datasource definition to be added to the new RRD file
 	 * @throws IOException Thrown in case of I/O error
 	 * @throws RrdException Thrown in case of JRobin specific error
 	 */
 	public void addDatasource(String sourcePath, String destPath, DsDef newDatasource)
 		throws IOException, RrdException {
+		if(Util.sameFilePath(sourcePath, destPath)) {
+			throw new RrdException("Source and destination paths are the same");
+		}
         RrdDb rrdSource = new RrdDb(sourcePath);
 		RrdDef rrdDef = rrdSource.getRrdDef();
 		rrdDef.setPath(destPath);
@@ -56,13 +59,19 @@ public class RrdToolkit {
 	 * existing one (the original RRD file is not modified at all). All remaining data from
 	 * the original RRD file is copied to the new one.
 	 * @param sourcePath path to a RRD file to import data from (will not be modified)
-	 * @param destPath path to new RRD file (will be created)
+	 * @param destPath path to a new RRD file (will be created)
 	 * @param dsName Name of the Datasource to be removed from the new RRD file
 	 * @throws IOException Thrown in case of I/O error
 	 * @throws RrdException Thrown in case of JRobin specific error
 	 */
+
+	/*
+	Still buggy! Will fix later
 	public void removeDatasource(String sourcePath, String destPath, String dsName)
 		throws IOException, RrdException {
+		if(Util.sameFilePath(sourcePath, destPath)) {
+			throw new RrdException("Source and destination paths are the same");
+		}
         RrdDb rrdSource = new RrdDb(sourcePath);
 		RrdDef rrdDef = rrdSource.getRrdDef();
 		rrdDef.setPath(destPath);
@@ -72,11 +81,38 @@ public class RrdToolkit {
 		rrdSource.close();
 		rrdDest.close();
 	}
+	*/
+
+	/**
+	 * Creates a new RRD file with one more archive in it. RRD file is created based on the
+	 * existing one (the original RRD file is not modified at all). All data from
+	 * the original RRD file is copied to the new one.
+	 * @param sourcePath path to a RRD file to import data from (will not be modified)
+	 * @param destPath path to a new RRD file (will be created)
+	 * @param newArchive Archive definition to be added to the new RRD file
+	 * @throws IOException Thrown in case of I/O error
+	 * @throws RrdException Thrown in case of JRobin specific error
+	 */
+	public void addArchive(String sourcePath, String destPath, ArcDef newArchive)
+		throws IOException, RrdException {
+		if(Util.sameFilePath(sourcePath, destPath)) {
+			throw new RrdException("Source and destination paths are the same");
+		}
+        RrdDb rrdSource = new RrdDb(sourcePath);
+		RrdDef rrdDef = rrdSource.getRrdDef();
+		rrdDef.setPath(destPath);
+		rrdDef.addArchive(newArchive);
+		RrdDb rrdDest = new RrdDb(rrdDef);
+		rrdSource.copyStateTo(rrdDest);
+		rrdSource.close();
+		rrdDest.close();
+	}
 
     public static void main(String[] args) throws RrdException, IOException {
 		DsDef dsDef = new DsDef("XXX", "GAUGE", 666, -1, Double.NaN);
 		RrdToolkit.getInstance().addDatasource("demo.rrd", "demo2.rrd", dsDef);
-		RrdToolkit.getInstance().removeDatasource("demo2.rrd", "demo3.rrd", "XXX");
+		ArcDef arcDef = new ArcDef("LAST", 0.666, 77, 888);
+		RrdToolkit.getInstance().addArchive("demo2.rrd", "demo3.rrd", arcDef);
 	}
 }
 
