@@ -28,11 +28,12 @@ package org.jrobin.convertor;
 import org.jrobin.core.RrdDb;
 import java.io.*;
 import java.text.DecimalFormat;
+import java.util.Date;
 
 class Convertor {
 	private static final String SUFFIX = ".jrb";
 	private static final DecimalFormat secondsFormatter = new DecimalFormat("##0.000");
-	private static final DecimalFormat countFormatter = new DecimalFormat("00000");
+	private static final DecimalFormat countFormatter = new DecimalFormat("0000");
 
 	private String[] files;
 	private int totalCount, badCount, goodCount;
@@ -42,6 +43,7 @@ class Convertor {
 	}
 
 	private void convertAll() {
+		Date t1 = new Date();
 		final String ruler = "=======================================================================";
 		println(ruler);
 		println("Converting RRDTool files to JRobin native format.");
@@ -53,7 +55,14 @@ class Convertor {
 		}
 		println(ruler);
 		println("Finished: " + totalCount + " total, " +
-			goodCount + " OK, " + badCount + " failed.");
+			goodCount + " OK, " + badCount + " failed");
+		Date t2 = new Date();
+		double secs = (t2.getTime() - t1.getTime()) / 1000.0;
+		println("Conversion took " + secondsFormatter.format(secs) + " sec");
+		if(totalCount > 0) {
+			double avgSec = secs / totalCount;
+			println("Average per-file conversion time: " + secondsFormatter.format(avgSec) + " sec");
+		}
 	}
 
 	private void convertFile(String path) {
@@ -61,7 +70,8 @@ class Convertor {
 		totalCount++;
 		try {
 			File rrdFile = new File(path);
-			print(countFormatter.format(totalCount) + " " + rrdFile.getName() + " ");
+			print(countFormatter.format(totalCount) + "/" + countFormatter.format(files.length) +
+					" " + rrdFile.getName() + " ");
 			String sourcePath = rrdFile.getCanonicalPath();
 			String destPath = sourcePath + SUFFIX;
 			RrdDb rrd = new RrdDb(destPath, RrdDb.PREFIX_RRDTool + sourcePath);
