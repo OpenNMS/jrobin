@@ -25,10 +25,13 @@
 
 package org.jrobin.core;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Class to represent RRD file on the disk. All disk I/O operations are performed
@@ -37,32 +40,30 @@ import java.nio.channels.FileLock;
  *
  * @author <a href="mailto:saxon@jrobin.org">Sasa Markovic</a>
  */
-public class RrdFile {
-	/** Maximum acceptable string length (20).*/
-	public static int STRING_LENGTH = 20;
-	static final int STRING_SIZE = STRING_LENGTH * 2;
-	static final int INT_SIZE = 4;
-	static final int LONG_SIZE = 8;
-	static final int DOUBLE_SIZE = 8;
+public class RrdFile extends RandomAccessFile {
+	static final int MODE_NORMAL = 0;
+	static final int MODE_RESTORE = 1;
+	static final int MODE_CREATE = 2;	
 
 	static final long LOCK_DELAY = 500; // 0.5sec
+	static final String FLAGS = "rw";   // R/W access
 	static int lockMode = RrdDb.NO_LOCKS;
 
-	private RandomAccessFile file;
-	private boolean safeMode = true;
-	private long bookmark;
 	private String filePath;
 	private FileLock fileLock;
+	private List primitives = new LinkedList();
+	private int mode;
 
-	RrdFile(String filePath) throws IOException {
+	RrdFile(String filePath, int mode) throws IOException {
+		super(filePath, FLAGS);
 		this.filePath = filePath;
-		file = new RandomAccessFile(filePath, "rw");
+		this.mode = mode;
 		lockFile();
 	}
 
 	private void lockFile() throws IOException {
 		if(lockMode == RrdDb.WAIT_IF_LOCKED || lockMode == RrdDb.EXCEPTION_IF_LOCKED) {
-			FileChannel fileChannel = file.getChannel();
+			FileChannel fileChannel = getChannel();
 			do {
 				fileLock = fileChannel.tryLock();
 				if(fileLock == null) {
@@ -84,12 +85,13 @@ public class RrdFile {
 		}
 	}
 
-	void close() throws IOException {
+	/**
+	 * Closes the underlying RandomAccessFile object.
+	 * @throws IOException Thrown in case of I/O error
+	 */
+	public void close() throws IOException {
 		unlockFile();
-		if(file != null) {
-			file.close();
-			file = null;
-		}
+		super.close();
 	}
 
 	private void unlockFile() throws IOException {
@@ -102,133 +104,34 @@ public class RrdFile {
 	protected void finalize() throws IOException {
 		close();
 	}
+	
+	RrdPrimitive getPrimitive(int index) {
+		return (RrdPrimitive) primitives.get(index);
+	}
+	
+	void allocate(RrdPrimitive primitive, int byteCount) throws IOException {
+		long pointer = getNextPointer();
+		primitive.setPointer(pointer);
+		primitive.setByteCount(byteCount);
+		primitives.add(primitive);
+	}
+	
+	private long getNextPointer() {
+		long pointer = 0;
+		int count = primitives.size();
+		if(count > 0) {
+			RrdPrimitive lastPrimitive = getPrimitive(count - 1);
+			pointer = lastPrimitive.getPointer() + lastPrimitive.getByteCount();  		 
+		}
+		return pointer;
+	}	
 
-	void truncate() throws IOException {
-		file.setLength(file.getFilePointer());
+	void truncateFile() throws IOException {
+		setLength(getNextPointer());
 	}
 
 	boolean isEndReached() throws IOException {
-		return file.getFilePointer() == file.length();
-	}
-
-	long allocate(int typeSize, int count) throws IOException {
-		assert typeSize == STRING_SIZE || typeSize == INT_SIZE ||
-			typeSize == LONG_SIZE || typeSize == DOUBLE_SIZE;
-		long pointer = file.getFilePointer();
-		file.seek(pointer + typeSize * count);
-		return pointer;
-	}
-
-	long allocate(int intVal) throws IOException {
-		long pointer = file.getFilePointer();
-		file.writeInt(intVal);
-		return pointer;
-	}
-
-	long allocate(long longVal) throws IOException {
-		long pointer = file.getFilePointer();
-		file.writeLong(longVal);
-		return pointer;
-	}
-
-	long allocate(double doubleVal) throws IOException {
-		long pointer = file.getFilePointer();
-		file.writeDouble(doubleVal);
-		return pointer;
-	}
-
-	long allocate(String stringVal) throws IOException {
-		long pointer = file.getFilePointer();
-		writeStringInternal(stringVal);
-		return pointer;
-	}
-
-	int readInt(long pointer) throws IOException {
-		prepareIO(pointer);
-		int result = file.readInt();
-		finalizeIO();
-		return result;
-	}
-
-	long readLong(long pointer) throws IOException {
-		prepareIO(pointer);
-		long result = file.readLong();
-		finalizeIO();
-		return result;
-	}
-
-	double readDouble(long pointer) throws IOException {
-		prepareIO(pointer);
-		double result = file.readDouble();
-		finalizeIO();
-		return result;
-	}
-
-	String readString(long pointer) throws IOException {
-		prepareIO(pointer);
-		char[] chars = new char[STRING_LENGTH];
-		for(int i = 0; i < STRING_LENGTH; i++) {
-			chars[i] = file.readChar();
-		}
-		String result = new String(chars).trim();
-		finalizeIO();
-		return result;
-	}
-
-	void writeInt(long pointer, int value) throws IOException {
-		prepareIO(pointer);
-		file.writeInt(value);
-		finalizeIO();
-	}
-
-	void writeLong(long pointer, long value) throws IOException {
-		prepareIO(pointer);
-		file.writeLong(value);
-		finalizeIO();
-	}
-
-	void writeDouble(long pointer, double value) throws IOException {
-		prepareIO(pointer);
-		file.writeDouble(value);
-		finalizeIO();
-	}
-
-	void writeString(long pointer, String value) throws IOException {
-		prepareIO(pointer);
-		writeStringInternal(value);
-		finalizeIO();
-	}
-
-	private void writeStringInternal(String value) throws IOException {
-		for(int i = 0; i < STRING_LENGTH; i++) {
-			if(i < value.length()) {
-				file.writeChar(value.charAt(i));
-			}
-			else {
-				file.writeChar(' ');
-			}
-		}
-	}
-
-	private void prepareIO(long pointer) throws IOException {
-		if(safeMode) {
-			bookmark = file.getFilePointer();
-		}
-		file.seek(pointer);
-	}
-
-	private void finalizeIO() throws IOException {
-        if(safeMode) {
-			file.seek(bookmark);
-		}
-	}
-
-	boolean isSafeMode() {
-		return safeMode;
-	}
-
-	void setSafeMode(boolean safeMode) {
-		this.safeMode = safeMode;
+		return getNextPointer() == length();
 	}
 
 	/**
@@ -238,6 +141,15 @@ public class RrdFile {
 	public String getFilePath() {
 		return filePath;
 	}
+	
+	/**
+	 * Returns canonical path to RRD file on disk.
+	 * @return RRD file path.
+	 * @throws IOException Thrown in case of I/O error
+	 */
+	public String getCanonicalFilePath() throws IOException {
+		return new File(filePath).getCanonicalPath();
+	}
 
 	/**
 	 * Returns RRD file length. Once created, RRD file has the same length,
@@ -246,7 +158,7 @@ public class RrdFile {
 	 * @throws IOException Thrown in case of I/O error.
 	 */
 	public long getFileSize() throws IOException {
-		return file.length();
+		return length();
 	}
 
 	static int getLockMode() {
@@ -256,4 +168,13 @@ public class RrdFile {
 	static void setLockMode(int lockMode) {
 		RrdFile.lockMode = lockMode;
 	}
+	
+	int getMode() {
+		return mode;
+	}
+
+	void setMode(int mode) {
+		this.mode = mode;
+	}
+
 }

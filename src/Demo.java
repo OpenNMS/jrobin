@@ -32,12 +32,18 @@ import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Random;
 
 class Demo {
+	static final long SEED = 1909752002L;  
+	
+	static final Random RANDOM = new Random(SEED);
 	static final String HOME = Util.getJRobinDemoDirectory();
 	static final String FILE = "demo";
+
 	static final long START = Util.getTimestamp(2003, 4, 1);
 	static final long END = Util.getTimestamp(2003, 5, 1);
+
 	static final int MAX_STEP = 300;
 
 	public static void main(String[] args) throws RrdException, IOException {
@@ -75,7 +81,8 @@ class Demo {
 		println(rrdDef.dump());
 		pw.println(rrdDef.dump());
 		RrdDb rrdDb = new RrdDb(rrdDef);
-		println("== RRD file created.");
+		rrdDb.close();
+		println("== RRD file created and closed.");
 
 		// update database
 		GaugeSource sunSource = new GaugeSource(1200, 20);
@@ -83,6 +90,7 @@ class Demo {
 		println("== Simulating one month of RRD file updates with step not larger than " +
 			MAX_STEP + " seconds (* denotes 1000 updates)");
 		long t = start; int n = 0;
+		rrdDb = new RrdDb(rrdPath);
 		Sample sample = rrdDb.createSample();
 		while(t <= end + 86400L) {
 			sample.setTime(t);
@@ -91,7 +99,7 @@ class Demo {
 			pw.println(sample.dump());
 			sample.update();
 			
-			t += Math.random() * MAX_STEP + 1;
+			t += RANDOM.nextDouble() * MAX_STEP + 1;
 			if(((++n) % 1000) == 0) {
 				System.out.print("*");
 			};
@@ -179,8 +187,8 @@ class GaugeSource {
 
 	long getValue() {
 		double oldValue = value;
-		double increment = Math.random() * step;
-		if(Math.random() > 0.5) {
+		double increment = Demo.RANDOM.nextDouble() * step;
+		if(Demo.RANDOM.nextDouble() > 0.5) {
 			increment *= -1;
 		}
 		value += increment;

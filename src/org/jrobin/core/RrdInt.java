@@ -27,55 +27,37 @@ package org.jrobin.core;
 
 import java.io.IOException;
 
-class RrdInt {
-	private RrdFile file;
-	private long pointer;
-	private int count;
-
-	private boolean cached = false;
-	private int cachedValue;
-
-	RrdInt(RrdUpdater updater, int count) throws IOException {
-		this.count = count;
-		file = updater.getRrdFile();
-		pointer = file.allocate(RrdFile.INT_SIZE, count);
-	}
+class RrdInt extends RrdPrimitive {
+	static final int SIZE = 4;
+	
+	private int cache;
 
 	RrdInt(RrdUpdater updater) throws IOException {
-		this(updater, 1);
+		super(updater, SIZE);
+		loadCache();
 	}
-
+	
+	void loadCache() throws IOException {
+		RrdFile rrdFile = getRrdFile();
+		if(rrdFile.getMode() == RrdFile.MODE_RESTORE) {
+			rrdFile.seek(getPointer());
+			cache = rrdFile.readInt();
+		}
+	}
+	
 	RrdInt(int initValue, RrdUpdater updater) throws IOException {
-		this.count = 1;
-		file = updater.getRrdFile();
-		pointer = file.allocate(initValue);
-		cached = true;
-		cachedValue = initValue;
-	}
-
-	void set(int index, int value) throws IOException {
-		assert index < count;
-		long readPointer = pointer + index * RrdFile.INT_SIZE;
-		file.writeInt(readPointer, value);
+		super(updater, SIZE);
+		set(initValue);
 	}
 
 	void set(int value) throws IOException {
-		cached = true;
-		cachedValue = value;
-		set(0, value);
+		cache = value;
+		RrdFile rrdFile = getRrdFile();
+		rrdFile.seek(getPointer());
+		rrdFile.writeInt(cache);
 	}
 
-	int get(int index) throws IOException {
-		assert index < count;
-		long readPointer = pointer + index * RrdFile.INT_SIZE;
-		return file.readInt(readPointer);
-	}
-
-	int get() throws IOException {
-		if(!cached) {
-			cachedValue = get(0);
-			cached = true;
-		}
-		return cachedValue;
+	int get() {
+		return cache;
 	}
 }

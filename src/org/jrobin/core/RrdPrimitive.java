@@ -22,42 +22,54 @@
  * library; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-
 package org.jrobin.core;
 
 import java.io.IOException;
 
-class RrdDouble extends RrdPrimitive {
-	static final int SIZE = 8;
+abstract class RrdPrimitive {
 	
-	private double cache;
-
-	RrdDouble(RrdUpdater updater) throws IOException {
-		super(updater, SIZE);
-		loadCache();
+	private RrdUpdater parent;
+	private long pointer;
+	private int byteCount;
+	
+	RrdPrimitive(RrdUpdater parent, int byteCount) throws IOException {
+		this.parent = parent;
+		// this will set pointer and byteCount
+		parent.getRrdFile().allocate(this, byteCount);
 	}
 	
-	void loadCache() throws IOException {
-		RrdFile rrdFile = getRrdFile();
-		if(rrdFile.getMode() == RrdFile.MODE_RESTORE) {
-			rrdFile.seek(getPointer());
-			cache = rrdFile.readDouble();
+	long getPointer() {
+		return pointer;
+	}
+
+	void setPointer(long pointer) {
+		this.pointer = pointer;
+	}
+	
+	int getByteCount() {
+		return byteCount;
+	}
+	
+	void setByteCount(int byteCount) {
+		this.byteCount = byteCount;
+	}
+	
+	RrdUpdater getParent() {
+		return parent;
+	}
+	
+	RrdFile getRrdFile() {
+		return parent.getRrdFile();
+	}
+	
+	byte[] getBytes() throws IOException {
+		byte[] b = new byte[byteCount];
+		int bytesRead = parent.getRrdFile().read(b);
+		if(bytesRead != byteCount) {
+			throw new IOException("Could not read enough bytes (" + byteCount + 
+				" bytes requested, " + bytesRead + " bytes obtained");
 		}
+		return b;
 	}
-
-	RrdDouble(double initValue, RrdUpdater updater) throws IOException {
-		super(updater, SIZE);
-		set(initValue);
-	}
-
-	void set(double value) throws IOException {
-		cache = value;
-		RrdFile rrdFile = getRrdFile();
-		rrdFile.seek(getPointer());
-		rrdFile.writeDouble(cache);
-	}
-
-	double get() {
-		return cache;
-	}
+	
 }

@@ -22,42 +22,37 @@
  * library; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-
 package org.jrobin.core;
 
 import java.io.IOException;
 
-class RrdDouble extends RrdPrimitive {
-	static final int SIZE = 8;
+class RrdDoubleArray extends RrdPrimitive {
 	
-	private double cache;
+	private int length;
 
-	RrdDouble(RrdUpdater updater) throws IOException {
-		super(updater, SIZE);
-		loadCache();
+	RrdDoubleArray(RrdUpdater updater, int length) throws IOException {
+		super(updater, length * RrdDouble.SIZE);
+		this.length = length;
 	}
 	
-	void loadCache() throws IOException {
-		RrdFile rrdFile = getRrdFile();
-		if(rrdFile.getMode() == RrdFile.MODE_RESTORE) {
-			rrdFile.seek(getPointer());
-			cache = rrdFile.readDouble();
+	RrdDoubleArray(RrdUpdater updater, int length, double initVal) throws IOException {
+		super(updater, length * RrdDouble.SIZE);
+		this.length = length;
+		for(int i = 0; i < length; i++) {
+			set(i, initVal);
 		}
 	}
 
-	RrdDouble(double initValue, RrdUpdater updater) throws IOException {
-		super(updater, SIZE);
-		set(initValue);
-	}
-
-	void set(double value) throws IOException {
-		cache = value;
+	void set(int index, double value) throws IOException {
 		RrdFile rrdFile = getRrdFile();
-		rrdFile.seek(getPointer());
-		rrdFile.writeDouble(cache);
+		rrdFile.seek(getPointer() + index * RrdDouble.SIZE);
+		rrdFile.writeDouble(value);
 	}
 
-	double get() {
-		return cache;
+	double get(int index) throws IOException {
+		RrdFile rrdFile = getRrdFile();
+		rrdFile.seek(getPointer() + index * RrdDouble.SIZE);
+		return rrdFile.readDouble();
 	}
+
 }

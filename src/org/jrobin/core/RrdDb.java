@@ -106,7 +106,7 @@ public class RrdDb implements RrdUpdater {
 	 */
 	public RrdDb(RrdDef rrdDef) throws IOException, RrdException {
 		rrdDef.validate();
-		initializeSetup(rrdDef.getPath());
+		initializeSetup(rrdDef.getPath(), RrdFile.MODE_CREATE);
 		// create header
 		header = new Header(this, rrdDef);
 		// create datasources
@@ -122,7 +122,7 @@ public class RrdDb implements RrdUpdater {
 			archives[i] = new Archive(this, arcDefs[i]);
 		}
 		// finalize
-		finalizeSetup(true);
+		finalizeSetup();
 		Util.debug(rrdDef.getRrdToolCommand());
 	}
 
@@ -142,7 +142,7 @@ public class RrdDb implements RrdUpdater {
 			throw new IOException("Could not open file " + path + " [non existent]");
 		}
 		try {
-			initializeSetup(path);
+			initializeSetup(path, RrdFile.MODE_RESTORE);
 			// restore header
 			header = new Header(this);
 			// restore datasources
@@ -157,7 +157,7 @@ public class RrdDb implements RrdUpdater {
 			for(int i = 0; i < arcCount; i++) {
 				archives[i] = new Archive(this);
 			}
-			finalizeSetup(false);
+			finalizeSetup();
 		}
 		catch(RuntimeException e) {
 			throw new RrdException(e);
@@ -187,7 +187,7 @@ public class RrdDb implements RrdUpdater {
 	 * @throws RrdException Thrown in case of JRobin specific error
 	 */
 	public RrdDb(String rrdPath, String xmlPath) throws IOException, RrdException {
-		initializeSetup(rrdPath);
+		initializeSetup(rrdPath, RrdFile.MODE_CREATE);
 		XmlReader reader = new XmlReader(xmlPath);
 		// create header
 		header = new Header(this, reader);
@@ -204,23 +204,25 @@ public class RrdDb implements RrdUpdater {
 		// XMLReader is a rather huge DOM tree, release memory ASAP
 		reader = null;
 		// finalize
-		finalizeSetup(true);
+		finalizeSetup();
 	}
 
 
-	private void initializeSetup(String path) throws IOException {
-		file = new RrdFile(path);
-		file.setSafeMode(true);
+	private void initializeSetup(String path, int mode) throws IOException {
+		file = new RrdFile(path, mode);
 	}
 
-	private void finalizeSetup(boolean newFile) throws IOException {
-		if(newFile) {
-			file.truncate();
+	private void finalizeSetup() throws IOException {
+		int mode = file.getMode(); 
+		if(mode == RrdFile.MODE_CREATE) {
+			file.truncateFile();
 		}
-		else if(!file.isEndReached()) {
-			throw new IOException("Extra bytes found in RRD file. Not a RRD file at all?");
+		else if(mode == RrdFile.MODE_RESTORE) {
+			if(!file.isEndReached()) {
+				throw new IOException("Extra bytes found in RRD file. Not a RRD file at all?");
+			}
 		}
-		file.setSafeMode(false);
+		file.setMode(RrdFile.MODE_NORMAL);
 	}
 
 	/**

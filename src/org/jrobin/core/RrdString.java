@@ -27,55 +27,48 @@ package org.jrobin.core;
 
 import java.io.IOException;
 
-class RrdString {
-	private RrdFile file;
-	private long pointer;
-	private int count;
-
-	private boolean cached = false;
-	private String cachedValue;
-
-	RrdString(RrdUpdater updater, int count) throws IOException {
-		this.count = count;
-		file = updater.getRrdFile();
-		pointer = file.allocate(RrdFile.STRING_SIZE, count);
-	}
+class RrdString extends RrdPrimitive {
+	private static final int SIZE = 20;
+	
+	private String cache;
 
 	RrdString(RrdUpdater updater) throws IOException {
-		this(updater, 1);
+		super(updater, SIZE * 2);
+		loadCache();
+	}
+	
+	void loadCache() throws IOException {
+		RrdFile rrdFile = getRrdFile();
+		if(rrdFile.getMode() == RrdFile.MODE_RESTORE) {
+			rrdFile.seek(getPointer());
+			char[] c = new char[SIZE];
+			for(int i = 0; i < SIZE; i++) {
+				c[i] = rrdFile.readChar();			
+			}
+			cache = new String(c).trim();
+		}
 	}
 
 	RrdString(String initValue, RrdUpdater updater) throws IOException {
-		this.count = 1;
-		file = updater.getRrdFile();
-		pointer = file.allocate(initValue);
-		cached = true;
-		cachedValue = initValue;
-	}
-
-	void set(int index, String value) throws IOException {
-		assert index < count;
-		long readPointer = pointer + index * RrdFile.STRING_SIZE;
-		file.writeString(readPointer, value);
+		super(updater, SIZE * 2);
+		set(initValue);
 	}
 
 	void set(String value) throws IOException {
-		cached = true;
-		cachedValue = value;
-		set(0, value);
-	}
-
-	String get(int index) throws IOException {
-		assert index < count;
-		long readPointer = pointer + index * RrdFile.STRING_SIZE;
-		return file.readString(readPointer);
-	}
-
-	String get() throws IOException {
-		if(!cached) {
-			cachedValue = get(0);
-			cached = true;
+		cache = value.trim();
+		RrdFile rrdFile = getRrdFile();
+		rrdFile.seek(getPointer());
+		for(int i = 0; i < SIZE; i++) {
+			if(i < cache.length()) {
+				rrdFile.writeChar(cache.charAt(i));
+			}
+			else {
+				rrdFile.writeChar(' ');
+			}
 		}
-		return cachedValue;
+	}
+
+	String get() {
+		return cache;
 	}
 }

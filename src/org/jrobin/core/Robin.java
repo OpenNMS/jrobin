@@ -42,19 +42,19 @@ import java.io.IOException;
 public class Robin implements RrdUpdater {
 	private Archive parentArc;
 	private RrdInt pointer;
-	private RrdDouble values;
+	private RrdDoubleArray values;
 	private int rows;
 
-	Robin(Archive parentArc, int rows, boolean newRobin) throws IOException {
+	Robin(Archive parentArc, int rows) throws IOException {
 		this.parentArc = parentArc;
 		this.rows = rows;
-		pointer = new RrdInt(this);
-		values = new RrdDouble(this, rows);
-		if(newRobin) {
-			pointer.set(0);
-			for(int i = 0; i < rows; i++) {
-				values.set(i, Double.NaN);
-			}
+		if(getRrdFile().getMode() == RrdFile.MODE_CREATE) { 
+			pointer = new RrdInt(0, this);
+			values = new RrdDoubleArray(this, rows, Double.NaN);
+		}
+		else {
+			pointer = new RrdInt(this);
+			values = new RrdDoubleArray(this, rows);
 		}
 	}
 
