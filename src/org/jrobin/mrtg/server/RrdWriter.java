@@ -118,7 +118,8 @@ class RrdWriter extends Thread implements MrtgConstants {
 	}
 
 	static String getRrdFilename(String host, String ifDescr) {
-		String filename = ifDescr.replaceAll("[^0-9a-zA-Z]", "_") + "@" + host + ".rrd";
+		String filename = ifDescr.replaceAll("[^0-9a-zA-Z]", "_") +
+			"@" + host.replaceFirst(":", "_") + ".rrd";
 		return Config.getRrdDir() + filename;
 	}
 

@@ -58,8 +58,18 @@ class Poller {
 
     public Poller(String host, String community)
 		throws IOException {
-		InetAddress hostAddress = InetAddress.getByName(host);
-		comm = new SNMPv1CommunicationInterface(0, hostAddress, community);
+		// check for port information
+		String snmpHost = host;
+		int snmpPort = SNMPv1CommunicationInterface.DEFAULT_SNMPPORT;
+		int colonIndex = host.indexOf(":");
+		if(colonIndex != -1) {
+			// port specified
+            snmpHost = host.substring(0, colonIndex);
+			String portStr = host.substring(colonIndex + 1);
+			snmpPort = Integer.parseInt(portStr);
+		}
+		InetAddress snmpHostAddress = InetAddress.getByName(snmpHost);
+		comm = new SNMPv1CommunicationInterface(0, snmpHostAddress, community, snmpPort);
 		comm.setSocketTimeout(SNMP_TIMEOUT * 1000);
     }
 
