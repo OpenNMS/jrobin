@@ -101,8 +101,26 @@ import java.util.*;
  */
 public class RrdDbPool implements Runnable {
 	static final String GC_THREAD_NAME = "RrdDbPool GC thread";
-	private static RrdDbPool ourInstance;
+	static final String CLOSING_THREAD_NAME = "RrdDbPool closing thread";
 	private static final boolean DEBUG = false;
+
+	// singleton pattern
+	private static RrdDbPool ourInstance;
+
+	static {
+		Runtime.getRuntime().addShutdownHook(new Thread(CLOSING_THREAD_NAME) {
+			public void run() {
+				if(ourInstance != null) {
+					try {
+						ourInstance.close();
+					}
+					catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		});
+	}
 
 	/**
 	 * Constant to represent the maximum number of internally open RRD files
@@ -110,6 +128,7 @@ public class RrdDbPool implements Runnable {
 	 */
 	public static final int INITIAL_CAPACITY = 500;
 	private int capacity = INITIAL_CAPACITY, maxUsedCapacity;
+	private boolean active = true;
 
 	/**
 	 * Constant to represent the internal behaviour of the pool.
@@ -165,6 +184,7 @@ public class RrdDbPool implements Runnable {
 	 * @throws RrdException Thrown in case of JRobin specific error.
 	 */
 	public synchronized RrdDb requestRrdDb(String path) throws IOException, RrdException {
+		proveActive();
 		poolRequestsCount++;
 		String canonicalPath = getCanonicalPath(path);
 		for(;;) {
@@ -226,6 +246,7 @@ public class RrdDbPool implements Runnable {
 	}
 
 	private RrdDb requestNewRrdDb(String path, Object creationDef) throws IOException, RrdException {
+		proveActive();
 		poolRequestsCount++;
 		String canonicalPath = getCanonicalPath(path);
 		for(;;) {
@@ -325,6 +346,7 @@ public class RrdDbPool implements Runnable {
 	 * @throws RrdException Thrown in case of JRobin specific error.
 	 */
 	public synchronized void release(RrdDb rrdDb) throws IOException, RrdException {
+		proveActive();
 		if (rrdDb == null) {
 			// we don't want NullPointerException
 			return;
@@ -353,7 +375,7 @@ public class RrdDbPool implements Runnable {
 	 */
 	public void run() {
 //		debug("GC: started");
-		for (; ;) {
+		while (active) {
 			synchronized (this) {
 				if (rrdMap.size() >= capacity && rrdIdleMap.size() > 0) {
 					try {
@@ -380,7 +402,7 @@ public class RrdDbPool implements Runnable {
 	}
 
 	protected void finalize() throws IOException {
-		reset();
+		close();
 	}
 
 	/**
@@ -397,6 +419,22 @@ public class RrdDbPool implements Runnable {
 		rrdMap.clear();
 		rrdIdleMap.clear();
 //		debug("Pool cleared");
+	}
+
+	/**
+	 * Closes the pool and all RRD files currently held in the pool.
+	 * No further operations on the pool are allowed.
+	 * @throws IOException Thrown in case of I/O error.
+	 */
+	public synchronized void close() throws IOException {
+		if(active) {
+			active = false;
+			reset();
+//			debug("The pool is closed.");
+		}
+		else {
+//			debug("The pool is already closed!");
+		}
 	}
 
 	private static String getCanonicalPath(String path) throws IOException {
@@ -582,7 +620,7 @@ public class RrdDbPool implements Runnable {
 	 * @return <code>true</code> if the pool is 'flexible' (by not imposing the strict
 	 * limit on the number of simultaneously open files), <code>false</code> otherwise.
 	 */
-	public boolean isLimitedCapacity() {
+	public synchronized boolean isLimitedCapacity() {
 		return limitedCapacity;
 	}
 
@@ -598,8 +636,23 @@ public class RrdDbPool implements Runnable {
 	 * @param limitedCapacity <code>true</code> if the pool should be 'flexible' (not imposing the strict
 	 * limit on the number of simultaneously open files), <code>false</code> otherwise.
 	 */
-	public void setLimitedCapacity(boolean limitedCapacity) {
+	public synchronized void setLimitedCapacity(boolean limitedCapacity) {
 		this.limitedCapacity = limitedCapacity;
+	}
+
+	private void proveActive() throws IOException {
+		if(!active) {
+			throw new IOException("RrdDbPool is already closed");
+		}
+	}
+
+	/**
+	 * Checks if the pool is active. You can request RrdDb references only from the active pool. The
+	 * pool is deactived when the {@link #close()} method is called.
+	 * @return <code>true</code> if active, <code>false</code> otherwise.
+	 */
+	public synchronized boolean isActive() {
+		return active;
 	}
 }
 
