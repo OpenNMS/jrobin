@@ -74,7 +74,7 @@ public class JRobinComplexGraph {
 			gDef.area("p50t75", new Color(0x66,0x66,0x00), "50 - 75%");
 			gDef.area("p75t90", new Color(0xff,0x66,0x00), "75 - 90%");
 			gDef.area("p90t100", new Color(0xcc,0x33,0x00), "90 - 100%");
-			gDef.rule(10.0, Color.ORANGE, null);
+			//gDef.rule(10.0, Color.ORANGE, null);
 			gDef.gprint("busy", "AVERAGE", " Average:@5.1@s%");
 			gDef.gprint("busy", "LAST", "Current: @5.1@s%");
 			gDef.comment("\n");
@@ -96,13 +96,21 @@ public class JRobinComplexGraph {
 			gDef.comment("\n");
 			gDef.comment("-------------------------------------------------------------------------------@c");
 			gDef.comment("Generated: " + new Date() + "@r");
-			//gDef.setBackColor( Color.ORANGE );
+			gDef.setBackColor( Color.DARK_GRAY );
+			gDef.setCanvasColor( Color.LIGHT_GRAY );
 			gDef.setValueAxisLabel("server load");
+			gDef.setFontColor( Color.WHITE );
 			//gDef.setGridX( false );
 			//gDef.setGridY( false );
-			gDef.setImageBorder( Color.DARK_GRAY, 1 );
+			gDef.setImageBorder( Color.BLACK, 1 );
 			gDef.setFrontGrid(false);
 			gDef.setShowLegend(true);
+			gDef.setMajorGridColor(Color.BLACK);
+			gDef.setMinorGridColor( new Color( 130, 30, 30) );
+			gDef.setFrameColor( Color.YELLOW );
+			gDef.setAxisColor( Color.RED );
+			gDef.setArrowColor( Color.GREEN );
+			gDef.setChartLeftPadding( 40 );
 			// Create actual graph
 			RrdGraph graph = new RrdGraph(gDef);
 			graph.saveAsPNG("/zzzzzz.png", 0, 0);
@@ -110,7 +118,7 @@ public class JRobinComplexGraph {
 			
 			// -- New graph
 			RrdGraphDef gd = new RrdGraphDef();
-			gd.setBackColor( Color.WHITE );
+			//gd.setBackColor( Color.WHITE );
 			gd.setTimePeriod( start, end );
 			gd.datasource("in2", "c:/test.rrd", "ifInOctets", "AVERAGE");
 			gd.datasource("out2", "c:/test.rrd", "ifOutOctets", "AVERAGE");
@@ -124,7 +132,7 @@ public class JRobinComplexGraph {
 			
 			//////////////////////////////
 			gd = new RrdGraphDef();
-			gd.setBackColor( Color.WHITE );
+			//gd.setBackColor( Color.WHITE );
 			gd.setTimePeriod( start, end );
 			gd.datasource("in2", "c:/test.rrd", "ifInUcastPkts", "AVERAGE");
 			gd.datasource("out2", "c:/test.rrd", "ifOutUcastPkts", "AVERAGE");

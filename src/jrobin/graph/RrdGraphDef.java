@@ -152,13 +152,22 @@ public class RrdGraphDef
 	private boolean showLegend		= true;
 	
 	private BasicStroke borderStroke;
-	private Color borderColor;
-	
+		
 	private Range valueRange;
 	private boolean logarithmic = false;
 	private double valueStep = 0;
 
-	private Color backColor;
+	private Color borderColor;		// null value is special here
+	private Color backColor			= new Color( 245, 245, 245 );
+	private Color canvasColor		= Color.WHITE;
+	private Color fontColor			= Color.BLACK;
+	private Color majorGridColor	= new Color(130,30,30);
+	private Color minorGridColor	= new Color(140,140,140);
+	private Color axisColor			= new Color(130,30,30);
+	private Color arrowColor		= Color.RED;
+	private Color frameColor		= Color.LIGHT_GRAY;
+	
+	private int chart_lpadding		= Grapher.CHART_LPADDING;
 
 	/**
 	 * Creates new RRD graph definition.
@@ -549,12 +558,24 @@ public class RrdGraphDef
 		return backColor;
 	}
 
+	Color getCanvasColor() {
+		return canvasColor;	
+	}
+	
 	/**
-	 * Sets graph background color. If not set, back color defaults to light gray.
+	 * Sets image background color. If not set, back color defaults to a very light gray.
 	 * @param backColor Graph background color.
 	 */
-	public void setBackColor(Color backColor) {
+	public void setBackColor( Color backColor ) {
 		this.backColor = backColor;
+	}
+	
+	/**
+	 * Sets graph area background color. If not set, back color defaults to white.
+	 * @param backColor Graph area background color.
+	 */
+	public void setCanvasColor( Color canvasColor ) {
+		this.canvasColor = canvasColor;		
 	}
 	
 	/**
@@ -687,6 +708,90 @@ public class RrdGraphDef
 	
 	public boolean getShowLegend() {
 		return this.showLegend;
+	}
+	
+	/**
+	 * Sets the color of the font on the graph.
+	 * @param c The color to be used.
+	 */
+	public void setFontColor( Color c ) {
+		this.fontColor = c;
+	}
+	
+	public Color getFontColor() {
+		return this.fontColor;
+	}
+	
+	/**
+	 * Determines the color of the major grid.
+	 * @param c Color to use
+	 */
+	public void setMajorGridColor( Color c ) {
+		this.majorGridColor = c;	
+	}
+	
+	public Color getMajorGridColor() {
+		return majorGridColor;
+	}
+	
+	/**
+	 * Determines the color of the minor grid.
+	 * @param c Color to use
+	 */
+	public void setMinorGridColor( Color c ) {
+		this.minorGridColor = c;
+	}
+	
+	public Color getMinorGridColor() {
+		return minorGridColor;
+	}
+	
+	/**
+	 * Determines the color of canvas frame.
+	 * @param c Color to use
+	 */
+	public void setFrameColor( Color c ) {
+		this.frameColor = c;
+	}
+
+	public Color getFrameColor() {
+		return frameColor;
+	}
+	
+	/**
+	 * Determines the color of X axis.
+	 * @param c Color to use
+	 */
+	public void setAxisColor( Color c ) {
+		this.axisColor = c;
+	}
+
+	public Color getAxisColor() {
+		return axisColor;
+	}
+	
+	/**
+	 * Determines the color of the small axis arrow.
+	 * @param c Color to use
+	 */
+	public void setArrowColor( Color c ) {
+		this.arrowColor = c;
+	}
+
+	public Color getArrowColor() {
+		return arrowColor;
+	}
+	
+	/**
+	 * Set the number of pixels on the left of the canvas area ( value marker space )
+	 * @param lp Number of pixels used, defaults to 50
+	 */
+	public void setChartLeftPadding( int lp ) {
+		this.chart_lpadding = lp;
+	}
+	
+	public int getChartLeftPadding() {
+		return this.chart_lpadding;
 	}
 	
 }

@@ -24,14 +24,11 @@ package jrobin.graph;
 
 import jrobin.core.RrdException;
 
-import java.awt.geom.*;
 import java.awt.*;
-import java.awt.font.*;
 import java.awt.image.*;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 
 class Grapher 
 {
@@ -46,12 +43,12 @@ class Grapher
 	private static final int LBORDER_SPACE		= 10;
 	private static final int RBORDER_SPACE		= 10;
 	
-	private static final int CHART_UPADDING		= 5;
-	private static int CHART_BPADDING			= 25;
-	private static final int CHART_RPADDING		= 10;
-	private static int CHART_LPADDING			= 50;
-	private static final int CHART_BPADDING_NM	= 10;		// No legend makers on the axis
-	private static final int CHART_LPADDING_NM	= 10;
+	public static final int CHART_UPADDING		= 5;
+	public static int CHART_BPADDING			= 25;
+	public static final int CHART_RPADDING		= 10;
+	public static int CHART_LPADDING			= 50;		// Default lpadding
+	public static final int CHART_BPADDING_NM	= 10;		// No legend makers on the axis
+	public static final int CHART_LPADDING_NM	= 10;
 	
 	private static final int LINE_PADDING		= 4;
 			
@@ -65,6 +62,9 @@ class Grapher
 
 	private boolean vLabelCentered				= false;
 	private long vLabelGridWidth				= 0; 
+	
+	private Color fontColor, gridColor, mGridColor, axisColor, frameColor, arrowColor;
+	private int chart_lpadding;
 		
 	private int imgWidth, imgHeight;				// Dimensions of the entire image
 	private int chartWidth, chartHeight;			// Dimensions of the chart area within the image	
@@ -81,6 +81,13 @@ class Grapher
 	Grapher(RrdGraphDef graphDef) throws RrdException 
 	{
 		this.graphDef 		= graphDef;
+		this.fontColor		= graphDef.getFontColor();
+		this.gridColor		= graphDef.getMinorGridColor();
+		this.mGridColor		= graphDef.getMajorGridColor();
+		this.arrowColor		= graphDef.getArrowColor();
+		this.axisColor		= graphDef.getAxisColor();
+		this.frameColor		= graphDef.getFrameColor();
+				
 		StringBuffer buff 	= new StringBuffer(GRAPH_RESPECT);
 		//graphDef.comment( buff.reverse().toString() );
 	}
@@ -107,7 +114,7 @@ class Grapher
 		if ( cWidth > GRAPH_RESOLUTION ) numPoints = cWidth;
 		
 		// Padding depends on grid visibility
-		CHART_LPADDING 	= ( graphDef.getMajorGridY() ? Grapher.CHART_LPADDING : CHART_LPADDING_NM );
+		chart_lpadding 	= ( graphDef.getMajorGridY() ? graphDef.getChartLeftPadding() : CHART_LPADDING_NM );
 		CHART_BPADDING 	= ( graphDef.getMajorGridX() ? Grapher.CHART_BPADDING : CHART_BPADDING_NM );
 		
 		// Calculate the complete image dimensions for the creation of the bufferedimage
@@ -120,7 +127,7 @@ class Grapher
 		
 		x_offset		= LBORDER_SPACE;
 		if ( graphDef.getValueAxisLabel() != null ) x_offset += font_height + LINE_PADDING;
-		imgWidth		= chartWidth + x_offset + RBORDER_SPACE + CHART_LPADDING + CHART_RPADDING;
+		imgWidth		= chartWidth + x_offset + RBORDER_SPACE + chart_lpadding + CHART_RPADDING;
 				
 		y_offset		= UBORDER_SPACE;
 		if ( graphDef.getTitle() != null ) y_offset	+= tfont_height + LINE_PADDING;
@@ -163,7 +170,7 @@ class Grapher
 		Graphics2D g = chartGraph.g;
 		g.setFont( SUBTITLE_FONT );
 		
-		int lux = x_offset + CHART_LPADDING;
+		int lux = x_offset + chart_lpadding;
 		int luy = y_offset + CHART_UPADDING;
 		
 		boolean gridX	= graphDef.getGridX();
@@ -184,9 +191,10 @@ class Grapher
 		int tmpx = lux + chartWidth;
 		int tmpy = luy + chartHeight;
 		
-		g.setColor( new Color(130,30,30) );
+		// Draw axis and arrow
+		g.setColor( axisColor );
 		g.drawLine( lux - 4, tmpy, tmpx + 4, tmpy );
-		g.setColor( Color.RED );
+		g.setColor( arrowColor );
 		g.drawLine( tmpx + 4, tmpy - 3, tmpx + 4, tmpy + 3);
 		g.drawLine( tmpx + 4, tmpy - 3, tmpx + 9, tmpy);
 		g.drawLine( tmpx + 4, tmpy + 3, tmpx + 9, tmpy);
@@ -206,7 +214,7 @@ class Grapher
 				if ( posRel >= 0 ) {
 					if ( majorX && timeList[i].isLabel() )
 					{
-						g.setColor( new Color(130,30,30) );
+						g.setColor( mGridColor );
 						g.setStroke( dStroke );
 						g.drawLine( pos, luy, pos, luy + chartHeight);
 						g.setStroke( new BasicStroke() );
@@ -218,20 +226,15 @@ class Grapher
 						
 						if ( vLabelCentered )
 						{
-							if ( pos + pixWidth <= lux + chartWidth ) {
-								g.setColor( Color.BLACK );
-								g.drawString( timeList[i].text, pos + 2 + pixWidth/2 - txtDistance, luy + chartHeight + font_height + LINE_PADDING );
-							}
+							if ( pos + pixWidth <= lux + chartWidth )
+								drawString( g, timeList[i].text, pos + 2 + pixWidth/2 - txtDistance, luy + chartHeight + font_height + LINE_PADDING );
 						}
 						else if ( (pos - lux > txtDistance + 2) && (pos + txtDistance + 2 < lux + chartWidth) )	
-						{ 
-							g.setColor( Color.BLACK );
-							g.drawString( timeList[i].text, pos - txtDistance, luy + chartHeight + font_height + LINE_PADDING );
-						}
+							drawString( g, timeList[i].text, pos - txtDistance, luy + chartHeight + font_height + LINE_PADDING );
 					}
 					else if ( minorX )
 					{	
-						g.setColor( new Color(140,140,140) );
+						g.setColor( gridColor );
 						g.setStroke( dStroke );
 						g.drawLine( pos, luy, pos, luy + chartHeight);
 						g.setStroke( new BasicStroke() );
@@ -251,18 +254,17 @@ class Grapher
 			
 				if ( majorY && valueList[i].isLabel() )
 				{
-					g.setColor( new Color(130,30,30) );
+					g.setColor( mGridColor );
 					g.setStroke( dStroke );
 					g.drawLine( graphOriginX, graphOriginY - valRel, graphOriginX + chartWidth, graphOriginY - valRel );
 					g.setStroke( new BasicStroke() );
 					g.drawLine( graphOriginX - 2, graphOriginY - valRel, graphOriginX + 2, graphOriginY - valRel);
 					g.drawLine( graphOriginX + chartWidth - 2, graphOriginY - valRel, graphOriginX + chartWidth + 2, graphOriginY - valRel );
-					g.setColor( Color.BLACK );
-					g.drawString( valueList[i].text, graphOriginX - (valueList[i].text.length() * font_width) - 7, graphOriginY - valRel + font_height/2 - 1 );
+					drawString( g, valueList[i].text, graphOriginX - (valueList[i].text.length() * font_width) - 7, graphOriginY - valRel + font_height/2 - 1 );
 				}
 				else if ( minorY )
 				{
-					g.setColor( new Color(140,140,140) );
+					g.setColor( gridColor );
 					g.setStroke( dStroke );
 					g.drawLine( graphOriginX, graphOriginY - valRel, graphOriginX + chartWidth, graphOriginY - valRel );
 					g.setStroke( new BasicStroke() );
@@ -298,9 +300,8 @@ class Grapher
 			{
 				g.setColor( ((Legend) cl[i]).getColor() );
 				g.fillRect( posx, posy - 9, 10, 10 );
-				g.setColor( Color.BLACK );
+				g.setColor( fontColor );
 				g.drawRect( posx, posy - 9, 10, 10 );
-				g.setColor( Color.BLACK );
 				posx += 10 + (3*font_width - 10);		
 			}
 
@@ -310,7 +311,7 @@ class Grapher
 				str 	= comment.substring(0, lf).replaceAll("\n", "");
 				comment = comment.substring(lf + 1);
 			
-				g.drawString(str, posx, posy);
+				drawString(g, str, posx, posy);
 			
 				posy 	+= font_height + LINE_PADDING;
 				posx 	= LBORDER_SPACE;
@@ -323,28 +324,28 @@ class Grapher
 				{
 					case Comment.ALIGN_CENTER:
 						posx = imgWidth / 2 - (comment.length()*font_width)/2; 
-						g.drawString(comment, posx, posy);
+						drawString(g, comment, posx, posy);
 						posy += font_height + LINE_PADDING;
 						posx = LBORDER_SPACE;
 						break;
 					
 					case Comment.ALIGN_LEFT:
 						posx = LBORDER_SPACE; 
-						g.drawString(comment, posx, posy);
+						drawString(g, comment, posx, posy);
 						posy += font_height + LINE_PADDING;
 						posx = LBORDER_SPACE;
 						break;
 				
 					case Comment.ALIGN_RIGHT:
 						posx = imgWidth - comment.length()*font_width - RBORDER_SPACE; 
-						g.drawString(comment, posx, posy);
+						drawString(g, comment, posx, posy);
 						posy += font_height + LINE_PADDING;
 						posx = LBORDER_SPACE;
 						break;
 				
 					default:
 						comment = comment + SPACER;
-						g.drawString(comment, posx, posy);
+						drawString(g, comment, posx, posy);
 						posx += font_width * comment.length();
 				}
 			}
@@ -358,11 +359,13 @@ class Grapher
 	 */
 	private void plotChart( Graphics2D graphics )
 	{
-		int lux		= x_offset + CHART_LPADDING;
+		int lux		= x_offset + chart_lpadding;
 		int luy		= y_offset + CHART_UPADDING;
 		
-		graphics.setColor(Color.LIGHT_GRAY);
-		graphics.drawRect( lux, luy, chartWidth, chartHeight);
+		graphics.setColor( graphDef.getCanvasColor() );
+		graphics.fillRect( lux, luy, chartWidth, chartHeight );
+		graphics.setColor( frameColor );
+		graphics.drawRect( lux, luy, chartWidth, chartHeight );
 								
 		double val;
 		double[] tmpSeries = new double[numPoints];
@@ -539,6 +542,14 @@ class Grapher
 		}
 	}
 	
+	private void drawString( Graphics2D g, String str, int x, int y )
+	{
+		Color oc = g.getColor();
+		g.setColor( fontColor );
+		g.drawString( str, x, y );
+		g.setColor( oc );
+	}
+	
 	/**
 	 * Plots the labels for the vertical axis.
 	 * @param g
@@ -553,7 +564,7 @@ class Grapher
 
 			g.setFont( SUBTITLE_FONT );
 			g.rotate( -Math.PI/2.0 );
-			g.drawString( valueAxisLabel, - y_offset - CHART_UPADDING
+			drawString( g, valueAxisLabel, - y_offset - CHART_UPADDING
 											- chartHeight / 2 
 											- labelWidth / 2,
 											LBORDER_SPACE + font_height
@@ -578,7 +589,7 @@ class Grapher
 			// Title goes in the middle of the graph, in black
 			g.setColor( Color.BLACK );
 			g.setFont( TITLE_FONT );
-			g.drawString( title, imgWidth / 2 - titleWidth / 2, tf_height + UBORDER_SPACE );
+			drawString( g, title, imgWidth / 2 - titleWidth / 2, tf_height + UBORDER_SPACE );
 		}
 	}
 	
@@ -885,7 +896,7 @@ class Grapher
 		
 		if ( !upperFromRange ) upperValue = v.getNiceHigher( upperValue );
 		if ( !lowerFromRange ) lowerValue = v.getNiceLower( lowerValue );
-				
+			
 		return v.getValueMarkers( lowerValue, upperValue );
 	}
 }

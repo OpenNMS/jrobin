@@ -169,6 +169,7 @@ public class ValueAxisUnit
 		double value		= ovalue * gridFactor;
 		int valueInt		= new Double(value).intValue();
 		int roundStep		= new Double(gridUnit * gridParts).intValue();
+		if ( roundStep == 0 ) roundStep = 1;
 		int num 			= valueInt / roundStep; 
 		int mod 			= valueInt % roundStep;
 		double gridValue	= (roundStep * num) * 1.0d;
@@ -182,6 +183,7 @@ public class ValueAxisUnit
 		
 		value				= ovalue * mGridFactor;
 		roundStep			= new Double(mGridUnit * mGridParts).intValue();
+		if ( roundStep == 0 ) roundStep = 1;
 		num					= valueInt / roundStep;
 		mod					= valueInt % roundStep;
 		double mGridValue	= (roundStep * num) * 1.0d;
@@ -220,6 +222,7 @@ public class ValueAxisUnit
 		double value		= ovalue * gridFactor;
 		int valueInt		= new Double(value).intValue();
 		int roundStep		= new Double(gridUnit * gridParts).intValue();
+		if ( roundStep == 0 ) roundStep = 1;
 		int num 			= valueInt / roundStep; 
 		int mod 			= valueInt % roundStep;
 		double gridValue	= (roundStep * (num + 1)) * 1.0d;
@@ -228,6 +231,7 @@ public class ValueAxisUnit
 		
 		value				= ovalue * mGridFactor;
 		roundStep			= new Double(mGridUnit * mGridParts).intValue();
+		if ( roundStep == 0 ) roundStep = 1;
 		num					= valueInt / roundStep;
 		mod					= valueInt % roundStep;
 		double mGridValue	= (roundStep * (num + 1)) * 1.0d;
