@@ -24,10 +24,8 @@ package jrobin.core;
 
 import java.io.IOException;
 
-/**
- *
- */
-class Robin implements RrdUpdater {
+// TODO: Fix javadoc, class made public
+public class Robin implements RrdUpdater {
 
 	private Archive parentArc;
 
@@ -49,7 +47,7 @@ class Robin implements RrdUpdater {
 		}
 	}
 
-	double[] getValues() throws IOException {
+	public double[] getValues() throws IOException {
 		double[] result = new double[rows];
 		int start = pointer.get();
 		for(int i = start, j = 0; i < start + rows; i++, j++) {

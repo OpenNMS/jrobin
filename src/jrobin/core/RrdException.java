@@ -40,4 +40,8 @@ public class RrdException extends Exception {
 		super(message);
 	}
 
+	public RrdException(Exception e) {
+		super(e);
+	}
+
 }

@@ -24,11 +24,9 @@ package jrobin.core;
 
 import java.io.IOException;
 
-/**
- *
- */
-class Archive implements RrdUpdater {
-	RrdDb parentDb;
+// TODO: FIX JAVADOC, CLASS MADE PUBLIC
+public class Archive implements RrdUpdater {
+	private RrdDb parentDb;
 	// definition
 	private RrdString consolFun;
 	private RrdDouble xff;
@@ -91,7 +89,7 @@ class Archive implements RrdUpdater {
 		}
 	}
 
-	long getArcStep() throws IOException {
+	public long getArcStep() throws IOException {
 		long step = parentDb.getHeader().getStep();
 		return step * steps.get();
 	}
@@ -186,33 +184,41 @@ class Archive implements RrdUpdater {
 		state.setNanSteps(0);
 	}
 
-	String getConsolFun() throws IOException {
+	public String getConsolFun() throws IOException {
 		return consolFun.get();
 	}
 
-	double getXff() throws IOException {
+	public double getXff() throws IOException {
 		return xff.get();
 	}
 
-	int getSteps() throws IOException {
+	public int getSteps() throws IOException {
 		return steps.get();
 	}
 
-	int getRows() throws IOException{
+	public int getRows() throws IOException{
 		return rows.get();
 	}
 
-	long getStartTime() throws IOException {
+	public long getStartTime() throws IOException {
 		long endTime = getEndTime();
 		long arcStep = getArcStep();
 		long numRows = rows.get();
 		return endTime - (numRows - 1) * arcStep;
 	}
 
-	long getEndTime() throws IOException {
+	public long getEndTime() throws IOException {
 		long arcStep = getArcStep();
 		long lastUpdateTime = parentDb.getHeader().getLastUpdateTime();
 		return Util.normalize(lastUpdateTime, arcStep);
+	}
+
+	public ArcState getArcState(int dsIndex) {
+		return states[dsIndex];
+	}
+
+	public Robin getRobin(int dsIndex) {
+		return robins[dsIndex];
 	}
 
 	FetchPoint[] fetch(FetchRequest request) throws IOException, RrdException {

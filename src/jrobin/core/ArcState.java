@@ -24,10 +24,8 @@ package jrobin.core;
 
 import java.io.IOException;
 
-/**
- *
- */
-class ArcState implements RrdUpdater {
+// TODO: Fix javadoc, class made public
+public class ArcState implements RrdUpdater {
 	private Archive parentArc;
 
 	private RrdDouble accumValue;
@@ -63,7 +61,7 @@ class ArcState implements RrdUpdater {
 		nanSteps.set(value);
 	}
 
-	long getNanSteps() throws IOException {
+	public long getNanSteps() throws IOException {
 		return nanSteps.get();
 	}
 
@@ -71,7 +69,7 @@ class ArcState implements RrdUpdater {
 		accumValue.set(value);
 	}
 
-	double getAccumValue() throws IOException {
+	public double getAccumValue() throws IOException {
 		return accumValue.get();
 	}
 

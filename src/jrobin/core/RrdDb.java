@@ -134,22 +134,27 @@ public class RrdDb implements RrdUpdater {
 	 */
 
 	public RrdDb(String path) throws IOException, RrdException {
-		initializeSetup(path);
-		// restore header
-        header = new Header(this);
-		// restore datasources
-		int dsCount = header.getDsCount();
-		datasources = new Datasource[dsCount];
-		for(int i = 0; i < dsCount; i++) {
-			datasources[i] = new Datasource(this);
+		try {
+			initializeSetup(path);
+			// restore header
+			header = new Header(this);
+			// restore datasources
+			int dsCount = header.getDsCount();
+			datasources = new Datasource[dsCount];
+			for(int i = 0; i < dsCount; i++) {
+				datasources[i] = new Datasource(this);
+			}
+			// restore archives
+			int arcCount = header.getArcCount();
+			archives = new Archive[arcCount];
+			for(int i = 0; i < arcCount; i++) {
+				archives[i] = new Archive(this);
+			}
+			finalizeSetup(false);
 		}
-		// restore archives
-		int arcCount = header.getArcCount();
-		archives = new Archive[arcCount];
-		for(int i = 0; i < arcCount; i++) {
-			archives[i] = new Archive(this);
+		catch(RuntimeException e) {
+			throw new RrdException(e);
 		}
-		finalizeSetup(false);
 	}
 
 	/**
@@ -237,8 +242,17 @@ public class RrdDb implements RrdUpdater {
 		return file;
 	}
 
-	Header getHeader() {
+	// TODO: ADD JAVADOC for methods made public!
+	public Header getHeader() {
 		return header;
+	}
+
+	public Datasource getDatasource(int dsIndex) {
+		return datasources[dsIndex];
+	}
+
+	public Archive getArchive(int arcIndex) {
+		return archives[arcIndex];
 	}
 
 	/**

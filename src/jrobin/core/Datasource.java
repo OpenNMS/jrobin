@@ -27,7 +27,7 @@ import java.io.IOException;
 /**
  *
  */
-class Datasource implements RrdUpdater {
+public class Datasource implements RrdUpdater {
 	private RrdDb parentDb;
 	// definition
 	private RrdString dsName, dsType;
@@ -88,24 +88,36 @@ class Datasource implements RrdUpdater {
 		return parentDb.getRrdFile();
 	}
 
-	String getDsName() throws IOException {
+	public String getDsName() throws IOException {
 		return dsName.get();
 	}
 
-	String getDsType() throws IOException {
+	public String getDsType() throws IOException {
 		return dsType.get();
 	}
 
-	long getHeartbeat() throws IOException {
+	public long getHeartbeat() throws IOException {
 		return heartbeat.get();
 	}
 
-	double getMinValue() throws IOException {
+	public double getMinValue() throws IOException {
 		return minValue.get();
 	}
 
-	double getMaxValue() throws IOException {
+	public double getMaxValue() throws IOException {
 		return maxValue.get();
+	}
+
+	public double getLastValue() throws IOException {
+		return lastValue.get();
+	}
+
+	public double getAccumValue() throws IOException {
+		return accumValue.get();
+	}
+
+	public long getNanSeconds() throws IOException {
+		return nanSeconds.get();
 	}
 
 	void process(long newTime, double newValue) throws IOException, RrdException {

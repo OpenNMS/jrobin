@@ -24,10 +24,12 @@ package jrobin.core;
 
 import java.io.IOException;
 
+// TODO: Fix javadoc, class made public!
+
 /**
  *
  */
-class Header implements RrdUpdater {
+public class Header implements RrdUpdater {
 	static final String SIGNATURE = "JRobin, version 0.1";
 	static final String RRDTOOL_VERSION = "0001";
 
@@ -38,9 +40,12 @@ class Header implements RrdUpdater {
 	private RrdInt dsCount, arcCount;
 	private RrdLong lastUpdateTime;
 
-	Header(RrdDb parentDb) throws IOException {
+	Header(RrdDb parentDb) throws IOException, RrdException {
 		this.parentDb = parentDb;
 		signature = new RrdString(this);
+		if(!signature.get().equals(SIGNATURE)) {
+			throw new RrdException("Not a JRobin RRD file");
+		}
 		step = new RrdLong(this);
 		dsCount = new RrdInt(this);
 		arcCount = new RrdInt(this);
@@ -69,23 +74,23 @@ class Header implements RrdUpdater {
 		lastUpdateTime = new RrdLong(reader.getLastUpdateTime(), this);
 	}
 
-	String getSignature() throws IOException {
+	public String getSignature() throws IOException {
 		return signature.get();
 	}
 
-	long getLastUpdateTime() throws IOException {
+	public long getLastUpdateTime() throws IOException {
 		return lastUpdateTime.get();
 	}
 
-	long getStep() throws IOException {
+	public long getStep() throws IOException {
 		return step.get();
 	}
 
-	int getDsCount() throws IOException {
+	public int getDsCount() throws IOException {
 		return dsCount.get();
 	}
 
-	int getArcCount() throws IOException {
+	public int getArcCount() throws IOException {
 		return arcCount.get();
 	}
 
