@@ -89,8 +89,12 @@ import java.util.*;
  * offers serious performance improvement especially in complex applications with many
  * threads and many simultaneously open RRD files.<p>
  *
- * The pool is thread-safe.
+ * RrdDbPool can be forced to block (force wait on) all threads requesting access
+ * to a single RRD file which is already in use (not yet returned to the pool).
+ * If you want such feature, call
+ * {@link #setExclusiveMode setExclusiveMode()} method with a <code>true</code> argument.<p>
  *
+ * The pool is thread-safe.<p>
  */
 public class RrdDbPool {
 	private static RrdDbPool ourInstance;
@@ -101,6 +105,8 @@ public class RrdDbPool {
 	 */
 	public static final int INITIAL_CAPACITY = 50;
 	private static int capacity = INITIAL_CAPACITY;
+
+	private boolean exclusiveMode = false;
 
 	private HashMap rrdMap = new HashMap();
 
@@ -130,18 +136,28 @@ public class RrdDbPool {
 	 */
 	public synchronized RrdDb requestRrdDb(String path) throws IOException, RrdException {
 		String keypath = getCanonicalPath(path);
-		if(rrdMap.containsKey(keypath)) {
-			// already open
-			RrdEntry rrdEntry = (RrdEntry) rrdMap.get(keypath);
-			rrdEntry.reportUsage();
-			debug("EXISTING: " + rrdEntry.dump());
-			return rrdEntry.getRrdDb();
-		}
-		else {
-			// not found, open it
-			RrdDb rrdDb = new RrdDb(path);
-			put(keypath, rrdDb);
-			return rrdDb;
+		for (;;) { // ugly, but it works
+			if (rrdMap.containsKey(keypath)) {
+				// already open
+				RrdEntry rrdEntry = (RrdEntry) rrdMap.get(keypath);
+				if(exclusiveMode && rrdEntry.getUsageCount() > 0) {
+					// reference already in use, wait until the reference
+					// is returned to the pool
+					try {
+						wait();
+					} catch (InterruptedException e) { }
+					// try to obtain the same reference once again
+					continue;
+				}
+				rrdEntry.reportUsage();
+				debug("EXISTING: " + rrdEntry.dump());
+				return rrdEntry.getRrdDb();
+			} else {
+				// not found, open it
+				RrdDb rrdDb = new RrdDb(path);
+				put(keypath, rrdDb);
+				return rrdDb;
+			}
 		}
 	}
 
@@ -229,10 +245,13 @@ public class RrdDbPool {
 		if(rrdMap.containsKey(keypath)) {
 			RrdEntry rrdEntry = (RrdEntry) rrdMap.get(keypath);
 			rrdEntry.release();
+			if(exclusiveMode) {
+				notifyAll();
+			}
 			debug("RELEASED: " + rrdEntry.dump());
 		}
 		else {
-			throw new RrdException("RrdDb with path " + keypath + " not in pool");
+			throw new RrdException("RrdDb with path " + keypath + " not in the pool");
 		}
 		gc();
 	}
@@ -339,6 +358,27 @@ public class RrdDbPool {
 	 */
 	public static void setCapacity(int capacity) {
 		RrdDbPool.capacity = capacity;
+	}
+
+	/**
+	 * Checks if RrdDbPool will return a reference to an already open RRD file if it is still
+	 * in use (not released, not returned to the pool). If true, simultaneous access
+	 * to the same RRD file will not be possible.
+	 * @return Current working mode of RrdDbPool (initial working mode is <code>false</code>)
+	 */
+	public boolean isExclusiveMode() {
+		return exclusiveMode;
+	}
+
+	/**
+	 * Method used to set the current working mode of RrdDbPool. If set to true, simultaneous
+	 * access to the same RRD file will not be possible. In case of several threads requesting
+	 * a reference to the same RRD file, one thread will get the reference, other threads will
+	 * block until the reference is returned to the pool.
+	 * @param exclusiveMode Working mode of RrdDbPool
+	 */
+	public void setExclusiveMode(boolean exclusiveMode) {
+		this.exclusiveMode = exclusiveMode;
 	}
 
 	private class RrdEntry {

@@ -25,6 +25,7 @@
 package org.jrobin.mrtg.server;
 
 import org.jrobin.core.RrdDb;
+import org.jrobin.core.RrdDbPool;
 import org.jrobin.mrtg.MrtgException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -65,6 +66,7 @@ public class Server {
 
 	private Server() {
 		RrdDb.setLockMode(RrdDb.NO_LOCKS);
+		RrdDbPool.getInstance().setExclusiveMode(true);
 	}
 
 	public synchronized void start(String[] acceptedClients) throws MrtgException {

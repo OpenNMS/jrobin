@@ -382,7 +382,16 @@ public class RrdGraph implements Serializable
 		else 
 			return new RrdDb( rrdFile );
 	}
-	
+
+	void releaseRrd(RrdDb rrdDb) throws RrdException, IOException {
+		if(pool != null) {
+			pool.release(rrdDb);
+		}
+		else {
+			rrdDb.close();
+		}
+	}
+
 	// ================================================================
 	// -- Private methods
 	// ================================================================

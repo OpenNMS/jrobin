@@ -306,7 +306,8 @@ class Grapher
 		{
 			// Get the rrdDb
 			src 	= (FetchSource) fetchSources.next();
-			rrd		= rrdGraph.getRrd( src.getRrdFile() );
+			String rrdFile = src.getRrdFile();
+			rrd		= rrdGraph.getRrd( rrdFile );
 			
 			// If the endtime is 0, use the last time a database was updated
 			if ( changingEndTime ) {
@@ -320,7 +321,10 @@ class Grapher
 			// Fetch all required datasources
 			ve 		= src.fetch( rrd, startTime,  endTime );
 			varList = ve.getNames();
-		
+
+			// BUGFIX: Release the rrdDb
+			rrdGraph.releaseRrd(rrd);
+
 			for (int i= 0; i < varList.length; i++) {
 				sources[tblPos]	= new Def(varList[i], numPoints);
 				sourceIndex.put( varList[i], new Integer(tblPos++) );
