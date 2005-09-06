@@ -4,11 +4,11 @@
  *
  * Project Info:  http://www.jrobin.org
  * Project Lead:  Sasa Markovic (saxon@jrobin.org)
- * 
- * Developers:    Sasa Markovic (saxon@jrobin.org)
- *                Arne Vandamme (cobralord@jrobin.org)
  *
- * (C) Copyright 2003, by Sasa Markovic.
+ * Developers:    Sasa Markovic (saxon@jrobin.org)
+ *
+ *
+ * (C) Copyright 2003-2005, by Sasa Markovic.
  *
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation;
@@ -24,61 +24,41 @@
  */
 package org.jrobin.graph;
 
-import java.awt.Color;
-
 import org.jrobin.core.RrdException;
+import org.jrobin.data.DataProcessor;
 
-/**
- * <p>Class used to represent a stacked datasource plotted in a graph.  The datasource
- * will be drawn as a line or an area, depending on PlotDef on which it is stacked.</p>
- * 
- * @author Arne Vandamme (cobralord@jrobin.org)
- */
-class Stack extends PlotDef
-{
-	// ================================================================
-	// -- Constructors
-	// ================================================================	
-	/**
-	 * Constructs a <code>Stack</code> PlotDef object based on a datasource name and a graph color. 
-	 * @param sourceName Name of the graph definition <code>Source</code> containing the datapoints.
-	 * @param color Color of the resulting area or line, if no color is specified, the PlotDef will not be drawn.
-	 */
-	Stack( String sourceName, Color color )
-	{
-		super( sourceName, color );
-		this.plotType	= PlotDef.PLOT_STACK;
+import java.awt.*;
+
+class Stack extends SourcedPlotElement {
+	private final SourcedPlotElement parent;
+
+	Stack(SourcedPlotElement parent, String srcName, Paint color) {
+		super(srcName, color);
+		this.parent = parent;
 	}
 
+	void assignValues(DataProcessor dproc) throws RrdException {
+		double[] parentValues = parent.getValues();
+		double[] procValues = dproc.getValues(srcName);
+		values = new double[procValues.length];
+		for(int i = 0; i < values.length; i++) {
+			values[i] = parentValues[i] + procValues[i];
+		}
+	}
 
-	// ================================================================
-	// -- Protected methods
-	// ================================================================	
-	/**
-	 * Draws the actual PlotDef on the chart, depending on the type of the previous PlotDef, 
-	 * the Stack will be drawn as a <code>Line</code> or an <code>Area</code>.
-	 * @param g ChartGraphics object representing the graphing area.
-	 * @param xValues List of relative chart area X positions corresponding to the datapoints.
-	 * @param stackValues Datapoint values of previous PlotDefs, used to stack on if necessary.
-	 * @param lastPlotType Type of the previous PlotDef, used to determine PlotDef type of a stack.
-	 */
-	void draw( ChartGraphics g, int[] xValues, int[] stackValues, int lastPlotType ) throws RrdException
-	{
-		PlotDef stack = null;
-		
-		try
-		{
-			if ( lastPlotType == PlotDef.PLOT_LINE )
-				stack = new Line( source, color, true, visible );	
-			else if ( lastPlotType == PlotDef.PLOT_AREA )
-				stack = new Area( source, color, true, visible );
-	
-			stack.draw( g, xValues, stackValues, lastPlotType );
+	float getParentLineWidth() {
+		if(parent instanceof Line) {
+			return ((Line) parent).width;
 		}
-		catch (Exception e) 
-		{
-			throw new RrdException( "Could not stack source: " + sourceName );
+		else if(parent instanceof Area) {
+			return -1F;
 		}
-	
+		else /* if(parent instanceof Stack) */ {
+			return ((Stack) parent).getParentLineWidth();
+		}
+	}
+
+	Paint getParentColor() {
+		return parent.color;
 	}
 }

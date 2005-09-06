@@ -1,5 +1,3 @@
-package org.jrobin.demo;
-
 /* ============================================================
  * JRobin : Pure java implementation of RRDTool's functionality
  * ============================================================
@@ -7,14 +5,14 @@ package org.jrobin.demo;
  * Project Info:  http://www.jrobin.org
  * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
- * (C) Copyright 2003, by Sasa Markovic.
+ * (C) Copyright 2003-2005, by Sasa Markovic.
  *
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation;
  * either version 2.1 of the License, or (at your option) any later version.
  *
  * Developers:    Sasa Markovic (saxon@jrobin.org)
- *                Arne Vandamme (cobralord@jrobin.org)
+ *
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
@@ -24,6 +22,8 @@ package org.jrobin.demo;
  * library; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+
+package org.jrobin.demo;
 
 import org.jrobin.core.*;
 import org.jrobin.graph.RrdGraph;
@@ -36,9 +36,11 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Random;
 
-class Demo {
-	// static final String FACTORY_NAME = "NIO";
-
+/**
+ * Simple demo just to check that everything is OK with this library. Creates two files in your
+ * $HOME/jrobin-demo directory: demo.rrd and demo.png.
+ */
+public class Demo {
 	static final long SEED = 1909752002L;
 	static final Random RANDOM = new Random(SEED);
 	static final String FILE = "demo";
@@ -47,25 +49,34 @@ class Demo {
 	static final long END = Util.getTimestamp(2003, 5, 1);
 	static final int MAX_STEP = 300;
 
+	static final int IMG_WIDTH = 500;
+	static final int IMG_HEIGHT = 300;
+
+	/**
+	 * <p>To start the demo, use the following command:</p>
+	 * <pre>
+	 * java -cp jrobin-{version}.jar org.jrobin.demo.Demo
+	 * </pre>
+	 * @param args the name of the backend factory to use (optional)
+	 * @throws RrdException Thrown in case of JRobin specific error
+	 * @throws IOException Thrown 
+	 */
 	public static void main(String[] args) throws RrdException, IOException {
-		// RrdDb.setDefaultFactory(FACTORY_NAME);
-		// setup
 		println("== Starting demo");
 		RrdDb.setLockMode(RrdDb.NO_LOCKS);
 		long startMillis = System.currentTimeMillis();
+		if (args.length > 0) {
+			println("Setting default backend factory to " + args[0]);
+			RrdDb.setDefaultFactory(args[0]);
+		}
 		long start = START;
 		long end = END;
 		String rrdPath = Util.getJRobinDemoPath(FILE + ".rrd");
 		String xmlPath = Util.getJRobinDemoPath(FILE + ".xml");
 		String rrdRestoredPath = Util.getJRobinDemoPath(FILE + "_restored.rrd");
-		String pngPath = Util.getJRobinDemoPath(FILE + ".png");
-		String jpegPath = Util.getJRobinDemoPath(FILE + ".jpeg");
-		String gifPath = Util.getJRobinDemoPath(FILE + ".gif");
+		String imgPath = Util.getJRobinDemoPath(FILE + ".png");
 		String logPath = Util.getJRobinDemoPath(FILE + ".log");
-		PrintWriter log = new PrintWriter(
-			new BufferedOutputStream(new FileOutputStream(logPath, false))
-		);
-
+		PrintWriter log = new PrintWriter(new BufferedOutputStream(new FileOutputStream(logPath, false)));
 		// creation
 		println("== Creating RRD file " + rrdPath);
 		RrdDef rrdDef = new RrdDef(rrdPath, start - 1, 300);
@@ -84,6 +95,13 @@ class Demo {
 		println("Estimated file size: " + rrdDef.getEstimatedSize());
 		RrdDb rrdDb = new RrdDb(rrdDef);
 		println("== RRD file created.");
+		if (rrdDb.getRrdDef().equals(rrdDef)) {
+			println("Checking RRD file structure... OK");
+		}
+		else {
+			println("Invalid RRD file created. This is a serious bug, bailing out");
+			return;
+		}
 		rrdDb.close();
 		println("== RRD file closed.");
 
@@ -91,11 +109,12 @@ class Demo {
 		GaugeSource sunSource = new GaugeSource(1200, 20);
 		GaugeSource shadeSource = new GaugeSource(300, 10);
 		println("== Simulating one month of RRD file updates with step not larger than " +
-			MAX_STEP + " seconds (* denotes 1000 updates)");
-		long t = start; int n = 0;
+				MAX_STEP + " seconds (* denotes 1000 updates)");
+		long t = start;
+		int n = 0;
 		rrdDb = new RrdDb(rrdPath);
 		Sample sample = rrdDb.createSample();
-		while(t <= end + 86400L) {
+		while (t <= end + 86400L) {
 			//rrdDb = new RrdDb(rrdPath);
 			//Sample sample = rrdDb.createSample();
 			sample.setTime(t);
@@ -104,9 +123,10 @@ class Demo {
 			log.println(sample.dump());
 			sample.update();
 			t += RANDOM.nextDouble() * MAX_STEP + 1;
-			if(((++n) % 1000) == 0) {
+			if (((++n) % 1000) == 0) {
 				System.out.print("*");
-			};
+			}
+			;
 			//rrdDb.close();
 		}
 		println("");
@@ -125,10 +145,8 @@ class Demo {
 		log.println(request.dump());
 		FetchData fetchData = request.fetchData();
 		println("== Data fetched. " + fetchData.getRowCount() + " points obtained");
-		for(int i = 0; i < fetchData.getRowCount(); i++) {
-			println(fetchData.getRow(i).dump());
-		}
-		println("== Dumping fetch data to XML format");
+		println(fetchData.toString());
+		println("== Dumping fetched data to XML format");
 		println(fetchData.exportXml());
 		println("== Fetch completed");
 
@@ -146,41 +164,50 @@ class Demo {
 		println("== Second file closed");
 
 		// create graph
+		println("Creating graph " + Util.getLapTime());
 		println("== Creating graph from the second file");
 		RrdGraphDef gDef = new RrdGraphDef();
-		gDef.setTimePeriod(start, end);
-        gDef.setTitle("Temperatures in May 2003");
+		gDef.setWidth(IMG_WIDTH);
+		gDef.setHeight(IMG_HEIGHT);
+		gDef.setFilename(imgPath);
+		gDef.setStartTime(start);
+		gDef.setEndTime(end);
+		gDef.setTitle("Temperatures in May 2003");
 		gDef.setVerticalLabel("temperature");
 		gDef.datasource("sun", rrdRestoredPath, "sun", "AVERAGE");
 		gDef.datasource("shade", rrdRestoredPath, "shade", "AVERAGE");
 		gDef.datasource("median", "sun,shade,+,2,/");
 		gDef.datasource("diff", "sun,shade,-,ABS,-1,*");
 		gDef.datasource("sine", "TIME," + start + ",-," + (end - start) +
-			",/,2,PI,*,*,SIN,1000,*");
+				",/,2,PI,*,*,SIN,1000,*");
 		gDef.line("sun", Color.GREEN, "sun temp");
 		gDef.line("shade", Color.BLUE, "shade temp");
-		gDef.line("median", Color.MAGENTA, "median value@L");
-		gDef.area("diff", Color.YELLOW, "difference@r");
+		gDef.line("median", Color.MAGENTA, "median value");
+		gDef.area("diff", Color.YELLOW, "difference\\r");
 		gDef.line("diff", Color.RED, null);
-		gDef.line("sine", Color.CYAN, "sine function demo@L");
-		gDef.gprint("sun", "MAX", "maxSun = @3@s");
-		gDef.gprint("sun", "AVERAGE", "avgSun = @3@S@r");
-		gDef.gprint("shade", "MAX", "maxShade = @3@S");
-		gDef.gprint("shade", "AVERAGE", "avgShade = @3@S@r");
+		gDef.line("sine", Color.CYAN, "sine function demo\\r");
+		gDef.hrule(2568, Color.GREEN, "hrule");
+		gDef.vrule((start + 2 * end) / 3, Color.MAGENTA, "vrule\\r");
+		gDef.gprint("sun", "MAX", "maxSun = %.3f%s");
+		gDef.gprint("sun", "AVERAGE", "avgSun = %.3f%S\\r");
+		gDef.gprint("shade", "MAX", "maxShade = %.3f%S");
+		gDef.gprint("shade", "AVERAGE", "avgShade = %.3f%S\\r");
+		gDef.print("sun", "MAX", "maxSun = %.3f%s");
+		gDef.print("sun", "AVERAGE", "avgSun = %.3f%S\\r");
+		gDef.print("shade", "MAX", "maxShade = %.3f%S");
+		gDef.print("shade", "AVERAGE", "avgShade = %.3f%S\\r");
+		gDef.setImageInfo("<img src='%s' width='%d' height = '%d'>");
+		gDef.setPoolUsed(false);
+		gDef.setImageFormat("png");
 		// create graph finally
 		RrdGraph graph = new RrdGraph(gDef);
-		println("== Graph created");
-		graph.saveAsPNG(pngPath, 400, 250);
-		println("== Graph saved as a PNG file " + pngPath);
-		graph.saveAsJPEG(jpegPath, 400, 250, 0.5F);
-		println("== Graph saved as a JPEG file " + jpegPath);
-		graph.saveAsGIF(gifPath, 400, 250);
-		println("== Graph saved as a GIF file " + gifPath);
+		println(graph.getRrdGraphInfo().dump());
+		println("== Graph created " + Util.getLapTime());
 
 		// demo ends
 		log.close();
 		println("== Demo completed in " +
-			((System.currentTimeMillis() - startMillis) / 1000.0) +	" sec");
+				((System.currentTimeMillis() - startMillis) / 1000.0) + " sec");
 	}
 
 	static void println(String msg) {
@@ -204,11 +231,11 @@ class Demo {
 		long getValue() {
 			double oldValue = value;
 			double increment = RANDOM.nextDouble() * step;
-			if(RANDOM.nextDouble() > 0.5) {
+			if (RANDOM.nextDouble() > 0.5) {
 				increment *= -1;
 			}
 			value += increment;
-			if(value <= 0) {
+			if (value <= 0) {
 				value = 0;
 			}
 			return Math.round(oldValue);

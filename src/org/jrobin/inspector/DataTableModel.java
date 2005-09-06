@@ -2,13 +2,13 @@
  * JRobin : Pure java implementation of RRDTool's functionality
  * ============================================================
  *
- * Project Info:  http://www.sourceforge.net/projects/jrobin
- * Project Lead:  Sasa Markovic (saxon@eunet.yu);
+ * Project Info:  http://www.jrobin.org
+ * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
  * (C) Copyright 2003, by Sasa Markovic.
  *
  * Developers:    Sasa Markovic (saxon@jrobin.org)
- *                Arne Vandamme (cobralord@jrobin.org)
+ *
  *
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation;
@@ -40,7 +40,7 @@ class DataTableModel extends AbstractTableModel {
 	private int dsIndex = -1, arcIndex = -1;
 
 	public int getRowCount() {
-		if(values == null) {
+		if (values == null) {
 			return 0;
 		}
 		else {
@@ -53,7 +53,7 @@ class DataTableModel extends AbstractTableModel {
 	}
 
 	public Object getValueAt(int rowIndex, int columnIndex) {
-		if(values == null) {
+		if (values == null) {
 			return "--";
 		}
 		return values[rowIndex][columnIndex];
@@ -63,11 +63,40 @@ class DataTableModel extends AbstractTableModel {
 		return COLUMN_NAMES[column];
 	}
 
-	void setFile(File newFile) {
-		if (file == null || !file.getAbsolutePath().equals(newFile.getAbsolutePath())) {
-			file = newFile;
-			setIndex(-1, -1);
+	public boolean isCellEditable(int rowIndex, int columnIndex) {
+		return columnIndex == 2;
+	}
+
+	public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
+		assert columnIndex == 2: "Column " + columnIndex + " is not editable!";
+		double value;
+		try {
+			value = Double.parseDouble(aValue.toString());
 		}
+		catch (NumberFormatException nfe) {
+			value = Double.NaN;
+		}
+		if (dsIndex >= 0 && arcIndex >= 0 && file != null) {
+			try {
+				RrdDb rrd = new RrdDb(file.getAbsolutePath());
+				try {
+					Robin robin = rrd.getArchive(arcIndex).getRobin(dsIndex);
+					robin.setValue(rowIndex, value);
+					values[rowIndex][2] = InspectorModel.formatDouble(robin.getValue(rowIndex));
+				}
+				finally {
+					rrd.close();
+				}
+			}
+			catch (Exception e) {
+				Util.error(null, e);
+			}
+		}
+	}
+
+	void setFile(File newFile) {
+		file = newFile;
+		setIndex(-1, -1);
 	}
 
 	void setIndex(int newDsIndex, int newArcIndex) {
@@ -75,28 +104,34 @@ class DataTableModel extends AbstractTableModel {
 			dsIndex = newDsIndex;
 			arcIndex = newArcIndex;
 			values = null;
-			if(dsIndex >= 0 && arcIndex >= 0) {
+			if (dsIndex >= 0 && arcIndex >= 0) {
 				try {
-					RrdDb rrd = new RrdDb(file.getAbsolutePath());
-					Archive arc = rrd.getArchive(arcIndex);
-					Robin robin = arc.getRobin(dsIndex);
-					long start = arc.getStartTime();
-					long step = arc.getArcStep();
-					double robinValues[] = robin.getValues();
-					values = new Object[robinValues.length][];
-					for(int i = 0; i < robinValues.length; i++) {
-						long timestamp = start + i * step;
-						String date = new Date(timestamp * 1000L).toString();
-						String value = InspectorModel.formatDouble(robinValues[i]);
-						values[i] = new Object[] {
-							"" + timestamp,	date, value
-						};
+					RrdDb rrd = new RrdDb(file.getAbsolutePath(), true);
+					try {
+						Archive arc = rrd.getArchive(arcIndex);
+						Robin robin = arc.getRobin(dsIndex);
+						long start = arc.getStartTime();
+						long step = arc.getArcStep();
+						double robinValues[] = robin.getValues();
+						values = new Object[robinValues.length][];
+						for (int i = 0; i < robinValues.length; i++) {
+							long timestamp = start + i * step;
+							String date = new Date(timestamp * 1000L).toString();
+							String value = InspectorModel.formatDouble(robinValues[i]);
+							values[i] = new Object[]{
+								"" + timestamp, date, value
+							};
+						}
 					}
-					rrd.close();
+					finally {
+						rrd.close();
+					}
 				}
 				catch (IOException e) {
+					Util.error(null, e);
 				}
 				catch (RrdException e) {
+					Util.error(null, e);
 				}
 			}
 			fireTableDataChanged();

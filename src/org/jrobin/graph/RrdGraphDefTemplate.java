@@ -5,10 +5,10 @@
  * Project Info:  http://www.jrobin.org
  * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
- * (C) Copyright 2003, by Sasa Markovic.
+ * (C) Copyright 2003-2005, by Sasa Markovic.
  *
  * Developers:    Sasa Markovic (saxon@jrobin.org)
- *                Arne Vandamme (cobralord@jrobin.org)
+ *
  *
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation;
@@ -24,185 +24,186 @@
  */
 package org.jrobin.graph;
 
-import org.jrobin.core.XmlTemplate;
 import org.jrobin.core.RrdException;
 import org.jrobin.core.Util;
-import org.xml.sax.InputSource;
+import org.jrobin.core.XmlTemplate;
 import org.w3c.dom.Node;
+import org.xml.sax.InputSource;
 
-import java.io.IOException;
-import java.io.File;
 import java.awt.*;
-import java.util.GregorianCalendar;
-import java.util.Date;
-import java.text.SimpleDateFormat;
-import java.text.ParseException;
+import java.io.File;
+import java.io.IOException;
 
 /**
- * Class used to create an arbitrary number of RrdGraphDefs (graph definition) objects
+ * Class used to create an arbitrary number of RrdGraphDef (graph definition) objects
  * from a single XML template. XML template can be supplied as an XML InputSource,
  * XML file or XML formatted string.<p>
- *
+ * <p/>
  * Here is an example of a properly formatted XML template with all available options in it
- * (unwanted options can be removed):<p>
+ * (unwanted options can be removed/ignored):<p>
  * <pre>
  * &lt;rrd_graph_def&gt;
+ *     &lt;!-- use '-' to represent in-memory graph --&gt;
+ *     &lt;filename&gt;test.png&lt;/filename&gt;
+ *     &lt;!--
+ *         starting and ending timestamps can be specified by
+ *         using at-style time specification, or by specifying
+ *         exact timestamps since epoch (without milliseconds)
+ *     --&gt;
  *     &lt;span&gt;
- *         &lt;!-- ISO FORMAT: yyyy-MM-dd HH:mm:ss --&gt;
- *         &lt;start&gt;2004-02-27 13:35:00&lt;/start&gt;
- *         &lt;!-- timestamp in seconds is also allowed --&gt;
- *         &lt;end&gt;1234567890&lt;/end&gt;
+ *         &lt;start&gt;now - 1d&lt;/start&gt;
+ *         &lt;end&gt;now&lt;/end&gt;
  *     &lt;/span&gt;
  *     &lt;options&gt;
+ *         &lt;!--
+ *             specify 'true' if you want to use RrdDbPool while
+ *             creating graph
+ *         --&gt;
+ *         &lt;use_pool&gt;false&lt;/use_pool&gt;
  *         &lt;anti_aliasing&gt;true&lt;/anti_aliasing&gt;
- *         &lt;arrow_color&gt;#FF0000&lt;/arrow_color&gt;
- *         &lt;axis_color&gt;#00FF00&lt;/axis_color&gt;
- *         &lt;back_color&gt;#00FF00&lt;/back_color&gt;
- *         &lt;background&gt;#FFFFFF&lt;/background&gt;
- *         &lt;base_value&gt;1024&lt;/base_value&gt;
- *         &lt;canvas&gt;#112211&lt;/canvas&gt;
- *         &lt;left_padding&gt;55&lt;/left_padding&gt;
- *         &lt;default_font&gt;
- *             &lt;name&gt;Times&lt;/name&gt;
- *             &lt;style&gt;BOLD ITALIC&lt;/style&gt;
- *             &lt;size&gt;15&lt;/size&gt;
- *         &lt;/default_font&gt;
- *         &lt;default_font_color&gt;#000000&lt;/default_font_color&gt;
- *         &lt;frame_color&gt;#0000FF&lt;/frame_color&gt;
- *         &lt;front_grid&gt;true&lt;/front_grid&gt;
- *         &lt;grid_range&gt;
- *             &lt;lower&gt;100&lt;/lower&gt;
- *             &lt;upper&gt;200&lt;/upper&gt;
- *             &lt;rigid&gt;false&lt;/rigid&gt;
- *         &lt;/grid_range&gt;
- *         &lt;grid_x&gt;true&lt;/grid_x&gt;
- *         &lt;grid_y&gt;false&lt;/grid_y&gt;
- *         &lt;border&gt;
- *             &lt;color&gt;#00FFFF&lt;/color&gt;
- *             &lt;width&gt;2&lt;/width&gt;
- *         &lt;/border&gt;
- *         &lt;major_grid_color&gt;#00FF00&lt;/major_grid_color&gt;
- *         &lt;major_grid_x&gt;true&lt;/major_grid_x&gt;
- *         &lt;major_grid_y&gt;false&lt;/major_grid_y&gt;
- *         &lt;minor_grid_color&gt;#00FFFF&lt;/minor_grid_color&gt;
- *         &lt;minor_grid_x&gt;true&lt;/minor_grid_x&gt;
- *         &lt;minor_grid_y&gt;false&lt;/minor_grid_y&gt;
- *         &lt;overlay&gt;overlay_image.png&lt;/overlay&gt;
- *         &lt;show_legend&gt;true&lt;/show_legend&gt;
- *         &lt;show_signature&gt;false&lt;/show_signature&gt;
- *         &lt;time_axis&gt;
- *             &lt;!-- ALLOWED TIME UNITS: SECOND, MINUTE, HOUR, DAY, WEEK, MONTH, YEAR --&gt;
- *             &lt;min_grid_time_unit&gt;HOUR&lt;/min_grid_time_unit&gt;
- *             &lt;min_grid_unit_steps&gt;4&lt;/min_grid_unit_steps&gt;
- *             &lt;maj_grid_time_unit&gt;DAY&lt;/maj_grid_time_unit&gt;
- *             &lt;maj_grid_unit_steps&gt;2&lt;/maj_grid_unit_steps&gt;
- *             &lt;date_format&gt;HH:mm&lt;/date_format&gt;
- *             &lt;center_labels&gt;true&lt;/center_labels&gt;
- *         &lt;/time_axis&gt;
- *         &lt;time_axis_label&gt;time&lt;/time_axis_label&gt;
- *         &lt;title&gt;Graph title&lt;/title&gt;
- *         &lt;title_font&gt;
- *             &lt;name&gt;Verdana&lt;/name&gt;
- *             &lt;style&gt;BOLD&lt;/style&gt;
- *             &lt;size&gt;17&lt;/size&gt;
- *         &lt;/title_font&gt;
- *         &lt;title_font_color&gt;#FF0000&lt;/title_font_color&gt;
- *         &lt;units_exponent&gt;6&lt;/units_exponent&gt;
- *         &lt;value_axis&gt;
- *             &lt;grid_step&gt;100&lt;/grid_step&gt;
- *             &lt;label_step&gt;200&lt;/label_step&gt;
- *         &lt;/value_axis&gt;
- *         &lt;vertical_label&gt;voltage [V]&lt;/vertical_label&gt;
+ *         &lt;time_grid&gt;
+ *             &lt;show_grid&gt;true&lt;/show_grid&gt;
+ *             &lt;!-- allowed units: second, minute, hour, day, week, month, year --&gt;
+ *             &lt;minor_grid_unit&gt;minute&lt;/minor_grid_unit&gt;
+ *             &lt;minor_grid_unit_count&gt;60&lt;/minor_grid_unit_count&gt;
+ *             &lt;major_grid_unit&gt;hour&lt;/major_grid_unit&gt;
+ *             &lt;major_grid_unit_count&gt;2&lt;/major_grid_unit_count&gt;
+ *             &lt;label_unit&gt;hour&lt;/label_unit&gt;
+ *             &lt;label_unit_count&gt;2&lt;/label_unit_count&gt;
+ *             &lt;label_span&gt;1200&lt;/label_span&gt;
+ *             &lt;!-- use SimpleDateFormat or strftime-like format to format labels --&gt;
+ *             &lt;label_format&gt;dd-MMM-yy&lt;/label_format&gt;
+ *         &lt;/time_grid&gt;
+ *         &lt;value_grid&gt;
+ *             &lt;show_grid&gt;true&lt;/show_grid&gt;
+ *             &lt;grid_step&gt;100.0&lt;/grid_step&gt;
+ *             &lt;label_factor&gt;5&lt;/label_factor&gt;
+ *         &lt;/value_grid&gt;
+ *         &lt;no_minor_grid&gt;true&lt;/no_minor_grid&gt;
+ *         &lt;alt_y_grid&gt;true&lt;/alt_y_grid&gt;
+ *         &lt;alt_y_mrtg&gt;true&lt;/alt_y_mrtg&gt;
+ *         &lt;alt_autoscale&gt;true&lt;/alt_autoscale&gt;
+ *         &lt;alt_autoscale_max&gt;true&lt;/alt_autoscale_max&gt;
+ *         &lt;units_exponent&gt;3&lt;/units_exponent&gt;
+ *         &lt;units_length&gt;13&lt;/units_length&gt;
+ *         &lt;vertical_label&gt;Speed (kbits/sec)&lt;/vertical_label&gt;
+ *         &lt;width&gt;444&lt;/width&gt;
+ *         &lt;height&gt;222&lt;/height&gt;
+ *         &lt;interlaced&gt;true&lt;/interlaced&gt;
+ *         &lt;image_info&gt;filename = %s, width=%d, height=%d&lt;/image_info&gt;
+ *         &lt;image_format&gt;png&lt;/image_format&gt;
+ *         &lt;image_quality&gt;0.8&lt;/image_quality&gt;
+ *         &lt;background_image&gt;luka.png&lt;/background_image&gt;
+ *         &lt;overlay_image&gt;luka.png&lt;/overlay_image&gt;
+ *         &lt;unit&gt;kilos&lt;/unit&gt;
+ *         &lt;lazy&gt;false&lt;/lazy&gt;
+ *         &lt;min_value&gt;0&lt;/min_value&gt;
+ *         &lt;max_value&gt;5000&lt;/max_value&gt;
+ *         &lt;rigid&gt;true&lt;/rigid&gt;
+ *         &lt;base&gt;1000&lt;/base&gt;
+ *         &lt;logarithmic&gt;false&lt;/logarithmic&gt;
+ *         &lt;colors&gt;
+ *             &lt;canvas&gt;#FFFFFF&lt;/canvas&gt;
+ *             &lt;back&gt;#FFFFFF&lt;/back&gt;
+ *             &lt;shadea&gt;#AABBCC&lt;/shadea&gt;
+ *             &lt;shadeb&gt;#DDDDDD&lt;/shadeb&gt;
+ *             &lt;grid&gt;#FF0000&lt;/grid&gt;
+ *             &lt;mgrid&gt;#00FF00&lt;/mgrid&gt;
+ *             &lt;font&gt;#FFFFFF&lt;/font&gt;
+ *             &lt;frame&gt;#EE00FF&lt;/frame&gt;
+ *             &lt;arrow&gt;#FF0000&lt;/arrow&gt;
+ *         &lt;/colors&gt;
+ *         &lt;no_legend&gt;false&lt;/no_legend&gt;
+ *         &lt;only_graph&gt;false&lt;/only_graph&gt;
+ *         &lt;force_rules_legend&gt;false&lt;/force_rules_legend&gt;
+ *         &lt;title&gt;This is a title&lt;/title&gt;
+ *         &lt;step&gt;300&lt;/step&gt;
+ *         &lt;fonts&gt;
+ *             &lt;small_font&gt;
+ *                 &lt;name&gt;Courier&lt;/name&gt;
+ *                 &lt;style&gt;bold italic&lt;/style&gt;
+ *                 &lt;size&gt;12&lt;/size&gt;
+ *             &lt;/small_font&gt;
+ *             &lt;large_font&gt;
+ *                 &lt;name&gt;Courier&lt;/name&gt;
+ *                 &lt;style&gt;plain&lt;/style&gt;
+ *                 &lt;size&gt;11&lt;/size&gt;
+ *             &lt;/large_font&gt;
+ *         &lt;/fonts&gt;
+ *         &lt;first_day_of_week&gt;SUNDAY&lt;/first_day_of_week&gt;
  *     &lt;/options&gt;
  *     &lt;datasources&gt;
  *         &lt;def&gt;
- *             &lt;name&gt;input&lt;/name&gt;
- *             &lt;rrd&gt;test1.rrd&lt;/rrd&gt;
- *             &lt;source&gt;inOctets&lt;/source&gt;
+ *             &lt;name&gt;x&lt;/name&gt;
+ *             &lt;rrd&gt;test.rrd&lt;/rrd&gt;
+ *             &lt;source&gt;sun&lt;/source&gt;
+ *             &lt;cf&gt;AVERAGE&lt;/cf&gt;
+ *             &lt;backend&gt;FILE&lt;/backend&gt;
+ *         &lt;/def&gt;
+ *         &lt;def&gt;
+ *             &lt;name&gt;y&lt;/name&gt;
+ *             &lt;rrd&gt;test.rrd&lt;/rrd&gt;
+ *             &lt;source&gt;shade&lt;/source&gt;
  *             &lt;cf&gt;AVERAGE&lt;/cf&gt;
  *         &lt;/def&gt;
- *         &lt;def&gt;
- *             &lt;name&gt;output&lt;/name&gt;
- *             &lt;rrd&gt;test2.rrd&lt;/rrd&gt;
- *             &lt;source&gt;outOctets&lt;/source&gt;
+ *         &lt;cdef&gt;
+ *             &lt;name&gt;x_plus_y&lt;/name&gt;
+ *             &lt;rpn&gt;x,y,+&lt;/rpn&gt;
+ *         &lt;/cdef&gt;
+ *         &lt;cdef&gt;
+ *             &lt;name&gt;x_minus_y&lt;/name&gt;
+ *             &lt;rpn&gt;x,y,-&lt;/rpn&gt;
+ *         &lt;/cdef&gt;
+ *         &lt;sdef&gt;
+ *             &lt;name&gt;x_avg&lt;/name&gt;
+ *             &lt;source&gt;x&lt;/source&gt;
+ *             &lt;cf&gt;AVERAGE&lt;/cf&gt;
+ *         &lt;/sdef&gt;
+ *         &lt;sdef&gt;
+ *             &lt;name&gt;y_max&lt;/name&gt;
+ *             &lt;source&gt;y&lt;/source&gt;
  *             &lt;cf&gt;MAX&lt;/cf&gt;
- *         &lt;/def&gt;
- *         &lt;def&gt;
- *             &lt;name&gt;input8&lt;/name&gt;
- *             &lt;rpn&gt;input,8,*&lt;/rpn&gt;
- *         &lt;/def&gt;
- *         &lt;def&gt;
- *             &lt;name&gt;output8&lt;/name&gt;
- *             &lt;rpn&gt;output,8,*,-1,*&lt;/rpn&gt;
- *         &lt;/def&gt;
+ *         &lt;/sdef&gt;
  *     &lt;/datasources&gt;
  *     &lt;graph&gt;
  *         &lt;area&gt;
- *             &lt;datasource&gt;input&lt;/datasource&gt;
+ *             &lt;datasource&gt;x&lt;/datasource&gt;
  *             &lt;color&gt;#FF0000&lt;/color&gt;
- *             &lt;legend&gt;Input traffic&lt;/legend&gt;
- *         &lt;/area&gt;
- *         &lt;area&gt;
- *             &lt;datasource&gt;output&lt;/datasource&gt;
- *             &lt;color&gt;#00FF00&lt;/color&gt;
- *             &lt;legend&gt;Output traffic&lt;/legend&gt;
+ *             &lt;legend&gt;X value\r&lt;/legend&gt;
  *         &lt;/area&gt;
  *         &lt;stack&gt;
- *             &lt;datasource&gt;input8&lt;/datasource&gt;
- *             &lt;color&gt;#AA00AA&lt;/color&gt;
- *             &lt;legend&gt;Stacked input@r&lt;/legend&gt;
+ *             &lt;datasource&gt;y&lt;/datasource&gt;
+ *             &lt;color&gt;#00FF00&lt;/color&gt;
+ *             &lt;legend&gt;Y value\r&lt;/legend&gt;
  *         &lt;/stack&gt;
  *         &lt;line&gt;
- *             &lt;datasource&gt;input&lt;/datasource&gt;
- *             &lt;color&gt;#AB7777&lt;/color&gt;
- *             &lt;legend&gt;Input traffic@l&lt;/legend&gt;
- *         &lt;/line&gt;
- *         &lt;line&gt;
- *             &lt;datasource&gt;output&lt;/datasource&gt;
- *             &lt;color&gt;#AA00AA&lt;/color&gt;
- *             &lt;legend&gt;Output traffic@r&lt;/legend&gt;
+ *             &lt;datasource&gt;x&lt;/datasource&gt;
+ *             &lt;color&gt;#FF0000&lt;/color&gt;
+ *             &lt;legend&gt;X value\r&lt;/legend&gt;
  *             &lt;width&gt;2&lt;/width&gt;
  *         &lt;/line&gt;
- *         &lt;area&gt;
- *             &lt;time1&gt;2004-02-25 12:00:01&lt;/time1&gt;
- *             &lt;time2&gt;1000222333&lt;/time2&gt;
- *             &lt;value1&gt;1001.23&lt;/value1&gt;
- *             &lt;value2&gt;2765.45&lt;/value2&gt;
- *             &lt;color&gt;#AABBCC&lt;/color&gt;
- *             &lt;legend&gt;simeple two point area&lt;/legend&gt;
- *         &lt;/area&gt;
- *         &lt;line&gt;
- *             &lt;time1&gt;1000111444&lt;/time1&gt;
- *             &lt;time2&gt;2004-02-25 12:00:01&lt;/time2&gt;
- *             &lt;value1&gt;1009.23&lt;/value1&gt;
- *             &lt;value2&gt;9002.45&lt;/value2&gt;
- *             &lt;color&gt;#AABB33&lt;/color&gt;
- *             &lt;legend&gt;simple two point line&lt;/legend&gt;
- *             &lt;width&gt;5&lt;/width&gt;
- *         &lt;/line&gt;
- *         &lt;gprint&gt;
- *             &lt;datasource&gt;input&lt;/datasource&gt;
+ *         &lt;print&gt;
+ *             &lt;datasource&gt;x&lt;/datasource&gt;
  *             &lt;cf&gt;AVERAGE&lt;/cf&gt;
- *             &lt;format&gt;Average input: @2@c&lt;/format&gt;
- *         &lt;/gprint&gt;
+ *             &lt;format&gt;Average is %7.3f\c&lt;/format&gt;
+ *         &lt;/print&gt;
  *         &lt;gprint&gt;
- *             &lt;datasource&gt;output&lt;/datasource&gt;
+ *             &lt;datasource&gt;y&lt;/datasource&gt;
  *             &lt;cf&gt;MAX&lt;/cf&gt;
- *             &lt;format&gt;Average output: @2@r&lt;/format&gt;
+ *             &lt;format&gt;Max is %7.3f\c&lt;/format&gt;
  *         &lt;/gprint&gt;
  *         &lt;hrule&gt;
- *             &lt;value&gt;1234.5678&lt;/value&gt;
- *             &lt;color&gt;#112233&lt;/color&gt;
- *             &lt;legend&gt;horizontal rule&lt;/legend&gt;
- *             &lt;width&gt;3&lt;/width&gt;
+ *             &lt;value&gt;1250&lt;/value&gt;
+ *             &lt;color&gt;#0000FF&lt;/color&gt;
+ *             &lt;legend&gt;This is a horizontal rule&lt;/legend&gt;
  *         &lt;/hrule&gt;
  *         &lt;vrule&gt;
- *             &lt;time&gt;2004-02-22 17:43:57&lt;/time&gt;
- *             &lt;color&gt;#112299&lt;/color&gt;
- *             &lt;legend&gt;vertical rule&lt;/legend&gt;
- *             &lt;width&gt;6&lt;/width&gt;
+ *             &lt;time&gt;now-6h&lt;/time&gt;
+ *             &lt;color&gt;#0000FF&lt;/color&gt;
+ *             &lt;legend&gt;This is a vertical rule&lt;/legend&gt;
  *         &lt;/vrule&gt;
- *         &lt;comment&gt;Created with JRobin&lt;/comment&gt;
+ *         &lt;comment&gt;Simple comment&lt;/comment&gt;
+ *         &lt;comment&gt;One more comment\c&lt;/comment&gt;
  *     &lt;/graph&gt;
  * &lt;/rrd_graph_def&gt;
  * </pre>
@@ -210,33 +211,36 @@ import java.text.ParseException;
  * <ul>
  * <li>There is a strong relation between the XML template syntax and the syntax of
  * {@link RrdGraphDef} class methods. If you are not sure what some XML tag means, check javadoc
- * for the corresponding class.
+ * for the corresponding class method.
  * <li>hard-coded timestamps in templates should be long integeres
- * (like: 1000243567) or ISO formatted strings (like: 2004-02-21 12:25:45)
- * <li>all leading and trailing whitespaces are removed
+ * (like: 1000243567) or at-style formatted strings
+ * <li>whitespaces are not harmful
  * <li>use <code>true</code>, <code>on</code>, <code>yes</code>, <code>y</code>,
  * or <code>1</code> to specify boolean <code>true</code> value (anything else will
  * be treated as <code>false</code>).
  * <li>floating point values: anything that cannot be parsed will be treated as Double.NaN
  * (like: U, unknown, 12r.23)
- * <li>use #RRGGBB format to specify colors.
+ * <li>use #RRGGBB or #RRGGBBAA format to specify colors.
+ * <li>valid font styles are: PLAIN, ITALIC, BOLD, BOLDITALIC
  * <li>comments are allowed.
  * </ul>
  * Any template value (text between <code>&lt;some_tag&gt;</code> and
  * <code>&lt;/some_tag&gt;</code>) can be replaced with
  * a variable of the following form: <code>${variable_name}</code>. Use
- * {@link XmlTemplate#setMapping(String, String) setMapping()} methods from the base class to replace
+ * {@link XmlTemplate#setVariable(String, String) setVariable()}
+ * methods from the base class to replace
  * template variables with real values at runtime.<p>
- *
+ * <p/>
  * Typical usage scenario:<p>
  * <ul>
  * <li>Create your XML template and save it to a file (template.xml, for example)
  * <li>Replace template values with variables if you want to change them during runtime.
  * For example, time span should not be hard-coded in the template - you probably want to create
- * many different graphs with different time spans, but starting from the same XML template.
+ * many different graphs with different time spans from the same XML template.
  * For example, your XML template could start with:
  * <pre>
  * &lt;rrd_graph_def&gt;
+ *     ...
  *     &lt;span&gt;
  *         &lt;start&gt;${start}&lt;/start&gt;
  *         &lt;end&gt;${end}&lt;/end&gt;
@@ -249,15 +253,14 @@ import java.text.ParseException;
  * </pre>
  * <li>Then, specify real values for template variables:
  * <pre>
- * t.setMapping("start", new GregorianCalendar(2004, 2, 25));
- * t.setMapping("end", new GregorianCalendar(2004, 2, 26));
+ * t.setVariable("start", new GregorianCalendar(2004, 2, 25));
+ * t.setVariable("end", new GregorianCalendar(2004, 2, 26));
  * </pre>
  * <li>Once all template variables are set, just use the template object to create RrdGraphDef
  * object. This object is actually used to create JRobin grahps:
  * <pre>
  * RrdGraphDef gdef = t.getRrdGraphDef();
  * RrdGraph g = new RrdGraph(gdef);
- * g.saveAsPNG("graph.png");
  * </pre>
  * </ul>
  * You should create new RrdGraphDefTemplate object only once for each XML template. Single template
@@ -265,15 +268,16 @@ import java.text.ParseException;
  * specified for template variables. XML synatax check is performed only once - the first graph
  * definition object gets created relatively slowly, but it will be created much faster next time.
  */
-public class RrdGraphDefTemplate extends XmlTemplate {
-	static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";   // ISO format
+public class RrdGraphDefTemplate extends XmlTemplate implements RrdGraphConstants {
+    static final Color BLIND_COLOR = new Color(0, 0, 0, 0);
 
 	private RrdGraphDef rrdGraphDef;
 
 	/**
 	 * Creates template object from any parsable XML source
+	 *
 	 * @param inputSource XML source
-	 * @throws IOException thrown in case of I/O error
+	 * @throws IOException  thrown in case of I/O error
 	 * @throws RrdException usually thrown in case of XML related error
 	 */
 	public RrdGraphDefTemplate(InputSource inputSource) throws IOException, RrdException {
@@ -282,8 +286,9 @@ public class RrdGraphDefTemplate extends XmlTemplate {
 
 	/**
 	 * Creates template object from the file containing XML template code
+	 *
 	 * @param xmlFile file containing XML template
-	 * @throws IOException thrown in case of I/O error
+	 * @throws IOException  thrown in case of I/O error
 	 * @throws RrdException usually thrown in case of XML related error
 	 */
 	public RrdGraphDefTemplate(File xmlFile) throws IOException, RrdException {
@@ -292,8 +297,9 @@ public class RrdGraphDefTemplate extends XmlTemplate {
 
 	/**
 	 * Creates template object from the string containing XML template code
+	 *
 	 * @param xmlString string containing XML template
-	 * @throws IOException thrown in case of I/O error
+	 * @throws IOException  thrown in case of I/O error
 	 * @throws RrdException usually thrown in case of XML related error
 	 */
 	public RrdGraphDefTemplate(String xmlString) throws IOException, RrdException {
@@ -304,477 +310,678 @@ public class RrdGraphDefTemplate extends XmlTemplate {
 	 * Creates RrdGraphDef object which can be used to create RrdGraph
 	 * object (actual JRobin graphs). Before this method is called, all template variables (if any)
 	 * must be resolved (replaced with real values).
-	 * See {@link XmlTemplate#setMapping(String, String) setMapping()} method information to
+	 * See {@link XmlTemplate#setVariable(String, String) setVariable()} method information to
 	 * understand how to supply values for template variables.
+	 *
 	 * @return Graph definition which can be used to create RrdGraph object (actual JRobin graphs)
 	 * @throws RrdException Thrown if parsed XML template contains invalid (unrecognized) tags
 	 */
 	public RrdGraphDef getRrdGraphDef() throws RrdException {
 		// basic check
-		if(!root.getTagName().equals("rrd_graph_def")) {
+		if (!root.getTagName().equals("rrd_graph_def")) {
 			throw new RrdException("XML definition must start with <rrd_graph_def>");
 		}
-		validateOnce(root, new String[] {"span", "options", "datasources", "graph"});
+		validateTagsOnlyOnce(root, new String[]{"filename", "span", "options", "datasources", "graph"});
 		rrdGraphDef = new RrdGraphDef();
-        // traverse all nodes
-		Node[] childs = getChildNodes(root);
-		for(int i = 0; i < childs.length; i++) {
+		// traverse all nodes
+		Node[] childNodes = getChildNodes(root);
+		for (int i = 0; i < childNodes.length; i++) {
+			String nodeName = childNodes[i].getNodeName();
+			if (nodeName.equals("filename")) {
+				resolveFilename(childNodes[i]);
+			}
 			// SPAN
-			String nodeName = childs[i].getNodeName();
-            if(nodeName.equals("span")) {
-				resolveSpan(childs[i]);
+			else if (nodeName.equals("span")) {
+				resolveSpan(childNodes[i]);
 			}
 			// OPTIONS
-			else if(nodeName.equals("options")) {
-				resolveOptions(childs[i]);
+			else if (nodeName.equals("options")) {
+				resolveOptions(childNodes[i]);
 			}
 			// DATASOURCES
-			else if(nodeName.equals("datasources")) {
-				resolveDatasources(childs[i]);
+			else if (nodeName.equals("datasources")) {
+				resolveDatasources(childNodes[i]);
 			}
 			// GRAPH ELEMENTS
-			else if(nodeName.equals("graph")) {
-				resolveGraphElements(childs[i]);
+			else if (nodeName.equals("graph")) {
+				resolveGraphElements(childNodes[i]);
 			}
 		}
 		return rrdGraphDef;
 	}
 
 	private void resolveGraphElements(Node graphNode) throws RrdException {
-		validateOnce(graphNode, new String[] {
-			"area", "line", "stack", "gprint", "hrule", "vrule", "comment"
-		});
-		Node[] childs = getChildNodes(graphNode);
-		for(int i = 0; i < childs.length; i++) {
-			String nodeName = childs[i].getNodeName();
-			if(nodeName.equals("area")) {
-				resolveArea(childs[i]);
+		validateTagsOnlyOnce(graphNode, new String[]{"area*", "line*", "stack*",
+													 "print*", "gprint*", "hrule*", "vrule*", "comment*"});
+		Node[] childNodes = getChildNodes(graphNode);
+		for (int i = 0; i < childNodes.length; i++) {
+			String nodeName = childNodes[i].getNodeName();
+			if (nodeName.equals("area")) {
+				resolveArea(childNodes[i]);
 			}
-			else if(nodeName.equals("line")) {
-				resolveLine(childs[i]);
+			else if (nodeName.equals("line")) {
+				resolveLine(childNodes[i]);
 			}
-			else if(nodeName.equals("stack")) {
-				validateOnce(childs[i], new String[] { "datasource", "color", "legend" });
-				String datasource = getChildValue(childs[i], "datasource");
-				String colorStr = getChildValue(childs[i], "color");
-				Color color = Color.decode(colorStr);
-				String legend = getChildValue(childs[i], "legend");
-				rrdGraphDef.stack(datasource, color, legend);
+			else if (nodeName.equals("stack")) {
+				resolveStack(childNodes[i]);
 			}
-			else if(nodeName.equals("comment")) {
-				String comment = getValue(childs[i]);
-				rrdGraphDef.comment(comment);
+			else if (nodeName.equals("print")) {
+				resolvePrint(childNodes[i], false);
 			}
 			else if(nodeName.equals("gprint")) {
-				validateOnce(childs[i], new String[] { "datasource", "cf", "format" });
-				String datasource = getChildValue(childs[i], "datasource");
-				String consolFun = getChildValue(childs[i], "cf");
-				String format = getChildValue(childs[i], "format");
-				rrdGraphDef.gprint(datasource, consolFun, format);
+				resolvePrint(childNodes[i], true);
 			}
 			else if(nodeName.equals("hrule")) {
-				validateOnce(childs[i], new String[] { "value", "color", "legend", "width" });
-				double value = getChildValueAsDouble(childs[i], "value");
-				String colorStr = getChildValue(childs[i], "color");
-				Color color = Color.decode(colorStr);
-				String legend = getChildValue(childs[i], "legend");
-				int width = 1;
-				try {
-					width = getChildValueAsInt(childs[i], "width");
-				} catch(RrdException e) { }
-				rrdGraphDef.hrule(value, color, legend, width);
+				resolveHRule(childNodes[i]);
 			}
 			else if(nodeName.equals("vrule")) {
-				validateOnce(childs[i], new String[] { "time", "color", "legend", "width" });
-				String timeStr = getChildValue(childs[i], "time");
-				GregorianCalendar gc = resolveTime(timeStr);
-				String colorStr = getChildValue(childs[i], "color");
-				Color color = Color.decode(colorStr);
-				String legend = getChildValue(childs[i], "legend");
-				int width = 1;
-				try {
-					width = getChildValueAsInt(childs[i], "width");
-				} catch(RrdException e) { }
-				rrdGraphDef.vrule(gc, color, legend, width);
+				resolveVRule(childNodes[i]);
+			}
+			else if(nodeName.equals("comment")) {
+				rrdGraphDef.comment(getValue(childNodes[i]));
 			}
 		}
 	}
 
-	private void resolveLine(Node lineNode) throws RrdException {
-        if(hasChildNode(lineNode, "datasource")) {
-			// ordinary line definition
-			validateOnce(lineNode, new String[] { "datasource", "color", "legend", "width" });
-			String datasource = getChildValue(lineNode, "datasource");
-			String colorStr = getChildValue(lineNode, "color");
-			Color color = Color.decode(colorStr);
-			String legend = getChildValue(lineNode, "legend");
-			// line width is not mandatory
-			int width = 1;
-			try {
-				width = getChildValueAsInt(lineNode, "width");
-			} catch(RrdException e) { }
-			rrdGraphDef.line(datasource, color, legend, width);
-		}
-		else if(hasChildNode(lineNode, "time1")) {
-			// two point definition
-			validateOnce(lineNode, new String[] {
-				"time1", "time2", "value1", "value2", "color", "legend", "width"
-			});
-			String t1str = getChildValue(lineNode, "time1");
-			GregorianCalendar gc1 = resolveTime(t1str);
-			String t2str = getChildValue(lineNode, "time2");
-			GregorianCalendar gc2 = resolveTime(t2str);
-			double v1 = getChildValueAsDouble(lineNode, "value1");
-			double v2 = getChildValueAsDouble(lineNode, "value2");
-            String colorStr = getChildValue(lineNode, "color");
-			Color color = Color.decode(colorStr);
-			String legend = getChildValue(lineNode, "legend");
-			int width = 1;
-			try {
-				width = getChildValueAsInt(lineNode, "width");
-			} catch(RrdException e) { }
-			rrdGraphDef.line(gc1, v1, gc2, v2, color, legend, width);
-		}
-		else {
-			throw new RrdException("Unrecognized <line> format");
-		}
-	}
-
-	private void resolveArea(Node areaNode) throws RrdException {
-        if(hasChildNode(areaNode, "datasource")) {
-			validateOnce(areaNode, new String[] { "datasource", "color", "legend" });
-			// ordinary area definition
-			String datasource = getChildValue(areaNode, "datasource");
-			String colorStr = getChildValue(areaNode, "color");
-			Color color = Color.decode(colorStr);
-			String legend = getChildValue(areaNode, "legend");
-			rrdGraphDef.area(datasource, color, legend);
-		}
-		else if(hasChildNode(areaNode, "time1")) {
-			// two point definition
-			validateOnce(areaNode, new String[] {
-				"time1", "time2", "value1", "value2", "color", "legend", "width"
-			});
-			String t1str = getChildValue(areaNode, "time1");
-			GregorianCalendar gc1 = resolveTime(t1str);
-			String t2str = getChildValue(areaNode, "time2");
-			GregorianCalendar gc2 = resolveTime(t2str);
-			double v1 = getChildValueAsDouble(areaNode, "value1");
-			double v2 = getChildValueAsDouble(areaNode, "value2");
-            String colorStr = getChildValue(areaNode, "color");
-			Color color = Color.decode(colorStr);
-			String legend = getChildValue(areaNode, "legend");
-			rrdGraphDef.area(gc1, v1, gc2, v2, color, legend);
-		}
-		else {
-			throw new RrdException("Unrecognized <area> format");
-		}
-	}
-
-	private void resolveDatasources(Node dsNode) throws RrdException {
-		validateOnce(dsNode, new String[] { "def" });
-		Node[] nodes = getChildNodes(dsNode, "def");
-		for(int i = 0; i < nodes.length; i++) {
-			if(hasChildNode(nodes[i], "rrd")) {
-				// RRD datasource
-				validateOnce(nodes[i], new String[] {"name", "rrd", "source", "cf"});
-				String name = getChildValue(nodes[i], "name");
-            	String rrd = getChildValue(nodes[i], "rrd");
-				String dsName = getChildValue(nodes[i], "source");
-				String consolFun = getChildValue(nodes[i], "cf");
-				rrdGraphDef.datasource(name, rrd, dsName, consolFun);
+	private void resolveVRule(Node parentNode) throws RrdException {
+		validateTagsOnlyOnce(parentNode, new String[]{"time", "color", "legend"});
+		long timestamp = Long.MIN_VALUE;
+		Paint color = null;
+		String legend = null;
+		Node[] childNodes = getChildNodes(parentNode);
+		for (int i = 0; i < childNodes.length; i++) {
+			String nodeName = childNodes[i].getNodeName();
+			if (nodeName.equals("time")) {
+				timestamp = Util.getTimestamp(getValue(childNodes[i]));
 			}
-			else if(hasChildNode(nodes[i], "rpn")) {
-				// RPN datasource
-				validateOnce(nodes[i], new String[] {"name", "rpn"});
-				String name = getChildValue(nodes[i], "name");
-				String rpn = getChildValue(nodes[i], "rpn");
-				rrdGraphDef.datasource(name, rpn);
+			else if(nodeName.equals("color")) {
+				color = getValueAsColor(childNodes[i]);
+			}
+			else if(nodeName.equals("legend")) {
+				legend = getValue(childNodes[i]);
+			}
+		}
+		if(timestamp != Long.MIN_VALUE && color != null) {
+			rrdGraphDef.vrule(timestamp, color, legend);
+		}
+		else {
+			throw new RrdException("Incomplete VRULE settings");
+		}
+	}
+
+	private void resolveHRule(Node parentNode) throws RrdException {
+		validateTagsOnlyOnce(parentNode, new String[]{"value", "color", "legend"});
+		double value = Double.NaN;
+		Paint color = null;
+		String legend = null;
+		Node[] childNodes = getChildNodes(parentNode);
+		for (int i = 0; i < childNodes.length; i++) {
+			String nodeName = childNodes[i].getNodeName();
+			if (nodeName.equals("value")) {
+				value = getValueAsDouble(childNodes[i]);
+			}
+			else if(nodeName.equals("color")) {
+				color = getValueAsColor(childNodes[i]);
+			}
+			else if(nodeName.equals("legend")) {
+				legend = getValue(childNodes[i]);
+			}
+		}
+		if(!Double.isNaN(value) && color != null) {
+			rrdGraphDef.hrule(value, color, legend);
+		}
+		else {
+			throw new RrdException("Incomplete HRULE settings");
+		}
+	}
+
+	private void resolvePrint(Node parentNode, boolean isInGraph) throws RrdException {
+		validateTagsOnlyOnce(parentNode, new String[]{"datasource", "cf", "format"});
+		String datasource = null, cf = null, format = null;
+		Node[] childNodes = getChildNodes(parentNode);
+		for (int i = 0; i < childNodes.length; i++) {
+			String nodeName = childNodes[i].getNodeName();
+			if (nodeName.equals("datasource")) {
+				datasource = getValue(childNodes[i]);
+			}
+			else if(nodeName.equals("cf")) {
+				cf = getValue(childNodes[i]);
+			}
+			else if(nodeName.equals("format")) {
+				format = getValue(childNodes[i]);
+			}
+		}
+		if(datasource != null && cf != null && format != null) {
+			if(isInGraph) {
+				rrdGraphDef.gprint(datasource, cf, format);
 			}
 			else {
-				throw new RrdException("Unrecognized <def> format");
+				rrdGraphDef.print(datasource, cf, format);
 			}
-		}
-	}
-
-	private void resolveOptions(Node rootOptionNode) throws RrdException {
-		validateOnce(rootOptionNode, new String[] {
-			"anti_aliasing", "arrow_color", "axis_color", "back_color", "background",
-			"base_value", "canvas", "left_padding", "default_font",	"default_font_color",
-			"frame_color", "front_grid", "grid_range", "grid_x", "grid_y", "border",
-			"major_grid_color", "major_grid_x", "major_grid_y",
-			"minor_grid_color", "minor_grid_x", "minor_grid_y",
-			"overlay", "show_legend", "show_signature", "time_axis", "time_axis_label",
-			"title", "title_font", "title_font_color", "units_exponent", "value_axis",
-			"vertical_label"
-		});
-		Node[] optionNodes = getChildNodes(rootOptionNode);
-		for(int i = 0; i < optionNodes.length; i++) {
-			String option = optionNodes[i].getNodeName();
-			Node optionNode = optionNodes[i];
-			// ANTI ALIASING
-			if(option.equals("anti_aliasing")) {
-				boolean antiAliasing = getValueAsBoolean(optionNode);
-				rrdGraphDef.setAntiAliasing(antiAliasing);
-			}
-			// ARROW COLOR
-			else if(option.equals("arrow_color")) {
-				String colorStr = getValue(optionNode);
-				rrdGraphDef.setArrowColor(Color.decode(colorStr));
-			}
-			// AXIS COLOR
-			else if(option.equals("axis_color")) {
-				String colorStr = getValue(optionNode);
-				rrdGraphDef.setAxisColor(Color.decode(colorStr));
-			}
-			// BACK COLOR
-			else if(option.equals("back_color")) {
-				String colorStr = getValue(optionNode);
-				rrdGraphDef.setBackColor(Color.decode(colorStr));
-			}
-			// BACKGROUND
-			else if(option.equals("background")) {
-				String backgroundFile = getValue(optionNode);
-				rrdGraphDef.setBackground(backgroundFile);
-			}
-			// BASE VALUE
-			else if(option.equals("base_value")) {
-				double baseValue = getValueAsDouble(optionNode);
-				rrdGraphDef.setBaseValue(baseValue);
-			}
-			// CANVAS
-			else if(option.equals("canvas")) {
-				String colorStr = getValue(optionNode);
-				rrdGraphDef.setCanvasColor(Color.decode(colorStr));
-			}
-			// LEFT PADDING
-			else if(option.equals("left_padding")) {
-				int padding = getValueAsInt(optionNode);
-				rrdGraphDef.setChartLeftPadding(padding);
-			}
-			// DEFAULT FONT
-			else if(option.equals("default_font")) {
-				Font f = resolveFont(optionNode);
-				rrdGraphDef.setTitleFont(f);
-			}
-			// DEFAULT FONT COLOR
-			else if(option.equals("default_font_color")) {
-				String colorStr = getValue(optionNode);
-				rrdGraphDef.setDefaultFontColor(Color.decode(colorStr));
-			}
-			// FRAME COLOR
-			else if(option.equals("frame_color")) {
-				String colorStr = getValue(optionNode);
-				rrdGraphDef.setFrameColor(Color.decode(colorStr));
-			}
-			// FRONT GRID
-			else if(option.equals("front_grid")) {
-				boolean frontGrid = getValueAsBoolean(optionNode);
-				rrdGraphDef.setFrontGrid(frontGrid);
-			}
-			// GRID RANGE
-			else if(option.equals("grid_range")) {
-				validateOnce(optionNode, new String[] { "lower", "upper", "rigid" });
-				double lower = getChildValueAsDouble(optionNode, "lower");
-				double upper = getChildValueAsDouble(optionNode, "upper");
-				boolean rigid = getChildValueAsBoolean(optionNode, "rigid");
-				rrdGraphDef.setGridRange(lower, upper, rigid);
-			}
-			// GRID X?
-			else if(option.equals("grid_x")) {
-				boolean gx = getValueAsBoolean(optionNode);
-				rrdGraphDef.setGridX(gx);
-			}
-			// GRID Y?
-			else if(option.equals("grid_y")) {
-				boolean gy = getValueAsBoolean(optionNode);
-				rrdGraphDef.setGridY(gy);
-			}
-			// BORDER
-			else if(option.equals("border")) {
-				validateOnce(optionNode, new String[] {"color", "width"});
-				String colorStr = getChildValue(optionNode, "color");
-				int width = getChildValueAsInt(optionNode, "width");
-				rrdGraphDef.setImageBorder(Color.decode(colorStr), width);
-			}
-			// MAJOR GRID COLOR
-			else if(option.equals("major_grid_color")) {
-				String colorStr = getValue(optionNode);
-				rrdGraphDef.setMajorGridColor(Color.decode(colorStr));
-			}
-			// MAJOR GRID X?
-			else if(option.equals("major_grid_x")) {
-				boolean gx = getValueAsBoolean(optionNode);
-				rrdGraphDef.setMajorGridX(gx);
-			}
-			// MAJOR GRID Y?
-			else if(option.equals("major_grid_y")) {
-				boolean gy = getValueAsBoolean(optionNode);
-				rrdGraphDef.setMajorGridY(gy);
-			}
-			// MINOR GRID COLOR
-			else if(option.equals("minor_grid_color")) {
-				String colorStr = getValue(optionNode);
-				rrdGraphDef.setMinorGridColor(Color.decode(colorStr));
-			}
-			// MINOR GRID X?
-			else if(option.equals("minor_grid_x")) {
-				boolean gx = getValueAsBoolean(optionNode);
-				rrdGraphDef.setMinorGridX(gx);
-			}
-			// MINOR GRID Y?
-			else if(option.equals("minor_grid_y")) {
-				boolean gy = getValueAsBoolean(optionNode);
-				rrdGraphDef.setMinorGridY(gy);
-			}
-			// OVERLAY
-			else if(option.equals("overlay")) {
-				String overlay = getValue(optionNode);
-				rrdGraphDef.setOverlay(overlay);
-			}
-			// SHOW LEGEND?
-			else if(option.equals("show_legend")) {
-				boolean show = getValueAsBoolean(optionNode);
-				rrdGraphDef.setShowLegend(show);
-			}
-			// SHOW SIGNATURE?
-			else if(option.equals("show_signature")) {
-				boolean show = getValueAsBoolean(optionNode);
-				rrdGraphDef.setShowSignature(show);
-			}
-			// TIME AXIS
-			else if(option.equals("time_axis")) {
-				validateOnce(optionNode, new String[] {
-					"min_grid_time_unit", "min_grid_unit_steps", "maj_grid_time_unit",
-					"maj_grid_unit_steps", "date_format", "center_labels"
-				});
-				int unit1 = resolveUnit(getChildValue(optionNode, "min_grid_time_unit"));
-				int step1 = getChildValueAsInt(optionNode, "min_grid_unit_steps");
-				int unit2 = resolveUnit(getChildValue(optionNode, "maj_grid_time_unit"));
-				int step2 = getChildValueAsInt(optionNode, "maj_grid_unit_steps");
-				String format = getChildValue(optionNode, "date_format");
-				boolean center = getChildValueAsBoolean(optionNode, "center_labels");
-				rrdGraphDef.setTimeAxis(unit1, step1, unit2, step2, format, center);
-			}
-			// TIME AXIS LABEL
-			else if(option.equals("time_axis_label")) {
-				String label = getValue(optionNode);
-				rrdGraphDef.setTimeAxisLabel(label);
-			}
-			// TITLE
-			else if(option.equals("title")) {
-				String title = getValue(optionNode);
-				rrdGraphDef.setTitle(title);
-			}
-			// TITLE FONT
-			else if(option.equals("title_font")) {
-				Font f = resolveFont(optionNode);
-				rrdGraphDef.setTitleFont(f);
-			}
-			// TITLE FONT COLOR
-			else if(option.equals("title_font_color")) {
-				String colorStr = getValue(optionNode);
-				rrdGraphDef.setTitleFontColor(Color.decode(colorStr));
-			}
-			// UNITS EXPONENT
-			else if(option.equals("units_exponent")) {
-				int exp = getValueAsInt(optionNode);
-				rrdGraphDef.setUnitsExponent(exp);
-			}
-			// VALUE AXIS
-			else if(option.equals("value_axis")) {
-				validateOnce(optionNode, new String[] {"grid_step", "label_step"});
-				double gridStep = getChildValueAsDouble(optionNode, "grid_step");
-				double labelStep = getChildValueAsDouble(optionNode, "label_step");
-				rrdGraphDef.setValueAxis(gridStep, labelStep);
-			}
-			// VERTICAL LABEL
-			else if(option.equals("vertical_label")) {
-				String label = getValue(optionNode);
-				rrdGraphDef.setVerticalLabel(label);
-			}
-		}
-	}
-
-	private int resolveUnit(String unit) {
-		if(unit.equalsIgnoreCase("second")) {
-			return TimeAxisUnit.SECOND;
-		}
-		else if(unit.equalsIgnoreCase("minute")) {
-			return TimeAxisUnit.MINUTE;
-		}
-		else if(unit.equalsIgnoreCase("hour")) {
-			return TimeAxisUnit.HOUR;
-		}
-		else if(unit.equalsIgnoreCase("day")) {
-			return TimeAxisUnit.DAY;
-		}
-		else if(unit.equalsIgnoreCase("week")) {
-			return TimeAxisUnit.WEEK;
-		}
-		else if(unit.equalsIgnoreCase("month")) {
-			return TimeAxisUnit.MONTH;
-		}
-		else if(unit.equalsIgnoreCase("year")) {
-			return TimeAxisUnit.YEAR;
 		}
 		else {
-			throw new IllegalArgumentException("Invalid unit specified: " + unit);
+			throw new RrdException("Incomplete " + (isInGraph? "GRPINT": "PRINT") + " settings");
 		}
+	}
+
+	private void resolveStack(Node parentNode) throws RrdException {
+		validateTagsOnlyOnce(parentNode, new String[]{"datasource", "color", "legend"});
+		String datasource = null, legend = null;
+		Paint color = null;
+		Node[] childNodes = getChildNodes(parentNode);
+		for (int i = 0; i < childNodes.length; i++) {
+			String nodeName = childNodes[i].getNodeName();
+			if (nodeName.equals("datasource")) {
+				datasource = getValue(childNodes[i]);
+			}
+			else if(nodeName.equals("color")) {
+				color = getValueAsColor(childNodes[i]);
+			}
+			else if(nodeName.equals("legend")) {
+				legend = getValue(childNodes[i]);
+			}
+		}
+		if(datasource != null) {
+			if(color != null) {
+				rrdGraphDef.stack(datasource, color, legend);
+			}
+			else {
+				rrdGraphDef.stack(datasource, BLIND_COLOR, legend);				
+			}
+		}
+		else {
+			throw new RrdException("Incomplete STACK settings");
+		}
+	}
+
+	private void resolveLine(Node parentNode) throws RrdException {
+		validateTagsOnlyOnce(parentNode, new String[]{"datasource", "color", "legend", "width"});
+		String datasource = null, legend = null;
+		Paint color = null;
+		float width = 1.0F;
+		Node[] childNodes = getChildNodes(parentNode);
+		for (int i = 0; i < childNodes.length; i++) {
+			String nodeName = childNodes[i].getNodeName();
+			if (nodeName.equals("datasource")) {
+				datasource = getValue(childNodes[i]);
+			}
+			else if(nodeName.equals("color")) {
+				color = getValueAsColor(childNodes[i]);
+			}
+			else if(nodeName.equals("legend")) {
+				legend = getValue(childNodes[i]);
+			}
+			else if(nodeName.equals("width")) {
+				width = (float)getValueAsDouble(childNodes[i]);
+			}
+		}
+		if(datasource != null) {
+			if(color != null) {
+				rrdGraphDef.line(datasource, color, legend, width);
+			}
+			else {
+				rrdGraphDef.line(datasource, BLIND_COLOR, legend, width);
+			}
+		}
+		else {
+			throw new RrdException("Incomplete LINE settings");
+		}
+	}
+
+	private void resolveArea(Node parentNode) throws RrdException {
+		validateTagsOnlyOnce(parentNode, new String[]{"datasource", "color", "legend"});
+		String datasource = null, legend = null;
+		Paint color = null;
+		Node[] childNodes = getChildNodes(parentNode);
+		for (int i = 0; i < childNodes.length; i++) {
+			String nodeName = childNodes[i].getNodeName();
+			if (nodeName.equals("datasource")) {
+				datasource = getValue(childNodes[i]);
+			}
+			else if(nodeName.equals("color")) {
+				color = getValueAsColor(childNodes[i]);
+			}
+			else if(nodeName.equals("legend")) {
+				legend = getValue(childNodes[i]);
+			}
+		}
+		if(datasource != null) {
+			if(color != null) {
+				rrdGraphDef.area(datasource, color, legend);
+			}
+			else {
+				rrdGraphDef.area(datasource, BLIND_COLOR, legend);
+			}
+		}
+		else {
+			throw new RrdException("Incomplete AREA settings");
+		}
+	}
+
+	private void resolveDatasources(Node datasourcesNode) throws RrdException {
+		validateTagsOnlyOnce(datasourcesNode, new String[]{"def*", "cdef*", "sdef*"});
+		Node[] childNodes = getChildNodes(datasourcesNode);
+		for (int i = 0; i < childNodes.length; i++) {
+			String nodeName = childNodes[i].getNodeName();
+			if (nodeName.equals("def")) {
+				resolveDef(childNodes[i]);
+			}
+			else if (nodeName.equals("cdef")) {
+				resolveCDef(childNodes[i]);
+			}
+			else if (nodeName.equals("sdef")) {
+				resolveSDef(childNodes[i]);
+			}
+		}
+	}
+
+	private void resolveSDef(Node parentNode) throws RrdException {
+		validateTagsOnlyOnce(parentNode, new String[]{"name", "source", "cf"});
+		String name = null, source = null, cf = null;
+		Node[] childNodes = getChildNodes(parentNode);
+		for (int i = 0; i < childNodes.length; i++) {
+			String nodeName = childNodes[i].getNodeName();
+			if (nodeName.equals("name")) {
+				name = getValue(childNodes[i]);
+			}
+			else if(nodeName.equals("source")) {
+				source = getValue(childNodes[i]);
+			}
+			else if(nodeName.equals("cf")) {
+				cf = getValue(childNodes[i]);
+			}
+		}
+		if(name != null && source != null && cf != null) {
+			rrdGraphDef.datasource(name, source, cf);
+		}
+		else {
+			throw new RrdException("Incomplete SDEF settings");
+		}
+	}
+
+	private void resolveCDef(Node parentNode) throws RrdException {
+		validateTagsOnlyOnce(parentNode, new String[]{"name", "rpn"});
+		String name = null, rpn = null;
+		Node[] childNodes = getChildNodes(parentNode);
+		for (int i = 0; i < childNodes.length; i++) {
+			String nodeName = childNodes[i].getNodeName();
+			if (nodeName.equals("name")) {
+				name = getValue(childNodes[i]);
+			}
+			else if(nodeName.equals("rpn")) {
+				rpn = getValue(childNodes[i]);
+			}
+		}
+		if(name != null && rpn != null) {
+			rrdGraphDef.datasource(name, rpn);
+		}
+		else {
+			throw new RrdException("Incomplete CDEF settings");
+		}
+	}
+
+	private void resolveDef(Node parentNode) throws RrdException {
+		validateTagsOnlyOnce(parentNode, new String[]{"name", "rrd", "source", "cf", "backend"});
+		String name = null, rrd = null, source = null, cf = null, backend = null;
+		Node[] childNodes = getChildNodes(parentNode);
+		for (int i = 0; i < childNodes.length; i++) {
+			String nodeName = childNodes[i].getNodeName();
+			if (nodeName.equals("name")) {
+				name = getValue(childNodes[i]);
+			}
+			else if (nodeName.equals("rrd")) {
+				rrd = getValue(childNodes[i]);
+			}
+			else if (nodeName.equals("source")) {
+				source = getValue(childNodes[i]);
+			}
+			else if (nodeName.equals("cf")) {
+				cf = getValue(childNodes[i]);
+			}
+			else if (nodeName.equals("backend")) {
+				backend = getValue(childNodes[i]);
+			}
+		}
+		if (name != null && rrd != null && source != null && cf != null) {
+			rrdGraphDef.datasource(name, rrd, source, cf, backend);
+		}
+		else {
+			throw new RrdException("Incomplete DEF settings");
+		}
+	}
+
+	private void resolveFilename(Node filenameNode) {
+		String filename = getValue(filenameNode);
+		rrdGraphDef.setFilename(filename);
 	}
 
 	private void resolveSpan(Node spanNode) throws RrdException {
-		validateOnce(spanNode, new String[] {"start", "end"});
+		validateTagsOnlyOnce(spanNode, new String[]{"start", "end"});
 		String startStr = getChildValue(spanNode, "start");
 		String endStr = getChildValue(spanNode, "end");
-		GregorianCalendar gc1 = resolveTime(startStr);
-		GregorianCalendar gc2 = resolveTime(endStr);
-		rrdGraphDef.setTimePeriod(gc1, gc2);
+		long[] span = Util.getTimestamps(startStr, endStr);
+		rrdGraphDef.setStartTime(span[0]);
+		rrdGraphDef.setEndTime(span[1]);
 	}
 
-	private Font resolveFont(Node fontNode) throws RrdException {
-		validateOnce(fontNode, new String[] {"name", "style", "size"});
-        String name = getChildValue(fontNode, "name");
-		String style = getChildValue(fontNode, "style");
-		int size = getChildValueAsInt(fontNode, "size");
-		int stl = Font.PLAIN;
-		if(style.equalsIgnoreCase("BOLD")) {
-			stl = Font.BOLD;
+	private void resolveOptions(Node rootOptionNode) throws RrdException {
+		validateTagsOnlyOnce(rootOptionNode, new String[]{
+			"anti_aliasing", "use_pool", "time_grid", "value_grid", "alt_y_grid", "alt_y_mrtg",
+			"no_minor_grid", "alt_autoscale", "alt_autoscale_max", "units_exponent", "units_length",
+			"vertical_label", "width", "height", "interlaced", "image_info", "image_format",
+			"image_quality", "background_image", "overlay_image", "unit", "lazy",
+			"min_value", "max_value", "rigid", "base", "logarithmic", "colors",
+			"no_legend", "only_graph", "force_rules_legend", "title", "step", "fonts",
+			"first_day_of_week", "signature"
+		});
+		Node[] optionNodes = getChildNodes(rootOptionNode);
+		for (int i = 0; i < optionNodes.length; i++) {
+			String option = optionNodes[i].getNodeName();
+			Node optionNode = optionNodes[i];
+			if (option.equals("use_pool")) {
+				rrdGraphDef.setPoolUsed(getValueAsBoolean(optionNode));
+			}
+			else if (option.equals("anti_aliasing")) {
+				rrdGraphDef.setAntiAliasing(getValueAsBoolean(optionNode));
+			}
+			else if (option.equals("time_grid")) {
+				resolveTimeGrid(optionNode);
+			}
+			else if (option.equals("value_grid")) {
+				resolveValueGrid(optionNode);
+			}
+			else if (option.equals("no_minor_grid")) {
+				rrdGraphDef.setNoMinorGrid(getValueAsBoolean(optionNode));
+			}
+			else if (option.equals("alt_y_grid")) {
+				rrdGraphDef.setAltYGrid(getValueAsBoolean(optionNode));
+			}
+			else if (option.equals("alt_y_mrtg")) {
+				rrdGraphDef.setAltYMrtg(getValueAsBoolean(optionNode));
+			}
+			else if (option.equals("alt_autoscale")) {
+				rrdGraphDef.setAltAutoscale(getValueAsBoolean(optionNode));
+			}
+			else if (option.equals("alt_autoscale_max")) {
+				rrdGraphDef.setAltAutoscaleMax(getValueAsBoolean(optionNode));
+			}
+			else if (option.equals("units_exponent")) {
+				rrdGraphDef.setUnitsExponent(getValueAsInt(optionNode));
+			}
+			else if (option.equals("units_length")) {
+				rrdGraphDef.setUnitsLength(getValueAsInt(optionNode));
+			}
+			else if (option.equals("vertical_label")) {
+				rrdGraphDef.setVerticalLabel(getValue(optionNode));
+			}
+			else if (option.equals("width")) {
+				rrdGraphDef.setWidth(getValueAsInt(optionNode));
+			}
+			else if (option.equals("height")) {
+				rrdGraphDef.setHeight(getValueAsInt(optionNode));
+			}
+			else if (option.equals("interlaced")) {
+				rrdGraphDef.setInterlaced(getValueAsBoolean(optionNode));
+			}
+			else if (option.equals("image_info")) {
+				rrdGraphDef.setImageInfo(getValue(optionNode));
+			}
+			else if (option.equals("image_format")) {
+				rrdGraphDef.setImageFormat(getValue(optionNode));
+			}
+			else if (option.equals("image_quality")) {
+				rrdGraphDef.setImageQuality((float) getValueAsDouble(optionNode));
+			}
+			else if (option.equals("background_image")) {
+				rrdGraphDef.setBackgroundImage(getValue(optionNode));
+			}
+			else if (option.equals("overlay_image")) {
+				rrdGraphDef.setOverlayImage(getValue(optionNode));
+			}
+			else if (option.equals("unit")) {
+				rrdGraphDef.setUnit(getValue(optionNode));
+			}
+			else if (option.equals("lazy")) {
+				rrdGraphDef.setLazy(getValueAsBoolean(optionNode));
+			}
+			else if (option.equals("min_value")) {
+				rrdGraphDef.setMinValue(getValueAsDouble(optionNode));
+			}
+			else if (option.equals("max_value")) {
+				rrdGraphDef.setMaxValue(getValueAsDouble(optionNode));
+			}
+			else if (option.equals("rigid")) {
+				rrdGraphDef.setRigid(getValueAsBoolean(optionNode));
+			}
+			else if (option.equals("base")) {
+				rrdGraphDef.setBase(getValueAsDouble(optionNode));
+			}
+			else if (option.equals("logarithmic")) {
+				rrdGraphDef.setLogarithmic(getValueAsBoolean(optionNode));
+			}
+			else if (option.equals("colors")) {
+				resolveColors(optionNode);
+			}
+			else if (option.equals("no_legend")) {
+				rrdGraphDef.setNoLegend(getValueAsBoolean(optionNode));
+			}
+			else if (option.equals("only_graph")) {
+				rrdGraphDef.setOnlyGraph(getValueAsBoolean(optionNode));
+			}
+			else if (option.equals("force_rules_legend")) {
+				rrdGraphDef.setForceRulesLegend(getValueAsBoolean(optionNode));
+			}
+			else if (option.equals("title")) {
+				rrdGraphDef.setTitle(getValue(optionNode));
+			}
+			else if (option.equals("step")) {
+				rrdGraphDef.setStep(getValueAsLong(optionNode));
+			}
+			else if (option.equals("fonts")) {
+				resolveFonts(optionNode);
+			}
+			else if (option.equals("first_day_of_week")) {
+				int dayIndex = resolveFirstDayOfWeek(getValue(optionNode));
+				rrdGraphDef.setFirstDayOfWeek(dayIndex);
+			}
+			else if(option.equals("signature")) {
+				rrdGraphDef.setShowSignature(getValueAsBoolean(optionNode));
+			}
 		}
-		else if(style.equalsIgnoreCase("ITALIC")) {
-			stl = Font.ITALIC;
-		}
-		else if(style.equalsIgnoreCase("BOLDITALIC") ||
-			style.equalsIgnoreCase("ITALICBOLD") ||
-			style.equalsIgnoreCase("BOLD ITALIC") ||
-			style.equalsIgnoreCase("ITALIC BOLD")) {
-			stl = Font.ITALIC + Font.BOLD;
-		}
-		return new Font(name, stl, size);
 	}
 
-	private GregorianCalendar resolveTime(String timeStr) {
-		// try to parse it as long
-		try {
-			long timestamp = Long.parseLong(timeStr);
-			return Util.getGregorianCalendar(timestamp);
-		} catch (NumberFormatException e) { }
-		// not a long timestamp, try to parse it as data
-		SimpleDateFormat df = new SimpleDateFormat(DATE_FORMAT);
-		df.setLenient(false);
-		try {
-			Date date = df.parse(timeStr);
-            return Util.getGregorianCalendar(date);
-		} catch (ParseException e) {
-			throw new IllegalArgumentException("Time/date not in " + DATE_FORMAT +
-				" format: " + timeStr);
+	private int resolveFirstDayOfWeek(String firstDayOfWeek) throws RrdException {
+		if (firstDayOfWeek.equalsIgnoreCase("sunday")) {
+			return SUNDAY;
+		}
+		else if (firstDayOfWeek.equalsIgnoreCase("monday")) {
+			return MONDAY;
+		}
+		else if (firstDayOfWeek.equalsIgnoreCase("tuesday")) {
+			return TUESDAY;
+		}
+		else if (firstDayOfWeek.equalsIgnoreCase("wednesday")) {
+			return WEDNESDAY;
+		}
+		else if (firstDayOfWeek.equalsIgnoreCase("thursday")) {
+			return THURSDAY;
+		}
+		else if (firstDayOfWeek.equalsIgnoreCase("friday")) {
+			return FRIDAY;
+		}
+		else if (firstDayOfWeek.equalsIgnoreCase("saturday")) {
+			return SATURDAY;
+		}
+		throw new RrdException("Never heard for this day of week: " + firstDayOfWeek);
+	}
+
+	private void resolveFonts(Node parentNode) throws RrdException {
+		validateTagsOnlyOnce(parentNode, new String[]{"small_font", "large_font"});
+		Node[] childNodes = getChildNodes(parentNode);
+		for (int i = 0; i < childNodes.length; i++) {
+			String nodeName = childNodes[i].getNodeName();
+			if (nodeName.equals("small_font")) {
+				rrdGraphDef.setSmallFont(resolveFont(childNodes[i]));
+			}
+			else if (nodeName.equals("large_font")) {
+				rrdGraphDef.setLargeFont(resolveFont(childNodes[i]));
+			}
 		}
 	}
 
-	public static void main(String[] args) throws IOException, RrdException {
-		File f = new File("work/test2.xml");
-		RrdGraphDefTemplate t = new RrdGraphDefTemplate(f);
-		t.setMapping("date", new Date());
-		t.getRrdGraphDef();
+	private Font resolveFont(Node parentNode) throws RrdException {
+		validateTagsOnlyOnce(parentNode, new String[]{"name", "style", "size"});
+		String name = null, style = null;
+		int size = 0;
+		Node[] childNodes = getChildNodes(parentNode);
+		for (int i = 0; i < childNodes.length; i++) {
+			String nodeName = childNodes[i].getNodeName();
+			if (nodeName.equals("name")) {
+				name = getValue(childNodes[i]);
+			}
+			else if (nodeName.equals("style")) {
+				style = getValue(childNodes[i]).toLowerCase();
+			}
+			else if (nodeName.equals("size")) {
+				size = getValueAsInt(childNodes[i]);
+			}
+		}
+		if (name != null && style != null && size > 0) {
+			boolean isItalic = style.contains("italic"), isBold = style.contains("bold");
+			int fstyle = Font.PLAIN;
+			if (isItalic && isBold) {
+				fstyle = Font.BOLD + Font.ITALIC;
+			}
+			else if (isItalic) {
+				fstyle = Font.ITALIC;
+			}
+			else if (isBold) {
+				fstyle = Font.BOLD;
+			}
+			Font font = new Font(name, fstyle, size);
+			return font;
+		}
+		else {
+			throw new RrdException("Incomplete font specification");
+		}
+	}
+
+	private void resolveColors(Node parentNode) throws RrdException {
+		validateTagsOnlyOnce(parentNode, COLOR_NAMES);
+		Node[] childNodes = getChildNodes(parentNode);
+		for (int i = 0; i < childNodes.length; i++) {
+			String colorName = childNodes[i].getNodeName();
+			rrdGraphDef.setColor(colorName, getValueAsColor(childNodes[i]));
+		}
+	}
+
+	private void resolveValueGrid(Node parentNode) throws RrdException {
+		validateTagsOnlyOnce(parentNode, new String[]{"show_grid", "grid_step", "label_factor"});
+		boolean showGrid = true;
+		double gridStep = Double.NaN;
+		int NOT_SET = Integer.MIN_VALUE, labelFactor = NOT_SET;
+		Node[] childNodes = getChildNodes(parentNode);
+		for (int i = 0; i < childNodes.length; i++) {
+			String nodeName = childNodes[i].getNodeName();
+			if (nodeName.equals("show_grid")) {
+				showGrid = getValueAsBoolean(childNodes[i]);
+			}
+			else if (nodeName.equals("grid_step")) {
+				gridStep = getValueAsDouble(childNodes[i]);
+			}
+			else if (nodeName.equals("label_factor")) {
+				labelFactor = getValueAsInt(childNodes[i]);
+			}
+		}
+		rrdGraphDef.setDrawYGrid(showGrid);
+		if (!Double.isNaN(gridStep) && labelFactor != NOT_SET) {
+			rrdGraphDef.setValueAxis(gridStep, labelFactor);
+		}
+		else if (!Double.isNaN(gridStep) || labelFactor != NOT_SET) {
+			throw new RrdException("Incomplete value axis settings");
+		}
+	}
+
+	private void resolveTimeGrid(Node parentNode) throws RrdException {
+		validateTagsOnlyOnce(parentNode, new String[]{
+			"show_grid", "minor_grid_unit",
+			"minor_grid_unit_count", "major_grid_unit",
+			"major_grid_unit_count", "label_unit", "label_unit_count",
+			"label_span", "label_format"
+		});
+		boolean showGrid = true;
+		final int NOT_SET = Integer.MIN_VALUE;
+		int minorGridUnit = NOT_SET, minorGridUnitCount = NOT_SET,
+				majorGridUnit = NOT_SET, majorGridUnitCount = NOT_SET,
+				labelUnit = NOT_SET, labelUnitCount = NOT_SET, labelSpan = NOT_SET;
+		String labelFormat = null;
+		Node[] childNodes = getChildNodes(parentNode);
+		for (int i = 0; i < childNodes.length; i++) {
+			String nodeName = childNodes[i].getNodeName();
+			if (nodeName.equals("show_grid")) {
+				showGrid = getValueAsBoolean(childNodes[i]);
+			}
+			else if (nodeName.equals("minor_grid_unit")) {
+				minorGridUnit = resolveTimeUnit(getValue(childNodes[i]));
+			}
+			else if (nodeName.equals("minor_grid_unit_count")) {
+				minorGridUnitCount = getValueAsInt(childNodes[i]);
+			}
+			else if (nodeName.equals("major_grid_unit")) {
+				majorGridUnit = resolveTimeUnit(getValue(childNodes[i]));
+			}
+			else if (nodeName.equals("major_grid_unit_count")) {
+				majorGridUnitCount = getValueAsInt(childNodes[i]);
+			}
+			else if (nodeName.equals("label_unit")) {
+				labelUnit = resolveTimeUnit(getValue(childNodes[i]));
+			}
+			else if (nodeName.equals("label_unit_count")) {
+				labelUnitCount = getValueAsInt(childNodes[i]);
+			}
+			else if (nodeName.equals("label_span")) {
+				labelSpan = getValueAsInt(childNodes[i]);
+			}
+			else if (nodeName.equals("label_format")) {
+				labelFormat = getValue(childNodes[i]);
+			}
+		}
+		rrdGraphDef.setDrawXGrid(showGrid);
+		if (minorGridUnit != NOT_SET && minorGridUnitCount != NOT_SET &&
+				majorGridUnit != NOT_SET && majorGridUnitCount != NOT_SET &&
+				labelUnit != NOT_SET && labelUnitCount != NOT_SET && labelSpan != NOT_SET && labelFormat != null) {
+			rrdGraphDef.setTimeAxis(minorGridUnit, minorGridUnitCount, majorGridUnit, majorGridUnitCount,
+					labelUnit, labelUnitCount, labelSpan, labelFormat);
+		}
+		else if (minorGridUnit != NOT_SET || minorGridUnitCount != NOT_SET ||
+				majorGridUnit != NOT_SET || majorGridUnitCount != NOT_SET ||
+				labelUnit != NOT_SET || labelUnitCount != NOT_SET || labelSpan != NOT_SET || labelFormat != null) {
+			throw new RrdException("Incomplete time axis settings");
+		}
+	}
+
+	private int resolveTimeUnit(String unit) throws RrdException {
+		if (unit.equalsIgnoreCase("second")) {
+			return RrdGraphConstants.SECOND;
+		}
+		else if (unit.equalsIgnoreCase("minute")) {
+			return RrdGraphConstants.MINUTE;
+		}
+		else if (unit.equalsIgnoreCase("hour")) {
+			return RrdGraphConstants.HOUR;
+		}
+		else if (unit.equalsIgnoreCase("day")) {
+			return RrdGraphConstants.DAY;
+		}
+		else if (unit.equalsIgnoreCase("week")) {
+			return RrdGraphConstants.WEEK;
+		}
+		else if (unit.equalsIgnoreCase("month")) {
+			return RrdGraphConstants.MONTH;
+		}
+		else if (unit.equalsIgnoreCase("year")) {
+			return RrdGraphConstants.YEAR;
+		}
+		throw new RrdException("Unknown time unit specified: " + unit);
 	}
 }

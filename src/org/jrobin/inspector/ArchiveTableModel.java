@@ -2,13 +2,13 @@
  * JRobin : Pure java implementation of RRDTool's functionality
  * ============================================================
  *
- * Project Info:  http://www.sourceforge.net/projects/jrobin
- * Project Lead:  Sasa Markovic (saxon@eunet.yu);
+ * Project Info:  http://www.jrobin.org
+ * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
  * (C) Copyright 2003, by Sasa Markovic.
  *
  * Developers:    Sasa Markovic (saxon@jrobin.org)
- *                Arne Vandamme (cobralord@jrobin.org)
+ *
  *
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation;
@@ -70,10 +70,8 @@ class ArchiveTableModel extends AbstractTableModel {
 	}
 
 	void setFile(File newFile) {
-		if (file == null || !file.getAbsolutePath().equals(newFile.getAbsolutePath())) {
-			file = newFile;
-			setIndex(-1, -1);
-		}
+		file = newFile;
+		setIndex(-1, -1);
 	}
 
 	void setIndex(int newDsIndex, int newArcIndex) {
@@ -81,26 +79,32 @@ class ArchiveTableModel extends AbstractTableModel {
 			dsIndex = newDsIndex;
 			arcIndex = newArcIndex;
 			values = null;
-			if(dsIndex >= 0 && arcIndex >= 0) {
+			if (dsIndex >= 0 && arcIndex >= 0) {
 				try {
-					RrdDb rrd = new RrdDb(file.getAbsolutePath());
-					Archive arc = rrd.getArchive(arcIndex);
-					ArcState state = arc.getArcState(dsIndex);
-					values = new Object[]{
-						arc.getConsolFun(),
-						"" + arc.getXff(),
-						"" + arc.getSteps(),
-						"" + arc.getRows(),
-						InspectorModel.formatDouble(state.getAccumValue()),
-						"" + state.getNanSteps(),
-						"" + arc.getStartTime() + " [" + new Date(arc.getStartTime() * 1000L) + "]",
-						"" + arc.getEndTime() + " [" + new Date(arc.getEndTime() * 1000L) + "]"
-					};
-					rrd.close();
+					RrdDb rrd = new RrdDb(file.getAbsolutePath(), true);
+					try {
+						Archive arc = rrd.getArchive(arcIndex);
+						ArcState state = arc.getArcState(dsIndex);
+						values = new Object[]{
+							arc.getConsolFun(),
+							"" + arc.getXff(),
+							"" + arc.getSteps(),
+							"" + arc.getRows(),
+							InspectorModel.formatDouble(state.getAccumValue()),
+							"" + state.getNanSteps(),
+							"" + arc.getStartTime() + " [" + new Date(arc.getStartTime() * 1000L) + "]",
+							"" + arc.getEndTime() + " [" + new Date(arc.getEndTime() * 1000L) + "]"
+						};
+					}
+					finally {
+						rrd.close();
+					}
 				}
 				catch (IOException e) {
+					Util.error(null, e);
 				}
 				catch (RrdException e) {
+					Util.error(null, e);
 				}
 			}
 			fireTableDataChanged();

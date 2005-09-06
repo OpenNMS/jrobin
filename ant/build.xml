@@ -6,10 +6,7 @@
  * Project Info:  http://www.jrobin.org
  * Project Lead:  Sasa Markovic (saxon@jrobin.org)
  *
- * Developers:    Sasa Markovic (saxon@jrobin.org)
- *                Arne Vandamme (cobralord@jrobin.org)
- *
- * (C) Copyright 2003, by Sasa Markovic.
+ * (C) Copyright 2003-2005, by Sasa Markovic.
  *
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation;
@@ -25,163 +22,119 @@
  */
 -->
 
-<project name="JRobin" default="dist" basedir=".">
-	<description>JRobin build file</description>
+<project name="JRobin" default="jrobin" basedir=".">
+	<description>JRobinLite Build File</description>
 
 	<!-- VARIABLES -->
-	<property name="version" value="1.4.0" />
-	<property name="who" value="Sasa Markovic &lt;saxon@jrobin.org&gt;"/>
-	<property name="cwd" location=".."/>
+	<property name="version" value="1.5.2"/>
+	<property name="who" value="Sasa Markovic &lt;saxon@eunet.yu&gt;"/>
+	<property name="home" location=".."/>
 
 	<property name="classes" value="classes"/>
 	<property name="doc" value="doc"/>
 	<property name="javadoc" value="${doc}/javadoc"/>
-	<property name="dist" value="dist"/>
 	<property name="src" value="src"/>
-	<property name="libs" value="lib" />
-	<property name="ant" value="ant" />
-	<property name="lib-snmp" value="snmp-1.3.jar"/>
-	<property name="lib-xmlrpc" value="xmlrpc-1.2-b1.jar"/>
-	<property name="lib-jrobin" value="JRobin-${version}.jar"/>
-	<property name="lib-mrtg-client" value="mrtg-client-${version}.jar"/>
-	<property name="lib-mrtg-server" value="mrtg-server-${version}.jar"/>
+	<property name="lib" value="lib"/>
+	<property name="ant" value="ant"/>
+	<property name="dist" value="dist"/>
+	<property name="tmpfile" value="tmp.tar"/>
+	<property name="lib-jrobin" value="jrobin-${version}.jar"/>
 	<property name="lib-inspector" value="inspector-${version}.jar"/>
 	<property name="lib-convertor" value="convertor-${version}.jar"/>
-	<property name="res" value="res"/>
-	<property name="res-mrtg" value="${res}/mrtg"/>
-	<property name="classpath" value="${cwd}/${libs}/${lib-snmp}:${cwd}/${libs}/${lib-xmlrpc}"/>
-	<property name="tarfile" value="JRobin-${version}.tar"/>
-	<property name="tgzfile" value="JRobin-${version}.tar.gz"/>
+	<property name="dist-prefix" value="JRobinLite-${version}"/>
+	<property name="dist-file" value="${dist-prefix}.tar.gz"/>
+
 
 	<!-- TARGETS -->
 	<target name="init">
 		<tstamp/>
+		<mkdir dir="${home}/${classes}"/>
+		<mkdir dir="${home}/${doc}"/>
+		<mkdir dir="${home}/${javadoc}"/>
+		<mkdir dir="${home}/${lib}"/>
+		<mkdir dir="${home}/${dist}"/>
 	</target>
 
 	<target name="clean" depends="init">
-		<delete includeemptydirs="true">
-			<fileset dir="${cwd}" >
-				<include name="${classes}/**/*"/>
-				<include name="${dist}/JRobin*.tar.gz"/>
-				<include name="${javadoc}/**/*"/>
-				<include name="${libs}/${lib-jrobin}" />
-				<include name="${libs}/${lib-mrtg-client}" />
-				<include name="${libs}/${lib-mrtg-server}" />
-				<include name="${libs}/${lib-inspector}" />
-				<include name="${libs}/${lib-convertor}" />
+		<delete>
+			<fileset dir="${home}">
+				<include name="${classes}/**/*.class"/>
+				<include name="${lib}/**/*"/>
+				<include name="${doc}/**/*"/>
+				<include name="${dist}/**/*"/>
 			</fileset>
 		</delete>
 	</target>
 
 	<target name="compile" depends="init">
-		<mkdir dir="${cwd}/${classes}"/>
 		<javac
-			srcdir="${cwd}/${src}" destdir="${cwd}/${classes}"
-			classpath="${classpath}"
-            compiler="modern" source="1.4"
-		/>
+			srcdir="${home}/${src}" destdir="${home}/${classes}"
+			compiler="modern" source="1.5"
+			/>
 	</target>
 
-	<target name="core-lib" depends="compile">
-		<delete file="${cwd}/${libs}/${lib-jrobin}" />
-		<jar jarfile="${cwd}/${libs}/${lib-jrobin}" basedir="${cwd}/${classes}">
+	<target name="jrobin" depends="compile">
+		<delete file="${home}/${lib}/${lib-jrobin}"/>
+		<jar jarfile="${home}/${lib}/${lib-jrobin}" basedir="${home}/${classes}">
 			<manifest>
-				<attribute name="Main-Class" value="Demo"/>
+				<attribute name="Main-Class" value="org.jrobin.cmd.RrdCommander"/>
 			</manifest>
+			<include name="org/jrobin/cmd/**/*.class"/>
+			<include name="org/jrobin/convertor/**/*.class"/>
 			<include name="org/jrobin/core/**/*.class"/>
+			<include name="org/jrobin/data/**/*.class"/>
+			<include name="org/jrobin/demo/**/*.class"/>
 			<include name="org/jrobin/graph/**/*.class"/>
-			<include name="*.class"/>
+			<include name="org/jrobin/inspector/**/*.class"/>
 		</jar>
-	</target>
-
-	<target name="mrtg-server-lib" depends="core-lib">
-		<delete file="${cwd}/${libs}/${lib-mrtg-server}" />
-		<jar jarfile="${cwd}/${libs}/${lib-mrtg-server}" basedir="${cwd}/${classes}">
-			<manifest>
-				<attribute name="Main-Class" value="org.jrobin.mrtg.server.Server"/>
-				<attribute name="Class-Path" value="${lib-xmlrpc} ${lib-snmp} ${lib-jrobin}"/>
-			</manifest>
-			<include name="org/jrobin/mrtg/*.class"/>
-			<include name="org/jrobin/mrtg/server/*.class"/>
-		</jar>
-	</target>
-
-	<target name="mrtg-client-lib" depends="mrtg-server-lib">
-		<delete file="${cwd}/${libs}/${lib-mrtg-client}" />
-		<jar jarfile="${cwd}/${libs}/${lib-mrtg-client}" basedir="${cwd}/${classes}">
-			<include name="org/jrobin/mrtg/*.class"/>
-			<include name="org/jrobin/mrtg/client/*.class"/>
-		</jar>
-		<jar jarfile="${cwd}/${libs}/${lib-mrtg-client}" basedir="${cwd}" update="true" >
-			<include name="${res-mrtg}/**/*"/>
-			<manifest>
-				<attribute name="Main-Class" value="org.jrobin.mrtg.client.Client"/>
-				<attribute name="Class-Path" value="${lib-xmlrpc}"/>
-			</manifest>
-		</jar>
-	</target>
-
-	<target name="inspector-lib" depends="core-lib">
-		<delete file="${cwd}/${libs}/${lib-inspector}" />
-		<jar jarfile="${cwd}/${libs}/${lib-inspector}" basedir="${cwd}/${classes}">
-			<manifest>
-				<attribute name="Main-Class" value="org.jrobin.inspector.RrdInspector"/>
-				<attribute name="Class-Path" value="${lib-jrobin}"/>
-			</manifest>
-			<include name="org/jrobin/inspector/*.class"/>
-		</jar>
-	</target>
-
-	<target name="convertor-lib" depends="core-lib">
-		<delete file="${cwd}/${libs}/${lib-convertor}" />
-		<jar jarfile="${cwd}/${libs}/${lib-convertor}" basedir="${cwd}/${classes}">
+		<delete file="${home}/${lib}/${lib-convertor}"/>
+		<jar jarfile="${home}/${lib}/${lib-convertor}" basedir="${home}/${classes}">
 			<manifest>
 				<attribute name="Main-Class" value="org.jrobin.convertor.Convertor"/>
 				<attribute name="Class-Path" value="${lib-jrobin}"/>
 			</manifest>
-			<include name="org/jrobin/convertor/*.class"/>
+			<include name="org/jrobin/convertor/**/*.class"/>
+		</jar>
+		<jar jarfile="${home}/${lib}/${lib-inspector}" basedir="${home}/${classes}">
+			<manifest>
+				<attribute name="Main-Class" value="org.jrobin.inspector.RrdInspector"/>
+				<attribute name="Class-Path" value="${lib-jrobin}"/>
+			</manifest>
+			<include name="org/jrobin/inspector/**/*.class"/>
 		</jar>
 	</target>
 
-	<target name="all-libs" depends="core-lib,mrtg-server-lib,mrtg-client-lib,inspector-lib,convertor-lib"/>
-
 	<target name="javadoc" depends="compile">
 		<javadoc author="false" version="false"
-			destdir="${cwd}/${javadoc}"
-			packagenames="org.jrobin.core.*,org.jrobin.graph.*"
-			source="1.4"
-			sourcepath="${cwd}/${src}"
-			classpath="${classpath}"
-            access="protected"
-		/>
+			destdir="${home}/${javadoc}"
+			packagenames="org.jrobin.cmd.*,org.jrobin.convertor.*,org.jrobin.core.*,org.jrobin.data.*,org.jrobin.demo.*,org.jrobin.graph.*,org.jrobin.inspector.*"
+			excludepackagenames="org.jrobin.core.jrrd.*"
+			source="1.5"
+			sourcepath="${home}/${src}"
+			access="protected"
+			/>
 	</target>
 
-	<target name="dist" depends="all-libs,javadoc">
-		<mkdir dir="${cwd}/${dist}"/>
-		<delete file="${cwd}/${dist}/${tarfile}>"/>
-		<delete file="${cwd}/${dist}/${tgzfile}>"/>
-		<property name="prefix" value="jrobin-${version}"/>
-		<tar destfile="${cwd}/${dist}/${tarfile}">
-			<tarfileset dir="${cwd}/${doc}" prefix="${prefix}/${doc}">
-    			<include name="**/*"/>
-  			</tarfileset>
-			<tarfileset dir="${cwd}/${libs}" prefix="${prefix}/${libs}">
-    			<include name="*.jar"/>
-  			</tarfileset>
-			<tarfileset dir="${cwd}/${src}" prefix="${prefix}/${src}">
-				<exclude name="**/test/**/*"/> 
-    			<include name="**/*.java"/>
-  			</tarfileset>
-			<tarfileset dir="${cwd}/${res}" prefix="${prefix}/${res}">
-    			<include name="**/*"/>
-  			</tarfileset>
-			<tarfileset dir="${cwd}/${ant}" prefix="${prefix}/${ant}">
-    			<include name="*.xml"/>
-  			</tarfileset>
+	<target name="dist" depends="clean,jrobin,javadoc">
+		<tar destfile="${home}/${dist}/${tmpfile}">
+			<tarfileset dir="${home}/${doc}" prefix="${dist-prefix}/${doc}">
+				<include name="**/*"/>
+			</tarfileset>
+			<tarfileset dir="${home}/${lib}" prefix="${dist-prefix}/${lib}">
+				<include name="**/*"/>
+			</tarfileset>
+			<tarfileset dir="${home}/${src}" prefix="${dist-prefix}/${src}">
+				<include name="**/*.java"/>
+			</tarfileset>
+			<tarfileset dir="${home}/${classes}" prefix="${dist-prefix}/${classes}">
+				<include name="**/*.class"/>
+			</tarfileset>
+			<tarfileset dir="${home}/${ant}" prefix="${dist-prefix}/${ant}">
+				<include name="*.xml"/>
+			</tarfileset>
 		</tar>
-		<gzip src="${cwd}/${dist}/${tarfile}" zipfile="${cwd}/${dist}/${tgzfile}"/>
-		<delete file="${cwd}/${dist}/${tarfile}"/>
+		<gzip src="${home}/${dist}/${tmpfile}" zipfile="${home}/${dist}/${dist-file}"/>
+		<delete file="${home}/${dist}/${tmpfile}"/>
 	</target>
-
 </project>
 
