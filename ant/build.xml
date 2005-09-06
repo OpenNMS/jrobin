@@ -160,6 +160,7 @@
 		<javadoc author="false" version="false"
 			destdir="${cwd}/${javadoc}"
 			packagenames="org.jrobin.core.*,org.jrobin.graph.*"
+			excludepackagenames="org.jrobin.core.jrrd.*"
 			source="1.4"
 			sourcepath="${cwd}/${src}"
 			classpath="${classpath}"
