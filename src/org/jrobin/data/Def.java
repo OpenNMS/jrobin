@@ -5,10 +5,10 @@
  * Project Info:  http://www.jrobin.org
  * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
- * (C) Copyright 2003, by Sasa Markovic.
+ * (C) Copyright 2003-2005, by Sasa Markovic.
  *
  * Developers:    Sasa Markovic (saxon@jrobin.org)
- *                Arne Vandamme (cobralord@jrobin.org)
+ *
  *
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation;
@@ -25,11 +25,20 @@
 
 package org.jrobin.data;
 
+import org.jrobin.core.FetchData;
+import org.jrobin.core.RrdException;
 import org.jrobin.core.Util;
+
 import java.io.IOException;
 
 class Def extends Source {
 	private String path, dsName, consolFun, backend;
+	private FetchData fetchData;
+
+	Def(String name, FetchData fetchData) {
+		this(name, null, name, null, null);
+		setFetchData(fetchData);
+	}
 
 	Def(String name, String path, String dsName, String consolFunc) {
 		this(name, path, dsName, consolFunc, null);
@@ -68,5 +77,43 @@ class Def extends Source {
 				getConsolFun().equals(def.consolFun) &&
 				((backend == null && def.backend == null) ||
 				(backend != null && def.backend != null && backend.equals(def.backend)));
+	}
+
+	void setFetchData(FetchData fetchData) {
+		this.fetchData = fetchData;
+	}
+
+	long[] getRrdTimestamps() {
+		return fetchData.getTimestamps();
+	}
+
+	double[] getRrdValues() throws RrdException {
+		return fetchData.getValues(dsName);
+	}
+
+	long getArchiveEndTime() {
+		return fetchData.getArcEndTime();
+	}
+
+	long getFetchStep() {
+		return fetchData.getStep();
+	}
+
+	Aggregates getAggregates(long tStart, long tEnd) throws RrdException {
+		long[] t = getRrdTimestamps();
+		double[] v = getRrdValues();
+		Aggregator agg = new Aggregator(t, v);
+		return agg.getAggregates(tStart, tEnd);
+	}
+
+	double getPercentile(long tStart, long tEnd, double percentile) throws RrdException {
+		long[] t = getRrdTimestamps();
+		double[] v = getRrdValues();
+		Aggregator agg = new Aggregator(t, v);
+		return agg.getPercentile(tStart, tEnd, percentile);
+	}
+
+	boolean isLoaded() {
+		return fetchData != null;
 	}
 }

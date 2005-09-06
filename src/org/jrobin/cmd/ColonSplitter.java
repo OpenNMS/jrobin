@@ -22,23 +22,21 @@
  * library; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+package org.jrobin.cmd;
 
-package org.jrobin.data;
+class ColonSplitter {
+	private String cmd;
+	private static final String COLON = "@#@";
 
-class PDef extends Source {
-	private final Plottable plottable;
-
-	PDef(String name, Plottable plottable) {
-		super(name);
-		this.plottable = plottable;
+	ColonSplitter(String command) {
+		this.cmd = command;
 	}
 
-	void calculateValues() {
-		long[] times = getTimestamps();
-		double[] vals = new double[times.length];
-		for(int i = 0; i < times.length; i++) {
-			vals[i] = plottable.getValue(times[i]);
+	String[] split() {
+		String[] tokens = cmd.replaceAll("\\\\:", COLON).split(":");
+		for(int i = 0; i < tokens.length; i++) {
+			tokens[i] = tokens[i].replaceAll(COLON, ":");
 		}
-		setValues(vals);
+		return tokens;
 	}
 }

@@ -5,10 +5,10 @@
  * Project Info:  http://www.jrobin.org
  * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
- * (C) Copyright 2003, by Sasa Markovic.
+ * (C) Copyright 2003-2005, by Sasa Markovic.
  *
  * Developers:    Sasa Markovic (saxon@jrobin.org)
- *                Arne Vandamme (cobralord@jrobin.org)
+ *
  *
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation;
@@ -25,138 +25,143 @@
 package org.jrobin.cmd;
 
 import org.jrobin.core.RrdException;
-import org.jrobin.graph.RrdExportDef;
-import org.jrobin.graph.RrdExport;
-import org.jrobin.graph.ExportData;
+import org.jrobin.core.Util;
+import org.jrobin.core.XmlWriter;
+import org.jrobin.data.DataProcessor;
+import org.jrobin.graph.RrdGraphConstants;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
-/**
- * <p>Description</p>
- * 
- * @author Arne Vandamme (cobralord@jrobin.org)
- */
-public class RrdXportCmd extends RrdToolCmd
-{
-	static final String DEFAULT_START 	= "end-1day";
-	static final String DEFAULT_END 	= "now";
-
-	static
-	{
-		keywords = new String[]	{ "DEF", "CDEF", "XPORT" };
-	}
-
-	public RrdXportCmd( RrdCmdScanner cmdScanner ) {
-		super(cmdScanner);
-	}
+class RrdXportCmd extends RrdToolCmd implements RrdGraphConstants {
+	private DataProcessor dproc;
+	private List<XPort> xports;
 
 	String getCmdType() {
 		return "xport";
 	}
 
-	Object execute() throws RrdException, IOException
-	{
-		// --start
-		String startStr			= cmdScanner.getOptionValue( "s", "start", DEFAULT_START );
-		TimeSpec spec1 			= new TimeParser(startStr).parse();
-
-		// --end
-		String endStr 			= cmdScanner.getOptionValue( "e", "end", DEFAULT_END );
-		TimeSpec spec2 			= new TimeParser(endStr).parse();
-		long[] timestamps 		= TimeSpec.getTimestamps(spec1, spec2);
-
-		// --step
-		String resolutionStr 	= cmdScanner.getOptionValue( "step", null, "1" );		// Smallest step possible is default
-		long resolution 		= parseLong( resolutionStr );
-
-		// --maxrows
-		String maxrowsStr		= cmdScanner.getOptionValue( "m", "maxrows", "400" );
-		int maxRows				= parseInt( maxrowsStr );
-
-		RrdExportDef exportDef	= new RrdExportDef( timestamps[0], timestamps[1] );
-		exportDef.setResolution( resolution );
-		exportDef.setStrictExport( true );												// Always use strict export in case of RrdTool command
-
-		String[] words 			= cmdScanner.getRemainingWords();
-
-		for ( int i = 0; i < words.length; i++ )
-		{
-			if ( words[i].startsWith("DEF:") )
-				parseDef( words[i], exportDef );
-			else if ( words[i].startsWith("CDEF:") )
-				parseCdef( words[i], exportDef );
-			else if ( words[i].startsWith("XPORT:") )
-				parseXport( words[i], exportDef );
+	Object execute() throws RrdException, IOException {
+		String startStr = getOptionValue("s", "start", DEFAULT_START);
+		String endStr = getOptionValue("e", "end", DEFAULT_END);
+		long span[] = Util.getTimestamps(startStr, endStr);
+		dproc = new DataProcessor(span[0], span[1]);
+		xports = new ArrayList<XPort>();
+		long step = parseLong(getOptionValue(null, "step", "1"));
+		int maxRows = parseInt(getOptionValue("m", "maxrows", "400"));
+		long minStep = (long) Math.ceil((span[1] - span[0]) / (double) (maxRows - 1));
+		step = Math.max(step, minStep);
+		dproc.setStep(step);
+		String[] words = getRemainingWords();
+		if(words.length < 2) {
+			throw new RrdException("Incomplete XPORT command");
 		}
-
-		// Now create the export data
-		RrdExport export		= new RrdExport( exportDef );
-		ExportData data			= export.fetch( maxRows );
-
-		System.out.println( data.exportXml() );
-
-		return data;
+		for (int i = 1; i < words.length; i++) {
+			if (words[i].startsWith("DEF:")) {
+				parseDef(words[i]);
+			}
+			else if (words[i].startsWith("CDEF:")) {
+				parseCDef(words[i]);
+			}
+			else if (words[i].startsWith("XPORT:")) {
+				parseXport(words[i]);
+			}
+			else {
+				throw new RrdException("Invalid XPORT syntax: " + words[i]);
+			}
+		}
+		String result = xports.size() == 0 ? null : xport();
+		println(xports.size() == 0 ? "No XPORT statement found, nothing done" : result);
+		return result;
 	}
 
-	/**
-	 * DEF:vname=rrd:ds-name:CF
-	 */
-	private void parseDef( String word, RrdExportDef def ) throws RrdException
-	{
-		String[] tokens = word.split(":");
-
-		if ( tokens.length != 4 )
-			throw new RrdException( "Invalid DEF command: " + word );
-
-		String[] token1	= tokens[1].split("=");
-
-		if ( token1.length != 2 )
-			throw new RrdException( "Invalid DEF command: " + word );
-
-		def.datasource( token1[0], token1[1], tokens[2], tokens[3] );
+	private String xport() throws IOException, RrdException {
+		dproc.processData();
+		long[] timestamps = dproc.getTimestamps();
+		for (int j = 0; j < xports.size(); j++) {
+			xports.get(j).values = dproc.getValues(xports.get(j).name);
+		}
+		ByteArrayOutputStream stream = new ByteArrayOutputStream();
+		XmlWriter w = new XmlWriter(stream);
+		w.startTag("xport");
+		w.startTag("meta");
+		w.writeTag("start", timestamps[0]);
+		w.writeTag("step", timestamps[1] - timestamps[0]);
+		w.writeTag("end", timestamps[timestamps.length - 1]);
+		w.writeTag("rows", timestamps.length);
+		w.writeTag("columns", xports.size());
+		w.startTag("legend");
+		for (int j = 0; j < xports.size(); j++) {
+			w.writeTag("entry", xports.get(j).legend);
+		}
+		w.closeTag(); // legend
+		w.closeTag(); // meta
+		w.startTag("data");
+		for (int i = 0; i < timestamps.length; i++) {
+			w.startTag("row");
+			w.writeComment(new Date(timestamps[i] * 1000L));
+			w.writeTag("t", timestamps[i]);
+			for (int j = 0; j < xports.size(); j++) {
+				w.writeTag("v", xports.get(j).values[i]);
+			}
+			w.closeTag(); // row
+		}
+		w.closeTag(); // data
+		w.closeTag(); // xport
+		w.flush();
+		String result = stream.toString();
+		stream.close();
+		return result;
 	}
 
-	/**
-	 * CDEF:vname=rpn-expression
-	 */
-	private void parseCdef( String word, RrdExportDef def ) throws RrdException
-	{
-		String[] tokens = word.split(":");
-
-		if ( tokens.length != 2 )
-			throw new RrdException( "Invalid CDEF command: " + word );
-
-		String[] token1	= tokens[1].split("=");
-
-		if ( token1.length != 2 )
-			throw new RrdException( "Invalid CDEF command: " + word );
-
-		def.datasource( token1[0], token1[1] );
+	private void parseDef(String word) throws RrdException {
+		// DEF:vname=rrd:ds-name:CF
+		String[] tokens1 = new ColonSplitter(word).split();
+		if (tokens1.length != 4) {
+			throw new RrdException("Invalid DEF syntax: " + word);
+		}
+		String[] tokens2 = tokens1[1].split("=");
+		if (tokens2.length != 2) {
+			throw new RrdException("Invalid DEF syntax: " + word);
+		}
+		dproc.addDatasource(tokens2[0], tokens2[1], tokens1[2], tokens1[3]);
 	}
 
-	/**
-	 * XPORT:vname:legend
-	 */
-	private void parseXport( String word, RrdExportDef def ) throws RrdException
-	{
-		String[] tokens = word.split(":");
-
-		if ( tokens.length < 2 || tokens.length > 3 )
-			throw new RrdException( "Invalid XPORT command: " + word );
-
-		if ( tokens.length == 2 )
-			def.export( tokens[1] );
-		else
-			def.export( tokens[1], tokens[2] );
+	private void parseCDef(String word) throws RrdException {
+		// CDEF:vname=rpn-expression
+		String[] tokens1 = new ColonSplitter(word).split();
+		if (tokens1.length != 2) {
+			throw new RrdException("Invalid CDEF syntax: " + word);
+		}
+		String[] tokens2 = tokens1[1].split("=");
+		if (tokens2.length != 2) {
+			throw new RrdException("Invalid CDEF syntax: " + word);
+		}
+		dproc.addDatasource(tokens2[0], tokens2[1]);
 	}
 
-	public static void main( String[] args ) throws Exception
-	{
-		String cmd = "xport --start now-1h --end now DEF:xx=host-inout.lo.rrd:output:AVERAGE DEF:yy=host-inout.lo.rrd:input:AVERAGE CDEF:aa=xx,yy,+,8,* "
-			+ "XPORT:xx:\"out bytes\" XPORT:aa:\"in and out bits\"";
+	private void parseXport(String word) throws RrdException {
+		// XPORT:vname[:legend]
+		String[] tokens = new ColonSplitter(word).split();
+		if (tokens.length == 2 || tokens.length == 3) {
+			XPort xport = new XPort(tokens[1], tokens.length == 3 ? tokens[2] : null);
+			xports.add(xport);
+		}
+		else {
+			throw new RrdException("Invalid XPORT syntax: " + word);
+		}
+	}
 
-		cmd = "xport --start now-1h --end now -m 10 DEF:xx=/code/idea-projects/jrobin/res/demo/eth0.rrd:ifOutOctets:AVERAGE XPORT:xx:outgoing traffic";
+	static class XPort {
+		String name, legend;
+		double[] values;
 
-		RrdCommander.execute( cmd );
+		XPort(String name, String legend) {
+			this.name = name;
+			this.legend = legend != null ? legend : "";
+		}
 	}
 }

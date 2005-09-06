@@ -3,12 +3,12 @@
  * ============================================================
  *
  * Project Info:  http://www.jrobin.org
- * Project Lead:  Sasa Markovic (saxon@jrobin.org);
- *
- * (C) Copyright 2003-2005, by Sasa Markovic.
+ * Project Lead:  Sasa Markovic (saxon@jrobin.org)
  *
  * Developers:    Sasa Markovic (saxon@jrobin.org)
  *
+ *
+ * (C) Copyright 2003-2005, by Sasa Markovic.
  *
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation;
@@ -22,23 +22,19 @@
  * library; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+package org.jrobin.graph;
 
-package org.jrobin.data;
+import org.jrobin.data.DataProcessor;
 
-class PDef extends Source {
-	private final Plottable plottable;
+class CDef extends Source {
+	private final String rpnExpression;
 
-	PDef(String name, Plottable plottable) {
+	CDef(String name, String rpnExpression) {
 		super(name);
-		this.plottable = plottable;
+		this.rpnExpression = rpnExpression;
 	}
 
-	void calculateValues() {
-		long[] times = getTimestamps();
-		double[] vals = new double[times.length];
-		for(int i = 0; i < times.length; i++) {
-			vals[i] = plottable.getValue(times[i]);
-		}
-		setValues(vals);
+	void requestData(DataProcessor dproc) {
+		dproc.addDatasource(name, rpnExpression);
 	}
 }

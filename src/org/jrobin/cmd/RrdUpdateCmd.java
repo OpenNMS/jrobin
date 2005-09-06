@@ -5,10 +5,10 @@
  * Project Info:  http://www.jrobin.org
  * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
- * (C) Copyright 2003, by Sasa Markovic.
+ * (C) Copyright 2003-2005, by Sasa Markovic.
  *
  * Developers:    Sasa Markovic (saxon@jrobin.org)
- *                Arne Vandamme (cobralord@jrobin.org)
+ *
  *
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation;
@@ -25,7 +25,11 @@
 
 package org.jrobin.cmd;
 
-import org.jrobin.core.*;
+import org.jrobin.core.RrdDb;
+import org.jrobin.core.RrdException;
+import org.jrobin.core.Sample;
+import org.jrobin.core.Util;
+
 import java.io.IOException;
 
 class RrdUpdateCmd extends RrdToolCmd {
@@ -37,12 +41,10 @@ class RrdUpdateCmd extends RrdToolCmd {
 
 	Object execute() throws RrdException, IOException {
 		String template = getOptionValue("t", "template");
-		if (template != null) {
-			dsNames = template.split(":");
-		}
+		dsNames = (template != null) ? new ColonSplitter(template).split() : null;
 		String[] words = getRemainingWords();
 		if (words.length < 3) {
-			throw new RrdException("Insufficent number of parameters for rrdupdate");
+			throw new RrdException("Insufficent number of parameters for rrdupdate command");
 		}
 		String path = words[1];
 		RrdDb rrdDb = getRrdDbReference(path);
@@ -50,15 +52,17 @@ class RrdUpdateCmd extends RrdToolCmd {
 			if (dsNames != null) {
 				// template specified, check datasource names
 				for (int i = 0; i < dsNames.length; i++) {
-					rrdDb.getDsIndex(dsNames[i]); // will throw exception if not found
+					if (!rrdDb.containsDs(dsNames[i])) {
+						throw new RrdException("Invalid datasource name: " + dsNames[i]);
+					}
 				}
 			}
 			// parse update strings
 			long timestamp = -1;
 			for (int i = 2; i < words.length; i++) {
-				String[] tokens = words[i].split(":");
+				String[] tokens = new ColonSplitter(words[i]).split();
 				if (dsNames != null && dsNames.length + 1 != tokens.length) {
-					throw new RrdException("Template required " + dsNames.length + " values, " +
+					throw new RrdException("Template requires " + dsNames.length + " values, " +
 							(tokens.length - 1) + " value(s) found in: " + words[i]);
 				}
 				int dsCount = rrdDb.getHeader().getDsCount();
@@ -66,21 +70,23 @@ class RrdUpdateCmd extends RrdToolCmd {
 					throw new RrdException("Expected " + dsCount + " values, " +
 							(tokens.length - 1) + " value(s) found in: " + words[i]);
 				}
-				TimeSpec spec = new TimeParser(tokens[0]).parse();
-				timestamp = spec.getTimestamp();
+				timestamp = Util.getTimestamp(tokens[0]);
 				Sample sample = rrdDb.createSample(timestamp);
 				for (int j = 1; j < tokens.length; j++) {
 					if (dsNames == null) {
 						sample.setValue(j - 1, parseDouble(tokens[j]));
-					} else {
+					}
+					else {
 						sample.setValue(dsNames[j - 1], parseDouble(tokens[j]));
 					}
 				}
 				sample.update();
 			}
 			return new Long(timestamp);
-		} finally {
+		}
+		finally {
 			releaseRrdDbReference(rrdDb);
 		}
 	}
 }
+

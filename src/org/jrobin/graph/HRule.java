@@ -3,12 +3,12 @@
  * ============================================================
  *
  * Project Info:  http://www.jrobin.org
- * Project Lead:  Sasa Markovic (saxon@jrobin.org);
- *
- * (C) Copyright 2003-2005, by Sasa Markovic.
+ * Project Lead:  Sasa Markovic (saxon@jrobin.org)
  *
  * Developers:    Sasa Markovic (saxon@jrobin.org)
  *
+ *
+ * (C) Copyright 2003-2005, by Sasa Markovic.
  *
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation;
@@ -23,22 +23,19 @@
  * Boston, MA 02111-1307, USA.
  */
 
-package org.jrobin.data;
+package org.jrobin.graph;
 
-class PDef extends Source {
-	private final Plottable plottable;
+import java.awt.*;
 
-	PDef(String name, Plottable plottable) {
-		super(name);
-		this.plottable = plottable;
+class HRule extends Rule {
+	final double value;
+
+	HRule(double value, Paint color, LegendText legend, float width) {
+		super(color, legend, width);
+		this.value = value;
 	}
 
-	void calculateValues() {
-		long[] times = getTimestamps();
-		double[] vals = new double[times.length];
-		for(int i = 0; i < times.length; i++) {
-			vals[i] = plottable.getValue(times[i]);
-		}
-		setValues(vals);
+	void setLegendVisibility(double minval, double maxval, boolean forceLegend) {
+		legend.enabled &= (forceLegend || (value >= minval && value <= maxval));
 	}
 }

@@ -5,10 +5,10 @@
  * Project Info:  http://www.jrobin.org
  * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
- * (C) Copyright 2003, by Sasa Markovic.
+ * (C) Copyright 2003-2005, by Sasa Markovic.
  *
  * Developers:    Sasa Markovic (saxon@jrobin.org)
- *                Arne Vandamme (cobralord@jrobin.org)
+ *
  *
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation;
@@ -25,14 +25,46 @@
 
 package org.jrobin.cmd;
 
-import org.jrobin.core.RrdException;
 import org.jrobin.core.RrdDb;
 import org.jrobin.core.RrdDbPool;
 import org.jrobin.core.RrdDef;
+import org.jrobin.core.RrdException;
 
 import java.io.IOException;
 
 abstract class RrdToolCmd {
+
+	private RrdCmdScanner cmdScanner;
+
+	abstract String getCmdType();
+
+	abstract Object execute() throws RrdException, IOException;
+
+	Object executeCommand(String command) throws RrdException, IOException {
+		cmdScanner = new RrdCmdScanner(command);
+		return execute();
+	}
+
+	String getOptionValue(String shortForm, String longForm) throws RrdException {
+		return cmdScanner.getOptionValue(shortForm, longForm);
+	}
+
+	String getOptionValue(String shortForm, String longForm, String defaultValue) throws RrdException {
+		return cmdScanner.getOptionValue(shortForm, longForm, defaultValue);
+	}
+
+	String[] getMultipleOptionValues(String shortForm, String longForm) throws RrdException {
+		return cmdScanner.getMultipleOptions(shortForm, longForm);
+	}
+
+	boolean getBooleanOption(String shortForm, String longForm) {
+		return cmdScanner.getBooleanOption(shortForm, longForm);
+	}
+
+	String[] getRemainingWords() {
+		return cmdScanner.getRemainingWords();
+	}
+
 	static boolean rrdDbPoolUsed = true;
 	static boolean standardOutUsed = true;
 
@@ -52,28 +84,11 @@ abstract class RrdToolCmd {
 		RrdToolCmd.standardOutUsed = standardOutUsed;
 	}
 
-	RrdCmdScanner cmdScanner;
-
-	RrdToolCmd(RrdCmdScanner cmdScanner) {
-		this.cmdScanner = cmdScanner;
-	}
-
-	abstract String getCmdType();
-
-	Object go() throws IOException, RrdException {
-		if(!getCmdType().equals(cmdScanner.getCmdType())) {
-			return null;
-		}
-		return execute();
-	}
-
-	abstract Object execute() throws RrdException, IOException;
-
 	static long parseLong(String value) throws RrdException {
 		try {
 			return Long.parseLong(value);
 		}
-		catch(NumberFormatException nfe) {
+		catch (NumberFormatException nfe) {
 			throw new RrdException(nfe);
 		}
 	}
@@ -82,37 +97,37 @@ abstract class RrdToolCmd {
 		try {
 			return Integer.parseInt(value);
 		}
-		catch(NumberFormatException nfe) {
+		catch (NumberFormatException nfe) {
 			throw new RrdException(nfe);
 		}
 	}
 
 	static double parseDouble(String value) throws RrdException {
-		if(value.equals("U")) {
+		if (value.equals("U")) {
 			return Double.NaN;
 		}
 		try {
 			return Double.parseDouble(value);
 		}
-		catch(NumberFormatException nfe) {
+		catch (NumberFormatException nfe) {
 			throw new RrdException(nfe);
 		}
 	}
 
 	static void print(String s) {
-		if(standardOutUsed) {
+		if (standardOutUsed) {
 			System.out.print(s);
 		}
 	}
 
 	static void println(String s) {
-		if(standardOutUsed) {
+		if (standardOutUsed) {
 			System.out.println(s);
 		}
 	}
 
 	static RrdDb getRrdDbReference(String path) throws IOException, RrdException {
-		if(rrdDbPoolUsed) {
+		if (rrdDbPoolUsed) {
 			return RrdDbPool.getInstance().requestRrdDb(path);
 		}
 		else {
@@ -121,7 +136,7 @@ abstract class RrdToolCmd {
 	}
 
 	static RrdDb getRrdDbReference(String path, String xmlPath) throws IOException, RrdException {
-		if(rrdDbPoolUsed) {
+		if (rrdDbPoolUsed) {
 			return RrdDbPool.getInstance().requestRrdDb(path, xmlPath);
 		}
 		else {
@@ -130,7 +145,7 @@ abstract class RrdToolCmd {
 	}
 
 	static RrdDb getRrdDbReference(RrdDef rrdDef) throws IOException, RrdException {
-		if(rrdDbPoolUsed) {
+		if (rrdDbPoolUsed) {
 			return RrdDbPool.getInstance().requestRrdDb(rrdDef);
 		}
 		else {
@@ -139,7 +154,7 @@ abstract class RrdToolCmd {
 	}
 
 	static void releaseRrdDbReference(RrdDb rrdDb) throws IOException, RrdException {
-		if(rrdDbPoolUsed) {
+		if (rrdDbPoolUsed) {
 			RrdDbPool.getInstance().release(rrdDb);
 		}
 		else {

@@ -23,21 +23,28 @@
  * Boston, MA 02111-1307, USA.
  */
 
-package org.jrobin.data;
+package org.jrobin.graph;
 
 import org.jrobin.core.Util;
 
 import java.util.Arrays;
 
 class Normalizer {
-	final private long[] timestamps;
+	final private double[] timestamps;
 	final int count;
-	final long step;
+	final double step;
 
-	Normalizer(long[] timestamps) {
-		this.timestamps = timestamps;
-		this.step = timestamps[1] - timestamps[0];
-		this.count = timestamps.length;
+	Normalizer(long tStart, long tEnd, int count) {
+		this.count = count;
+		this.step = (tEnd - tStart) / (count - 1);
+		this.timestamps = new double[count];
+		for(int i = 0; i < count; i++) {
+			this.timestamps[i] = tStart + ((double) i / (double) (count - 1)) * (tEnd - tStart);
+		}
+	}
+
+	double[] getTimestamps() {
+		return timestamps;
 	}
 
 	double[] normalize(long[] rawTimestamps, double[] rawValues) {
@@ -59,9 +66,9 @@ class Normalizer {
 				}
 				boolean overlap = true;
 				for (int fillSeg = seg; overlap && fillSeg < count; fillSeg++) {
-					long left = timestamps[fillSeg] - step;
-					long t1 = Math.max(rawLeft, left);
-					long t2 = Math.min(rawTimestamps[rawSeg], timestamps[fillSeg]);
+					double left = timestamps[fillSeg] - step;
+					double t1 = Math.max(rawLeft, left);
+					double t2 = Math.min(rawTimestamps[rawSeg], timestamps[fillSeg]);
 					if (t1 < t2) {
 						values[fillSeg] = Util.sum(values[fillSeg], (t2 - t1) * rawValues[rawSeg]);
 					}

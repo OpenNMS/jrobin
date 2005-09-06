@@ -5,10 +5,10 @@
  * Project Info:  http://www.jrobin.org
  * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
- * (C) Copyright 2003, by Sasa Markovic.
+ * (C) Copyright 2003-2005, by Sasa Markovic.
  *
  * Developers:    Sasa Markovic (saxon@jrobin.org)
- *                Arne Vandamme (cobralord@jrobin.org)
+ *
  *
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation;
@@ -25,47 +25,13 @@
 
 package org.jrobin.data;
 
-import org.jrobin.core.Util;
 import org.jrobin.core.RrdException;
+import org.jrobin.core.Util;
 
+import java.util.Calendar;
 import java.util.StringTokenizer;
-import java.util.Map;
-import java.util.HashMap;
 
-/**
- * Class which implements simple RPN calculator (RRDTool-like). <p>
- * To calculate the value of expression:
- * <pre>
- * square_root[(x + y) * (x-y)]
- * </pre>
- * for <code>x=5, y=4</code>, than for <code>x=6, y=4</code>, use the following code:
- * <pre>
- * RpnCalculator c = new RpnCalculator("x,y,+,x,y,-,*,SQRT");
- * c.setValue("x", 5);
- * c.setValue("y", 4);
- * System.out.println(c.calculate());
- * // change the value of "x", and leave "y" as before
- * c.setValue("x", 6);
- * System.out.println(c.calculate());
- * </pre>
- * Notes:<p>
- * <ul>
- * <li>If you call the {@link #setValue(double)} method with just one double argument,
- * it will set the value of variable named "value" by default.
- * <li>The method {@link #setTimestamp(long)} will set the value of variable "timestamp".
- * This special variable can be referenced in the RPN expression by using the token TIME.
- * <li>Once set, variable values remain preserved between consecutive {@link #calculate()} calls. You can overwrite
- * this values by calling the {@link #setValue(String, double)} method again. To get rid of all variable values,
- * use method {@link #clearValues()}.
- * </ul>
- *
- */
-public class RpnCalculator {
-	/** Default variable name for the {@link #setValue(double)} method ("value") */
-	public static final String VALUE_PLACEHOLDER = "value";
-	/** Default variable name for the {@link #setTimestamp(long)} method ("timestamp") */
-	public static final String TIMESTAMP_PLACEHOLDER = "timestamp";
-
+class RpnCalculator {
 	private static final byte TKN_VAR 		= 0;
 	private static final byte TKN_NUM 		= 1;
 	private static final byte TKN_PLUS 		= 2;
@@ -77,7 +43,7 @@ public class RpnCalculator {
 	private static final byte TKN_COS 		= 8;
 	private static final byte TKN_LOG 		= 9;
 	private static final byte TKN_EXP 		= 10;
-    private static final byte TKN_FLOOR 	= 11;
+	private static final byte TKN_FLOOR 	= 11;
 	private static final byte TKN_CEIL 		= 12;
 	private static final byte TKN_ROUND 	= 13;
 	private static final byte TKN_POW 		= 14;
@@ -103,354 +69,431 @@ public class RpnCalculator {
 	private static final byte TKN_PI 		= 34;
 	private static final byte TKN_E 		= 35;
 	private static final byte TKN_AND 		= 36;
-    private static final byte TKN_OR 		= 37;
+	private static final byte TKN_OR 		= 37;
 	private static final byte TKN_XOR 		= 38;
-
-	private Map values = new HashMap();
-	private Token[] tokens;
-	private RpnStack stack = new RpnStack();
+	private static final byte TKN_PREV 		= 39;
+	private static final byte TKN_INF 		= 40;
+	private static final byte TKN_NEGINF 	= 41;
+	private static final byte TKN_STEP 		= 42;
+	private static final byte TKN_YEAR 		= 43;
+	private static final byte TKN_MONTH		= 44;
+	private static final byte TKN_DATE 		= 45;
+	private static final byte TKN_HOUR 		= 46;
+	private static final byte TKN_MINUTE	= 47;
+	private static final byte TKN_SECOND	= 48;
+	private static final byte TKN_WEEK		= 49;
+	private static final byte TKN_SIGN		= 50;
+	private static final byte TKN_RND		= 51;
 
 	private String rpnExpression;
+	private String sourceName;
+	private DataProcessor dataProcessor;
 
-	/**
-	 * Creates new RpnCalculator. RpnCalculator objects may be safely reused to calculate as many
-	 * expression values (for different variable values) as needed.
-	 * @param rpnExpression RPN expression to be used. RPN tokens should be comma (",")
-	 * or space (" ") delimited.
-	 */
-	public RpnCalculator(String rpnExpression) {
+	private Token[] tokens;
+	private RpnStack stack = new RpnStack();
+	private double[] calculatedValues;
+	private long[] timestamps;
+	private double timeStep;
+
+	RpnCalculator(String rpnExpression, String sourceName, DataProcessor dataProcessor) throws RrdException {
 		this.rpnExpression = rpnExpression;
-		createTokens();
-	}
-
-	private void createTokens() {
+		this.sourceName = sourceName;
+		this.dataProcessor = dataProcessor;
+		this.timestamps = dataProcessor.getTimestamps();
+		this.timeStep = this.timestamps[1] - this.timestamps[0];
+		this.calculatedValues = new double[this.timestamps.length];
 		StringTokenizer st = new StringTokenizer(rpnExpression, ", ");
 		tokens = new Token[st.countTokens()];
-		for(int i = 0; st.hasMoreTokens(); i++) {
+		for (int i = 0; st.hasMoreTokens(); i++) {
 			tokens[i] = createToken(st.nextToken());
 		}
 	}
 
-	private Token createToken(String str) {
-		Token token = new Token(str);
-		if(Util.isDouble(str)) {
+	private Token createToken(String parsedText) throws RrdException {
+		Token token = new Token();
+		if (Util.isDouble(parsedText)) {
 			token.id = TKN_NUM;
-			token.number = Util.parseDouble(str);
+			token.number = Util.parseDouble(parsedText);
 		}
-		else if(str.equals("+")) {
+		else if (parsedText.equals("+")) {
 			token.id = TKN_PLUS;
 		}
-		else if(str.equals("-")) {
+		else if (parsedText.equals("-")) {
 			token.id = TKN_MINUS;
 		}
-		else if(str.equals("*")) {
+		else if (parsedText.equals("*")) {
 			token.id = TKN_MULT;
 		}
-		else if(str.equals("/")) {
+		else if (parsedText.equals("/")) {
 			token.id = TKN_DIV;
 		}
-		else if(str.equals("%")) {
+		else if (parsedText.equals("%")) {
 			token.id = TKN_MOD;
 		}
-		else if(str.equals("SIN")) {
+		else if (parsedText.equals("SIN")) {
 			token.id = TKN_SIN;
 		}
-		else if(str.equals("COS")) {
+		else if (parsedText.equals("COS")) {
 			token.id = TKN_COS;
 		}
-		else if(str.equals("LOG")) {
+		else if (parsedText.equals("LOG")) {
 			token.id = TKN_LOG;
 		}
-		else if(str.equals("EXP")) {
+		else if (parsedText.equals("EXP")) {
 			token.id = TKN_EXP;
 		}
-		else if(str.equals("FLOOR")) {
+		else if (parsedText.equals("FLOOR")) {
 			token.id = TKN_FLOOR;
 		}
-		else if(str.equals("CEIL")) {
+		else if (parsedText.equals("CEIL")) {
 			token.id = TKN_CEIL;
 		}
-		else if(str.equals("ROUND")) {
+		else if (parsedText.equals("ROUND")) {
 			token.id = TKN_ROUND;
 		}
-		else if(str.equals("POW")) {
+		else if (parsedText.equals("POW")) {
 			token.id = TKN_POW;
 		}
-		else if(str.equals("ABS")) {
+		else if (parsedText.equals("ABS")) {
 			token.id = TKN_ABS;
 		}
-		else if(str.equals("SQRT")) {
+		else if (parsedText.equals("SQRT")) {
 			token.id = TKN_SQRT;
 		}
-		else if(str.equals("RANDOM")) {
+		else if (parsedText.equals("RANDOM")) {
 			token.id = TKN_RANDOM;
 		}
-		else if(str.equals("LT")) {
+		else if (parsedText.equals("LT")) {
 			token.id = TKN_LT;
 		}
-		else if(str.equals("LE")) {
+		else if (parsedText.equals("LE")) {
 			token.id = TKN_LE;
 		}
-		else if(str.equals("GT")) {
+		else if (parsedText.equals("GT")) {
 			token.id = TKN_GT;
 		}
-		else if(str.equals("GE")) {
+		else if (parsedText.equals("GE")) {
 			token.id = TKN_GE;
 		}
-		else if(str.equals("EQ")) {
+		else if (parsedText.equals("EQ")) {
 			token.id = TKN_EQ;
 		}
-		else if(str.equals("IF")) {
+		else if (parsedText.equals("IF")) {
 			token.id = TKN_IF;
 		}
-		else if(str.equals("MIN")) {
+		else if (parsedText.equals("MIN")) {
 			token.id = TKN_MIN;
 		}
-		else if(str.equals("MAX")) {
+		else if (parsedText.equals("MAX")) {
 			token.id = TKN_MAX;
 		}
-		else if(str.equals("LIMIT")) {
+		else if (parsedText.equals("LIMIT")) {
 			token.id = TKN_LIMIT;
 		}
-		else if(str.equals("DUP")) {
+		else if (parsedText.equals("DUP")) {
 			token.id = TKN_DUP;
 		}
-		else if(str.equals("EXC")) {
+		else if (parsedText.equals("EXC")) {
 			token.id = TKN_EXC;
 		}
-		else if(str.equals("POP")) {
+		else if (parsedText.equals("POP")) {
 			token.id = TKN_POP;
 		}
-		else if(str.equals("UN")) {
+		else if (parsedText.equals("UN")) {
 			token.id = TKN_UN;
 		}
-		else if(str.equals("UNKN")) {
+		else if (parsedText.equals("UNKN")) {
 			token.id = TKN_UNKN;
 		}
-		else if(str.equals("NOW")) {
+		else if (parsedText.equals("NOW")) {
 			token.id = TKN_NOW;
 		}
-		else if(str.equals("TIME")) {
+		else if (parsedText.equals("TIME")) {
 			token.id = TKN_TIME;
 		}
-		else if(str.equals("PI")) {
+		else if (parsedText.equals("PI")) {
 			token.id = TKN_PI;
 		}
-		else if(str.equals("E")) {
+		else if (parsedText.equals("E")) {
 			token.id = TKN_E;
 		}
-		else if(str.equals("AND")) {
+		else if (parsedText.equals("AND")) {
 			token.id = TKN_AND;
 		}
-		else if(str.equals("OR")) {
+		else if (parsedText.equals("OR")) {
 			token.id = TKN_OR;
 		}
-		else if(str.equals("XOR")) {
+		else if (parsedText.equals("XOR")) {
 			token.id = TKN_XOR;
+		}
+		else if (parsedText.equals("PREV")) {
+			token.id = TKN_PREV;
+			token.variable = sourceName;
+			token.values = calculatedValues;
+		}
+		else if (parsedText.startsWith("PREV(") && parsedText.endsWith(")")) {
+			token.id = TKN_PREV;
+			token.variable = parsedText.substring(5, parsedText.length() - 1);
+			token.values = dataProcessor.getValues(token.variable);
+		}
+		else if (parsedText.equals("INF")) {
+			token.id = TKN_INF;
+		}
+		else if (parsedText.equals("NEGINF")) {
+			token.id = TKN_NEGINF;
+		}
+		else if (parsedText.equals("STEP")) {
+			token.id = TKN_STEP;
+		}
+		else if (parsedText.equals("YEAR")) {
+			token.id = TKN_YEAR;
+		}
+		else if (parsedText.equals("MONTH")) {
+			token.id = TKN_MONTH;
+		}
+		else if (parsedText.equals("DATE")) {
+			token.id = TKN_DATE;
+		}
+		else if (parsedText.equals("HOUR")) {
+			token.id = TKN_HOUR;
+		}
+		else if (parsedText.equals("MINUTE")) {
+			token.id = TKN_MINUTE;
+		}
+		else if (parsedText.equals("SECOND")) {
+			token.id = TKN_SECOND;
+		}
+		else if (parsedText.equals("WEEK")) {
+			token.id = TKN_WEEK;
+		}
+		else if(parsedText.equals("SIGN")) {
+			token.id = TKN_SIGN;
+		}
+		else if(parsedText.equals("RND")) {
+			token.id = TKN_RND;
 		}
 		else {
 			token.id = TKN_VAR;
+			token.variable = parsedText;
+			token.values = dataProcessor.getValues(token.variable);
 		}
 		return token;
 	}
 
-	/**
-	 * Sets the value for the default variable if RPN expression ("value").
-	 * @param value Value to be used in calculation
-	 */
-	public void setValue(double value) {
-		setValue(VALUE_PLACEHOLDER, value);
-	}
-
-	/**
-	 * Sets the timestamp to be used in evaluation of the RPN expression. To use this
-	 * value in the RPN expression, use token TIME.
-	 * @param timestamp The value which will be used if token TIME is found in the RPN expression
-	 */
-	public void setTimestamp(long timestamp) {
-		setValue(TIMESTAMP_PLACEHOLDER, timestamp);
-	}
-
-	/**
-	 * Sets new value for a variable in the RPN expression.
-	 * @param name Variable name
-	 * @param value Variable value
-	 */
-	public void setValue(String name, double value) {
-		values.put(name, new Double(value));
-	}
-
-	/**
-	 * Clears all values specified for variables in the RPN expression
-	 */
-	public void clearValues() {
-		values.clear();
-	}
-
-	/**
-	 * Evaluates RPN expression, by replacing variable placeholders with specified values. You are free
-	 * to call this method as many times as needed, with the same or modified variable values.
-	 * @return The value of the RPN expression
-	 * @throws org.jrobin.core.RrdException Thrown if some variable values are not specified before this method is called, or if the
-	 * RPN expression is not valid.
-	 */
-	public double calculate() throws RrdException {
-		resetStack();
-		for(int i = 0; i < tokens.length; i++) {
-			Token token = tokens[i];
-			double x1, x2, x3;
-			switch(token.id) {
-				case TKN_NUM:
-					push(token.number);
-					break;
-				case TKN_VAR:
-					push(getValue(token.str));
-					break;
-				case TKN_PLUS:
-					push(pop() + pop());
-					break;
-				case TKN_MINUS:
-					x2 = pop(); x1 = pop();
-					push(x1 - x2);
-					break;
-				case TKN_MULT:
-					push(pop() * pop());
-					break;
-				case TKN_DIV:
-					x2 = pop(); x1 = pop();
-					push(x1 / x2);
-					break;
-				case TKN_MOD:
-					x2 = pop(); x1 = pop();
-					push(x1 % x2);
-					break;
-				case TKN_SIN:
-					push(Math.sin(pop()));
-					break;
-				case TKN_COS:
-					push(Math.cos(pop()));
-					break;
-				case TKN_LOG:
-					push(Math.log(pop()));
-					break;
-				case TKN_EXP:
-					push(Math.exp(pop()));
-					break;
-				case TKN_FLOOR:
-					push(Math.floor(pop()));
-					break;
-				case TKN_CEIL:
-					push(Math.ceil(pop()));
-					break;
-				case TKN_ROUND:
-					push(Math.round(pop()));
-					break;
-				case TKN_POW:
-					x2 = pop(); x1 = pop();
-					push(Math.pow(x1, x2));
-					break;
-				case TKN_ABS:
-					push(Math.abs(pop()));
-					break;
-				case TKN_SQRT:
-					push(Math.sqrt(pop()));
-					break;
-				case TKN_RANDOM:
-					push(Math.random());
-					break;
-				case TKN_LT:
-					x2 = pop(); x1 = pop();
-					push(x1 < x2? 1: 0);
-					break;
-				case TKN_LE:
-					x2 = pop(); x1 = pop();
-					push(x1 <= x2? 1: 0);
-					break;
-				case TKN_GT:
-					x2 = pop(); x1 = pop();
-					push(x1 > x2? 1: 0);
-					break;
-				case TKN_GE:
-					x2 = pop(); x1 = pop();
-					push(x1 >= x2? 1: 0);
-					break;
-				case TKN_EQ:
-					x2 = pop(); x1 = pop();
-					push(x1 == x2? 1: 0);
-					break;
-				case TKN_IF:
-					x3 = pop(); x2 = pop(); x1 = pop();
-					push(x1 != 0? x2: x3);
-					break;
-				case TKN_MIN:
-					push(Math.min(pop(), pop()));
-					break;
-				case TKN_MAX:
-					push(Math.max(pop(), pop()));
-					break;
-				case TKN_LIMIT:
-					x3 = pop(); x2 = pop(); x1 = pop();
-					push(x1 < x2 || x1 > x3? Double.NaN: x1);
-					break;
-				case TKN_DUP:
-					push(peek());
-					break;
-				case TKN_EXC:
-					x2 = pop(); x1 = pop();
-					push(x2);
-					push(x1);
-					break;
-				case TKN_POP:
-					pop();
-					break;
-				case TKN_UN:
-					push(Double.isNaN(pop())? 1: 0);
-					break;
-				case TKN_UNKN:
-					push(Double.NaN);
-					break;
-				case TKN_NOW:
-					push(Util.getTime());
-					break;
-				case TKN_TIME:
-					push(getValue(TIMESTAMP_PLACEHOLDER));
-					break;
-				case TKN_PI:
-					push(Math.PI);
-					break;
-				case TKN_E:
-					push(Math.E);
-					break;
-				case TKN_AND:
-					x2 = pop(); x1 = pop();
-					push((x1 != 0 && x2 != 0)? 1: 0);
-					break;
-				case TKN_OR:
-					x2 = pop(); x1 = pop();
-					push((x1 != 0 || x2 != 0)? 1: 0);
-					break;
-				case TKN_XOR:
-					x2 = pop(); x1 = pop();
-					push(((x1 != 0 && x2 == 0) || (x1 == 0 && x2 != 0))? 1: 0);
-					break;
-				default:
-					throw new RrdException("Unexpected RPN token encountered [" +
-						token.id + "," + token.str + "]");
+	double[] calculateValues() throws RrdException {
+		for (int slot = 0; slot < timestamps.length; slot++) {
+			resetStack();
+			for (int i = 0; i < tokens.length; i++) {
+				Token token = tokens[i];
+				double x1, x2, x3;
+				switch (token.id) {
+					case TKN_NUM:
+						push(token.number);
+						break;
+					case TKN_VAR:
+						push(token.values[slot]);
+						break;
+					case TKN_PLUS:
+						push(pop() + pop());
+						break;
+					case TKN_MINUS:
+						x2 = pop();
+						x1 = pop();
+						push(x1 - x2);
+						break;
+					case TKN_MULT:
+						push(pop() * pop());
+						break;
+					case TKN_DIV:
+						x2 = pop();
+						x1 = pop();
+						push(x1 / x2);
+						break;
+					case TKN_MOD:
+						x2 = pop();
+						x1 = pop();
+						push(x1 % x2);
+						break;
+					case TKN_SIN:
+						push(Math.sin(pop()));
+						break;
+					case TKN_COS:
+						push(Math.cos(pop()));
+						break;
+					case TKN_LOG:
+						push(Math.log(pop()));
+						break;
+					case TKN_EXP:
+						push(Math.exp(pop()));
+						break;
+					case TKN_FLOOR:
+						push(Math.floor(pop()));
+						break;
+					case TKN_CEIL:
+						push(Math.ceil(pop()));
+						break;
+					case TKN_ROUND:
+						push(Math.round(pop()));
+						break;
+					case TKN_POW:
+						x2 = pop();
+						x1 = pop();
+						push(Math.pow(x1, x2));
+						break;
+					case TKN_ABS:
+						push(Math.abs(pop()));
+						break;
+					case TKN_SQRT:
+						push(Math.sqrt(pop()));
+						break;
+					case TKN_RANDOM:
+						push(Math.random());
+						break;
+					case TKN_LT:
+						x2 = pop();
+						x1 = pop();
+						push(x1 < x2 ? 1 : 0);
+						break;
+					case TKN_LE:
+						x2 = pop();
+						x1 = pop();
+						push(x1 <= x2 ? 1 : 0);
+						break;
+					case TKN_GT:
+						x2 = pop();
+						x1 = pop();
+						push(x1 > x2 ? 1 : 0);
+						break;
+					case TKN_GE:
+						x2 = pop();
+						x1 = pop();
+						push(x1 >= x2 ? 1 : 0);
+						break;
+					case TKN_EQ:
+						x2 = pop();
+						x1 = pop();
+						push(x1 == x2 ? 1 : 0);
+						break;
+					case TKN_IF:
+						x3 = pop();
+						x2 = pop();
+						x1 = pop();
+						push(x1 != 0 ? x2 : x3);
+						break;
+					case TKN_MIN:
+						push(Math.min(pop(), pop()));
+						break;
+					case TKN_MAX:
+						push(Math.max(pop(), pop()));
+						break;
+					case TKN_LIMIT:
+						x3 = pop();
+						x2 = pop();
+						x1 = pop();
+						push(x1 < x2 || x1 > x3 ? Double.NaN : x1);
+						break;
+					case TKN_DUP:
+						push(peek());
+						break;
+					case TKN_EXC:
+						x2 = pop();
+						x1 = pop();
+						push(x2);
+						push(x1);
+						break;
+					case TKN_POP:
+						pop();
+						break;
+					case TKN_UN:
+						push(Double.isNaN(pop()) ? 1 : 0);
+						break;
+					case TKN_UNKN:
+						push(Double.NaN);
+						break;
+					case TKN_NOW:
+						push(Util.getTime());
+						break;
+					case TKN_TIME:
+						push((long)Math.round(timestamps[slot]));
+						break;
+					case TKN_PI:
+						push(Math.PI);
+						break;
+					case TKN_E:
+						push(Math.E);
+						break;
+					case TKN_AND:
+						x2 = pop();
+						x1 = pop();
+						push((x1 != 0 && x2 != 0) ? 1 : 0);
+						break;
+					case TKN_OR:
+						x2 = pop();
+						x1 = pop();
+						push((x1 != 0 || x2 != 0) ? 1 : 0);
+						break;
+					case TKN_XOR:
+						x2 = pop();
+						x1 = pop();
+						push(((x1 != 0 && x2 == 0) || (x1 == 0 && x2 != 0)) ? 1 : 0);
+						break;
+					case TKN_PREV:
+						push((slot == 0)? Double.NaN: token.values[slot - 1]);
+						break;
+					case TKN_INF:
+						push(Double.POSITIVE_INFINITY);
+						break;
+					case TKN_NEGINF:
+						push(Double.NEGATIVE_INFINITY);
+						break;
+					case TKN_STEP:
+						push(timeStep);
+						break;
+					case TKN_YEAR:
+						push(getCalendarField(pop(), Calendar.YEAR));
+						break;
+					case TKN_MONTH:
+						push(getCalendarField(pop(), Calendar.MONTH));
+						break;
+					case TKN_DATE:
+						push(getCalendarField(pop(), Calendar.DAY_OF_MONTH));
+						break;
+					case TKN_HOUR:
+						push(getCalendarField(pop(), Calendar.HOUR_OF_DAY));
+						break;
+					case TKN_MINUTE:
+						push(getCalendarField(pop(), Calendar.MINUTE));
+						break;
+					case TKN_SECOND:
+						push(getCalendarField(pop(), Calendar.SECOND));
+						break;
+					case TKN_WEEK:
+						push(getCalendarField(pop(), Calendar.WEEK_OF_YEAR));
+						break;
+					case TKN_SIGN:
+						x1 = pop();
+						push(Double.isNaN(x1)? Double.NaN: x1 > 0? +1: x1 < 0? -1: 0);
+						break;
+					case TKN_RND:
+						push(Math.floor(pop() * Math.random()));
+						break;
+					default:
+						throw new RrdException("Unexpected RPN token encountered, token.id=" + token.id);
+				}
+			}
+			calculatedValues[slot] = pop();
+			// check if stack is empty only on the first try
+			if (slot == 0 && !isStackEmpty()) {
+				throw new RrdException("Stack not empty at the end of calculation. " +
+						"Probably bad RPN expression [" + rpnExpression + "]");
 			}
 		}
-        double retVal = pop();
-		if(!isStackEmpty()) {
-			throw new RrdException("Stack not empty at the end of calculation. " +
-					"Probably bad RPN expression [" + rpnExpression + "]");
-		}
-		return retVal;
+		return calculatedValues;
 	}
 
-	private double getValue(String varName) throws RrdException {
-		if(values.containsKey(varName)) {
-			return ((Double) values.get(varName)).doubleValue();
-		}
-		throw new RrdException("Value of variable [" + varName + "] not specified");
+	private double getCalendarField(double timestamp, int field) {
+		Calendar calendar = Util.getCalendar((long)(timestamp * 1000));
+		return calendar.get(field);
 	}
 
 	private void push(double x) throws RrdException {
@@ -479,21 +522,21 @@ public class RpnCalculator {
 		private int pos = 0;
 
 		void push(double x) throws RrdException {
-			if(pos >= MAX_STACK_SIZE) {
+			if (pos >= MAX_STACK_SIZE) {
 				throw new RrdException("PUSH failed, RPN stack full [" + MAX_STACK_SIZE + "]");
 			}
 			stack[pos++] = x;
 		}
 
 		double pop() throws RrdException {
-			if(pos <= 0) {
+			if (pos <= 0) {
 				throw new RrdException("POP failed, RPN stack is empty ");
 			}
 			return stack[--pos];
 		}
 
 		double peek() throws RrdException {
-			if(pos <= 0) {
+			if (pos <= 0) {
 				throw new RrdException("PEEK failed, RPN stack is empty ");
 			}
 			return stack[pos - 1];
@@ -509,23 +552,9 @@ public class RpnCalculator {
 	}
 
 	private class Token {
-		byte id;
-		String str;
-		double number;
-
-		Token(String str) {
-			this.str = str;
-		}
+		byte id = -1;
+		double number = Double.NaN;
+		String variable = null;
+		double[] values = null;
 	}
-
-	/*
-	public static void main(String[] args) throws RrdException {
-		RpnCalculator c = new RpnCalculator("x,y,+,x,y,-,*,SQRT");
-		c.setValue("x", 5);
-		c.setValue("y", 4);
-		System.out.println(c.calculate());
-		c.setValue("x", 6);
-		System.out.println(c.calculate());
-	}
-	*/
 }

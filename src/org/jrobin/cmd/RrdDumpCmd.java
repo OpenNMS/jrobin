@@ -5,10 +5,10 @@
  * Project Info:  http://www.jrobin.org
  * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
- * (C) Copyright 2003, by Sasa Markovic.
+ * (C) Copyright 2003-2005, by Sasa Markovic.
  *
  * Developers:    Sasa Markovic (saxon@jrobin.org)
- *                Arne Vandamme (cobralord@jrobin.org)
+ *
  *
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation;
@@ -25,23 +25,19 @@
 
 package org.jrobin.cmd;
 
-import org.jrobin.core.RrdException;
 import org.jrobin.core.RrdDb;
+import org.jrobin.core.RrdException;
 
 import java.io.IOException;
 
 class RrdDumpCmd extends RrdToolCmd {
-	RrdDumpCmd(RrdCmdScanner cmdScanner) {
-		super(cmdScanner);
-	}
-
 	String getCmdType() {
 		return "dump";
 	}
 
 	Object execute() throws RrdException, IOException {
-		String[] words = cmdScanner.getRemainingWords();
-		if(words.length != 2) {
+		String[] words = getRemainingWords();
+		if (words.length != 2) {
 			throw new RrdException("Invalid rrddump syntax");
 		}
 		String path = words[1];
