@@ -5,10 +5,10 @@
  * Project Info:  http://www.jrobin.org
  * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
- * (C) Copyright 2003, by Sasa Markovic.
+ * (C) Copyright 2003-2005, by Sasa Markovic.
  *
  * Developers:    Sasa Markovic (saxon@jrobin.org)
- *                Arne Vandamme (cobralord@jrobin.org)
+ *
  *
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation;
@@ -27,9 +27,6 @@ package org.jrobin.core;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.nio.channels.FileLock;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * JRobin backend which is used to store RRD data to ordinary files on the disk. This was the
@@ -38,84 +35,26 @@ import java.util.Set;
  * This backend is based on the RandomAccessFile class (java.io.* package).
  */
 public class RrdFileBackend extends RrdBackend {
-	private static final long LOCK_DELAY = 100; // 0.1sec
-
-	private static Set openFiles = new HashSet();
-
-	/** read/write file status */
+	/**
+	 * read/write file status
+	 */
 	protected boolean readOnly;
-	/** locking mode */
-	protected int lockMode;
-
-	/** radnom access file handle */
+	/**
+	 * radnom access file handle
+	 */
 	protected RandomAccessFile file;
-	/** file lock */
-	protected FileLock fileLock;
 
 	/**
 	 * Creates RrdFileBackend object for the given file path, backed by RandomAccessFile object.
-	 * @param path Path to a file
+	 *
+	 * @param path	 Path to a file
 	 * @param readOnly True, if file should be open in a read-only mode. False otherwise
-	 * @param lockMode Locking mode, as described in {@link RrdDb#getLockMode()}
 	 * @throws IOException Thrown in case of I/O error
 	 */
-	protected RrdFileBackend(String path, boolean readOnly, int lockMode) throws IOException {
+	protected RrdFileBackend(String path, boolean readOnly) throws IOException {
 		super(path);
 		this.readOnly = readOnly;
-		this.lockMode = lockMode;
-		file = new RandomAccessFile(path, readOnly ? "r" : "rw");
-		try {
-			lockFile();
-			registerWriter();
-		}
-		catch(IOException ioe) {
-			close();
-			throw ioe;
-		}
-	}
-
-	private void lockFile() throws IOException {
-		switch (lockMode) {
-			case RrdDb.EXCEPTION_IF_LOCKED:
-				fileLock = file.getChannel().tryLock();
-				if (fileLock == null) {
-					// could not obtain lock
-					throw new IOException("Access denied. " + "File [" + getPath() + "] already locked");
-				}
-				break;
-			case RrdDb.WAIT_IF_LOCKED:
-				while (fileLock == null) {
-					fileLock = file.getChannel().tryLock();
-					if (fileLock == null) {
-						// could not obtain lock, wait a little, than try again
-						try {
-							Thread.sleep(LOCK_DELAY);
-						}
-						catch (InterruptedException e) {
-							// NOP
-						}
-					}
-				}
-				break;
-			case RrdDb.NO_LOCKS:
-				break;
-		}
-	}
-
-	private void registerWriter() throws IOException {
-		if (!readOnly) {
-			String path = getPath();
-			String canonicalPath = getCanonicalPath(path);
-			synchronized (openFiles) {
-				if (openFiles.contains(canonicalPath)) {
-					throw new IOException("File \"" + path + "\" already open for R/W access. " +
-							"You cannot open the same file for R/W access twice");
-				}
-				else {
-					openFiles.add(canonicalPath);
-				}
-			}
-		}
+		this.file = new RandomAccessFile(path, readOnly ? "r" : "rw");
 	}
 
 	/**
@@ -124,29 +63,7 @@ public class RrdFileBackend extends RrdBackend {
 	 * @throws IOException Thrown in case of I/O error
 	 */
 	public void close() throws IOException {
-		unregisterWriter();
-		try {
-			unlockFile();
-		}
-		finally {
-			file.close();
-		}
-	}
-
-	private void unlockFile() throws IOException {
-		if (fileLock != null) {
-			fileLock.release();
-		}
-	}
-
-	private void unregisterWriter() throws IOException {
-		if (!readOnly) {
-			String path = getPath();
-			String canonicalPath = getCanonicalPath(path);
-			synchronized (openFiles) {
-				openFiles.remove(canonicalPath);
-			}
-		}
+		file.close();
 	}
 
 	/**
@@ -174,7 +91,7 @@ public class RrdFileBackend extends RrdBackend {
 	 * Writes bytes to the underlying RRD file on the disk
 	 *
 	 * @param offset Starting file offset
-	 * @param b      Bytes to be written.
+	 * @param b	  Bytes to be written.
 	 * @throws IOException Thrown in case of I/O error
 	 */
 	protected void write(long offset, byte[] b) throws IOException {
@@ -186,7 +103,7 @@ public class RrdFileBackend extends RrdBackend {
 	 * Reads a number of bytes from the RRD file on the disk
 	 *
 	 * @param offset Starting file offset
-	 * @param b      Buffer which receives bytes read from the file.
+	 * @param b	  Buffer which receives bytes read from the file.
 	 * @throws IOException Thrown in case of I/O error.
 	 */
 	protected void read(long offset, byte[] b) throws IOException {

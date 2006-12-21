@@ -38,7 +38,7 @@ class Normalizer {
 		this.count = count;
 		this.step = (tEnd - tStart) / (count - 1);
 		this.timestamps = new double[count];
-		for(int i = 0; i < count; i++) {
+		for (int i = 0; i < count; i++) {
 			this.timestamps[i] = tStart + ((double) i / (double) (count - 1)) * (tEnd - tStart);
 		}
 	}
@@ -51,7 +51,7 @@ class Normalizer {
 		int rawCount = rawTimestamps.length;
 		long rawStep = rawTimestamps[1] - rawTimestamps[0];
 		// check if we have a simple match
-		if(rawCount == count && rawStep == step && rawTimestamps[0] == timestamps[0]) {
+		if (rawCount == count && rawStep == step && rawTimestamps[0] == timestamps[0]) {
 			return getCopyOf(rawValues);
 		}
 		// reset all normalized values to NaN
@@ -87,9 +87,7 @@ class Normalizer {
 	private static double[] getCopyOf(double[] rawValues) {
 		int n = rawValues.length;
 		double[] values = new double[n];
-		for(int i = 0; i < n; i++) {
-			values[i] = rawValues[i];
-		}
+		System.arraycopy(rawValues, 0, values, 0, n);
 		return values;
 	}
 }

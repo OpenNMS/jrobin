@@ -5,10 +5,10 @@
  * Project Info:  http://www.jrobin.org
  * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
- * (C) Copyright 2003, by Sasa Markovic.
+ * (C) Copyright 2003-2005, by Sasa Markovic.
  *
  * Developers:    Sasa Markovic (saxon@jrobin.org)
- *                Arne Vandamme (cobralord@jrobin.org)
+ *
  *
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation;
@@ -25,8 +25,6 @@
 
 package org.jrobin.data;
 
-import org.jrobin.graph.Plottable;
-
 class PDef extends Source {
 	private final Plottable plottable;
 
@@ -35,28 +33,10 @@ class PDef extends Source {
 		this.plottable = plottable;
 	}
 
-	PDef(String name, final Plottable plottable, final int index) {
-		super(name);
-		this.plottable = new Plottable() {
-			public double getValue(long timestamp) {
-				return plottable.getValue(timestamp, index);
-			}
-		};
-	}
-
-	PDef(String name, final Plottable plottable, final String sourceName) {
-		super(name);
-		this.plottable = new Plottable() {
-			public double getValue(long timestamp) {
-				return plottable.getValue(timestamp, sourceName);
-			}
-		};
-	}
-
 	void calculateValues() {
 		long[] times = getTimestamps();
 		double[] vals = new double[times.length];
-		for(int i = 0; i < times.length; i++) {
+		for (int i = 0; i < times.length; i++) {
 			vals[i] = plottable.getValue(times[i]);
 		}
 		setValues(vals);

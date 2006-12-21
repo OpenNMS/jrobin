@@ -5,10 +5,10 @@
  * Project Info:  http://www.jrobin.org
  * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
- * (C) Copyright 2003, by Sasa Markovic.
+ * (C) Copyright 2003-2005, by Sasa Markovic.
  *
  * Developers:    Sasa Markovic (saxon@jrobin.org)
- *                Arne Vandamme (cobralord@jrobin.org)
+ *
  *
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation;
@@ -28,21 +28,33 @@ package org.jrobin.core;
  * Simple interface to represent available consolidation functions
  */
 public interface ConsolFuns {
-	/** Constant to represent AVERAGE consolidation function */
+	/**
+	 * Constant to represent AVERAGE consolidation function
+	 */
 	public static final String CF_AVERAGE = "AVERAGE";
 
-	/** Constant to represent MIN consolidation function */
+	/**
+	 * Constant to represent MIN consolidation function
+	 */
 	public static final String CF_MIN = "MIN";
 
-	/** Constant to represent MAX consolidation function */
+	/**
+	 * Constant to represent MAX consolidation function
+	 */
 	public static final String CF_MAX = "MAX";
 
-	/** Constant to represent LAST consolidation function */
+	/**
+	 * Constant to represent LAST consolidation function
+	 */
 	public static final String CF_LAST = "LAST";
 
-	/** Constant to represent FIRST consolidation function */
+	/**
+	 * Constant to represent FIRST consolidation function
+	 */
 	public static final String CF_FIRST = "FIRST";
 
-	/** Constant to represent TOTAL consolidation function */
+	/**
+	 * Constant to represent TOTAL consolidation function
+	 */
 	public static final String CF_TOTAL = "TOTAL";
 }

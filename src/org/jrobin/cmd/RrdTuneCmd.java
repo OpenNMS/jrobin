@@ -44,38 +44,38 @@ class RrdTuneCmd extends RrdToolCmd {
 		String[] dsTypes = getMultipleOptionValues("d", "data-source-type");
 		String[] dsNames = getMultipleOptionValues("r", "data-source-rename");
 		String[] words = getRemainingWords();
-		if(words.length < 2) {
+		if (words.length < 2) {
 			throw new RrdException("File name not specified");
 		}
-		if(words.length > 2) {
+		if (words.length > 2) {
 			throw new RrdException("Unexpected token encountered: " + words[2]);
 		}
 		String path = words[1];
 		RrdDb rrd = getRrdDbReference(path);
 		try {
 			// heartbeat
-			for(int i = 0; i < heartbeats.length; i++) {
-				tuneHeartbeat(rrd, heartbeats[i]);
+			for (String heartbeat : heartbeats) {
+				tuneHeartbeat(rrd, heartbeat);
 			}
 			// minimum
-			for(int i = 0; i < minimums.length; i++) {
-				tuneMinimum(rrd, minimums[i]);
+			for (String minimum : minimums) {
+				tuneMinimum(rrd, minimum);
 			}
 			// maximum
-			for(int i = 0; i < maximums.length; i++) {
-				tuneMaximum(rrd, maximums[i]);
+			for (String maximum : maximums) {
+				tuneMaximum(rrd, maximum);
 			}
 			// rename
-			for(int i = 0; i < dsNames.length; i++) {
-				tuneName(rrd, dsNames[i]);
+			for (String dsName : dsNames) {
+				tuneName(rrd, dsName);
 			}
 			// type
-			for(int i = 0; i < dsTypes.length; i++) {
-				tuneType(rrd, dsTypes[i]);
+			for (String dsType : dsTypes) {
+				tuneType(rrd, dsType);
 			}
 			// post festum
-			if(heartbeats.length == 0 && minimums.length == 0 && maximums.length == 0 &&
-				dsTypes.length == 0 && dsNames.length == 0) {
+			if (heartbeats.length == 0 && minimums.length == 0 && maximums.length == 0 &&
+					dsTypes.length == 0 && dsNames.length == 0) {
 				dump(rrd);
 			}
 		}
@@ -87,7 +87,7 @@ class RrdTuneCmd extends RrdToolCmd {
 
 	private void tuneHeartbeat(RrdDb rrd, String heartbeatStr) throws RrdException, IOException {
 		String[] tokens = new ColonSplitter(heartbeatStr).split();
-		if(tokens.length != 2) {
+		if (tokens.length != 2) {
 			throw new RrdException("Invalid suntax in: " + heartbeatStr);
 		}
 		String dsName = tokens[0];
@@ -98,7 +98,7 @@ class RrdTuneCmd extends RrdToolCmd {
 
 	private void tuneMinimum(RrdDb rrd, String minimumStr) throws RrdException, IOException {
 		String[] tokens = new ColonSplitter(minimumStr).split();
-		if(tokens.length != 2) {
+		if (tokens.length != 2) {
 			throw new RrdException("Invalid suntax in: " + minimumStr);
 		}
 		String dsName = tokens[0];
@@ -109,7 +109,7 @@ class RrdTuneCmd extends RrdToolCmd {
 
 	private void tuneMaximum(RrdDb rrd, String maximumStr) throws RrdException, IOException {
 		String[] tokens = new ColonSplitter(maximumStr).split();
-		if(tokens.length != 2) {
+		if (tokens.length != 2) {
 			throw new RrdException("Invalid suntax in: " + maximumStr);
 		}
 		String dsName = tokens[0];
@@ -120,7 +120,7 @@ class RrdTuneCmd extends RrdToolCmd {
 
 	private void tuneName(RrdDb rrd, String nameStr) throws RrdException, IOException {
 		String[] tokens = new ColonSplitter(nameStr).split();
-		if(tokens.length != 2) {
+		if (tokens.length != 2) {
 			throw new RrdException("Invalid suntax in: " + nameStr);
 		}
 		String oldName = tokens[0], newName = tokens[1];
@@ -130,7 +130,7 @@ class RrdTuneCmd extends RrdToolCmd {
 
 	private void tuneType(RrdDb rrd, String typeStr) throws RrdException, IOException {
 		String[] tokens = new ColonSplitter(typeStr).split();
-		if(tokens.length != 2) {
+		if (tokens.length != 2) {
 			throw new RrdException("Invalid suntax in: " + typeStr);
 		}
 		String dsName = tokens[0];
@@ -142,18 +142,18 @@ class RrdTuneCmd extends RrdToolCmd {
 	private void dump(RrdDb rrd) throws IOException {
 		StringBuffer line = new StringBuffer();
 		int n = rrd.getDsCount();
-		for(int i = 0; i < n; i++) {
+		for (int i = 0; i < n; i++) {
 			Datasource ds = rrd.getDatasource(i);
 			line.append("DS[");
 			line.append(ds.getDsName());
 			line.append("] typ: ");
 			line.append(ds.getDsType());
-			while(line.length() < 24) {
+			while (line.length() < 24) {
 				line.append(' ');
 			}
 			line.append("hbt: ");
 			line.append(ds.getHeartbeat());
-			while(line.length() < 40) {
+			while (line.length() < 40) {
 				line.append(' ');
 			}
 			line.append("min: ");

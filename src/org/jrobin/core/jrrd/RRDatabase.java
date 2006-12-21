@@ -8,10 +8,15 @@
  */
 package org.jrobin.core.jrrd;
 
-import java.io.*;
-import java.util.*;
-import java.text.NumberFormat;
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintStream;
 import java.text.DecimalFormat;
+import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Iterator;
 
 /**
  * Instances of this class model
@@ -28,8 +33,8 @@ public class RRDatabase {
 	// RRD file name
 	private String name;
 	Header header;
-	ArrayList dataSources;
-	ArrayList archives;
+	ArrayList<DataSource> dataSources;
+	ArrayList<Archive> archives;
 	Date lastUpdate;
 
 	/**
@@ -55,7 +60,7 @@ public class RRDatabase {
 		header = new Header(rrdFile);
 
 		// Load the data sources
-		dataSources = new ArrayList();
+		dataSources = new ArrayList<DataSource>();
 
 		for (int i = 0; i < header.dsCount; i++) {
 			DataSource ds = new DataSource(rrdFile);
@@ -64,7 +69,7 @@ public class RRDatabase {
 		}
 
 		// Load the archives
-		archives = new ArrayList();
+		archives = new ArrayList<Archive>();
 
 		for (int i = 0; i < header.rraCount; i++) {
 			Archive archive = new Archive(this);
@@ -78,28 +83,28 @@ public class RRDatabase {
 
 		// Load PDPStatus(s)
 		for (int i = 0; i < header.dsCount; i++) {
-			DataSource ds = (DataSource) dataSources.get(i);
+			DataSource ds = dataSources.get(i);
 
 			ds.loadPDPStatusBlock(rrdFile);
 		}
 
 		// Load CDPStatus(s)
 		for (int i = 0; i < header.rraCount; i++) {
-			Archive archive = (Archive) archives.get(i);
+			Archive archive = archives.get(i);
 
 			archive.loadCDPStatusBlocks(rrdFile, header.dsCount);
 		}
 
 		// Load current row information for each archive
 		for (int i = 0; i < header.rraCount; i++) {
-			Archive archive = (Archive) archives.get(i);
+			Archive archive = archives.get(i);
 
 			archive.loadCurrentRow(rrdFile);
 		}
 
 		// Now load the data
 		for (int i = 0; i < header.rraCount; i++) {
-			Archive archive = (Archive) archives.get(i);
+			Archive archive = archives.get(i);
 
 			archive.loadData(rrdFile, header.dsCount);
 		}
@@ -132,7 +137,7 @@ public class RRDatabase {
 	 * @return the <code>DataSource</code> at the specified position in this database
 	 */
 	public DataSource getDataSource(int index) {
-		return (DataSource) dataSources.get(index);
+		return dataSources.get(index);
 	}
 
 	/**
@@ -140,7 +145,7 @@ public class RRDatabase {
 	 *
 	 * @return an iterator over the data sources in this database in proper sequence.
 	 */
-	public Iterator getDataSources() {
+	public Iterator<DataSource> getDataSources() {
 		return dataSources.iterator();
 	}
 
@@ -151,7 +156,7 @@ public class RRDatabase {
 	 * @return the <code>Archive</code> at the specified position in this database.
 	 */
 	public Archive getArchive(int index) {
-		return (Archive) archives.get(index);
+		return archives.get(index);
 	}
 
 	/**
@@ -159,7 +164,7 @@ public class RRDatabase {
 	 *
 	 * @return an iterator over the archives in this database in proper sequence.
 	 */
-	public Iterator getArchives() {
+	public Iterator<Archive> getArchives() {
 		return archives.iterator();
 	}
 
@@ -181,16 +186,16 @@ public class RRDatabase {
 	 * @return an iterator over the archives in this database of the given type
 	 *         in proper sequence.
 	 */
-	public Iterator getArchives(ConsolidationFunctionType type) {
+	public Iterator<Archive> getArchives(ConsolidationFunctionType type) {
 		return getArchiveList(type).iterator();
 	}
 
-	ArrayList getArchiveList(ConsolidationFunctionType type) {
+	ArrayList<Archive> getArchiveList(ConsolidationFunctionType type) {
 
-		ArrayList subset = new ArrayList();
+		ArrayList<Archive> subset = new ArrayList<Archive>();
 
 		for (int i = 0; i < archives.size(); i++) {
-			Archive archive = (Archive) archives.get(i);
+			Archive archive = archives.get(i);
 
 			if (archive.getType().equals(type)) {
 				subset.add(archive);
@@ -254,7 +259,7 @@ public class RRDatabase {
 	public DataChunk getData(ConsolidationFunctionType type, long step)
 			throws RRDException, IOException {
 
-		ArrayList possibleArchives = getArchiveList(type);
+		ArrayList<Archive> possibleArchives = getArchiveList(type);
 
 		if (possibleArchives.size() == 0) {
 			throw new RRDException("Database does not contain an Archive of consolidation function type "
@@ -311,7 +316,7 @@ public class RRDatabase {
 	 * I need to put more of a Java style on it - CT
 	 */
 	private Archive findBestArchive(long start, long end, long step,
-									ArrayList archives) {
+									ArrayList<Archive> archives) {
 
 		Archive archive = null;
 		Archive bestFullArchive = null;
@@ -325,7 +330,7 @@ public class RRDatabase {
 		long tmpStepDiff = 0;
 
 		for (int i = 0; i < archives.size(); i++) {
-			archive = (Archive) archives.get(i);
+			archive = archives.get(i);
 
 			long calEnd = lastUpdateLong
 					- (lastUpdateLong
@@ -335,7 +340,7 @@ public class RRDatabase {
 					* header.pdpStep);
 			long fullMatch = end - start;
 
-			if ((calEnd >= end) && (calStart < start)) {    // Best full match
+			if ((calEnd >= end) && (calStart < start)) {	// Best full match
 				tmpStepDiff = Math.abs(step - (header.pdpStep * archive.pdpCount));
 
 				if ((firstFull != 0) || (tmpStepDiff < bestStepDiff)) {
@@ -343,7 +348,8 @@ public class RRDatabase {
 					bestStepDiff = tmpStepDiff;
 					bestFullArchive = archive;
 				}
-			} else {                                        // Best partial match
+			}
+			else {										// Best partial match
 				long tmpMatch = fullMatch;
 
 				if (calStart > start) {
@@ -366,7 +372,8 @@ public class RRDatabase {
 		// optimise this
 		if (firstFull == 0) {
 			archive = bestFullArchive;
-		} else if (firstPart == 0) {
+		}
+		else if (firstPart == 0) {
 			archive = bestPartialArchive;
 		}
 
@@ -379,7 +386,7 @@ public class RRDatabase {
 	 * produced by
 	 * <a href="http://people.ee.ethz.ch/~oetiker/webtools/rrdtool/manual/rrdinfo.html">rrdtool info</a>
 	 *
-	 * @param s            the PrintStream to print the header information to.
+	 * @param s			the PrintStream to print the header information to.
 	 * @param numberFormat the format to print <code>double</code>s as.
 	 */
 	public void printInfo(PrintStream s, NumberFormat numberFormat) {
@@ -395,16 +402,16 @@ public class RRDatabase {
 		s.print("last_update = ");
 		s.println(lastUpdate.getTime() / 1000);
 
-		for (Iterator i = dataSources.iterator(); i.hasNext();) {
-			DataSource ds = (DataSource) i.next();
+		for (Iterator<DataSource> i = dataSources.iterator(); i.hasNext();) {
+			DataSource ds = i.next();
 
 			ds.printInfo(s, numberFormat);
 		}
 
 		int index = 0;
 
-		for (Iterator i = archives.iterator(); i.hasNext();) {
-			Archive archive = (Archive) i.next();
+		for (Iterator<Archive> i = archives.iterator(); i.hasNext();) {
+			Archive archive = i.next();
 
 			archive.printInfo(s, numberFormat, index++);
 		}
@@ -438,7 +445,7 @@ public class RRDatabase {
 		s.println();
 
 		for (int i = 0; i < header.dsCount; i++) {
-			DataSource ds = (DataSource) dataSources.get(i);
+			DataSource ds = dataSources.get(i);
 
 			ds.toXml(s);
 		}
@@ -446,7 +453,7 @@ public class RRDatabase {
 		s.println("<!-- Round Robin Archives -->");
 
 		for (int i = 0; i < header.rraCount; i++) {
-			Archive archive = (Archive) archives.get(i);
+			Archive archive = archives.get(i);
 
 			archive.toXml(s);
 		}
@@ -465,15 +472,15 @@ public class RRDatabase {
 
 		sb.append(header.toString());
 
-		for (Iterator i = dataSources.iterator(); i.hasNext();) {
-			DataSource ds = (DataSource) i.next();
+		for (Iterator<DataSource> i = dataSources.iterator(); i.hasNext();) {
+			DataSource ds = i.next();
 
 			sb.append("\n\t");
 			sb.append(ds.toString());
 		}
 
-		for (Iterator i = archives.iterator(); i.hasNext();) {
-			Archive archive = (Archive) i.next();
+		for (Iterator<Archive> i = archives.iterator(); i.hasNext();) {
+			Archive archive = i.next();
 
 			sb.append("\n\t");
 			sb.append(archive.toString());

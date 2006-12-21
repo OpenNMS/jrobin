@@ -5,10 +5,10 @@
  * Project Info:  http://www.jrobin.org
  * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
- * (C) Copyright 2003, by Sasa Markovic.
+ * (C) Copyright 2003-2005, by Sasa Markovic.
  *
  * Developers:    Sasa Markovic (saxon@jrobin.org)
- *                Arne Vandamme (cobralord@jrobin.org)
+ *
  *
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation;
@@ -28,15 +28,23 @@ package org.jrobin.core;
  * Simple interface to represent available datasource types.
  */
 public interface DsTypes {
-	/** Constant to represent GAUGE datasource type */
+	/**
+	 * Constant to represent GAUGE datasource type
+	 */
 	public static final String DT_GAUGE = "GAUGE";
 
-	/** Constant to represent COUNTER datasource type */
+	/**
+	 * Constant to represent COUNTER datasource type
+	 */
 	public static final String DT_COUNTER = "COUNTER";
 
-	/** Constant to represent DERIVE datasource type */
+	/**
+	 * Constant to represent DERIVE datasource type
+	 */
 	public static final String DT_DERIVE = "DERIVE";
 
-	/** Constant to represent ABSOLUTE datasource type */
+	/**
+	 * Constant to represent ABSOLUTE datasource type
+	 */
 	public static final String DT_ABSOLUTE = "ABSOLUTE";
 }

@@ -42,17 +42,19 @@ public class RRDFile implements Constants {
 
 	private void initDataLayout(File file) throws IOException {
 
-		if (file.exists()) {    // Load the data formats from the file
+		if (file.exists()) {	// Load the data formats from the file
 			ras.read(buffer, 0, 24);
 
 			int index;
 
 			if ((index = indexOf(FLOAT_COOKIE_BIG_ENDIAN, buffer)) != -1) {
 				bigEndian = true;
-			} else if ((index = indexOf(FLOAT_COOKIE_LITTLE_ENDIAN, buffer))
+			}
+			else if ((index = indexOf(FLOAT_COOKIE_LITTLE_ENDIAN, buffer))
 					!= -1) {
 				bigEndian = false;
-			} else {
+			}
+			else {
 				throw new IOException("Invalid RRD file");
 			}
 
@@ -69,10 +71,11 @@ public class RRDFile implements Constants {
 				default :
 					throw new RuntimeException("Unsupported architecture");
 			}
-		} else {                // Default to data formats for this hardware architecture
+		}
+		else {				// Default to data formats for this hardware architecture
 		}
 
-		ras.seek(0);    // Reset file pointer to start of file
+		ras.seek(0);	// Reset file pointer to start of file
 	}
 
 	private int indexOf(byte[] pattern, byte[] array) {
@@ -96,7 +99,8 @@ public class RRDFile implements Constants {
 
 		if (bigEndian) {
 			tx = buffer;
-		} else {
+		}
+		else {
 			for (int i = 0; i < 8; i++) {
 				tx[7 - i] = buffer[i];
 			}
@@ -121,7 +125,8 @@ public class RRDFile implements Constants {
 		if (bigEndian) {
 			value = (0xFF & buffer[3]) | ((0xFF & buffer[2]) << 8)
 					| ((0xFF & buffer[1]) << 16) | ((0xFF & buffer[0]) << 24);
-		} else {
+		}
+		else {
 			value = (0xFF & buffer[0]) | ((0xFF & buffer[1]) << 8)
 					| ((0xFF & buffer[2]) << 16) | ((0xFF & buffer[3]) << 24);
 		}

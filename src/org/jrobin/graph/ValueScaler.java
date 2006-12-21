@@ -27,7 +27,7 @@ package org.jrobin.graph;
 class ValueScaler {
 	static final String UNIT_UNKNOWN = "?";
 	static final String UNIT_SYMBOLS[] = {
-		"a", "f", "p", "n", "u", "m", " ", "k", "M", "G", "T", "P", "E"
+			"a", "f", "p", "n", "u", "m", " ", "k", "M", "G", "T", "P", "E"
 	};
 	static final int SYMB_CENTER = 6;
 
@@ -41,10 +41,10 @@ class ValueScaler {
 
 	Scaled scale(double value, boolean mustRescale) {
 		Scaled scaled;
-		if(mustRescale) {
+		if (mustRescale) {
 			scaled = rescale(value);
 		}
-		else if(magfact >= 0) {
+		else if (magfact >= 0) {
 			// already scaled, need not rescale
 			scaled = new Scaled(value / magfact, unit);
 		}
@@ -52,7 +52,7 @@ class ValueScaler {
 			// scaling not requested, but never scaled before - must rescale anyway
 			scaled = rescale(value);
 			// if zero, scale again on the next try
-			if(scaled.value == 0.0 || Double.isNaN(scaled.value)) {
+			if (scaled.value == 0.0 || Double.isNaN(scaled.value)) {
 				magfact = -1.0;
 			}
 		}

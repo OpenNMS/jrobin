@@ -8,7 +8,7 @@
  */
 package org.jrobin.core.jrrd;
 
-import java.io.*;
+import java.io.IOException;
 
 /**
  * Instances of this class model the header section of an RRD file.

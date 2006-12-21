@@ -5,10 +5,10 @@
  * Project Info:  http://www.jrobin.org
  * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
- * (C) Copyright 2003, by Sasa Markovic.
+ * (C) Copyright 2003-2005, by Sasa Markovic.
  *
  * Developers:    Sasa Markovic (saxon@jrobin.org)
- *                Arne Vandamme (cobralord@jrobin.org)
+ *
  *
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation;
@@ -39,15 +39,15 @@ public class RrdMemoryBackend extends RrdBackend {
 
 	protected synchronized void write(long offset, byte[] b) throws IOException {
 		int pos = (int) offset;
-		for(int i = 0; i < b.length; i++) {
-			buffer[pos++] = b[i];
+		for (byte singleByte : b) {
+			buffer[pos++] = singleByte;
 		}
 	}
 
 	protected synchronized void read(long offset, byte[] b) throws IOException {
 		int pos = (int) offset;
-		if(pos + b.length <= buffer.length) {
-			for(int i = 0; i < b.length; i++) {
+		if (pos + b.length <= buffer.length) {
+			for (int i = 0; i < b.length; i++) {
 				b[i] = buffer[pos++];
 			}
 		}
@@ -58,6 +58,7 @@ public class RrdMemoryBackend extends RrdBackend {
 
 	/**
 	 * Returns the number of RRD bytes held in memory.
+	 *
 	 * @return Number of all RRD bytes.
 	 */
 	public long getLength() {
@@ -66,11 +67,12 @@ public class RrdMemoryBackend extends RrdBackend {
 
 	/**
 	 * Reserves a memory section as a RRD storage.
+	 *
 	 * @param newLength Number of bytes held in memory.
 	 * @throws IOException Thrown in case of I/O error.
 	 */
 	protected void setLength(long newLength) throws IOException {
-		if(newLength > Integer.MAX_VALUE) {
+		if (newLength > Integer.MAX_VALUE) {
 			throw new IOException("Cannot create this big memory backed RRD");
 		}
 		buffer = new byte[(int) newLength];
@@ -86,8 +88,9 @@ public class RrdMemoryBackend extends RrdBackend {
 
 	/**
 	 * This method is overriden to disable high-level caching in frontend JRobin classes.
+	 *
 	 * @return Always returns <code>false</code>. There is no need to cache anything in high-level classes
-	 * since all RRD bytes are already in memory.
+	 *         since all RRD bytes are already in memory.
 	 */
 	protected boolean isCachingAllowed() {
 		return false;

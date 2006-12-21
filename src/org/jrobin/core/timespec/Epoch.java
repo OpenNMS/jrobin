@@ -4,53 +4,71 @@ import org.jrobin.core.RrdException;
 import org.jrobin.core.Util;
 
 import javax.swing.*;
-import java.util.Date;
 import java.awt.*;
-import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
-import java.text.SimpleDateFormat;
+import java.awt.event.ActionListener;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
-class Epoch extends JFrame implements Runnable {
-	private static final String[] formats = {
-		"MM/dd/yy HH:mm:ss",
-		"dd.MM.yy HH:mm:ss",
-		"yy-MM-dd HH:mm:ss",
-		"MM/dd/yy HH:mm",
-		"dd.MM.yy HH:mm",
-		"yy-MM-dd HH:mm",
-		"MM/dd/yy",
-		"dd.MM.yy",
-		"yy-MM-dd",
-		"HH:mm MM/dd/yy",
-		"HH:mm dd.MM.yy",
-		"HH:mm yy-MM-dd",
-		"HH:mm:ss MM/dd/yy",
-		"HH:mm:ss dd.MM.yy",
-		"HH:mm:ss yy-MM-dd"
+/**
+ * Small swing-based utility to convert timestamps (seconds since epoch) to readable dates and vice versa.
+ * Supports at-style time specification (like "now-2d", "noon yesterday") and other human-readable
+ * data formats:<p>
+ * <ul>
+ * <li>MM/dd/yy HH:mm:ss
+ * <li>dd.MM.yy HH:mm:ss
+ * <li>dd.MM.yy HH:mm:ss
+ * <li>MM/dd/yy HH:mm
+ * <li>dd.MM.yy HH:mm
+ * <li>yy-MM-dd HH:mm
+ * <li>MM/dd/yy
+ * <li>dd.MM.yy
+ * <li>yy-MM-dd
+ * <li>HH:mm MM/dd/yy
+ * <li>HH:mm dd.MM.yy
+ * <li>HH:mm yy-MM-dd
+ * <li>HH:mm:ss MM/dd/yy
+ * <li>HH:mm:ss dd.MM.yy
+ * <li>HH:mm:ss yy-MM-dd
+ * </ul>
+ * The current timestamp is displayed in the title bar :)<p>
+ */
+public class Epoch extends JFrame {
+	private static final String[] supportedFormats = {
+			"MM/dd/yy HH:mm:ss", "dd.MM.yy HH:mm:ss", "yy-MM-dd HH:mm:ss", "MM/dd/yy HH:mm",
+			"dd.MM.yy HH:mm", "yy-MM-dd HH:mm", "MM/dd/yy", "dd.MM.yy", "yy-MM-dd", "HH:mm MM/dd/yy",
+			"HH:mm dd.MM.yy", "HH:mm yy-MM-dd", "HH:mm:ss MM/dd/yy", "HH:mm:ss dd.MM.yy", "HH:mm:ss yy-MM-dd"
 	};
 
-	private static final SimpleDateFormat[] parsers = new SimpleDateFormat[formats.length];
+	private static final SimpleDateFormat[] parsers = new SimpleDateFormat[supportedFormats.length];
 	private static final String helpText;
 
+	private Timer timer = new Timer(1000, new ActionListener() {
+		public void actionPerformed(ActionEvent e) {
+			showTimestamp();
+		}
+	});
+
 	static {
-		for(int i = 0; i < parsers.length; i++) {
-			parsers[i] = new SimpleDateFormat(formats[i]);
+		for (int i = 0; i < parsers.length; i++) {
+			parsers[i] = new SimpleDateFormat(supportedFormats[i]);
 			parsers[i].setLenient(true);
 		}
 		StringBuffer tooltipBuff = new StringBuffer("<html><b>Supported input formats:</b><br>");
-		for(int i = 0; i < formats.length; i++) {
-			tooltipBuff.append(formats[i] + "<br>");
+		for (String supportedFormat : supportedFormats) {
+			tooltipBuff.append(supportedFormat).append("<br>");
 		}
-		tooltipBuff.append("<b>RRDTool time format</b><br>");
-		tooltipBuff.append("... including timestamps</html>");
+		tooltipBuff.append("<b>AT-style time specification</b><br>");
+		tooltipBuff.append("timestamp<br><br>");
+		tooltipBuff.append("Copyright (C) 2003-2005 Sasa Markovic, All Rights Reserved</html>");
 		helpText = tooltipBuff.toString();
 	}
 
 	private JLabel topLabel = new JLabel("Enter timestamp or readable date:");
 	private JTextField inputField = new JTextField(25);
-	private JButton button = new JButton("Convert");
-	//private JLabel helpLabel = new JLabel(helpText);
+	private JButton convertButton = new JButton("Convert");
+	private JButton helpButton = new JButton("Help");
 
 	private static final SimpleDateFormat OUTPUT_DATE_FORMAT =
 			new SimpleDateFormat("MM/dd/yy HH:mm:ss EEE");
@@ -58,33 +76,34 @@ class Epoch extends JFrame implements Runnable {
 	Epoch() {
 		super("Epoch");
 		constructUI();
-		setVisible(true);
-		new Thread(this).start();
+		timer.start();
 	}
 
 	private void constructUI() {
 		JPanel c = (JPanel) getContentPane();
-		c.setLayout(new BorderLayout());
-
+		c.setLayout(new BorderLayout(3, 3));
 		c.add(topLabel, BorderLayout.NORTH);
-		c.add(inputField, BorderLayout.CENTER);
-		c.add(button, BorderLayout.EAST);
-		// c.add(helpLabel, BorderLayout.WEST);
-
-		button.setToolTipText(helpText);
-		button.addActionListener(new ActionListener() {
+		c.add(inputField, BorderLayout.WEST);
+		c.add(convertButton, BorderLayout.CENTER);
+		convertButton.setToolTipText(helpText);
+		convertButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				convert();
 			}
 		});
-
+		c.add(helpButton, BorderLayout.EAST);
+		helpButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				JOptionPane.showMessageDialog(helpButton, helpText, "Epoch Help", JOptionPane.INFORMATION_MESSAGE);
+			}
+		});
 		inputField.requestFocus();
-		getRootPane().setDefaultButton(button);
+		getRootPane().setDefaultButton(convertButton);
 		setResizable(false);
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		pack();
 		centerOnScreen();
-
+		setVisible(true);
 	}
 
 	void centerOnScreen() {
@@ -98,14 +117,14 @@ class Epoch extends JFrame implements Runnable {
 
 	private void convert() {
 		String time = inputField.getText().trim();
-		if(time.length() > 0) {
+		if (time.length() > 0) {
 			// try simple timestamp
 			try {
 				long timestamp = Long.parseLong(time);
 				Date date = new Date(timestamp * 1000L);
 				formatDate(date);
 			}
-			catch(NumberFormatException nfe) {
+			catch (NumberFormatException nfe) {
 				// failed, try as a date
 				try {
 					inputField.setText("" + parseDate(time));
@@ -117,17 +136,9 @@ class Epoch extends JFrame implements Runnable {
 		}
 	}
 
-	public void run() {
-		for(;;) {
-			Date now = new Date();
-			long timestamp = now.getTime() / 1000L;
-			setTitle(timestamp + " seconds since epoch");
-			try {
-				Thread.sleep(1000L);
-			}
-			catch (InterruptedException e) {
-			}
-		}
+	private void showTimestamp() {
+		long timestamp = Util.getTime();
+		setTitle(timestamp + " seconds since epoch");
 	}
 
 	void formatDate(Date date) {
@@ -135,17 +146,22 @@ class Epoch extends JFrame implements Runnable {
 	}
 
 	private long parseDate(String time) throws RrdException {
-		for(int i = 0; i < parsers.length; i++) {
+		for (SimpleDateFormat parser : parsers) {
 			try {
-				return Util.getTimestamp(parsers[i].parse(time));
+				return Util.getTimestamp(parser.parse(time));
 			}
 			catch (ParseException e) {
+				// NOP
 			}
 		}
 		return new TimeParser(time).parse().getTimestamp();
 	}
 
-
+	/**
+	 * Main method which runs this utility.
+	 *
+	 * @param args Not used.
+	 */
 	public static void main(String[] args) {
 		new Epoch();
 	}

@@ -5,10 +5,10 @@
  * Project Info:  http://www.jrobin.org
  * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
- * (C) Copyright 2003, by Sasa Markovic.
+ * (C) Copyright 2003-2005, by Sasa Markovic.
  *
  * Developers:    Sasa Markovic (saxon@jrobin.org)
- *                Arne Vandamme (cobralord@jrobin.org)
+ *
  *
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation;
@@ -25,66 +25,65 @@
 
 package org.jrobin.data;
 
-import org.jrobin.core.Util;
 import org.jrobin.core.RrdException;
+import org.jrobin.core.Util;
 
-import java.util.StringTokenizer;
 import java.util.Calendar;
-import java.util.GregorianCalendar;
+import java.util.StringTokenizer;
 
 class RpnCalculator {
-	private static final byte TKN_VAR 		= 0;
-	private static final byte TKN_NUM 		= 1;
-	private static final byte TKN_PLUS 		= 2;
-	private static final byte TKN_MINUS 	= 3;
-	private static final byte TKN_MULT 		= 4;
-	private static final byte TKN_DIV 		= 5;
-	private static final byte TKN_MOD 		= 6;
-	private static final byte TKN_SIN 		= 7;
-	private static final byte TKN_COS 		= 8;
-	private static final byte TKN_LOG 		= 9;
-	private static final byte TKN_EXP 		= 10;
-	private static final byte TKN_FLOOR 	= 11;
-	private static final byte TKN_CEIL 		= 12;
-	private static final byte TKN_ROUND 	= 13;
-	private static final byte TKN_POW 		= 14;
-	private static final byte TKN_ABS 		= 15;
-	private static final byte TKN_SQRT 		= 16;
-	private static final byte TKN_RANDOM 	= 17;
-	private static final byte TKN_LT 		= 18;
-	private static final byte TKN_LE 		= 19;
-	private static final byte TKN_GT 		= 20;
-	private static final byte TKN_GE 		= 21;
-	private static final byte TKN_EQ 		= 22;
-	private static final byte TKN_IF 		= 23;
-	private static final byte TKN_MIN 		= 24;
-	private static final byte TKN_MAX 		= 25;
-	private static final byte TKN_LIMIT 	= 26;
-	private static final byte TKN_DUP 		= 27;
-	private static final byte TKN_EXC 		= 28;
-	private static final byte TKN_POP 		= 29;
-	private static final byte TKN_UN 		= 30;
-	private static final byte TKN_UNKN 		= 31;
-	private static final byte TKN_NOW 		= 32;
-	private static final byte TKN_TIME 		= 33;
-	private static final byte TKN_PI 		= 34;
-	private static final byte TKN_E 		= 35;
-	private static final byte TKN_AND 		= 36;
-	private static final byte TKN_OR 		= 37;
-	private static final byte TKN_XOR 		= 38;
-	private static final byte TKN_PREV 		= 39;
-	private static final byte TKN_INF 		= 40;
-	private static final byte TKN_NEGINF 	= 41;
-	private static final byte TKN_STEP 		= 42;
-	private static final byte TKN_YEAR 		= 43;
-	private static final byte TKN_MONTH		= 44;
-	private static final byte TKN_DATE 		= 45;
-	private static final byte TKN_HOUR 		= 46;
-	private static final byte TKN_MINUTE	= 47;
-	private static final byte TKN_SECOND	= 48;
-	private static final byte TKN_WEEK		= 49;
-	private static final byte TKN_SIGN		= 50;
-	private static final byte TKN_RND		= 51;
+	private static final byte TKN_VAR = 0;
+	private static final byte TKN_NUM = 1;
+	private static final byte TKN_PLUS = 2;
+	private static final byte TKN_MINUS = 3;
+	private static final byte TKN_MULT = 4;
+	private static final byte TKN_DIV = 5;
+	private static final byte TKN_MOD = 6;
+	private static final byte TKN_SIN = 7;
+	private static final byte TKN_COS = 8;
+	private static final byte TKN_LOG = 9;
+	private static final byte TKN_EXP = 10;
+	private static final byte TKN_FLOOR = 11;
+	private static final byte TKN_CEIL = 12;
+	private static final byte TKN_ROUND = 13;
+	private static final byte TKN_POW = 14;
+	private static final byte TKN_ABS = 15;
+	private static final byte TKN_SQRT = 16;
+	private static final byte TKN_RANDOM = 17;
+	private static final byte TKN_LT = 18;
+	private static final byte TKN_LE = 19;
+	private static final byte TKN_GT = 20;
+	private static final byte TKN_GE = 21;
+	private static final byte TKN_EQ = 22;
+	private static final byte TKN_IF = 23;
+	private static final byte TKN_MIN = 24;
+	private static final byte TKN_MAX = 25;
+	private static final byte TKN_LIMIT = 26;
+	private static final byte TKN_DUP = 27;
+	private static final byte TKN_EXC = 28;
+	private static final byte TKN_POP = 29;
+	private static final byte TKN_UN = 30;
+	private static final byte TKN_UNKN = 31;
+	private static final byte TKN_NOW = 32;
+	private static final byte TKN_TIME = 33;
+	private static final byte TKN_PI = 34;
+	private static final byte TKN_E = 35;
+	private static final byte TKN_AND = 36;
+	private static final byte TKN_OR = 37;
+	private static final byte TKN_XOR = 38;
+	private static final byte TKN_PREV = 39;
+	private static final byte TKN_INF = 40;
+	private static final byte TKN_NEGINF = 41;
+	private static final byte TKN_STEP = 42;
+	private static final byte TKN_YEAR = 43;
+	private static final byte TKN_MONTH = 44;
+	private static final byte TKN_DATE = 45;
+	private static final byte TKN_HOUR = 46;
+	private static final byte TKN_MINUTE = 47;
+	private static final byte TKN_SECOND = 48;
+	private static final byte TKN_WEEK = 49;
+	private static final byte TKN_SIGN = 50;
+	private static final byte TKN_RND = 51;
 
 	private String rpnExpression;
 	private String sourceName;
@@ -267,10 +266,10 @@ class RpnCalculator {
 		else if (parsedText.equals("WEEK")) {
 			token.id = TKN_WEEK;
 		}
-		else if(parsedText.equals("SIGN")) {
+		else if (parsedText.equals("SIGN")) {
 			token.id = TKN_SIGN;
 		}
-		else if(parsedText.equals("RND")) {
+		else if (parsedText.equals("RND")) {
 			token.id = TKN_RND;
 		}
 		else {
@@ -284,8 +283,7 @@ class RpnCalculator {
 	double[] calculateValues() throws RrdException {
 		for (int slot = 0; slot < timestamps.length; slot++) {
 			resetStack();
-			for (int i = 0; i < tokens.length; i++) {
-				Token token = tokens[i];
+			for (Token token : tokens) {
 				double x1, x2, x3;
 				switch (token.id) {
 					case TKN_NUM:
@@ -415,7 +413,7 @@ class RpnCalculator {
 						push(Util.getTime());
 						break;
 					case TKN_TIME:
-						push((long)Math.round(timestamps[slot]));
+						push((long) Math.round(timestamps[slot]));
 						break;
 					case TKN_PI:
 						push(Math.PI);
@@ -439,7 +437,7 @@ class RpnCalculator {
 						push(((x1 != 0 && x2 == 0) || (x1 == 0 && x2 != 0)) ? 1 : 0);
 						break;
 					case TKN_PREV:
-						push((slot == 0)? Double.NaN: token.values[slot - 1]);
+						push((slot == 0) ? Double.NaN : token.values[slot - 1]);
 						break;
 					case TKN_INF:
 						push(Double.POSITIVE_INFINITY);
@@ -473,7 +471,7 @@ class RpnCalculator {
 						break;
 					case TKN_SIGN:
 						x1 = pop();
-						push(Double.isNaN(x1)? Double.NaN: x1 > 0? +1: x1 < 0? -1: 0);
+						push(Double.isNaN(x1) ? Double.NaN : x1 > 0 ? +1 : x1 < 0 ? -1 : 0);
 						break;
 					case TKN_RND:
 						push(Math.floor(pop() * Math.random()));
@@ -493,9 +491,8 @@ class RpnCalculator {
 	}
 
 	private double getCalendarField(double timestamp, int field) {
-		GregorianCalendar gc = new GregorianCalendar();
-		gc.setTimeInMillis((long)(timestamp * 1000));
-		return gc.get(field);
+		Calendar calendar = Util.getCalendar((long) (timestamp * 1000));
+		return calendar.get(field);
 	}
 
 	private void push(double x) throws RrdException {

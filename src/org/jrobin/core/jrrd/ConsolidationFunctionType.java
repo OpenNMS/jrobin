@@ -64,13 +64,17 @@ public class ConsolidationFunctionType {
 
 		if (s.equalsIgnoreCase(STR_AVERAGE)) {
 			return AVERAGE;
-		} else if (s.equalsIgnoreCase(STR_MIN)) {
+		}
+		else if (s.equalsIgnoreCase(STR_MIN)) {
 			return MIN;
-		} else if (s.equalsIgnoreCase(STR_MAX)) {
+		}
+		else if (s.equalsIgnoreCase(STR_MAX)) {
 			return MAX;
-		} else if (s.equalsIgnoreCase(STR_LAST)) {
+		}
+		else if (s.equalsIgnoreCase(STR_LAST)) {
 			return LAST;
-		} else {
+		}
+		else {
 			throw new IllegalArgumentException("Invalid ConsolidationFunctionType");
 		}
 	}

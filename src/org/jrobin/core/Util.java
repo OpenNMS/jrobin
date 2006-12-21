@@ -5,10 +5,10 @@
  * Project Info:  http://www.jrobin.org
  * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
- * (C) Copyright 2003, by Sasa Markovic.
+ * (C) Copyright 2003-2005, by Sasa Markovic.
  *
  * Developers:    Sasa Markovic (saxon@jrobin.org)
- *                Arne Vandamme (cobralord@jrobin.org)
+ *
  *
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation;
@@ -25,27 +25,28 @@
 
 package org.jrobin.core;
 
+import org.jrobin.core.timespec.TimeParser;
+import org.jrobin.core.timespec.TimeSpec;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.w3c.dom.Element;
-import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
-import org.jrobin.core.timespec.TimeSpec;
-import org.jrobin.core.timespec.TimeParser;
 
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import java.awt.*;
+import java.io.*;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.text.SimpleDateFormat;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
-import java.util.GregorianCalendar;
-import java.util.ArrayList;
-import java.io.*;
 
 /**
  * Class defines various utility functions used in JRobin.
@@ -54,11 +55,11 @@ import java.io.*;
  */
 public class Util {
 
-	public static final long MAX_LONG		= Long.MAX_VALUE;
-	public static final long MIN_LONG		= -Long.MAX_VALUE;
-	
-	public static final double MAX_DOUBLE	= Double.MAX_VALUE;
-	public static final double MIN_DOUBLE	= -Double.MAX_VALUE;
+	public static final long MAX_LONG = Long.MAX_VALUE;
+	public static final long MIN_LONG = -Long.MAX_VALUE;
+
+	public static final double MAX_DOUBLE = Double.MAX_VALUE;
+	public static final double MIN_DOUBLE = -Double.MAX_VALUE;
 
 	// pattern RRDTool uses to format doubles in XML files
 	static final String PATTERN = "0.0000000000E00";
@@ -66,6 +67,7 @@ public class Util {
 	static final String JROBIN_DIR = "jrobin-demo";
 
 	static final DecimalFormat df;
+
 	static {
 		df = (DecimalFormat) NumberFormat.getNumberInstance(Locale.ENGLISH);
 		df.applyPattern(PATTERN);
@@ -77,19 +79,20 @@ public class Util {
 	 *
 	 * @return Same array but with all values as double.
 	 */
-	public static double[] toDoubleArray( final long[] array )
-	{
+	public static double[] toDoubleArray(final long[] array) {
 		double[] values = new double[ array.length ];
-		for ( int i = 0; i < array.length; i++ )
+		for (int i = 0; i < array.length; i++) {
 			values[i] = array[i];
+		}
 		return values;
 	}
 
 	/**
 	 * Returns current timestamp in seconds (without milliseconds). Returned timestamp
 	 * is obtained with the following expression: <p>
-	 *
+	 * <p/>
 	 * <code>(System.currentTimeMillis() + 500L) / 1000L</code>
+	 *
 	 * @return Current timestamp
 	 */
 	public static long getTime() {
@@ -98,6 +101,7 @@ public class Util {
 
 	/**
 	 * Just an alias for {@link #getTime()} method.
+	 *
 	 * @return Current timestamp (without milliseconds)
 	 */
 	public static long getTimestamp() {
@@ -108,8 +112,9 @@ public class Util {
 	 * Rounds the given timestamp to the nearest whole &quote;step&quote;. Rounded value is obtained
 	 * from the following expression:<p>
 	 * <code>timestamp - timestamp % step;</code><p>
+	 *
 	 * @param timestamp Timestamp in seconds
-	 * @param step Step in seconds
+	 * @param step	  Step in seconds
 	 * @return "Rounded" timestamp
 	 */
 	public static long normalize(long timestamp, long step) {
@@ -125,7 +130,7 @@ public class Util {
 	 * @return the lager of arguments
 	 */
 	public static double max(double x, double y) {
-		return Double.isNaN(x)? y: Double.isNaN(y)? x: Math.max(x, y);
+		return Double.isNaN(x) ? y : Double.isNaN(y) ? x : Math.max(x, y);
 	}
 
 	/**
@@ -137,24 +142,25 @@ public class Util {
 	 * @return the smaller of arguments
 	 */
 	public static double min(double x, double y) {
-		return Double.isNaN(x)? y: Double.isNaN(y)? x: Math.min(x, y);
+		return Double.isNaN(x) ? y : Double.isNaN(y) ? x : Math.min(x, y);
 	}
 
 	/**
 	 * Calculates sum of two doubles, but treats NaNs as zeros.
+	 *
 	 * @param x First double
 	 * @param y Second double
 	 * @return Sum(x,y) calculated as <code>Double.isNaN(x)? y: Double.isNaN(y)? x: x + y;</code>
 	 */
 	public static double sum(double x, double y) {
-		return Double.isNaN(x)? y: Double.isNaN(y)? x: x + y;
+		return Double.isNaN(x) ? y : Double.isNaN(y) ? x : x + y;
 	}
 
 	static String formatDouble(double x, String nanString, boolean forceExponents) {
-		if(Double.isNaN(x)) {
+		if (Double.isNaN(x)) {
 			return nanString;
 		}
-		if(forceExponents) {
+		if (forceExponents) {
 			return df.format(x);
 		}
 		return "" + x;
@@ -167,6 +173,7 @@ public class Util {
 	/**
 	 * Formats double as a string using exponential notation (RRDTool like). Used for debugging
 	 * throught the project.
+	 *
 	 * @param x value to be formatted
 	 * @return string like "+1.234567E+02"
 	 */
@@ -177,6 +184,7 @@ public class Util {
 	/**
 	 * Returns <code>Date</code> object for the given timestamp (in seconds, without
 	 * milliseconds)
+	 *
 	 * @param timestamp Timestamp in seconds.
 	 * @return Corresponding Date object.
 	 */
@@ -184,31 +192,34 @@ public class Util {
 		return new Date(timestamp * 1000L);
 	}
 
-    /**
-	 * Returns <code>GregorianCalendar</code> object for the given timestamp
+	/**
+	 * Returns <code>Calendar</code> object for the given timestamp
 	 * (in seconds, without milliseconds)
+	 *
 	 * @param timestamp Timestamp in seconds.
-	 * @return Corresponding GregorianCalendar object.
+	 * @return Corresponding Calendar object.
 	 */
-	public static GregorianCalendar getGregorianCalendar(long timestamp) {
-		GregorianCalendar gc = new GregorianCalendar();
-		gc.setTimeInMillis(timestamp * 1000L);
-		return gc;
+	public static Calendar getCalendar(long timestamp) {
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTimeInMillis(timestamp * 1000L);
+		return calendar;
 	}
 
-    /**
-	 * Returns <code>GregorianCalendar</code> object for the given Date object
+	/**
+	 * Returns <code>Calendar</code> object for the given Date object
+	 *
 	 * @param date Date object
-	 * @return Corresponding GregorianCalendar object.
+	 * @return Corresponding Calendar object.
 	 */
-	public static GregorianCalendar getGregorianCalendar(Date date) {
-		GregorianCalendar gc = new GregorianCalendar();
-		gc.setTime(date);
-		return gc;
+	public static Calendar getCalendar(Date date) {
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(date);
+		return calendar;
 	}
 
 	/**
 	 * Returns timestamp (unix epoch) for the given Date object
+	 *
 	 * @param date Date object
 	 * @return Corresponding timestamp (without milliseconds)
 	 */
@@ -218,46 +229,52 @@ public class Util {
 	}
 
 	/**
-	 * Returns timestamp (unix epoch) for the given GregorianCalendar object
-	 * @param gc GregorianCalendar object
+	 * Returns timestamp (unix epoch) for the given Calendar object
+	 *
+	 * @param gc Calendar object
 	 * @return Corresponding timestamp (without milliseconds)
 	 */
-	public static long getTimestamp(GregorianCalendar gc) {
+	public static long getTimestamp(Calendar gc) {
 		return getTimestamp(gc.getTime());
 	}
 
 	/**
 	 * Returns timestamp (unix epoch) for the given year, month, day, hour and minute.
-	 * @param year Year
+	 *
+	 * @param year  Year
 	 * @param month Month (zero-based)
-	 * @param day Day in month
-	 * @param hour Hour
-	 * @param min Minute
+	 * @param day   Day in month
+	 * @param hour  Hour
+	 * @param min   Minute
 	 * @return Corresponding timestamp
 	 */
 	public static long getTimestamp(int year, int month, int day, int hour, int min) {
-		GregorianCalendar gc = new GregorianCalendar(year, month, day, hour, min);
-		return Util.getTimestamp(gc);
+		Calendar calendar = Calendar.getInstance();
+		calendar.clear();
+		calendar.set(year, month, day, hour, min);
+		return Util.getTimestamp(calendar);
 	}
 
 	/**
 	 * Returns timestamp (unix epoch) for the given year, month and day.
-	 * @param year Year
+	 *
+	 * @param year  Year
 	 * @param month Month (zero-based)
-	 * @param day Day in month
+	 * @param day   Day in month
 	 * @return Corresponding timestamp
 	 */
 	public static long getTimestamp(int year, int month, int day) {
 		return Util.getTimestamp(year, month, day, 0, 0);
 	}
 
-		/**
+	/**
 	 * Parses at-style time specification and returns the corresponding timestamp. For example:<p>
 	 * <pre>
 	 * long t = Util.getTimestamp("now-1d");
 	 * </pre>
+	 *
 	 * @param atStyleTimeSpec at-style time specification. For the complete explanation of the syntax
-	 * allowed see RRDTool's <code>rrdfetch</code> man page.<p>
+	 *                        allowed see RRDTool's <code>rrdfetch</code> man page.<p>
 	 * @return timestamp in seconds since epoch.
 	 * @throws RrdException Thrown if invalid time specification is supplied.
 	 */
@@ -271,10 +288,11 @@ public class Util {
 	 * <pre>
 	 * long[] t = Util.getTimestamps("end-1d","now");
 	 * </pre>
+	 *
 	 * @param atStyleTimeSpec1 Starting at-style time specification. For the complete explanation of the syntax
-	 * allowed see RRDTool's <code>rrdfetch</code> man page.<p>
+	 *                         allowed see RRDTool's <code>rrdfetch</code> man page.<p>
 	 * @param atStyleTimeSpec2 Ending at-style time specification. For the complete explanation of the syntax
-	 * allowed see RRDTool's <code>rrdfetch</code> man page.<p>
+	 *                         allowed see RRDTool's <code>rrdfetch</code> man page.<p>
 	 * @return An array of two longs representing starting and ending timestamp in seconds since epoch.
 	 * @throws RrdException Thrown if any input time specification is invalid.
 	 */
@@ -287,6 +305,7 @@ public class Util {
 	/**
 	 * Parses input string as a double value. If the value cannot be parsed, Double.NaN
 	 * is returned (NumberFormatException is never thrown).
+	 *
 	 * @param valueStr String representing double value
 	 * @return a double corresponding to the input string
 	 */
@@ -295,7 +314,7 @@ public class Util {
 		try {
 			value = Double.parseDouble(valueStr);
 		}
-		catch(NumberFormatException nfe) {
+		catch (NumberFormatException nfe) {
 			value = Double.NaN;
 		}
 		return value;
@@ -303,6 +322,7 @@ public class Util {
 
 	/**
 	 * Checks if a string can be parsed as double.
+	 *
 	 * @param s Input string
 	 * @return <code>true</code> if the string can be parsed as double, <code>false</code> otherwise
 	 */
@@ -311,27 +331,54 @@ public class Util {
 			Double.parseDouble(s);
 			return true;
 		}
-		catch(NumberFormatException nfe) {
+		catch (NumberFormatException nfe) {
 			return false;
 		}
 	}
 
 	/**
 	 * Parses input string as a boolean value. The parser is case insensitive.
+	 *
 	 * @param valueStr String representing boolean value
 	 * @return <code>true</code>, if valueStr equals to 'true', 'on', 'yes', 'y' or '1';
-	 * <code>false</code> in all other cases.
+	 *         <code>false</code> in all other cases.
 	 */
 	public static boolean parseBoolean(String valueStr) {
 		return valueStr.equalsIgnoreCase("true") ||
-			valueStr.equalsIgnoreCase("on") ||
-			valueStr.equalsIgnoreCase("yes") ||
-			valueStr.equalsIgnoreCase("y") ||
-			valueStr.equalsIgnoreCase("1");
+				valueStr.equalsIgnoreCase("on") ||
+				valueStr.equalsIgnoreCase("yes") ||
+				valueStr.equalsIgnoreCase("y") ||
+				valueStr.equalsIgnoreCase("1");
+	}
+
+	/**
+	 * Parses input string as color. The color string should be of the form #RRGGBB (no alpha specified,
+	 * opaque color) or #RRGGBBAA (alpa specified, transparent colors). Leading character '#' is
+	 * optional.
+	 *
+	 * @param valueStr Input string, for example #FFAA24, #AABBCC33, 010203 or ABC13E4F
+	 * @return Paint object
+	 * @throws RrdException If the input string is not 6 or 8 characters long (without optional '#')
+	 */
+	public static Paint parseColor(String valueStr) throws RrdException {
+		String c = valueStr.startsWith("#") ? valueStr.substring(1) : valueStr;
+		if (c.length() != 6 && c.length() != 8) {
+			throw new RrdException("Invalid color specification: " + valueStr);
+		}
+		String r = c.substring(0, 2), g = c.substring(2, 4), b = c.substring(4, 6);
+		if (c.length() == 6) {
+			return new Color(Integer.parseInt(r, 16), Integer.parseInt(g, 16), Integer.parseInt(b, 16));
+		}
+		else {
+			String a = c.substring(6);
+			return new Color(Integer.parseInt(r, 16), Integer.parseInt(g, 16),
+					Integer.parseInt(b, 16), Integer.parseInt(a, 16));
+		}
 	}
 
 	/**
 	 * Returns file system separator string.
+	 *
 	 * @return File system separator ("/" on Unix, "\" on Windows)
 	 */
 	public static String getFileSeparator() {
@@ -340,6 +387,7 @@ public class Util {
 
 	/**
 	 * Returns path to user's home directory.
+	 *
 	 * @return Path to users home directory, with file separator appended.
 	 */
 	public static String getUserHomeDirectory() {
@@ -349,24 +397,26 @@ public class Util {
 	/**
 	 * Returns path to directory used for placement of JRobin demo graphs and creates it
 	 * if necessary.
+	 *
 	 * @return Path to demo directory (defaults to $HOME/jrobin/) if directory exists or
-	 * was successfully created. Null if such directory could not be created.
+	 *         was successfully created. Null if such directory could not be created.
 	 */
 	public static String getJRobinDemoDirectory() {
 		String homeDirPath = getUserHomeDirectory() + JROBIN_DIR + getFileSeparator();
 		File homeDirFile = new File(homeDirPath);
-		return (homeDirFile.exists() || homeDirFile.mkdirs())? homeDirPath: null;
+		return (homeDirFile.exists() || homeDirFile.mkdirs()) ? homeDirPath : null;
 	}
 
 	/**
 	 * Returns full path to the file stored in the demo directory of JRobin
+	 *
 	 * @param filename Partial path to the file stored in the demo directory of JRobin
-	 * (just name and extension, without parent directories)
+	 *                 (just name and extension, without parent directories)
 	 * @return Full path to the file
 	 */
 	public static String getJRobinDemoPath(String filename) {
 		String demoDir = getJRobinDemoDirectory();
-		if(demoDir != null) {
+		if (demoDir != null) {
 			return demoDir + filename;
 		}
 		else {
@@ -384,19 +434,21 @@ public class Util {
 		String dsName = rrd1.getDatasource(dsIndex).getDsName();
 		try {
 			return rrd2.getDsIndex(dsName);
-		} catch (RrdException e) {
+		}
+		catch (RrdException e) {
 			return -1;
 		}
 	}
 
 	static int getMatchingArchiveIndex(RrdDb rrd1, int arcIndex, RrdDb rrd2)
-		throws IOException {
+			throws IOException {
 		Archive archive = rrd1.getArchive(arcIndex);
 		String consolFun = archive.getConsolFun();
 		int steps = archive.getSteps();
 		try {
 			return rrd2.getArcIndex(consolFun, steps);
-		} catch (RrdException e) {
+		}
+		catch (RrdException e) {
 			return -1;
 		}
 	}
@@ -408,28 +460,32 @@ public class Util {
 	static final String ISO_DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";   // ISO
 
 	/**
-	 * Creates GregorianCalendar object from a string. The string should represent
+	 * Creates Calendar object from a string. The string should represent
 	 * either a long integer (UNIX timestamp in seconds without milliseconds,
 	 * like "1002354657") or a human readable date string in the format "yyyy-MM-dd HH:mm:ss"
 	 * (like "2004-02-25 12:23:45").
+	 *
 	 * @param timeStr Input string
-	 * @return GregorianCalendar object
+	 * @return Calendar object
 	 */
-	public static GregorianCalendar getGregorianCalendar(String timeStr) {
+	public static Calendar getCalendar(String timeStr) {
 		// try to parse it as long
 		try {
 			long timestamp = Long.parseLong(timeStr);
-			return Util.getGregorianCalendar(timestamp);
-		} catch (NumberFormatException e) { }
-		// not a long timestamp, try to parse it as data
-		SimpleDateFormat df = new SimpleDateFormat(ISO_DATE_FORMAT);
-		df.setLenient(false);
-		try {
-			Date date = df.parse(timeStr);
-            return Util.getGregorianCalendar(date);
-		} catch (ParseException e) {
-			throw new IllegalArgumentException("Time/date not in " + ISO_DATE_FORMAT +
-				" format: " + timeStr);
+			return Util.getCalendar(timestamp);
+		}
+		catch (NumberFormatException nfe) {
+			// not a long timestamp, try to parse it as data
+			SimpleDateFormat df = new SimpleDateFormat(ISO_DATE_FORMAT);
+			df.setLenient(false);
+			try {
+				Date date = df.parse(timeStr);
+				return Util.getCalendar(date);
+			}
+			catch (ParseException pe) {
+				throw new IllegalArgumentException("Time/date not in " + ISO_DATE_FORMAT +
+						" format: " + timeStr);
+			}
 		}
 	}
 
@@ -442,7 +498,7 @@ public class Util {
 		}
 
 		public static Node[] getChildNodes(Node parentNode, String childName) {
-			ArrayList nodes = new ArrayList();
+			ArrayList<Node> nodes = new ArrayList<Node>();
 			NodeList nodeList = parentNode.getChildNodes();
 			for (int i = 0; i < nodeList.getLength(); i++) {
 				Node node = nodeList.item(i);
@@ -450,7 +506,7 @@ public class Util {
 					nodes.add(node);
 				}
 			}
-			return (Node[]) nodes.toArray(new Node[0]);
+			return nodes.toArray(new Node[0]);
 		}
 
 		public static Node getFirstChildNode(Node parentNode, String childName) throws RrdException {
@@ -467,11 +523,11 @@ public class Util {
 		}
 
 		// -- Wrapper around getChildValue with trim
-		public static String getChildValue( Node parentNode, String childName ) throws RrdException {
-			return getChildValue( parentNode, childName, true );
+		public static String getChildValue(Node parentNode, String childName) throws RrdException {
+			return getChildValue(parentNode, childName, true);
 		}
 
-		public static String getChildValue( Node parentNode, String childName, boolean trim ) throws RrdException {
+		public static String getChildValue(Node parentNode, String childName, boolean trim) throws RrdException {
 			NodeList children = parentNode.getChildNodes();
 			for (int i = 0; i < children.getLength(); i++) {
 				Node child = children.item(i);
@@ -484,15 +540,15 @@ public class Util {
 
 		// -- Wrapper around getValue with trim
 		public static String getValue(Node node) {
-			return getValue( node, true );
+			return getValue(node, true);
 		}
 
-		public static String getValue(Node node, boolean trimValue ) {
+		public static String getValue(Node node, boolean trimValue) {
 			String value = null;
 			Node child = node.getFirstChild();
-			if(child != null) {
+			if (child != null) {
 				value = child.getNodeValue();
-				if( value != null && trimValue ) {
+				if (value != null && trimValue) {
 					value = value.trim();
 				}
 			}
@@ -539,7 +595,7 @@ public class Util {
 			return Util.parseBoolean(valueStr);
 		}
 
-		public static Element getRootElement(InputSource inputSource) throws RrdException, IOException	{
+		public static Element getRootElement(InputSource inputSource) throws RrdException, IOException {
 			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 			factory.setValidating(false);
 			factory.setNamespaceAware(false);
@@ -547,42 +603,45 @@ public class Util {
 				DocumentBuilder builder = factory.newDocumentBuilder();
 				Document doc = builder.parse(inputSource);
 				return doc.getDocumentElement();
-			} catch (ParserConfigurationException e) {
+			}
+			catch (ParserConfigurationException e) {
 				throw new RrdException(e);
-			} catch (SAXException e) {
+			}
+			catch (SAXException e) {
 				throw new RrdException(e);
 			}
 		}
 
-		public static Element getRootElement(String xmlString)	throws RrdException, IOException {
+		public static Element getRootElement(String xmlString) throws RrdException, IOException {
 			return getRootElement(new InputSource(new StringReader(xmlString)));
 		}
 
-		public static Element getRootElement(File xmlFile)	throws RrdException, IOException {
+		public static Element getRootElement(File xmlFile) throws RrdException, IOException {
 			Reader reader = null;
 			try {
 				reader = new FileReader(xmlFile);
 				return getRootElement(new InputSource(reader));
 			}
 			finally {
-				if(reader != null) {
+				if (reader != null) {
 					reader.close();
 				}
 			}
 		}
 	}
 
-	private static Date lastLap = new Date();
+	private static long lastLap = System.currentTimeMillis();
 
 	/**
 	 * Function used for debugging purposes and performance bottlenecks detection.
 	 * Probably of no use for end users of JRobin.
+	 *
 	 * @return String representing time in seconds since last
-	 * <code>getLapTime()</code> method call.
+	 *         <code>getLapTime()</code> method call.
 	 */
 	public static String getLapTime() {
-		Date newLap = new Date();
-		double seconds = (newLap.getTime() - lastLap.getTime()) / 1000.0;
+		long newLap = System.currentTimeMillis();
+		double seconds = (newLap - lastLap) / 1000.0;
 		lastLap = newLap;
 		return "[" + seconds + " sec]";
 	}
@@ -590,7 +649,7 @@ public class Util {
 	/**
 	 * Returns the root directory of the JRobin distribution. Useful in some demo applications,
 	 * probably of no use anywhere else.<p>
-	 *
+	 * <p/>
 	 * The function assumes that all JRobin .class files are placed under
 	 * the &lt;root&gt;/classes subdirectory and that all jars (libraries) are placed in the
 	 * &lt;root&gt;/lib subdirectory (the original JRobin directory structure).<p>
@@ -601,20 +660,20 @@ public class Util {
 		String className = Util.class.getName().replace('.', '/');
 		String uri = Util.class.getResource("/" + className + ".class").toString();
 		//System.out.println(uri);
-		if(uri.startsWith("file:/")) {
+		if (uri.startsWith("file:/")) {
 			uri = uri.substring(6);
 			File file = new File(uri);
 			// let's go 5 steps backwards
-			for(int i = 0; i < 5; i++) {
+			for (int i = 0; i < 5; i++) {
 				file = file.getParentFile();
 			}
 			uri = file.getAbsolutePath();
 		}
-		else if(uri.startsWith("jar:file:/")) {
+		else if (uri.startsWith("jar:file:/")) {
 			uri = uri.substring(9, uri.lastIndexOf('!'));
 			File file = new File(uri);
 			// let's go 2 steps backwards
-			for(int i = 0; i < 2; i++) {
+			for (int i = 0; i < 2; i++) {
 				file = file.getParentFile();
 			}
 			uri = file.getAbsolutePath();
@@ -628,6 +687,7 @@ public class Util {
 	/**
 	 * Compares two doubles but treats all NaNs as equal.
 	 * In Java (by default) Double.NaN == Double.NaN always returns <code>false</code>
+	 *
 	 * @param x the first value
 	 * @param y the second value
 	 * @return <code>true</code> if x and y are both equal to Double.NaN, or if x == y. <code>false</code> otherwise
@@ -638,6 +698,7 @@ public class Util {
 
 	/**
 	 * Returns canonical file path for the given file path
+	 *
 	 * @param path Absolute or relative file path
 	 * @return Canonical file path
 	 * @throws IOException Thrown if canonical file path could not be resolved
@@ -646,4 +707,65 @@ public class Util {
 		return new File(path).getCanonicalPath();
 	}
 
+	/**
+	 * Returns last modification time for the given file.
+	 *
+	 * @param file File object representing file on the disk
+	 * @return Last modification time in seconds (without milliseconds)
+	 */
+	public static long getLastModified(String file) {
+		return (new File(file).lastModified() + 500L) / 1000L;
+	}
+
+	/**
+	 * Checks if the file with the given file name exists
+	 *
+	 * @param filename File name
+	 * @return <code>true</code> if file exists, <code>false</code> otherwise
+	 */
+	public static boolean fileExists(String filename) {
+		return new File(filename).exists();
+	}
+
+	/**
+	 * Finds max value for an array of doubles (NaNs are ignored). If all values in the array
+	 * are NaNs, NaN is returned.
+	 *
+	 * @param values Array of double values
+	 * @return max value in the array (NaNs are ignored)
+	 */
+	public static double max(double[] values) {
+		double max = Double.NaN;
+		for (double value : values) {
+			max = Util.max(max, value);
+		}
+		return max;
+	}
+
+	/**
+	 * Finds min value for an array of doubles (NaNs are ignored). If all values in the array
+	 * are NaNs, NaN is returned.
+	 *
+	 * @param values Array of double values
+	 * @return min value in the array (NaNs are ignored)
+	 */
+	public static double min(double[] values) {
+		double min = Double.NaN;
+		for (double value : values) {
+			min = Util.min(min, value);
+		}
+		return min;
+	}
+
+	/**
+	 * Equivalent of the C-style sprintf function. Sorry, it works only in Java5.
+	 *
+	 * @param format Format string
+	 * @param args   Arbitrary list of arguments
+	 * @return Formatted string
+	 */
+	public static String sprintf(String format, Object ... args) {
+		String fmt = format.replaceAll("([^%]|^)%([^a-zA-Z%]*)l(f|g|e)", "$1%$2$3");
+		return String.format(fmt, args);
+	}
 }

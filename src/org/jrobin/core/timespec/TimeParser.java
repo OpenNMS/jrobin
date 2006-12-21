@@ -5,10 +5,10 @@
  * Project Info:  http://www.jrobin.org
  * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
- * (C) Copyright 2003, by Sasa Markovic.
+ * (C) Copyright 2003-2005, by Sasa Markovic.
  *
  * Developers:    Sasa Markovic (saxon@jrobin.org)
- *                Arne Vandamme (cobralord@jrobin.org)
+ *
  *
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation;
@@ -48,8 +48,9 @@ public class TimeParser {
 
 	/**
 	 * Constructs TimeParser instance from the given input string.
+	 *
 	 * @param dateString at-style time specification (read rrdfetch man page
-	 * for the complete explanation)
+	 *                   for the complete explanation)
 	 */
 	public TimeParser(String dateString) {
 		scanner = new TimeScanner(dateString);
@@ -89,7 +90,8 @@ public class TimeParser {
 				default:
 					if (delta < 6) {
 						token = scanner.resolveMonthsMinutes(TimeToken.MONTHS);
-					} else {
+					}
+					else {
 						token = scanner.resolveMonthsMinutes(TimeToken.MINUTES);
 					}
 			}
@@ -99,26 +101,26 @@ public class TimeParser {
 		switch (token.id) {
 			case TimeToken.YEARS:
 				spec.dyear += delta;
-				return;
+				break;
 			case TimeToken.MONTHS:
 				spec.dmonth += delta;
-				return;
+				break;
 			case TimeToken.WEEKS:
 				delta *= 7;
 				/* FALLTHRU */
 			case TimeToken.DAYS:
 				spec.dday += delta;
-				return;
+				break;
 			case TimeToken.HOURS:
 				spec.dhour += delta;
-				return;
+				break;
 			case TimeToken.MINUTES:
 				spec.dmin += delta;
-				return;
+				break;
 			case TimeToken.SECONDS:
 			default: // default is 'seconds'
 				spec.dsec += delta;
-				return;
+				break;
 		}
 		// unreachable statement
 		// throw new RrdException("Well-known time unit expected after " + delta);
@@ -158,14 +160,16 @@ public class TimeParser {
 					/* 12:xx PM is 12:xx, not 24:xx */
 					hour += 12;
 				}
-			} else {
+			}
+			else {
 				if (hour == 12) {
 					/* 12:xx AM is 00:xx, not 12:xx */
 					hour = 0;
 				}
 			}
 			token = scanner.nextToken();
-		} else if (hour > 23) {
+		}
+		else if (hour > 23) {
 			/* guess it was not a time then ... */
 			token = scanner.restoreState();
 			return;
@@ -183,13 +187,15 @@ public class TimeParser {
 		if (year > 138) {
 			if (year > 1970) {
 				year -= 1900;
-			} else {
+			}
+			else {
 				throw new RrdException("Invalid year " + year +
 						" (should be either 00-99 or >1900)");
 			}
-		} else if (year >= 0 && year < 38) {
-			year += 100;	     /* Allow year 2000-2037 to be specified as   */
-		}					     /* 00-37 until the problem of 2038 year will */
+		}
+		else if (year >= 0 && year < 38) {
+			year += 100;		 /* Allow year 2000-2037 to be specified as   */
+		}						 /* 00-37 until the problem of 2038 year will */
 		/* arise for unices with 32-bit time_t     */
 		if (year < 70) {
 			throw new RrdException("Won't handle dates before epoch (01/01/1970), sorry");
@@ -232,7 +238,8 @@ public class TimeParser {
 				if (token.id == TimeToken.NUMBER) {
 					year = Long.parseLong(token.value);
 					token = scanner.nextToken();
-				} else {
+				}
+				else {
 					year = spec.year;
 				}
 				assignDate(mday, mon, year);
@@ -263,7 +270,8 @@ public class TimeParser {
 					mday = mon % 100;
 					mon = (mon / 100) % 100;
 					token = scanner.nextToken();
-				} else {
+				}
+				else {
 					token = scanner.nextToken();
 					if (mon <= 31 && (token.id == TimeToken.SLASH || token.id == TimeToken.DOT)) {
 						int sep = token.id;
@@ -302,6 +310,7 @@ public class TimeParser {
 
 	/**
 	 * Parses the input string specified in the constructor.
+	 *
 	 * @return Object representing parsed date/time.
 	 * @throws RrdException Thrown if the date string cannot be parsed.
 	 */
@@ -333,7 +342,8 @@ public class TimeParser {
 				}
 				if (time_reference != TimeToken.NOW) {
 					throw new RrdException("Words 'start' or 'end' MUST be followed by +|- offset");
-				} else if (token.id != TimeToken.EOF) {
+				}
+				else if (token.id != TimeToken.EOF) {
 					throw new RrdException("If 'now' is followed by a token it must be +|- offset");
 				}
 				break;
@@ -398,7 +408,8 @@ public class TimeParser {
 					token.id == TimeToken.NUMBER) {
 				if (token.id == TimeToken.NUMBER) {
 					plusMinus(PREVIOUS_OP);
-				} else {
+				}
+				else {
 					plusMinus(token.id);
 				}
 				token = scanner.nextToken();
@@ -412,21 +423,4 @@ public class TimeParser {
 		}
 		return spec;
 	}
-
-	/*
-	public static void main(String[] args) throws IOException {
-		BufferedReader r = new BufferedReader(new InputStreamReader(System.in));
-		while (true) {
-			String s = r.readLine();
-			try {
-				TimeParser p = new TimeParser(s);
-				TimeSpec spec = p.parse();
-				System.out.println(spec.getTime().getTime());
-				// System.out.println(spec.dump());
-			} catch (RrdException e) {
-				System.err.println("ERROR: " + e);
-			}
-		}
-	}
-	*/
 }

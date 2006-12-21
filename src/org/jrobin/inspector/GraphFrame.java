@@ -8,7 +8,7 @@
  * (C) Copyright 2003, by Sasa Markovic.
  *
  * Developers:    Sasa Markovic (saxon@jrobin.org)
- *                Arne Vandamme (cobralord@jrobin.org)
+ *
  *
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation;
@@ -27,7 +27,8 @@ package org.jrobin.inspector;
 import org.jrobin.core.*;
 import org.jrobin.graph.RrdGraphDef;
 import org.jrobin.graph.RrdGraph;
-import org.jrobin.graph.LinearInterpolator;
+import org.jrobin.graph.RrdGraphInfo;
+import org.jrobin.data.LinearInterpolator;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
@@ -35,65 +36,90 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.IOException;
 import java.io.File;
+import java.io.RandomAccessFile;
 import java.util.Date;
 
 class GraphFrame extends JFrame {
 	private static final Color COLOR = Color.RED;
 	private static final int WIDTH = 400, HEIGHT = 240;
+	private int deltaWidth = 0, deltaHeight = 0;
 
 	private Color color = COLOR;
 	private GraphPanel graphPanel = new GraphPanel();
 	private JComboBox graphCombo = new JComboBox();
 	private RrdGraph rrdGraph;
 
-	private String sourcePath, dsName;
+	private String sourcePath;
 	private int dsIndex, arcIndex;
-	private long t1, t2;
 
 	GraphFrame(String sourcePath, int dsIndex, int arcIndex) {
 		this.sourcePath = sourcePath;
 		this.dsIndex = dsIndex;
 		this.arcIndex = arcIndex;
-		createRrdGraph();
 		fillGraphCombo();
 		constructUI();
 		pack();
+		//createRrdGraph();
 		Util.placeWindow(this);
 		setVisible(true);
 	}
 
 	private void createRrdGraph() {
+		//System.out.println("Creating graph...");
 		try {
 			RrdDb rrdDb = new RrdDb(sourcePath, true);
-			Datasource ds = rrdDb.getDatasource(dsIndex);
-			Archive arc = rrdDb.getArchive(arcIndex);
-			Robin robin = arc.getRobin(dsIndex);
-			dsName = ds.getDsName();
-			t1 = arc.getStartTime();
-			t2 = arc.getEndTime();
-			long step = arc.getArcStep();
-			int count = robin.getSize();
-			long[] timestamps = new long[count];
-			for(int i = 0; i < count; i++) {
-				timestamps[i] = t1 + i * step;
+			RrdDef rrdDef;
+			long[] timestamps;
+			double[] values;
+			String dsName;
+			long t1, t2;
+			try {
+				Datasource ds = rrdDb.getDatasource(dsIndex);
+				Archive arc = rrdDb.getArchive(arcIndex);
+				Robin robin = arc.getRobin(dsIndex);
+				dsName = ds.getDsName();
+				t1 = arc.getStartTime();
+				t2 = arc.getEndTime();
+				long step = arc.getArcStep();
+				int count = robin.getSize();
+				timestamps = new long[count];
+				for (int i = 0; i < count; i++) {
+					timestamps[i] = t1 + i * step;
+				}
+				values = robin.getValues();
+				rrdDef = rrdDb.getRrdDef();
 			}
-			double[] values = robin.getValues();
-			RrdDef rrdDef = rrdDb.getRrdDef();
-			rrdDb.close();
-			RrdGraphDef rrdGraphDef = new RrdGraphDef(t1, t2);
+			finally {
+				rrdDb.close();
+			}
+			RrdGraphDef rrdGraphDef = new RrdGraphDef();
+			rrdGraphDef.setTimeSpan(t1, t2);
+			rrdGraphDef.setImageFormat("png");
 			rrdGraphDef.setTitle(rrdDef.getDsDefs()[dsIndex].dump() + " " +
-				rrdDef.getArcDefs()[arcIndex].dump());
+					rrdDef.getArcDefs()[arcIndex].dump());
 			LinearInterpolator linearInterpolator = new LinearInterpolator(timestamps, values);
 			linearInterpolator.setInterpolationMethod(LinearInterpolator.INTERPOLATE_RIGHT);
 			rrdGraphDef.datasource(dsName, linearInterpolator);
-			rrdGraphDef.area(dsName, color, dsName + "@r");
-			rrdGraphDef.comment("START: " + new Date(t1 * 1000L) + "@r");
-			rrdGraphDef.comment("END: " + new Date(t2 * 1000L) + "@r");
+			rrdGraphDef.area(dsName, color, dsName + "\\r");
+			rrdGraphDef.comment("START: " + new Date(t1 * 1000L) + "\\r");
+			rrdGraphDef.comment("END: " + new Date(t2 * 1000L) + "\\r");
+			int width = graphPanel.getWidth(), height = graphPanel.getHeight();
+			rrdGraphDef.setWidth(width + deltaWidth);
+			rrdGraphDef.setHeight(height + deltaHeight);
 			rrdGraph = new RrdGraph(rrdGraphDef);
-			rrdGraph.specifyImageSize(true);
-		} catch (IOException e) {
+			if (deltaWidth == 0 && deltaHeight == 0) {
+				RrdGraphInfo info = rrdGraph.getRrdGraphInfo();
+				deltaWidth = graphPanel.getWidth() - info.getWidth();
+				deltaHeight = graphPanel.getHeight() - info.getHeight();
+				if (deltaWidth != 0 && deltaHeight != 0) {
+					createRrdGraph(); // recursion is divine!
+				}
+			}
+		}
+		catch (IOException e) {
 			Util.error(this, e);
-		} catch (RrdException e) {
+		}
+		catch (RrdException e) {
 			Util.error(this, e);
 		}
 	}
@@ -101,22 +127,27 @@ class GraphFrame extends JFrame {
 	private void fillGraphCombo() {
 		try {
 			RrdDb rrdDb = new RrdDb(sourcePath, true);
-			RrdDef rrdDef = rrdDb.getRrdDef();
-			final DsDef[] dsDefs = rrdDef.getDsDefs();
-			final ArcDef[] arcDefs = rrdDef.getArcDefs();
-			GraphComboItem[] items = new GraphComboItem[rrdDef.getDsCount() * rrdDef.getArcCount()];
-			int selectedItem = -1;
-			for(int i = 0, k = 0; i <  rrdDef.getDsCount(); i++) {
-				for(int j = 0; j < rrdDef.getArcCount(); k++, j++) {
-					String description = dsDefs[i].dump() + " " + arcDefs[j].dump();
-					items[k] = new GraphComboItem(description, i, j);
-					if(i == dsIndex && j == arcIndex) {
-						selectedItem = k;
+			try {
+				RrdDef rrdDef = rrdDb.getRrdDef();
+				final DsDef[] dsDefs = rrdDef.getDsDefs();
+				final ArcDef[] arcDefs = rrdDef.getArcDefs();
+				GraphComboItem[] items = new GraphComboItem[rrdDef.getDsCount() * rrdDef.getArcCount()];
+				int selectedItem = -1;
+				for (int i = 0, k = 0; i < rrdDef.getDsCount(); i++) {
+					for (int j = 0; j < rrdDef.getArcCount(); k++, j++) {
+						String description = dsDefs[i].dump() + " " + arcDefs[j].dump();
+						items[k] = new GraphComboItem(description, i, j);
+						if (i == dsIndex && j == arcIndex) {
+							selectedItem = k;
+						}
 					}
 				}
+				graphCombo.setModel(new DefaultComboBoxModel(items));
+				graphCombo.setSelectedIndex(selectedItem);
 			}
-			graphCombo.setModel(new DefaultComboBoxModel(items));
-			graphCombo.setSelectedIndex(selectedItem);
+			finally {
+				rrdDb.close();
+			}
 		}
 		catch (IOException e) {
 			Util.error(this, e);
@@ -129,7 +160,7 @@ class GraphFrame extends JFrame {
 	private void constructUI() {
 		setTitle(new File(sourcePath).getName());
 		JPanel content = (JPanel) getContentPane();
-		content.setLayout(new BorderLayout(3, 3));
+		content.setLayout(new BorderLayout(0, 0));
 		content.add(graphCombo, BorderLayout.NORTH);
 		graphPanel.setPreferredSize(new Dimension(WIDTH, HEIGHT));
 		content.add(graphPanel, BorderLayout.CENTER);
@@ -158,9 +189,15 @@ class GraphFrame extends JFrame {
 				closeWindow();
 			}
 		});
+		addComponentListener(new ComponentAdapter() {
+			public void componentResized(ComponentEvent e) {
+				createRrdGraph();
+				graphPanel.repaint();
+			}
+		});
 		graphCombo.addItemListener(new ItemListener() {
 			public void itemStateChanged(ItemEvent e) {
-				if(e.getStateChange() == ItemEvent.SELECTED) {
+				if (e.getStateChange() == ItemEvent.SELECTED) {
 					GraphComboItem item = (GraphComboItem) e.getItem();
 					dsIndex = item.getDsIndex();
 					arcIndex = item.getArcIndex();
@@ -181,49 +218,54 @@ class GraphFrame extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				color = picker.getColor();
 				createRrdGraph();
-				graphPanel.repaint();
+				repaint();
 			}
 		};
-		JColorChooser.createDialog(this, "Select color", true, picker, okListener, null).show();
+		JColorChooser.createDialog(this, "Select color", true, picker, okListener, null).setVisible(true);
 	}
 
 	private void saveGraph() {
 		JFileChooser chooser = new JFileChooser();
 		FileFilter filter = new FileFilter() {
 			public boolean accept(File f) {
-				return f.isDirectory()? true:
-					f.getAbsolutePath().toLowerCase().endsWith(".png");
+				return f.isDirectory() || f.getAbsolutePath().toLowerCase().endsWith(".png");
 			}
+
 			public String getDescription() {
 				return "PNG images";
 			}
 		};
 		chooser.setFileFilter(filter);
 		int returnVal = chooser.showSaveDialog(this);
-		if(returnVal == JFileChooser.APPROVE_OPTION) {
+		if (returnVal == JFileChooser.APPROVE_OPTION) {
 			try {
 				File selectedFile = chooser.getSelectedFile();
 				String path = selectedFile.getAbsolutePath();
-				if(!path.toLowerCase().endsWith(".png")) {
+				if (!path.toLowerCase().endsWith(".png")) {
 					path += ".png";
 					selectedFile = new File(path);
 				}
-				if(selectedFile.exists()) {
+				if (selectedFile.exists()) {
 					// ask user to overwrite
 					String message = "File [" + selectedFile.getName() +
-						"] already exists. Do you want to overwrite it?";
-                    int answer = JOptionPane.showConfirmDialog(this,
-						message, "File exists", JOptionPane.YES_NO_OPTION);
-					if(answer == JOptionPane.NO_OPTION) {
+							"] already exists. Do you want to overwrite it?";
+					int answer = JOptionPane.showConfirmDialog(this,
+							message, "File exists", JOptionPane.YES_NO_OPTION);
+					if (answer == JOptionPane.NO_OPTION) {
 						return;
 					}
 				}
-				rrdGraph.saveAsPNG(selectedFile.getAbsolutePath(),
-						graphPanel.getWidth(), graphPanel.getHeight());
-			} catch (IOException e) {
-				Util.error(this, "Could not save graph to file:\n" + e);
+				String absolutePath = selectedFile.getAbsolutePath();
+				byte[] data = rrdGraph.getRrdGraphInfo().getBytes();
+				RandomAccessFile f = new RandomAccessFile(absolutePath, "rw");
+				try {
+					f.write(data);
+				}
+				finally {
+					f.close();
+				}
 			}
-			catch (RrdException e) {
+			catch (IOException e) {
 				Util.error(this, "Could not save graph to file:\n" + e);
 			}
 		}
@@ -231,13 +273,7 @@ class GraphFrame extends JFrame {
 
 	class GraphPanel extends JPanel {
 		public void paintComponent(Graphics g) {
-			try {
-				rrdGraph.renderImage((Graphics2D) g, getWidth(), getHeight());
-			} catch (RrdException e) {
-				Util.error(this, e);
-			} catch (IOException e) {
-				Util.error(this, e);
-			}
+			rrdGraph.render(g);
 		}
 	}
 

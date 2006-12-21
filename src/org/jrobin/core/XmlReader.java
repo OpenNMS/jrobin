@@ -5,10 +5,10 @@
  * Project Info:  http://www.jrobin.org
  * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
- * (C) Copyright 2003, by Sasa Markovic.
+ * (C) Copyright 2003-2005, by Sasa Markovic.
  *
  * Developers:    Sasa Markovic (saxon@jrobin.org)
- *                Arne Vandamme (cobralord@jrobin.org)
+ *
  *
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation;
@@ -27,15 +27,16 @@ package org.jrobin.core;
 
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
-import java.io.IOException;
+
 import java.io.File;
+import java.io.IOException;
 
 class XmlReader extends DataImporter {
 
 	private Element root;
 	private Node[] dsNodes, arcNodes;
 
-    XmlReader(String xmlFilePath) throws IOException, RrdException {
+	XmlReader(String xmlFilePath) throws IOException, RrdException {
 		root = Util.Xml.getRootElement(new File(xmlFilePath));
 		dsNodes = Util.Xml.getChildNodes(root, "ds");
 		arcNodes = Util.Xml.getChildNodes(root, "rra");
@@ -61,7 +62,7 @@ class XmlReader extends DataImporter {
 		return arcNodes.length;
 	}
 
-    String getDsName(int dsIndex) throws RrdException {
+	String getDsName(int dsIndex) throws RrdException {
 		return Util.Xml.getChildValue(dsNodes[dsIndex], "name");
 	}
 
@@ -93,7 +94,7 @@ class XmlReader extends DataImporter {
 		return Util.Xml.getChildValueAsLong(dsNodes[dsIndex], "unknown_sec");
 	}
 
-    String getConsolFun(int arcIndex) throws RrdException {
+	String getConsolFun(int arcIndex) throws RrdException {
 		return Util.Xml.getChildValue(arcNodes[arcIndex], "cf");
 	}
 
@@ -106,29 +107,29 @@ class XmlReader extends DataImporter {
 	}
 
 	double getStateAccumValue(int arcIndex, int dsIndex) throws RrdException {
-        Node cdpNode = Util.Xml.getFirstChildNode(arcNodes[arcIndex], "cdp_prep");
-        Node[] dsNodes = Util.Xml.getChildNodes(cdpNode, "ds");
+		Node cdpNode = Util.Xml.getFirstChildNode(arcNodes[arcIndex], "cdp_prep");
+		Node[] dsNodes = Util.Xml.getChildNodes(cdpNode, "ds");
 		return Util.Xml.getChildValueAsDouble(dsNodes[dsIndex], "value");
 	}
 
 	int getStateNanSteps(int arcIndex, int dsIndex) throws RrdException {
-        Node cdpNode = Util.Xml.getFirstChildNode(arcNodes[arcIndex], "cdp_prep");
-        Node[] dsNodes = Util.Xml.getChildNodes(cdpNode, "ds");
+		Node cdpNode = Util.Xml.getFirstChildNode(arcNodes[arcIndex], "cdp_prep");
+		Node[] dsNodes = Util.Xml.getChildNodes(cdpNode, "ds");
 		return Util.Xml.getChildValueAsInt(dsNodes[dsIndex], "unknown_datapoints");
 	}
 
 	int getRows(int arcIndex) throws RrdException {
 		Node dbNode = Util.Xml.getFirstChildNode(arcNodes[arcIndex], "database");
-        Node[] rows = Util.Xml.getChildNodes(dbNode, "row");
+		Node[] rows = Util.Xml.getChildNodes(dbNode, "row");
 		return rows.length;
 	}
 
 	double[] getValues(int arcIndex, int dsIndex) throws RrdException {
 		Node dbNode = Util.Xml.getFirstChildNode(arcNodes[arcIndex], "database");
-        Node[] rows = Util.Xml.getChildNodes(dbNode, "row");
+		Node[] rows = Util.Xml.getChildNodes(dbNode, "row");
 		double[] values = new double[rows.length];
-		for(int i = 0; i < rows.length; i++) {
-            Node[] vNodes = Util.Xml.getChildNodes(rows[i], "v");
+		for (int i = 0; i < rows.length; i++) {
+			Node[] vNodes = Util.Xml.getChildNodes(rows[i], "v");
 			Node vNode = vNodes[dsIndex];
 			values[i] = Util.parseDouble(vNode.getFirstChild().getNodeValue().trim());
 		}

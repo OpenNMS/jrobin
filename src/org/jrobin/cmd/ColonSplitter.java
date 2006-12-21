@@ -34,7 +34,7 @@ class ColonSplitter {
 
 	String[] split() {
 		String[] tokens = cmd.replaceAll("\\\\:", COLON).split(":");
-		for(int i = 0; i < tokens.length; i++) {
+		for (int i = 0; i < tokens.length; i++) {
 			tokens[i] = tokens[i].replaceAll(COLON, ":");
 		}
 		return tokens;

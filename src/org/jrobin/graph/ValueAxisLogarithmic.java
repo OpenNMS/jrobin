@@ -30,14 +30,14 @@ import java.awt.*;
 
 class ValueAxisLogarithmic implements RrdGraphConstants {
 	private static final double[][] yloglab = {
-		{1e9, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{1e3, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		{1e1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-		/* {  1e1, 1,  5,  0,  0,  0,  0,  0,  0,  0,  0,  0 }, */
-		{1e1, 1, 2.5, 5, 7.5, 0, 0, 0, 0, 0, 0, 0},
-		{1e1, 1, 2, 4, 6, 8, 0, 0, 0, 0, 0, 0},
-		{1e1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 0},
-		{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+			{1e9, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			{1e3, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			{1e1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+			/* {  1e1, 1,  5,  0,  0,  0,  0,  0,  0,  0,  0,  0 }, */
+			{1e1, 1, 2.5, 5, 7.5, 0, 0, 0, 0, 0, 0, 0},
+			{1e1, 1, 2, 4, 6, 8, 0, 0, 0, 0, 0, 0},
+			{1e1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 0},
+			{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 	};
 
 	private RrdGraph rrdGraph;
@@ -87,7 +87,9 @@ class ValueAxisLogarithmic implements RrdGraphConstants {
 				- Math.log10(im.minval) % Math.log10(yloglab[minoridx][0]));
 			 value <= im.maxval;
 			 value *= yloglab[minoridx][0]) {
-			if (value < im.minval) continue;
+			if (value < im.minval) {
+				continue;
+			}
 			int i = 0;
 			while (yloglab[minoridx][++i] > 0) {
 				int y = rrdGraph.mapper.ytr(value * yloglab[minoridx][i]);

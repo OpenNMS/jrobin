@@ -30,19 +30,19 @@ import java.awt.*;
 
 class ValueAxis implements RrdGraphConstants {
 	private static final YLab[] ylab = {
-		new YLab(0.1, 1, 2, 5, 10),
-		new YLab(0.2, 1, 5, 10, 20),
-		new YLab(0.5, 1, 2, 4, 10),
-		new YLab(1.0, 1, 2, 5, 10),
-		new YLab(2.0, 1, 5, 10, 20),
-		new YLab(5.0, 1, 2, 4, 10),
-		new YLab(10.0, 1, 2, 5, 10),
-		new YLab(20.0, 1, 5, 10, 20),
-		new YLab(50.0, 1, 2, 4, 10),
-		new YLab(100.0, 1, 2, 5, 10),
-		new YLab(200.0, 1, 5, 10, 20),
-		new YLab(500.0, 1, 2, 4, 10),
-		new YLab(0.0, 0, 0, 0, 0)
+			new YLab(0.1, 1, 2, 5, 10),
+			new YLab(0.2, 1, 5, 10, 20),
+			new YLab(0.5, 1, 2, 4, 10),
+			new YLab(1.0, 1, 2, 5, 10),
+			new YLab(2.0, 1, 5, 10, 20),
+			new YLab(5.0, 1, 2, 4, 10),
+			new YLab(10.0, 1, 2, 5, 10),
+			new YLab(20.0, 1, 5, 10, 20),
+			new YLab(50.0, 1, 2, 4, 10),
+			new YLab(100.0, 1, 2, 5, 10),
+			new YLab(200.0, 1, 5, 10, 20),
+			new YLab(500.0, 1, 2, 4, 10),
+			new YLab(0.0, 0, 0, 0, 0)
 	};
 
 	private RrdGraph rrdGraph;
@@ -158,10 +158,10 @@ class ValueAxis implements RrdGraphConstants {
 							graph_label = Util.sprintf("%4.1f %c", scaledstep * i, im.symbol);
 						}
 						else {
-							graph_label  = Util.sprintf("%4.0f %c", scaledstep * i, im.symbol);
+							graph_label = Util.sprintf("%4.0f %c", scaledstep * i, im.symbol);
 						}
 					}
-                    int length = (int)(worker.getStringWidth(graph_label, font));
+					int length = (int) (worker.getStringWidth(graph_label, font));
 					worker.drawString(graph_label, x0 - length - PADDING_VLABEL, y + labelOffset, font, fontColor);
 					worker.drawLine(x0 - 2, y, x0 + 2, y, mGridColor, TICK_STROKE);
 					worker.drawLine(x1 - 2, y, x1 + 2, y, mGridColor, TICK_STROKE);
@@ -183,7 +183,7 @@ class ValueAxis implements RrdGraphConstants {
 
 		YLab(double grid, int lfac1, int lfac2, int lfac3, int lfac4) {
 			this.grid = grid;
-			lfac = new int[]{lfac1, lfac2, lfac3, lfac4};
+			lfac = new int[] {lfac1, lfac2, lfac3, lfac4};
 		}
 	}
 }

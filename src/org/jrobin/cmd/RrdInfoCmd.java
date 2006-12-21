@@ -38,7 +38,7 @@ class RrdInfoCmd extends RrdToolCmd {
 
 	Object execute() throws RrdException, IOException {
 		String[] words = getRemainingWords();
-		if(words.length != 2) {
+		if (words.length != 2) {
 			throw new RrdException("Invalid rrdinfo syntax");
 		}
 		String path = words[1], info;
@@ -55,31 +55,32 @@ class RrdInfoCmd extends RrdToolCmd {
 
 	private String getInfo(RrdDb rrd) throws IOException {
 		StringBuffer b = new StringBuffer();
-		b.append("filename = \"" + rrd.getPath() + "\"\n");
+		b.append("filename = \"").append(rrd.getPath()).append("\"\n");
 		b.append("rrd_version = \"0001\"\n");
-		b.append("step = " + rrd.getHeader().getStep() + "\n");
-		b.append("last_update = " + rrd.getHeader().getLastUpdateTime() + "\n");
-		for(int i = 0; i < rrd.getDsCount(); i++) {
+		b.append("step = ").append(rrd.getHeader().getStep()).append("\n");
+		b.append("last_update = ").append(rrd.getHeader().getLastUpdateTime()).append("\n");
+		for (int i = 0; i < rrd.getDsCount(); i++) {
 			Datasource ds = rrd.getDatasource(i);
-			b.append("ds[" + ds.getDsName() + "].type = \"" + ds.getDsType() + "\"\n");
-			b.append("ds[" + ds.getDsName() + "].minimal_heartbeat = " + ds.getHeartbeat() + "\n");
-			b.append("ds[" + ds.getDsName() + "].min = " + ds.getMinValue() + "\n");
-			b.append("ds[" + ds.getDsName() + "].max = " + ds.getMaxValue() + "\n");
-			b.append("ds[" + ds.getDsName() + "].last_ds = " + ds.getLastValue() + "\n");
-			b.append("ds[" + ds.getDsName() + "].value = " + ds.getAccumValue() + "\n");
-			b.append("ds[" + ds.getDsName() + "].unknown_sec = " + ds.getNanSeconds() + "\n");
+			b.append("ds[").append(ds.getDsName()).append("].type = \"").append(ds.getDsType()).append("\"\n");
+			b.append("ds[").append(ds.getDsName()).append("].minimal_heartbeat = ").
+					append(ds.getHeartbeat()).append("\n");
+			b.append("ds[").append(ds.getDsName()).append("].min = ").append(ds.getMinValue()).append("\n");
+			b.append("ds[").append(ds.getDsName()).append("].max = ").append(ds.getMaxValue()).append("\n");
+			b.append("ds[").append(ds.getDsName()).append("].last_ds = ").append(ds.getLastValue()).append("\n");
+			b.append("ds[").append(ds.getDsName()).append("].value = ").append(ds.getAccumValue()).append("\n");
+			b.append("ds[").append(ds.getDsName()).append("].unknown_sec = ").append(ds.getNanSeconds()).append("\n");
 		}
-		for(int i = 0; i < rrd.getArcCount(); i++) {
+		for (int i = 0; i < rrd.getArcCount(); i++) {
 			Archive arc = rrd.getArchive(i);
-			b.append("rra[" + i + "].cf = \"" + arc.getConsolFun() + "\"\n");
-			b.append("rra[" + i + "].rows = " + arc.getRows() + "\n");
-			b.append("rra[" + i + "].pdp_per_row = " + arc.getSteps() + "\n");
-			b.append("rra[" + i + "].xff = " + arc.getXff() + "\n");
-			for(int j = 0; j < rrd.getDsCount(); j++) {
-				b.append("rra[" + i + "].cdp_prep[" + j + "].value = " +
-						arc.getArcState(j).getAccumValue() + "\n");
-				b.append("rra[" + i + "].cdp_prep[" + j + "].unknown_datapoints = " +
-						arc.getArcState(j).getNanSteps() + "\n");
+			b.append("rra[").append(i).append("].cf = \"").append(arc.getConsolFun()).append("\"\n");
+			b.append("rra[").append(i).append("].rows = ").append(arc.getRows()).append("\n");
+			b.append("rra[").append(i).append("].pdp_per_row = ").append(arc.getSteps()).append("\n");
+			b.append("rra[").append(i).append("].xff = ").append(arc.getXff()).append("\n");
+			for (int j = 0; j < rrd.getDsCount(); j++) {
+				b.append("rra[").append(i).append("].cdp_prep[").append(j).append("].value = ").
+						append(arc.getArcState(j).getAccumValue()).append("\n");
+				b.append("rra[").append(i).append("].cdp_prep[").append(j).append("].unknown_datapoints = ").
+						append(arc.getArcState(j).getNanSteps()).append("\n");
 			}
 		}
 		return b.toString();

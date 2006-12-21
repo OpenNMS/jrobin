@@ -5,10 +5,10 @@
  * Project Info:  http://www.jrobin.org
  * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
- * (C) Copyright 2003, by Sasa Markovic.
+ * (C) Copyright 2003-2005, by Sasa Markovic.
  *
  * Developers:    Sasa Markovic (saxon@jrobin.org)
- *                Arne Vandamme (cobralord@jrobin.org)
+ *
  *
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation;
@@ -47,6 +47,7 @@ public class Aggregates implements ConsolFuns {
 
 	/**
 	 * Returns the minimal value
+	 *
 	 * @return Minimal value
 	 */
 	public double getMin() {
@@ -55,6 +56,7 @@ public class Aggregates implements ConsolFuns {
 
 	/**
 	 * Returns the maximum value
+	 *
 	 * @return Maximum value
 	 */
 	public double getMax() {
@@ -63,6 +65,7 @@ public class Aggregates implements ConsolFuns {
 
 	/**
 	 * Returns the first falue
+	 *
 	 * @return First value
 	 */
 	public double getFirst() {
@@ -71,6 +74,7 @@ public class Aggregates implements ConsolFuns {
 
 	/**
 	 * Returns the last value
+	 *
 	 * @return Last value
 	 */
 	public double getLast() {
@@ -79,6 +83,7 @@ public class Aggregates implements ConsolFuns {
 
 	/**
 	 * Returns average
+	 *
 	 * @return Average value
 	 */
 	public double getAverage() {
@@ -87,6 +92,7 @@ public class Aggregates implements ConsolFuns {
 
 	/**
 	 * Returns total value
+	 *
 	 * @return Total value
 	 */
 	public double getTotal() {
@@ -95,28 +101,29 @@ public class Aggregates implements ConsolFuns {
 
 	/**
 	 * Returns single aggregated value for the give consolidation function
+	 *
 	 * @param consolFun Consolidation function: MIN, MAX, FIRST, LAST, AVERAGE, TOTAL. These constanst
-	 * are conveniently defined in the {@link org.jrobin.core.ConsolFuns ConsolFuns} interface.
+	 *                  are conveniently defined in the {@link org.jrobin.core.ConsolFuns ConsolFuns} interface.
 	 * @return Aggregated value
 	 * @throws RrdException Thrown if unsupported consolidation function is supplied
 	 */
 	public double getAggregate(String consolFun) throws RrdException {
-		if(consolFun.equals(CF_AVERAGE) || consolFun.equalsIgnoreCase( "AVG" ) ) {
+		if (consolFun.equals(CF_AVERAGE)) {
 			return average;
 		}
-		else if(consolFun.equals(CF_FIRST)) {
+		else if (consolFun.equals(CF_FIRST)) {
 			return first;
 		}
-		else if(consolFun.equals(CF_LAST)) {
+		else if (consolFun.equals(CF_LAST)) {
 			return last;
 		}
-		else if(consolFun.equals(CF_MAX) || consolFun.equalsIgnoreCase( "MAXIMUM" ) ) {
+		else if (consolFun.equals(CF_MAX)) {
 			return max;
 		}
-		else if(consolFun.equals(CF_MIN) || consolFun.equalsIgnoreCase( "MINIMUM" ) ) {
+		else if (consolFun.equals(CF_MIN)) {
 			return min;
 		}
-		else if(consolFun.equals(CF_TOTAL)) {
+		else if (consolFun.equals(CF_TOTAL)) {
 			return total;
 		}
 		else {
@@ -126,6 +133,7 @@ public class Aggregates implements ConsolFuns {
 
 	/**
 	 * Returns String representing all aggregated values. Just for debugging purposes.
+	 *
 	 * @return String containing all aggregated values
 	 */
 	public String dump() {

@@ -48,6 +48,7 @@ public class RrdGraphInfo {
 
 	/**
 	 * Returns filename of the graph
+	 *
 	 * @return filename of the graph. '-' denotes in-memory graph (no file created)
 	 */
 	public String getFilename() {
@@ -56,6 +57,7 @@ public class RrdGraphInfo {
 
 	/**
 	 * Returns total graph width
+	 *
 	 * @return total graph width
 	 */
 	public int getWidth() {
@@ -64,6 +66,7 @@ public class RrdGraphInfo {
 
 	/**
 	 * Returns total graph height
+	 *
 	 * @return total graph height
 	 */
 	public int getHeight() {
@@ -72,6 +75,7 @@ public class RrdGraphInfo {
 
 	/**
 	 * Returns graph bytes
+	 *
 	 * @return Graph bytes
 	 */
 	public byte[] getBytes() {
@@ -80,6 +84,7 @@ public class RrdGraphInfo {
 
 	/**
 	 * Returns PRINT lines requested by {@link RrdGraphDef#print(String, String, String)} method.
+	 *
 	 * @return An array of formatted PRINT lines
 	 */
 	public String[] getPrintLines() {
@@ -88,6 +93,7 @@ public class RrdGraphInfo {
 
 	/**
 	 * Returns image information requested by {@link RrdGraphDef#setImageInfo(String)} method
+	 *
 	 * @return Image information
 	 */
 	public String getImgInfo() {
@@ -96,6 +102,7 @@ public class RrdGraphInfo {
 
 	/**
 	 * Returns the number of bytes in the graph file
+	 *
 	 * @return Length of the graph file
 	 */
 	public int getByteCount() {
@@ -104,21 +111,22 @@ public class RrdGraphInfo {
 
 	/**
 	 * Dumps complete graph information. Useful for debugging purposes.
+	 *
 	 * @return String containing complete graph information
 	 */
 	public String dump() {
 		StringBuffer b = new StringBuffer();
-		b.append("filename = \"" + getFilename() + "\"\n");
-		b.append("width = " + getWidth() + ", height = " + getHeight() + "\n");
-		b.append("byteCount = " + getByteCount() + "\n");
-		b.append("imginfo = \"" + getImgInfo() + "\"\n");
+		b.append("filename = \"").append(getFilename()).append("\"\n");
+		b.append("width = ").append(getWidth()).append(", height = ").append(getHeight()).append("\n");
+		b.append("byteCount = ").append(getByteCount()).append("\n");
+		b.append("imginfo = \"").append(getImgInfo()).append("\"\n");
 		String[] plines = getPrintLines();
 		if (plines.length == 0) {
 			b.append("No print lines found\n");
 		}
 		else {
 			for (int i = 0; i < plines.length; i++) {
-				b.append("print[" + i + "] = \"" + plines[i] + "\"\n");
+				b.append("print[").append(i).append("] = \"").append(plines[i]).append("\"\n");
 			}
 		}
 		return b.toString();

@@ -5,10 +5,10 @@
  * Project Info:  http://www.jrobin.org
  * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
- * (C) Copyright 2003, by Sasa Markovic.
+ * (C) Copyright 2003-2005, by Sasa Markovic.
  *
  * Developers:    Sasa Markovic (saxon@jrobin.org)
- *                Arne Vandamme (cobralord@jrobin.org)
+ *
  *
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation;
@@ -28,35 +28,34 @@ package org.jrobin.core;
 import org.jrobin.data.Aggregates;
 import org.jrobin.data.DataProcessor;
 
+import java.io.ByteArrayOutputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.FileOutputStream;
-import java.io.ByteArrayOutputStream;
 
 /**
  * Class used to represent data fetched from the RRD.
  * Object of this class is created when the method
- * {@link org.jrobin.core.FetchRequest#fetchData() fetchData()} is
- * called on a {@link org.jrobin.core.FetchRequest FetchRequest} object.<p>
- *
+ * {@link FetchRequest#fetchData() fetchData()} is
+ * called on a {@link FetchRequest FetchRequest} object.<p>
+ * <p/>
  * Data returned from the RRD is, simply, just one big table filled with
  * timestamps and corresponding datasource values.
  * Use {@link #getRowCount() getRowCount()} method to count the number
  * of returned timestamps (table rows).<p>
- *
+ * <p/>
  * The first table column is filled with timestamps. Time intervals
  * between consecutive timestamps are guaranteed to be equal. Use
  * {@link #getTimestamps() getTimestamps()} method to get an array of
  * timestamps returned.<p>
- *
- * Remaining cells are filled with datasource values for the whole timestamp range,
+ * <p/>
+ * Remaining columns are filled with datasource values for the whole timestamp range,
  * on a column-per-datasource basis. Use {@link #getColumnCount() getColumnCount()} to find
  * the number of datasources and {@link #getValues(int) getValues(i)} method to obtain
  * all values for the i-th datasource. Returned datasource values correspond to
  * the values returned with {@link #getTimestamps() getTimestamps()} method.<p>
- *
  */
-public class FetchData implements RrdDataSet, ConsolFuns {
+public class FetchData implements ConsolFuns {
 	// anything fuuny will do
 	private static final String RPN_SOURCE_NAME = "WHERE THE SPEECHLES UNITE IN A SILENT ACCORD";
 
@@ -99,32 +98,14 @@ public class FetchData implements RrdDataSet, ConsolFuns {
 	}
 
 	/**
-	 * Returns the number of cells fetched from the corresponding RRD.
+	 * Returns the number of columns fetched from the corresponding RRD.
 	 * This number is always equal to the number of datasources defined
 	 * in the RRD. Each column represents values of a single datasource.
 	 *
-	 * @return Number of cells (datasources).
+	 * @return Number of columns (datasources).
 	 */
 	public int getColumnCount() {
 		return dsNames.length;
-	}
-
-	/**
-	 * Returns the number of rows fetched from the corresponding RRD.
-	 * Each row represents datasource values for the specific timestamp.
-	 *
-	 * @param rowIndex Row index.
-	 * @return FetchPoint object which represents datasource values for the
-	 *         specific timestamp.
-	 * @deprecated The usage of FetchPoint object is deprecated.
-	 */
-	public FetchPoint getRow(int rowIndex) {
-		int numCols = getColumnCount();
-		FetchPoint point = new FetchPoint(timestamps[rowIndex], getColumnCount());
-		for (int dsIndex = 0; dsIndex < numCols; dsIndex++) {
-			point.setValue(dsIndex, values[dsIndex][rowIndex]);
-		}
-		return point;
 	}
 
 	/**
@@ -192,6 +173,7 @@ public class FetchData implements RrdDataSet, ConsolFuns {
 	 * For example, if you have two datasources named <code>x</code> and <code>y</code>
 	 * in this FetchData and you want to calculate values for <code>(x+y)/2<code> use something like: <p>
 	 * <code>getRpnValues("x,y,+,2,/");</code><p>
+	 *
 	 * @param rpnExpression RRDTool-like RPN expression
 	 * @return Calculated values
 	 * @throws RrdException Thrown if invalid RPN expression is supplied
@@ -274,7 +256,7 @@ public class FetchData implements RrdDataSet, ConsolFuns {
 		for (int row = 0; row < getRowCount(); row++) {
 			buffer.append(timestamps[row]);
 			buffer.append(":  ");
-			for(int dsIndex = 0; dsIndex < getColumnCount(); dsIndex++) {
+			for (int dsIndex = 0; dsIndex < getColumnCount(); dsIndex++) {
 				buffer.append(Util.formatDouble(values[dsIndex][row], true));
 				buffer.append("  ");
 			}
@@ -293,8 +275,8 @@ public class FetchData implements RrdDataSet, ConsolFuns {
 		StringBuffer buff = new StringBuffer();
 		buff.append(padWithBlanks("", 10));
 		buff.append(" ");
-		for (int i = 0; i < dsNames.length; i++) {
-			buff.append(padWithBlanks(dsNames[i], 18));
+		for (String dsName : dsNames) {
+			buff.append(padWithBlanks(dsName, 18));
 		}
 		buff.append("\n \n");
 		for (int i = 0; i < timestamps.length; i++) {
@@ -323,7 +305,7 @@ public class FetchData implements RrdDataSet, ConsolFuns {
 	/**
 	 * Returns single aggregated value from the fetched data for a single datasource.
 	 *
-	 * @param dsName    Datasource name
+	 * @param dsName	Datasource name
 	 * @param consolFun Consolidation function to be applied to fetched datasource values.
 	 *                  Valid consolidation functions are "MIN", "MAX", "LAST", "FIRST", "AVERAGE" and "TOTAL"
 	 *                  (these string constants are conveniently defined in the {@link ConsolFuns} class)
@@ -331,7 +313,7 @@ public class FetchData implements RrdDataSet, ConsolFuns {
 	 *         for the given datasource name
 	 * @throws RrdException Thrown if the given datasource name cannot be found in fetched data.
 	 */
-	public double getAggregate(String dsName, String consolFun)	throws RrdException {
+	public double getAggregate(String dsName, String consolFun) throws RrdException {
 		DataProcessor dp = createDataProcessor(null);
 		return dp.getAggregate(dsName, consolFun);
 	}
@@ -342,13 +324,14 @@ public class FetchData implements RrdDataSet, ConsolFuns {
 	 * For example, if you have a gauge datasource named 'foots' but you want to find the maximum
 	 * fetched value in meters use something like: <p>
 	 * <code>getAggregate("foots", "MAX", "foots,0.3048,*");</code><p>
-	 * @param dsName Datasource name
-	 * @param consolFun Consolidation function (MIN, MAX, LAST, FIRST, AVERAGE or TOTAL)
+	 *
+	 * @param dsName		Datasource name
+	 * @param consolFun	 Consolidation function (MIN, MAX, LAST, FIRST, AVERAGE or TOTAL)
 	 * @param rpnExpression RRDTool-like RPN expression
 	 * @return Aggregated value
 	 * @throws RrdException Thrown if the given datasource name cannot be found in fetched data, or if
-	 * invalid RPN expression is supplied
-	 * @throws IOException Thrown in case of I/O error (unlikely to happen)
+	 *                      invalid RPN expression is supplied
+	 * @throws IOException  Thrown in case of I/O error (unlikely to happen)
 	 * @deprecated This method is preserved just for backward compatibility.
 	 */
 	public double getAggregate(String dsName, String consolFun, String rpnExpression)
@@ -363,8 +346,9 @@ public class FetchData implements RrdDataSet, ConsolFuns {
 	 * fetched data. For example, if you have two datasources named <code>x</code> and <code>y</code>
 	 * in this FetchData and you want to calculate MAX value of <code>(x+y)/2<code> use something like: <p>
 	 * <code>getRpnAggregate("x,y,+,2,/", "MAX");</code><p>
+	 *
 	 * @param rpnExpression RRDTool-like RPN expression
-	 * @param consolFun Consolidation function (MIN, MAX, LAST, FIRST, AVERAGE or TOTAL)
+	 * @param consolFun	 Consolidation function (MIN, MAX, LAST, FIRST, AVERAGE or TOTAL)
 	 * @return Aggregated value
 	 * @throws RrdException Thrown if invalid RPN expression is supplied
 	 */
@@ -392,6 +376,7 @@ public class FetchData implements RrdDataSet, ConsolFuns {
 	 * in this FetchData and you want to calculate MIN, MAX, LAST, FIRST, AVERAGE and TOTAL value
 	 * of <code>(x+y)/2<code> use something like: <p>
 	 * <code>getRpnAggregates("x,y,+,2,/");</code><p>
+	 *
 	 * @param rpnExpression RRDTool-like RPN expression
 	 * @return Object containing all aggregated values
 	 * @throws RrdException Thrown if invalid RPN expression is supplied
@@ -403,11 +388,11 @@ public class FetchData implements RrdDataSet, ConsolFuns {
 
 	/**
 	 * Used by ISPs which charge for bandwidth utilization on a "95th percentile" basis.<p>
-	 *
+	 * <p/>
 	 * The 95th percentile is the highest source value left when the top 5% of a numerically sorted set
 	 * of source data is discarded. It is used as a measure of the peak value used when one discounts
 	 * a fair amount for transitory spikes. This makes it markedly different from the average.<p>
-	 *
+	 * <p/>
 	 * Read more about this topic at:<p>
 	 * <a href="http://www.red.net/support/resourcecentre/leasedline/percentile.php">Rednet</a> or<br>
 	 * <a href="http://www.bytemark.co.uk/support/tech/95thpercentile.html">Bytemark</a>.
@@ -424,6 +409,7 @@ public class FetchData implements RrdDataSet, ConsolFuns {
 	/**
 	 * Same as {@link #get95Percentile(String)}, but for a set of values calculated with the given
 	 * RPN expression.
+	 *
 	 * @param rpnExpression RRDTool-like RPN expression
 	 * @return 95-percentile
 	 * @throws RrdException Thrown if invalid RPN expression is supplied
@@ -452,8 +438,8 @@ public class FetchData implements RrdDataSet, ConsolFuns {
 		writer.writeTag("cf", request.getConsolFun());
 		writer.closeTag(); // request
 		writer.startTag("datasources");
-		for (int i = 0; i < dsNames.length; i++) {
-			writer.writeTag("name", dsNames[i]);
+		for (String dsName : dsNames) {
+			writer.writeTag("name", dsName);
 		}
 		writer.closeTag(); // datasources
 		writer.startTag("data");
@@ -506,6 +492,7 @@ public class FetchData implements RrdDataSet, ConsolFuns {
 
 	/**
 	 * Returns the step of the corresponding RRA archive
+	 *
 	 * @return Archive step in seconds
 	 */
 	public long getArcStep() {
@@ -514,6 +501,7 @@ public class FetchData implements RrdDataSet, ConsolFuns {
 
 	/**
 	 * Returns the timestamp of the last populated slot in the corresponding RRA archive
+	 *
 	 * @return Timestamp in seconds
 	 */
 	public long getArcEndTime() {
@@ -522,15 +510,15 @@ public class FetchData implements RrdDataSet, ConsolFuns {
 
 	private DataProcessor createDataProcessor(String rpnExpression) throws RrdException {
 		DataProcessor dataProcessor = new DataProcessor(request.getFetchStart(), request.getFetchEnd());
-		for(int i = 0; i < dsNames.length; i++) {
-			dataProcessor.addDatasource(dsNames[i], this);
+		for (String dsName : dsNames) {
+			dataProcessor.addDatasource(dsName, this);
 		}
-		if(rpnExpression != null) {
+		if (rpnExpression != null) {
 			dataProcessor.addDatasource(RPN_SOURCE_NAME, rpnExpression);
 			try {
 				dataProcessor.processData();
 			}
-			catch(IOException ioe) {
+			catch (IOException ioe) {
 				// highly unlikely, since all datasources have already calculated values
 				throw new RuntimeException("Impossible error: " + ioe);
 			}

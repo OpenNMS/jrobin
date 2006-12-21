@@ -5,10 +5,10 @@
  * Project Info:  http://www.jrobin.org
  * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
- * (C) Copyright 2003, by Sasa Markovic.
+ * (C) Copyright 2003-2005, by Sasa Markovic.
  *
  * Developers:    Sasa Markovic (saxon@jrobin.org)
- *                Arne Vandamme (cobralord@jrobin.org)
+ *
  *
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation;
@@ -42,7 +42,7 @@ class RrdDoubleArray extends RrdPrimitive {
 	void set(int index, double value, int count) throws IOException {
 		// rollovers not allowed!
 		assert index + count <= length:	"Invalid robin index supplied: index=" + index +
-			", count=" + count + ", length=" + length;
+				", count=" + count + ", length=" + length;
 		writeDouble(index, value, count);
 	}
 
@@ -53,7 +53,7 @@ class RrdDoubleArray extends RrdPrimitive {
 
 	double[] get(int index, int count) throws IOException {
 		assert index + count <= length: "Invalid index/count supplied: " + index +
-			"/" + count + " (length=" + length + ")";
+				"/" + count + " (length=" + length + ")";
 		return readDouble(index, count);
 	}
 

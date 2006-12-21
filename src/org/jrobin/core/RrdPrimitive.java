@@ -5,10 +5,10 @@
  * Project Info:  http://www.jrobin.org
  * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
- * (C) Copyright 2003, by Sasa Markovic.
+ * (C) Copyright 2003-2005, by Sasa Markovic.
  *
  * Developers:    Sasa Markovic (saxon@jrobin.org)
- *                Arne Vandamme (cobralord@jrobin.org)
+ *
  *
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation;
@@ -30,7 +30,7 @@ import java.io.IOException;
 abstract class RrdPrimitive {
 	static final int STRING_LENGTH = 20;
 	static final int RRD_INT = 0, RRD_LONG = 1, RRD_DOUBLE = 2, RRD_STRING = 3;
-	static final int[] RRD_PRIM_SIZES = { 4, 8, 8, 2 * STRING_LENGTH };
+	static final int[] RRD_PRIM_SIZES = {4, 8, 8, 2 * STRING_LENGTH};
 
 	private RrdBackend backend;
 	private int byteCount;
@@ -47,7 +47,7 @@ abstract class RrdPrimitive {
 		this.pointer = updater.getRrdAllocator().allocate(byteCount);
 		this.cachingAllowed = isConstant || backend.isCachingAllowed();
 	}
-	
+
 	final byte[] readBytes() throws IOException {
 		byte[] b = new byte[byteCount];
 		backend.read(pointer, b);

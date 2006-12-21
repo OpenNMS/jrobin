@@ -5,10 +5,10 @@
  * Project Info:  http://www.jrobin.org
  * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
- * (C) Copyright 2003, by Sasa Markovic.
+ * (C) Copyright 2003-2005, by Sasa Markovic.
  *
  * Developers:    Sasa Markovic (saxon@jrobin.org)
- *                Arne Vandamme (cobralord@jrobin.org)
+ *
  *
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation;
@@ -28,9 +28,9 @@ package org.jrobin.data;
 import org.jrobin.core.ConsolFuns;
 import org.jrobin.core.Util;
 
-import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 class Aggregator implements ConsolFuns {
 	private long timestamps[], step;
@@ -72,13 +72,13 @@ class Aggregator implements ConsolFuns {
 	}
 
 	double getPercentile(long tStart, long tEnd, double percentile) {
-		List valueList = new ArrayList();
+		List<Double> valueList = new ArrayList<Double>();
 		// create a list of included datasource values (different from NaN)
 		for (int i = 0; i < timestamps.length; i++) {
 			long left = Math.max(timestamps[i] - step, tStart);
 			long right = Math.min(timestamps[i], tEnd);
 			if (right > left && !Double.isNaN(values[i])) {
-				valueList.add(new Double(values[i]));
+				valueList.add(values[i]);
 			}
 		}
 		// create an array to work with
@@ -86,7 +86,7 @@ class Aggregator implements ConsolFuns {
 		if (count > 1) {
 			double[] valuesCopy = new double[count];
 			for (int i = 0; i < count; i++) {
-				valuesCopy[i] = ((Double) valueList.get(i)).doubleValue();
+				valuesCopy[i] = valueList.get(i);
 			}
 			// sort array
 			Arrays.sort(valuesCopy);
@@ -101,13 +101,4 @@ class Aggregator implements ConsolFuns {
 		// not enough data available
 		return Double.NaN;
 	}
-
-	/*
-	public static void main(String[] args) {
-		long[] t = {10, 20, 30, 40};
-		double[] v = {2, Double.NaN, 3, 1};
-		Aggregator agg = new Aggregator(t, v);
-		System.out.println(agg.getAggregates(0, 40).dump());
-	}
-	*/
 }

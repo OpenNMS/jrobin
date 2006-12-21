@@ -5,10 +5,10 @@
  * Project Info:  http://www.jrobin.org
  * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
- * (C) Copyright 2003, by Sasa Markovic.
+ * (C) Copyright 2003-2005, by Sasa Markovic.
  *
  * Developers:    Sasa Markovic (saxon@jrobin.org)
- *                Arne Vandamme (cobralord@jrobin.org)
+ *
  *
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation;
@@ -26,12 +26,13 @@
 package org.jrobin.data;
 
 import org.jrobin.core.Util;
+
 import java.util.Arrays;
 
 class Normalizer {
-	private long[] timestamps;
-	int count;
-	long step;
+	final private long[] timestamps;
+	final int count;
+	final long step;
 
 	Normalizer(long[] timestamps) {
 		this.timestamps = timestamps;
@@ -43,7 +44,7 @@ class Normalizer {
 		int rawCount = rawTimestamps.length;
 		long rawStep = rawTimestamps[1] - rawTimestamps[0];
 		// check if we have a simple match
-		if(rawCount == count && rawStep == step && rawTimestamps[0] == timestamps[0]) {
+		if (rawCount == count && rawStep == step && rawTimestamps[0] == timestamps[0]) {
 			return getCopyOf(rawValues);
 		}
 		// reset all normalized values to NaN
@@ -79,26 +80,8 @@ class Normalizer {
 	private static double[] getCopyOf(double[] rawValues) {
 		int n = rawValues.length;
 		double[] values = new double[n];
-		for(int i = 0; i < n; i++) {
-			values[i] = rawValues[i];
-		}
+		System.arraycopy(rawValues, 0, values, 0, n);
 		return values;
 	}
-
-	private static void dump(long[] t, double[] v) {
-		for(int i = 0; i < v.length; i++) {
-			System.out.print("[" + t[i] + "," + v[i] + "] ");
-		}
-		System.out.println("");
-	}
-
-	public static void main(String[] args) {
-		long rawTime[] = {100, 120, 140, 160, 180, 200};
-		double rawValues[] = {10, 30, 20, Double.NaN, 50, 40};
-		long time[] = {60, 100, 140, 180, 220, 260, 300};
-		Normalizer n = new Normalizer(time);
-		double[] values = n.normalize(rawTime, rawValues);
-		dump(rawTime, rawValues);
-		dump(time, values);
-	}
 }
+

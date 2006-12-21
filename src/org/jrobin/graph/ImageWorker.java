@@ -48,7 +48,7 @@ class ImageWorker {
 	}
 
 	void resize(int width, int height) {
-		if(gd != null) {
+		if (gd != null) {
 			gd.dispose();
 		}
 		this.imgWidth = width;
@@ -86,10 +86,10 @@ class ImageWorker {
 	void fillPolygon(double[] x, double yBottom, double[] yTop, Paint paint) {
 		gd.setPaint(paint);
 		PathIterator path = new PathIterator(yTop);
-		for(int[] pos = path.getNextPath(); pos != null; pos = path.getNextPath()) {
+		for (int[] pos = path.getNextPath(); pos != null; pos = path.getNextPath()) {
 			int start = pos[0], end = pos[1], n = end - start;
 			int[] xDev = new int[n + 2], yDev = new int[n + 2];
-			for(int i = start; i < end; i++) {
+			for (int i = start; i < end; i++) {
 				xDev[i - start] = (int) x[i];
 				yDev[i - start] = (int) yTop[i];
 			}
@@ -104,10 +104,10 @@ class ImageWorker {
 	void fillPolygon(double[] x, double[] yBottom, double[] yTop, Paint paint) {
 		gd.setPaint(paint);
 		PathIterator path = new PathIterator(yTop);
-		for(int[] pos = path.getNextPath(); pos != null; pos = path.getNextPath()) {
+		for (int[] pos = path.getNextPath(); pos != null; pos = path.getNextPath()) {
 			int start = pos[0], end = pos[1], n = end - start;
 			int[] xDev = new int[n * 2], yDev = new int[n * 2];
-			for(int i = start; i < end; i++) {
+			for (int i = start; i < end; i++) {
 				int ix1 = i - start, ix2 = n * 2 - 1 - i + start;
 				xDev[ix1] = xDev[ix2] = (int) x[i];
 				yDev[ix1] = (int) yTop[i];
@@ -135,10 +135,10 @@ class ImageWorker {
 		gd.setPaint(paint);
 		gd.setStroke(stroke);
 		PathIterator path = new PathIterator(y);
-		for(int[] pos = path.getNextPath(); pos != null; pos = path.getNextPath()) {
+		for (int[] pos = path.getNextPath(); pos != null; pos = path.getNextPath()) {
 			int start = pos[0], end = pos[1];
 			int[] xDev = new int[end - start], yDev = new int[end - start];
-			for(int i = start; i < end; i++) {
+			for (int i = start; i < end; i++) {
 				xDev[i - start] = (int) x[i];
 				yDev[i - start] = (int) y[i];
 			}
@@ -163,7 +163,7 @@ class ImageWorker {
 	}
 
 	double getStringWidth(String text, Font font) {
-		return font.getStringBounds(text, 0, text.length(),	gd.getFontRenderContext()).getBounds().getWidth();
+		return font.getStringBounds(text, 0, text.length(), gd.getFontRenderContext()).getBounds().getWidth();
 	}
 
 	void setAntiAliasing(boolean enable) {
@@ -176,14 +176,14 @@ class ImageWorker {
 	}
 
 	void saveImage(OutputStream stream, String type, float quality) throws IOException {
-		if(type.equalsIgnoreCase("png")) {
+		if (type.equalsIgnoreCase("png")) {
 			ImageIO.write(img, "png", stream);
 		}
-		else if(type.equalsIgnoreCase("gif")) {
+		else if (type.equalsIgnoreCase("gif")) {
 			GifEncoder gifEncoder = new GifEncoder(img);
 			gifEncoder.encode(stream);
 		}
-		else if(type.equalsIgnoreCase("jpg") || type.equalsIgnoreCase("jpeg")) {
+		else if (type.equalsIgnoreCase("jpg") || type.equalsIgnoreCase("jpeg")) {
 			JPEGImageEncoder encoder = JPEGCodec.createJPEGEncoder(stream);
 			JPEGEncodeParam param = encoder.getDefaultJPEGEncodeParam(img);
 			param.setQuality(quality, false);

@@ -8,7 +8,7 @@
  * (C) Copyright 2003, by Sasa Markovic.
  *
  * Developers:    Sasa Markovic (saxon@jrobin.org)
- *                Arne Vandamme (cobralord@jrobin.org)
+ *
  *
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation;
@@ -88,7 +88,7 @@ class InspectorModel {
 	private static final DecimalFormat df = new DecimalFormat(DOUBLE_FORMAT);
 
 	static String formatDouble(double x, String nanString) {
-		if(Double.isNaN(x)) {
+		if (Double.isNaN(x)) {
 			return nanString;
 		}
 		return df.format(x);

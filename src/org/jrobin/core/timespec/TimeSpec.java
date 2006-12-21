@@ -5,10 +5,10 @@
  * Project Info:  http://www.jrobin.org
  * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
- * (C) Copyright 2003, by Sasa Markovic.
+ * (C) Copyright 2003-2005, by Sasa Markovic.
  *
  * Developers:    Sasa Markovic (saxon@jrobin.org)
- *                Arne Vandamme (cobralord@jrobin.org)
+ *
  *
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation;
@@ -28,13 +28,14 @@ package org.jrobin.core.timespec;
 import org.jrobin.core.RrdException;
 import org.jrobin.core.Util;
 
-import java.util.GregorianCalendar;
-import java.util.Date;
 import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 
 /**
  * Simple class to represent time obtained by parsing at-style date specification (described
- * in detail on the rrdfetch man page. See javadoc {@link org.jrobin.core.timespec.TimeParser} for more information.
+ * in detail on the rrdfetch man page. See javadoc for {@link org.jrobin.core.timespec.TimeParser}
+ * for more information.
  */
 public class TimeSpec {
 	static final int TYPE_ABSOLUTE = 0;
@@ -69,11 +70,11 @@ public class TimeSpec {
 	GregorianCalendar getTime() throws RrdException {
 		GregorianCalendar gc;
 		// absoulte time, this is easy
-		if(type ==  TYPE_ABSOLUTE) {
+		if (type == TYPE_ABSOLUTE) {
 			gc = new GregorianCalendar(year + 1900, month, day, hour, min, sec);
 		}
 		// relative time, we need a context to evaluate it
-		else if(context != null && context.type == TYPE_ABSOLUTE) {
+		else if (context != null && context.type == TYPE_ABSOLUTE) {
 			gc = context.getTime();
 		}
 		// how would I guess what time it was?
@@ -97,6 +98,7 @@ public class TimeSpec {
 	 * TimeSpec ts = p.parse();
 	 * System.out.println("Timestamp was: " + ts.getTimestamp();
 	 * </pre>
+	 *
 	 * @return Timestamp (in seconds, no milliseconds)
 	 * @throws RrdException Thrown if this TimeSpec object does not represent absolute time.
 	 */
@@ -105,7 +107,7 @@ public class TimeSpec {
 	}
 
 	String dump() {
-		return (type == TYPE_ABSOLUTE? "ABSTIME": type == TYPE_START? "START": "END") +
+		return (type == TYPE_ABSOLUTE ? "ABSTIME" : type == TYPE_START ? "START" : "END") +
 				": " + year + "/" + month + "/" + day +
 				"/" + hour + "/" + min + "/" + sec + " (" +
 				dyear + "/" + dmonth + "/" + dday +
@@ -114,7 +116,7 @@ public class TimeSpec {
 
 	/**
 	 * Use this static method to resolve relative time references and obtain the corresponding
-	 * GregorianCalendar objects. Example:<p>
+	 * Calendar objects. Example:<p>
 	 * <pre>
 	 * TimeParser pStart = new TimeParser("now-1month"); // starting time
 	 * TimeParser pEnd = new TimeParser("start+1week");  // ending time
@@ -122,20 +124,21 @@ public class TimeSpec {
 	 * TimeSpec specEnd = pEnd.parse();
 	 * GregorianCalendar[] gc = TimeSpec.getTimes(specStart, specEnd);
 	 * </pre>
+	 *
 	 * @param spec1 Starting time specification
 	 * @param spec2 Ending time specification
-	 * @return
+	 * @return Two element array containing Calendar objects
 	 * @throws RrdException Thrown if relative time references cannot be resolved
 	 */
-	public static GregorianCalendar[] getTimes(TimeSpec spec1, TimeSpec spec2) throws RrdException {
-		if(spec1.type == TYPE_START || spec2.type == TYPE_END) {
+	public static Calendar[] getTimes(TimeSpec spec1, TimeSpec spec2) throws RrdException {
+		if (spec1.type == TYPE_START || spec2.type == TYPE_END) {
 			throw new RrdException("Recursive time specifications not allowed");
 		}
 		spec1.context = spec2;
 		spec2.context = spec1;
-		return new GregorianCalendar[] {
-			spec1.getTime(),
-			spec2.getTime()
+		return new Calendar[] {
+				spec1.getTime(),
+				spec2.getTime()
 		};
 	}
 
@@ -149,15 +152,16 @@ public class TimeSpec {
 	 * TimeSpec specEnd = pEnd.parse();
 	 * long[] ts = TimeSpec.getTimestamps(specStart, specEnd);
 	 * </pre>
+	 *
 	 * @param spec1 Starting time specification
 	 * @param spec2 Ending time specification
-	 * @return
+	 * @return array containing two timestamps (in seconds since epoch)
 	 * @throws RrdException Thrown if relative time references cannot be resolved
 	 */
 	public static long[] getTimestamps(TimeSpec spec1, TimeSpec spec2) throws RrdException {
-		GregorianCalendar[] gcs = getTimes(spec1, spec2);
+		Calendar[] gcs = getTimes(spec1, spec2);
 		return new long[] {
-			Util.getTimestamp(gcs[0]), Util.getTimestamp(gcs[1])
+				Util.getTimestamp(gcs[0]), Util.getTimestamp(gcs[1])
 		};
 	}
 }

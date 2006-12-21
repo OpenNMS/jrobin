@@ -54,7 +54,7 @@ class PrintText extends CommentText {
 		if (resolvedText != null) {
 			double value = dproc.getAggregate(srcName, consolFun);
 			Matcher matcher = UNIT_PATTERN.matcher(resolvedText);
-			if(matcher.find()) {
+			if (matcher.find()) {
 				// unit specified
 				ValueScaler.Scaled scaled = valueScaler.scale(value, matcher.group(2).equals("s"));
 				resolvedText = resolvedText.substring(0, matcher.start()) +

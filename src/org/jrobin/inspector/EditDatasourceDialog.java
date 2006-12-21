@@ -8,7 +8,7 @@
  * (C) Copyright 2003, by Sasa Markovic.
  *
  * Developers:    Sasa Markovic (saxon@jrobin.org)
- *                Arne Vandamme (cobralord@jrobin.org)
+ *
  *
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation;
@@ -56,7 +56,7 @@ class EditDatasourceDialog extends JDialog {
 	private DsDef dsDef;
 
 	EditDatasourceDialog(Frame parent, DsDef dsDef) {
-		super(parent, dsDef == null? TITLE_NEW: TITLE_EDIT, true);
+		super(parent, dsDef == null ? TITLE_NEW : TITLE_EDIT, true);
 		constructUI(dsDef);
 		pack();
 		Util.centerOnScreen(this);
@@ -66,11 +66,11 @@ class EditDatasourceDialog extends JDialog {
 	private void constructUI(DsDef dsDef) {
 		// fill controls
 		String[] types = DsDef.DS_TYPES;
-		for (int i = 0; i < types.length; i++) {
-			typeCombo.addItem(types[i]);
+		for (String type : types) {
+			typeCombo.addItem(type);
 		}
 		typeCombo.setSelectedIndex(0);
-		if(dsDef == null) {
+		if (dsDef == null) {
 			// NEW
 			minField.setText("U");
 			maxField.setText("U");
@@ -90,9 +90,11 @@ class EditDatasourceDialog extends JDialog {
 		JPanel content = (JPanel) getContentPane();
 		GridBagLayout layout = new GridBagLayout();
 		content.setLayout(layout);
-        GridBagConstraints gbc = new GridBagConstraints();
+		GridBagConstraints gbc = new GridBagConstraints();
 		gbc.insets = new Insets(3, 3, 3, 3);
-		gbc.gridx = 0; gbc.gridy = 0; gbc.anchor = GridBagConstraints.EAST;
+		gbc.gridx = 0;
+		gbc.gridy = 0;
+		gbc.anchor = GridBagConstraints.EAST;
 		layout.setConstraints(nameLabel, gbc);
 		content.add(nameLabel);
 		gbc.gridy = 1;
@@ -111,7 +113,9 @@ class EditDatasourceDialog extends JDialog {
 		layout.setConstraints(okButton, gbc);
 		okButton.setPreferredSize(cancelButton.getPreferredSize());
 		content.add(okButton);
-		gbc.gridx = 1; gbc.gridy = 0; gbc.anchor = GridBagConstraints.WEST;
+		gbc.gridx = 1;
+		gbc.gridy = 0;
+		gbc.anchor = GridBagConstraints.WEST;
 		layout.setConstraints(nameField, gbc);
 		content.add(nameField);
 		gbc.gridy = 1;
@@ -133,10 +137,14 @@ class EditDatasourceDialog extends JDialog {
 
 		// actions
 		okButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) { ok(); }
+			public void actionPerformed(ActionEvent e) {
+				ok();
+			}
 		});
 		cancelButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) { cancel(); }
+			public void actionPerformed(ActionEvent e) {
+				cancel();
+			}
 		});
 
 		setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
@@ -144,7 +152,7 @@ class EditDatasourceDialog extends JDialog {
 
 	private void ok() {
 		dsDef = createDsDef();
-		if(dsDef != null) {
+		if (dsDef != null) {
 			close();
 		}
 	}
@@ -159,7 +167,7 @@ class EditDatasourceDialog extends JDialog {
 
 	private DsDef createDsDef() {
 		String name = nameField.getText();
-		if(name == null || name.length() < 1 || name.length() > 20) {
+		if (name == null || name.length() < 1 || name.length() > 20) {
 			Util.error(this, "Datasource name must be a non-empty string up to 20 chars long");
 			return null;
 		}
@@ -167,12 +175,12 @@ class EditDatasourceDialog extends JDialog {
 		long heartbeat;
 		try {
 			heartbeat = Long.parseLong(heartbeatField.getText());
-			if(heartbeat <= 0) {
+			if (heartbeat <= 0) {
 				throw new NumberFormatException();
 			}
 		}
-		catch(NumberFormatException nfe) {
-            Util.error(this, "Heartbeat must be a positive integer number");
+		catch (NumberFormatException nfe) {
+			Util.error(this, "Heartbeat must be a positive integer number");
 			return null;
 		}
 		double min = Double.NaN, max = Double.NaN;
@@ -188,14 +196,14 @@ class EditDatasourceDialog extends JDialog {
 		catch (NumberFormatException nfe) {
 			// NOP, leave NaN
 		}
-		if(!Double.isNaN(min) && !Double.isNaN(max) && min >= max) {
+		if (!Double.isNaN(min) && !Double.isNaN(max) && min >= max) {
 			Util.error(this, "Min value must be less than max value");
 			return null;
 		}
 		try {
 			return new DsDef(name, type, heartbeat, min, max);
 		}
-		catch(RrdException e) {
+		catch (RrdException e) {
 			// should not be hear ever!
 			Util.error(this, e);
 			return null;

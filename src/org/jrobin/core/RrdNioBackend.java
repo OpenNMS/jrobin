@@ -5,10 +5,10 @@
  * Project Info:  http://www.jrobin.org
  * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
- * (C) Copyright 2003, by Sasa Markovic.
+ * (C) Copyright 2003-2005, by Sasa Markovic.
  *
  * Developers:    Sasa Markovic (saxon@jrobin.org)
- *                Arne Vandamme (cobralord@jrobin.org)
+ *
  *
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation;
@@ -25,10 +25,11 @@
 
 package org.jrobin.core;
 
+import sun.nio.ch.DirectBuffer;
+
 import java.io.IOException;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
-import sun.nio.ch.DirectBuffer;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -40,36 +41,30 @@ public class RrdNioBackend extends RrdFileBackend {
 	private static final Timer fileSyncTimer = new Timer(true);
 
 	private MappedByteBuffer byteBuffer;
-	private int syncMode;
-	private TimerTask syncTask;
+	private TimerTask syncTask = new TimerTask() {
+		public void run() {
+			sync();
+		}
+	};
 
 	/**
 	 * Creates RrdFileBackend object for the given file path, backed by java.nio.* classes.
-	 * @param path Path to a file
-	 * @param readOnly True, if file should be open in a read-only mode. False otherwise
-	 * @param lockMode Locking mode, as described in {@link RrdDb#getLockMode()}
-	 * @param syncMode See {@link RrdNioBackendFactory#setSyncMode(int)} for explanation
-	 * @param syncPeriod See {@link RrdNioBackendFactory#setSyncMode(int)} for explanation
+	 *
+	 * @param path	   Path to a file
+	 * @param readOnly   True, if file should be open in a read-only mode. False otherwise
+	 * @param syncPeriod See {@link RrdNioBackendFactory#setSyncPeriod(int)} for explanation
 	 * @throws IOException Thrown in case of I/O error
 	 */
-	protected RrdNioBackend(String path, boolean readOnly, int lockMode, int syncMode, int syncPeriod)
+	protected RrdNioBackend(String path, boolean readOnly, int syncPeriod)
 			throws IOException {
-		super(path, readOnly, lockMode);
-		this.syncMode = syncMode;
-		// try-catch block suggested by jroth
-		// http://www.jrobin.org/mantis/bug_view_page.php?bug_id=0000072
+		super(path, readOnly);
 		try {
 			mapFile();
-			if(syncMode == RrdNioBackendFactory.SYNC_BACKGROUND && !readOnly) {
-				syncTask = new TimerTask() {
-					public void run() {
-						sync();
-					}
-				};
+			if (!readOnly) {
 				fileSyncTimer.schedule(syncTask, syncPeriod * 1000L, syncPeriod * 1000L);
 			}
 		}
-		catch(IOException ioe) {
+		catch (IOException ioe) {
 			super.close();
 			throw ioe;
 		}
@@ -77,16 +72,16 @@ public class RrdNioBackend extends RrdFileBackend {
 
 	private void mapFile() throws IOException {
 		long length = getLength();
-		if(length > 0) {
+		if (length > 0) {
 			FileChannel.MapMode mapMode =
-				readOnly? FileChannel.MapMode.READ_ONLY: FileChannel.MapMode.READ_WRITE;
+					readOnly ? FileChannel.MapMode.READ_ONLY : FileChannel.MapMode.READ_WRITE;
 			byteBuffer = file.getChannel().map(mapMode, 0, length);
 		}
 	}
 
 	private void unmapFile() {
-		if(byteBuffer != null) {
-			if(byteBuffer instanceof DirectBuffer) {
+		if (byteBuffer != null) {
+			if (byteBuffer instanceof DirectBuffer) {
 				((DirectBuffer) byteBuffer).cleaner().clean();
 			}
 			byteBuffer = null;
@@ -96,6 +91,7 @@ public class RrdNioBackend extends RrdFileBackend {
 	/**
 	 * Sets length of the underlying RRD file. This method is called only once, immediately
 	 * after a new RRD file gets created.
+	 *
 	 * @param newLength Length of the RRD file
 	 * @throws IOException Thrown in case of I/O error.
 	 */
@@ -107,12 +103,13 @@ public class RrdNioBackend extends RrdFileBackend {
 
 	/**
 	 * Writes bytes to the underlying RRD file on the disk
+	 *
 	 * @param offset Starting file offset
-	 * @param b Bytes to be written.
+	 * @param b	  Bytes to be written.
 	 */
 	protected synchronized void write(long offset, byte[] b) throws IOException {
-		if(byteBuffer != null) {
-			byteBuffer.position((int)offset);
+		if (byteBuffer != null) {
+			byteBuffer.position((int) offset);
 			byteBuffer.put(b);
 		}
 		else {
@@ -122,12 +119,13 @@ public class RrdNioBackend extends RrdFileBackend {
 
 	/**
 	 * Reads a number of bytes from the RRD file on the disk
+	 *
 	 * @param offset Starting file offset
-	 * @param b Buffer which receives bytes read from the file.
+	 * @param b	  Buffer which receives bytes read from the file.
 	 */
 	protected synchronized void read(long offset, byte[] b) throws IOException {
-		if(byteBuffer != null) {
-			byteBuffer.position((int)offset);
+		if (byteBuffer != null) {
+			byteBuffer.position((int) offset);
 			byteBuffer.get(b);
 		}
 		else {
@@ -135,17 +133,23 @@ public class RrdNioBackend extends RrdFileBackend {
 		}
 	}
 
-   	/**
+	/**
 	 * Closes the underlying RRD file.
+	 *
 	 * @throws IOException Thrown in case of I/O error
 	 */
 	public synchronized void close() throws IOException {
 		// cancel synchronization
-		if(syncTask != null) {
-			syncTask.cancel();
+		try {
+			if (syncTask != null) {
+				syncTask.cancel();
+			}
+			sync();
+			unmapFile();
 		}
-		unmapFile();
-		super.close();
+		finally {
+			super.close();
+		}
 	}
 
 	/**
@@ -153,52 +157,8 @@ public class RrdNioBackend extends RrdFileBackend {
 	 * to be stored in it.
 	 */
 	protected synchronized void sync() {
-		if(byteBuffer != null) {
+		if (byteBuffer != null) {
 			byteBuffer.force();
-		}
-	}
-
-	/**
-	 * Method called by the framework immediatelly before RRD update operation starts. This method
-	 * will synchronize in-memory cache with the disk content if synchronization mode is set to
-	 * {@link RrdNioBackendFactory#SYNC_BEFOREUPDATE}. Otherwise it does nothing.
-	 */
-	protected void beforeUpdate() {
-		if(syncMode == RrdNioBackendFactory.SYNC_BEFOREUPDATE) {
-			sync();
-		}
-	}
-
-	/**
-	 * Method called by the framework immediatelly after RRD update operation finishes. This method
-	 * will synchronize in-memory cache with the disk content if synchronization mode is set to
-	 * {@link RrdNioBackendFactory#SYNC_AFTERUPDATE}. Otherwise it does nothing.
-	 */
-	protected void afterUpdate() {
-		if(syncMode == RrdNioBackendFactory.SYNC_AFTERUPDATE) {
-			sync();
-		}
-	}
-
-	/**
-	 * Method called by the framework immediatelly before RRD fetch operation starts. This method
-	 * will synchronize in-memory cache with the disk content if synchronization mode is set to
-	 * {@link RrdNioBackendFactory#SYNC_BEFOREFETCH}. Otherwise it does nothing.
-	 */
-	protected void beforeFetch() {
-		if(syncMode == RrdNioBackendFactory.SYNC_BEFOREFETCH) {
-			sync();
-		}
-	}
-
-	/**
-	 * Method called by the framework immediatelly after RRD fetch operation finishes. This method
-	 * will synchronize in-memory cache with the disk content if synchronization mode is set to
-	 * {@link RrdNioBackendFactory#SYNC_AFTERFETCH}. Otherwise it does nothing.
-	 */
-	protected void afterFetch() {
-		if(syncMode == RrdNioBackendFactory.SYNC_AFTERFETCH) {
-			sync();
 		}
 	}
 }

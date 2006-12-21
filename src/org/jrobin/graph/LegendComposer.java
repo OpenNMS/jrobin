@@ -50,8 +50,7 @@ class LegendComposer implements RrdGraphConstants {
 
 	int placeComments() {
 		Line line = new Line();
-		for (int i = 0; i < gdef.comments.size(); i++) {
-			CommentText comment = gdef.comments.get(i);
+		for (CommentText comment : gdef.comments) {
 			if (comment.isValidGraphElement()) {
 				if (!line.canAccomodate(comment)) {
 					line.layoutAndAdvance(false);
@@ -128,7 +127,7 @@ class LegendComposer implements RrdGraphConstants {
 				}
 				else if (lastMarker.equals(ALIGN_JUSTIFIED_MARKER)) {
 					// anything to justify?
-					if(spaceCount > 0) {
+					if (spaceCount > 0) {
 						placeComments(legX, (legWidth - width) / spaceCount + interlegendSpace);
 					}
 					else {
@@ -147,7 +146,7 @@ class LegendComposer implements RrdGraphConstants {
 						placeComments(legX, (legWidth - width) / spaceCount + interlegendSpace);
 					}
 				}
-				if(lastMarker.equals(VERTICAL_SPACING_MARKER)) {
+				if (lastMarker.equals(VERTICAL_SPACING_MARKER)) {
 					legY += smallLeading;
 				}
 				else {
@@ -166,8 +165,7 @@ class LegendComposer implements RrdGraphConstants {
 
 		private void placeComments(double xStart, double space) {
 			double x = xStart;
-			for (int i = 0; i < comments.size(); i++) {
-				CommentText comment = comments.get(i);
+			for (CommentText comment : comments) {
 				comment.x = (int) x;
 				comment.y = legY;
 				x += getCommentWidth(comment);

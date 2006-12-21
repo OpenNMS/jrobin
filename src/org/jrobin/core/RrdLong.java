@@ -5,10 +5,10 @@
  * Project Info:  http://www.jrobin.org
  * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
- * (C) Copyright 2003, by Sasa Markovic.
+ * (C) Copyright 2003-2005, by Sasa Markovic.
  *
  * Developers:    Sasa Markovic (saxon@jrobin.org)
- *                Arne Vandamme (cobralord@jrobin.org)
+ *
  *
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation;
@@ -40,11 +40,11 @@ class RrdLong extends RrdPrimitive {
 	}
 
 	void set(long value) throws IOException {
-		if(!isCachingAllowed()) {
+		if (!isCachingAllowed()) {
 			writeLong(value);
 		}
 		// caching allowed
-		else if(!cached || cache != value) {
+		else if (!cached || cache != value) {
 			// update cache
 			writeLong(cache = value);
 			cached = true;
@@ -52,6 +52,6 @@ class RrdLong extends RrdPrimitive {
 	}
 
 	long get() throws IOException {
-		return cached? cache: readLong();
+		return cached ? cache : readLong();
 	}
 }

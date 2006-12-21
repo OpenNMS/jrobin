@@ -5,10 +5,10 @@
  * Project Info:  http://www.jrobin.org
  * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
- * (C) Copyright 2003, by Sasa Markovic.
+ * (C) Copyright 2003-2005, by Sasa Markovic.
  *
  * Developers:    Sasa Markovic (saxon@jrobin.org)
- *                Arne Vandamme (cobralord@jrobin.org)
+ *
  *
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation;
@@ -25,18 +25,17 @@
 
 package org.jrobin.data;
 
-import org.jrobin.graph.Plottable;
 import org.jrobin.core.*;
 
-import java.util.*;
 import java.io.IOException;
+import java.util.*;
 
 /**
  * Class which should be used for all calculations based on the data fetched from RRD files. This class
  * supports ordinary DEF datasources (defined in RRD files), CDEF datasources (RPN expressions evaluation),
  * SDEF (static datasources - extension of JRobin) and PDEF (plottables, see
- * {@link org.jrobin.graph.Plottable Plottable} for more information.<p>
- *
+ * {@link Plottable Plottable} for more information.<p>
+ * <p/>
  * Typical class usage:<p>
  * <pre>
  * final long t1 = ...
@@ -59,7 +58,7 @@ public class DataProcessor implements ConsolFuns {
 	 * Constant representing the default number of pixels on a JRobin graph (will be used if
 	 * no other value is specified with {@link #setStep(long) setStep()} method.
 	 */
-	public static final int DEFAULT_PIXEL_COUNT = 400;
+	public static final int DEFAULT_PIXEL_COUNT = 600;
 	private static final double DEFAULT_PERCENTILE = 95.0; // %
 
 	private int pixelCount = DEFAULT_PIXEL_COUNT;
@@ -71,24 +70,18 @@ public class DataProcessor implements ConsolFuns {
 	public static final boolean DEFAULT_POOL_USAGE_POLICY = false;
 	private boolean poolUsed = DEFAULT_POOL_USAGE_POLICY;
 
-	private long generationTime	= 0;
-
-	private long tStart, tEnd, timestamps[];
-	private double dblTimestamps[];
+	private final long tStart;
+	private long tEnd, timestamps[];
+	private long lastRrdArchiveUpdateTime = 0;
 	// this will be adjusted later
 	private long step = 0;
 	// resolution to be used for RRD fetch operation
 	private long fetchRequestResolution = 1;
 
 	// the order is important, ordinary HashMap is unordered
-	private Map sources = new LinkedHashMap();
+	private Map<String, Source> sources = new LinkedHashMap<String, Source>();
 
 	private Def[] defSources;
-
-	public DataProcessor()
-	{
-		// TODO Insert a check on valid timestamps later on
-	}
 
 	/**
 	 * Creates new DataProcessor object for the given time span. Ending timestamp may be set to zero.
@@ -99,9 +92,14 @@ public class DataProcessor implements ConsolFuns {
 	 * @param t2 Ending timestamp in seconds without milliseconds
 	 * @throws RrdException Thrown if invalid timestamps are supplied
 	 */
-	public DataProcessor(long t1, long t2) throws RrdException
-	{
-		setTimePeriod( t1, t2 );
+	public DataProcessor(long t1, long t2) throws RrdException {
+		if ((t1 < t2 && t1 > 0 && t2 > 0) || (t1 > 0 && t2 == 0)) {
+			this.tStart = t1;
+			this.tEnd = t2;
+		}
+		else {
+			throw new RrdException("Invalid timestamps specified: " + t1 + ", " + t2);
+		}
 	}
 
 	/**
@@ -122,23 +120,12 @@ public class DataProcessor implements ConsolFuns {
 	 * In that case, the class will try to find optimal ending date based on the last update time of
 	 * RRD files processed with the {@link #processData()} method.
 	 *
-	 * @param gc1 Starting Gregorian calendar date
-	 * @param gc2 Ending Gregorian calendar date
+	 * @param gc1 Starting Calendar date
+	 * @param gc2 Ending Calendar date
 	 * @throws RrdException Thrown if invalid timestamps are supplied
 	 */
-	public DataProcessor(GregorianCalendar gc1, GregorianCalendar gc2) throws RrdException {
+	public DataProcessor(Calendar gc1, Calendar gc2) throws RrdException {
 		this(Util.getTimestamp(gc1), gc2 != null ? Util.getTimestamp(gc2) : 0);
-	}
-
-	public void setTimePeriod( long t1, long t2 ) throws RrdException
-	{
-		if ((t1 < t2 && t1 > 0 && t2 > 0) || (t1 > 0 && t2 == 0)) {
-			tStart = t1;
-			tEnd = t2;
-		}
-		else {
-			throw new RrdException("Invalid timestamps specified: " + t1 + ", " + t2);
-		}
 	}
 
 	/**
@@ -166,7 +153,7 @@ public class DataProcessor implements ConsolFuns {
 	 * {@link #processData()} method nor on aggregated values returned from {@link #getAggregates(String)}
 	 * and similar methods. In other words, aggregated values will not change once you decide to change
 	 * the dimension of your graph.<p>
-	 *
+	 * <p/>
 	 * The default number of pixels is defined by constant {@link #DEFAULT_PIXEL_COUNT}
 	 * and can be changed with a {@link #setPixelCount(int)} method.
 	 *
@@ -179,6 +166,7 @@ public class DataProcessor implements ConsolFuns {
 
 	/**
 	 * Returns the number of pixels (target graph width). See {@link #setPixelCount(int)} for more information.
+	 *
 	 * @return Target graph width
 	 */
 	public int getPixelCount() {
@@ -188,14 +176,14 @@ public class DataProcessor implements ConsolFuns {
 	/**
 	 * Roughly corresponds to the --step option in RRDTool's graph/xport commands. Here is an explanation borrowed
 	 * from RRDTool:<p>
-	 *
+	 * <p/>
 	 * <i>"By default rrdgraph calculates the width of one pixel in the time
 	 * domain and tries to get data at that resolution from the RRD. With
 	 * this switch you can override this behavior. If you want rrdgraph to
 	 * get data at 1 hour resolution from the RRD, then you can set the
 	 * step to 3600 seconds. Note, that a step smaller than 1 pixel will
 	 * be silently ignored."</i><p>
-	 *
+	 * <p/>
 	 * I think this option is not that useful, but it's here just for compatibility.<p>
 	 *
 	 * @param step Time step at which data should be fetched from RRD files. If this method is not used,
@@ -255,18 +243,10 @@ public class DataProcessor implements ConsolFuns {
 	}
 
 	/**
-	 * Returns the starting timestamp.
-	 *
-	 * @return Starting timestamp in seconds
-	 */
-	public long getStartingTimestamp() {
-		return tStart;
-	}
-
-	/**
 	 * Returns consolidated timestamps created with the {@link #processData()} method.
 	 *
 	 * @return array of timestamps in seconds
+	 * @throws RrdException thrown if timestamps are not calculated yet
 	 */
 	public long[] getTimestamps() throws RrdException {
 		if (timestamps == null) {
@@ -274,23 +254,6 @@ public class DataProcessor implements ConsolFuns {
 		}
 		else {
 			return timestamps;
-		}
-	}
-
-	/**
-	 * Returns the same as getTimestamps(), only as an array of double primitives.
-	 *
-	 * @return array of timestamps in seconds
-	 */
-	public double[] getTimestampsDouble() throws RrdException {
-		if ( timestamps == null ) {
-			throw new RrdException("Timestamps not calculated yet");
-		}
-		else {
-			if ( dblTimestamps == null )
-				dblTimestamps = Util.toDoubleArray( timestamps );
-			
-			return dblTimestamps;
 		}
 	}
 
@@ -333,6 +296,7 @@ public class DataProcessor implements ConsolFuns {
 
 	/**
 	 * Returns all (MIN, MAX, LAST, FIRST, AVERAGE and TOTAL) aggregated values for a single datasource.
+	 *
 	 * @param sourceName Datasource name
 	 * @return Object containing all aggregated values
 	 * @throws RrdException Thrown if invalid datasource name is specified,
@@ -346,13 +310,13 @@ public class DataProcessor implements ConsolFuns {
 
 	/**
 	 * This method is just an alias for {@link #getPercentile(String)} method.
-	 *
+	 * <p/>
 	 * Used by ISPs which charge for bandwidth utilization on a "95th percentile" basis.<p>
-	 *
+	 * <p/>
 	 * The 95th percentile is the highest source value left when the top 5% of a numerically sorted set
 	 * of source data is discarded. It is used as a measure of the peak value used when one discounts
 	 * a fair amount for transitory spikes. This makes it markedly different from the average.<p>
-	 *
+	 * <p/>
 	 * Read more about this topic at
 	 * <a href="http://www.red.net/support/resourcecentre/leasedline/percentile.php">Rednet</a> or
 	 * <a href="http://www.bytemark.co.uk/support/tech/95thpercentile.html">Bytemark</a>.
@@ -367,11 +331,11 @@ public class DataProcessor implements ConsolFuns {
 
 	/**
 	 * Used by ISPs which charge for bandwidth utilization on a "95th percentile" basis.<p>
-	 *
+	 * <p/>
 	 * The 95th percentile is the highest source value left when the top 5% of a numerically sorted set
 	 * of source data is discarded. It is used as a measure of the peak value used when one discounts
 	 * a fair amount for transitory spikes. This makes it markedly different from the average.<p>
-	 *
+	 * <p/>
 	 * Read more about this topic at
 	 * <a href="http://www.red.net/support/resourcecentre/leasedline/percentile.php">Rednet</a> or
 	 * <a href="http://www.bytemark.co.uk/support/tech/95thpercentile.html">Bytemark</a>.
@@ -387,14 +351,15 @@ public class DataProcessor implements ConsolFuns {
 	/**
 	 * The same as {@link #getPercentile(String)} but with a possibility to define custom percentile boundary
 	 * (different from 95).
+	 *
 	 * @param sourceName Datasource name.
 	 * @param percentile Boundary percentile. Value of 95 (%) is suitable in most cases, but you are free
-	 * to provide your own percentile boundary between zero and 100.
+	 *                   to provide your own percentile boundary between zero and 100.
 	 * @return Requested percentile of fetched source values
 	 * @throws RrdException Thrown if invalid sourcename is supplied, or if the percentile value makes no sense.
 	 */
 	public double getPercentile(String sourceName, double percentile) throws RrdException {
-		if(percentile <= 0.0 || percentile > 100.0) {
+		if (percentile <= 0.0 || percentile > 100.0) {
 			throw new RrdException("Invalid percentile [" + percentile + "], should be between 0 and 100");
 		}
 		Source source = getSource(sourceName);
@@ -407,7 +372,7 @@ public class DataProcessor implements ConsolFuns {
 	 * @return array of datasource names
 	 */
 	public String[] getSourceNames() {
-		return (String[]) sources.keySet().toArray(new String[0]);
+		return sources.keySet().toArray(new String[0]);
 	}
 
 	/**
@@ -432,9 +397,9 @@ public class DataProcessor implements ConsolFuns {
 	}
 
 	private Source getSource(String sourceName) throws RrdException {
-		Object source = sources.get(sourceName);
+		Source source = sources.get(sourceName);
 		if (source != null) {
-			return (Source) source;
+			return source;
 		}
 		throw new RrdException("Unknown source: " + sourceName);
 	}
@@ -444,11 +409,11 @@ public class DataProcessor implements ConsolFuns {
 	/////////////////////////////////////////////////////////////////
 
 	/**
-	 * <p>Adds a custom, {@link org.jrobin.graph.Plottable plottable} datasource (<b>PDEF</b>).
+	 * <p>Adds a custom, {@link org.jrobin.data.Plottable plottable} datasource (<b>PDEF</b>).
 	 * The datapoints should be made available by a class extending
-	 * {@link org.jrobin.graph.Plottable Plottable} class.</p>
+	 * {@link org.jrobin.data.Plottable Plottable} class.</p>
 	 *
-	 * @param name      source name.
+	 * @param name	  source name.
 	 * @param plottable class that extends Plottable class and is suited for graphing.
 	 */
 	public void addDatasource(String name, Plottable plottable) {
@@ -457,56 +422,28 @@ public class DataProcessor implements ConsolFuns {
 	}
 
 	/**
-	 * <p>Adds a custom source (<b>PDEF</b>).
-	 * The datapoints should be made available by a class extending
-	 * {@link org.jrobin.graph.Plottable Plottable}.</p>
-	 *
-	 * @param name      Source name.
-	 * @param plottable Class that extends Plottable class and is suited for graphing.
-	 * @param index     Integer referring to the datasource in the Plottable class.
-	 */
-	public void addDatasource(String name, Plottable plottable, int index) {
-		PDef pDef = new PDef(name, plottable, index);
-		sources.put(name, pDef);
-	}
-
-	/**
-	 * <p>Adds a custom source (<b>PDEF</b>).
-	 * The datapoints should be made available by a class extending
-	 * {@link org.jrobin.graph.Plottable Plottable}.</p>
-	 *
-	 * @param name       Source name.
-	 * @param plottable  Class that extends Plottable class and is suited for graphing.
-	 * @param sourceName String name referring to the datasource in the Plottable class.
-	 */
-	public void addDatasource(String name, Plottable plottable, String sourceName) {
-		PDef pDef = new PDef(name, plottable, sourceName);
-		sources.put(name, pDef);
-	}
-
-	/**
 	 * <p>Adds complex source (<b>CDEF</b>).
 	 * Complex sources are evaluated using the supplied <code>RPN</code> expression.</p>
-	 *
+	 * <p/>
 	 * <p>Complex source <code>name</code> can be used:</p>
 	 * <ul>
 	 * <li>To specify sources for line, area and stack plots.</li>
 	 * <li>To define other complex sources.</li>
 	 * </ul>
-	 *
+	 * <p/>
 	 * <p>JRobin supports the following RPN functions, operators and constants: +, -, *, /,
 	 * %, SIN, COS, LOG, EXP, FLOOR, CEIL, ROUND, POW, ABS, SQRT, RANDOM, LT, LE, GT, GE, EQ,
 	 * IF, MIN, MAX, LIMIT, DUP, EXC, POP, UN, UNKN, NOW, TIME, PI, E,
 	 * AND, OR, XOR, PREV, PREV(sourceName), INF, NEGINF, STEP, YEAR, MONTH, DATE,
 	 * HOUR, MINUTE, SECOND, WEEK, SIGN and RND.</p>
-	 *
+	 * <p/>
 	 * <p>JRobin does not force you to specify at least one simple source name as RRDTool.</p>
-	 *
+	 * <p/>
 	 * <p>For more details on RPN see RRDTool's
 	 * <a href="http://people.ee.ethz.ch/~oetiker/webtools/rrdtool/manual/rrdgraph.html" target="man">
 	 * rrdgraph man page</a>.</p>
 	 *
-	 * @param name          source name.
+	 * @param name		  source name.
 	 * @param rpnExpression RPN expression containig comma (or space) delimited simple and complex
 	 *                      source names, RPN constants, functions and operators.
 	 */
@@ -519,7 +456,7 @@ public class DataProcessor implements ConsolFuns {
 	 * <p>Adds static source (<b>SDEF</b>). Static sources are the result of a consolidation function applied
 	 * to *any* other source that has been defined previously.</p>
 	 *
-	 * @param name      source name.
+	 * @param name	  source name.
 	 * @param defName   Name of the datasource to calculate the value from.
 	 * @param consolFun Consolidation function to use for value calculation
 	 */
@@ -536,9 +473,9 @@ public class DataProcessor implements ConsolFuns {
 	 * <li>To define complex sources
 	 * </ul>
 	 *
-	 * @param name       source name.
-	 * @param file       Path to RRD file.
-	 * @param dsName     Datasource name defined in the RRD file.
+	 * @param name	   source name.
+	 * @param file	   Path to RRD file.
+	 * @param dsName	 Datasource name defined in the RRD file.
 	 * @param consolFunc Consolidation function that will be used to extract data from the RRD
 	 *                   file ("AVERAGE", "MIN", "MAX" or "LAST" - these string constants are conveniently defined
 	 *                   in the {@link org.jrobin.core.ConsolFuns ConsolFuns} class).
@@ -555,13 +492,13 @@ public class DataProcessor implements ConsolFuns {
 	 * <li>To define complex sources
 	 * </ul>
 	 *
-	 * @param name       Source name.
-	 * @param file       Path to RRD file.
-	 * @param dsName     Data source name defined in the RRD file.
+	 * @param name	   Source name.
+	 * @param file	   Path to RRD file.
+	 * @param dsName	 Data source name defined in the RRD file.
 	 * @param consolFunc Consolidation function that will be used to extract data from the RRD
 	 *                   file ("AVERAGE", "MIN", "MAX" or "LAST" - these string constants are conveniently defined
 	 *                   in the {@link org.jrobin.core.ConsolFuns ConsolFuns} class).
-	 * @param backend    Name of the RrdBackendFactory that should be used for this RrdDb.
+	 * @param backend	Name of the RrdBackendFactory that should be used for this RrdDb.
 	 */
 	public void addDatasource(String name, String file, String dsName, String consolFunc, String backend) {
 		Def def = new Def(name, file, dsName, consolFunc, backend);
@@ -572,7 +509,7 @@ public class DataProcessor implements ConsolFuns {
 	 * Adds DEF datasource with datasource values already available in the FetchData object. This method is
 	 * used internally by JRobin and probably has no purpose outside of it.
 	 *
-	 * @param name Source name.
+	 * @param name	  Source name.
 	 * @param fetchData Fetched data containing values for the given source name.
 	 */
 	public void addDatasource(String name, FetchData fetchData) {
@@ -592,7 +529,6 @@ public class DataProcessor implements ConsolFuns {
 	 * @throws RrdException Thrown in case of JRobin specific error
 	 */
 	public void processData() throws IOException, RrdException {
-		generationTime = System.currentTimeMillis();
 		extractDefs();
 		fetchRrdData();
 		fixZeroEndingTimestamp();
@@ -613,7 +549,7 @@ public class DataProcessor implements ConsolFuns {
 	 * @param pixelCount Graph width
 	 * @return Per-pixel datasource values
 	 * @throws RrdException Thrown if datasource values are not yet calculated (method {@link #processData()}
-	 * was not called)
+	 *                      was not called)
 	 */
 	public double[] getValuesPerPixel(String sourceName, int pixelCount) throws RrdException {
 		setPixelCount(pixelCount);
@@ -629,7 +565,7 @@ public class DataProcessor implements ConsolFuns {
 	 * @param sourceName Datasource name
 	 * @return Per-pixel datasource values
 	 * @throws RrdException Thrown if datasource values are not yet calculated (method {@link #processData()}
-	 * was not called)
+	 *                      was not called)
 	 */
 	public double[] getValuesPerPixel(String sourceName) throws RrdException {
 		double[] values = getValues(sourceName);
@@ -696,8 +632,8 @@ public class DataProcessor implements ConsolFuns {
 		double[][] values = getValues();
 		StringBuffer buffer = new StringBuffer();
 		buffer.append(format("timestamp", 12));
-		for (int i = 0; i < names.length; i++) {
-			buffer.append(format(names[i], 20));
+		for (String name : names) {
+			buffer.append(format(name, 20));
 		}
 		buffer.append("\n");
 		for (int i = 0; i < timestamps.length; i++) {
@@ -710,22 +646,25 @@ public class DataProcessor implements ConsolFuns {
 		return buffer.toString();
 	}
 
-	public long getGenerationTime() {
-		return generationTime;
+	/**
+	 * Returns time when last RRD archive was updated (all RRD files are considered).
+	 *
+	 * @return Last archive update time for all RRD files in this DataProcessor
+	 */
+	public long getLastRrdArchiveUpdateTime() {
+		return lastRrdArchiveUpdateTime;
 	}
 
 	// PRIVATE METHODS
 
 	private void extractDefs() {
-		List defList = new ArrayList();
-		Iterator it = sources.values().iterator();
-		while (it.hasNext()) {
-			Source source = (Source) it.next();
+		List<Def> defList = new ArrayList<Def>();
+		for (Source source : sources.values()) {
 			if (source instanceof Def) {
-				defList.add(source);
+				defList.add((Def) source);
 			}
 		}
-		defSources = (Def[]) defList.toArray(new Def[defList.size()]);
+		defSources = defList.toArray(new Def[defList.size()]);
 	}
 
 	private void fetchRrdData() throws IOException, RrdException {
@@ -733,7 +672,7 @@ public class DataProcessor implements ConsolFuns {
 		for (int i = 0; i < defSources.length; i++) {
 			if (!defSources[i].isLoaded()) {
 				// not fetched yet
-				Set dsNames = new HashSet();
+				Set<String> dsNames = new HashSet<String>();
 				dsNames.add(defSources[i].getDsName());
 				// look for all other datasources with the same path and the same consolidation function
 				for (int j = i + 1; j < defSources.length; j++) {
@@ -745,6 +684,7 @@ public class DataProcessor implements ConsolFuns {
 				RrdDb rrd = null;
 				try {
 					rrd = getRrd(defSources[i]);
+					lastRrdArchiveUpdateTime = Math.max(lastRrdArchiveUpdateTime, rrd.getLastArchiveUpdateTime());
 					FetchRequest req = rrd.createFetchRequest(defSources[i].getConsolFun(),
 							tStart, tEndFixed, fetchRequestResolution);
 					req.setFilter(dsNames);
@@ -783,8 +723,8 @@ public class DataProcessor implements ConsolFuns {
 	// Tricky and ugly. Should be redesigned some time in the future
 	private void chooseOptimalStep() {
 		long newStep = Long.MAX_VALUE;
-		for (int i = 0; i < defSources.length; i++) {
-			long fetchStep = defSources[i].getFetchStep(), tryStep = fetchStep;
+		for (Def defSource : defSources) {
+			long fetchStep = defSource.getFetchStep(), tryStep = fetchStep;
 			if (step > 0) {
 				tryStep = Math.min(newStep, (((step - 1) / fetchStep) + 1) * fetchStep);
 			}
@@ -815,28 +755,23 @@ public class DataProcessor implements ConsolFuns {
 	}
 
 	private void assignTimestampsToSources() {
-		Iterator it = sources.values().iterator();
-		while (it.hasNext()) {
-			Source src = (Source) it.next();
+		for (Source src : sources.values()) {
 			src.setTimestamps(timestamps);
 		}
 	}
 
 	private void normalizeRrdValues() throws RrdException {
-		for (int i = 0; i < defSources.length; i++) {
-			Def def = defSources[i];
+		Normalizer normalizer = new Normalizer(timestamps);
+		for (Def def : defSources) {
 			long[] rrdTimestamps = def.getRrdTimestamps();
 			double[] rrdValues = def.getRrdValues();
-			Normalizer normalizer = new Normalizer(timestamps);
 			double[] values = normalizer.normalize(rrdTimestamps, rrdValues);
 			def.setValues(values);
 		}
 	}
 
 	private void calculateNonRrdSources() throws RrdException {
-		Iterator it = sources.values().iterator();
-		while (it.hasNext()) {
-			Object source = it.next();
+		for (Source source : sources.values()) {
 			if (source instanceof SDef) {
 				calculateSDef((SDef) source);
 			}
@@ -908,6 +843,8 @@ public class DataProcessor implements ConsolFuns {
 		// time span
 		long t1 = Util.getTimestamp(2003, 4, 1);
 		long t2 = Util.getTimestamp(2003, 5, 1);
+		System.out.println("t1 = " + t1);
+		System.out.println("t2 = " + t2);
 
 		// RRD file to use
 		String rrdPath = Util.getJRobinDemoPath("demo.rrd");
@@ -932,18 +869,10 @@ public class DataProcessor implements ConsolFuns {
 
 		// action
 		long laptime = System.currentTimeMillis();
+		//dp.setStep(86400);
 		dp.processData();
 		System.out.println("Data processed in " + (System.currentTimeMillis() - laptime) + " milliseconds\n---");
 		System.out.println(dp.dump());
-
-		// pixel values and timestamps
-		System.out.println("Per pixel timestasmps and values for datasource X (pixelCount=" +
-				dp.getPixelCount() + ")");
-		long[] t = dp.getTimestampsPerPixel();
-		double[] v = dp.getValuesPerPixel("X");
-		for(int i = 0; i < t.length; i++) {
-			System.out.println(t[i] + "  " + Util.formatDouble(v[i]));
-		}
 
 		// aggregates
 		System.out.println("\nAggregates for X");
@@ -956,6 +885,9 @@ public class DataProcessor implements ConsolFuns {
 		// 95-percentile
 		System.out.println("\n95-percentile for X: " + Util.formatDouble(dp.get95Percentile("X")));
 		System.out.println("95-percentile for Y: " + Util.formatDouble(dp.get95Percentile("Y")));
+
+		// lastArchiveUpdateTime
+		System.out.println("\nLast archive update time was: " + dp.getLastRrdArchiveUpdateTime());
 	}
 }
 

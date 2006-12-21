@@ -3,12 +3,12 @@
  * ============================================================
  *
  * Project Info:  http://www.jrobin.org
- * Project Lead:  Sasa Markovic (saxon@jrobin.org);
- *
- * (C) Copyright 2003-2005, by Sasa Markovic.
+ * Project Lead:  Sasa Markovic (saxon@jrobin.org)
  *
  * Developers:    Sasa Markovic (saxon@jrobin.org)
  *
+ *
+ * (C) Copyright 2003-2005, by Sasa Markovic.
  *
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation;
@@ -22,36 +22,19 @@
  * library; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+package org.jrobin.graph;
 
-package org.jrobin.core;
+import org.jrobin.data.DataProcessor;
 
-import java.io.IOException;
+class CDef extends Source {
+	private final String rpnExpression;
 
-class RrdDouble extends RrdPrimitive {
-	private double cache;
-	private boolean cached = false;
-
-	RrdDouble(RrdUpdater updater, boolean isConstant) throws IOException {
-		super(updater, RrdDouble.RRD_DOUBLE, isConstant);
+	CDef(String name, String rpnExpression) {
+		super(name);
+		this.rpnExpression = rpnExpression;
 	}
 
-	RrdDouble(RrdUpdater updater) throws IOException {
-		super(updater, RrdDouble.RRD_DOUBLE, false);
-	}
-
-	void set(double value) throws IOException {
-		if (!isCachingAllowed()) {
-			writeDouble(value);
-		}
-		// caching allowed
-		else if (!cached || !Util.equal(cache, value)) {
-			// update cache
-			writeDouble(cache = value);
-			cached = true;
-		}
-	}
-
-	double get() throws IOException {
-		return cached ? cache : readDouble();
+	void requestData(DataProcessor dproc) {
+		dproc.addDatasource(name, rpnExpression);
 	}
 }

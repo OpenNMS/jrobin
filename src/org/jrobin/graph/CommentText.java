@@ -42,10 +42,10 @@ class CommentText implements RrdGraphConstants {
 	void resolveText(DataProcessor dproc, ValueScaler valueScaler) throws RrdException {
 		resolvedText = text;
 		marker = "";
-		if(resolvedText != null) {
-			for (int i = 0; i < MARKERS.length; i++) {
-				if (resolvedText.endsWith(MARKERS[i])) {
-					marker = MARKERS[i];
+		if (resolvedText != null) {
+			for (String mark : MARKERS) {
+				if (resolvedText.endsWith(mark)) {
+					marker = mark;
 					resolvedText = resolvedText.substring(0, resolvedText.length() - marker.length());
 					trimIfGlue();
 					break;

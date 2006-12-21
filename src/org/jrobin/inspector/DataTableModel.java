@@ -8,7 +8,7 @@
  * (C) Copyright 2003, by Sasa Markovic.
  *
  * Developers:    Sasa Markovic (saxon@jrobin.org)
- *                Arne Vandamme (cobralord@jrobin.org)
+ *
  *
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation;
@@ -40,7 +40,7 @@ class DataTableModel extends AbstractTableModel {
 	private int dsIndex = -1, arcIndex = -1;
 
 	public int getRowCount() {
-		if(values == null) {
+		if (values == null) {
 			return 0;
 		}
 		else {
@@ -53,7 +53,7 @@ class DataTableModel extends AbstractTableModel {
 	}
 
 	public Object getValueAt(int rowIndex, int columnIndex) {
-		if(values == null) {
+		if (values == null) {
 			return "--";
 		}
 		return values[rowIndex][columnIndex];
@@ -76,15 +76,19 @@ class DataTableModel extends AbstractTableModel {
 		catch (NumberFormatException nfe) {
 			value = Double.NaN;
 		}
-		if(dsIndex >= 0 && arcIndex >= 0 && file != null) {
+		if (dsIndex >= 0 && arcIndex >= 0 && file != null) {
 			try {
 				RrdDb rrd = new RrdDb(file.getAbsolutePath());
-				Robin robin = rrd.getArchive(arcIndex).getRobin(dsIndex);
-				robin.setValue(rowIndex, value);
-				values[rowIndex][2] = InspectorModel.formatDouble(robin.getValue(rowIndex));
-				rrd.close();
+				try {
+					Robin robin = rrd.getArchive(arcIndex).getRobin(dsIndex);
+					robin.setValue(rowIndex, value);
+					values[rowIndex][2] = InspectorModel.formatDouble(robin.getValue(rowIndex));
+				}
+				finally {
+					rrd.close();
+				}
 			}
-			catch(Exception e) {
+			catch (Exception e) {
 				Util.error(null, e);
 			}
 		}
@@ -100,24 +104,28 @@ class DataTableModel extends AbstractTableModel {
 			dsIndex = newDsIndex;
 			arcIndex = newArcIndex;
 			values = null;
-			if(dsIndex >= 0 && arcIndex >= 0) {
+			if (dsIndex >= 0 && arcIndex >= 0) {
 				try {
 					RrdDb rrd = new RrdDb(file.getAbsolutePath(), true);
-					Archive arc = rrd.getArchive(arcIndex);
-					Robin robin = arc.getRobin(dsIndex);
-					long start = arc.getStartTime();
-					long step = arc.getArcStep();
-					double robinValues[] = robin.getValues();
-					values = new Object[robinValues.length][];
-					for(int i = 0; i < robinValues.length; i++) {
-						long timestamp = start + i * step;
-						String date = new Date(timestamp * 1000L).toString();
-						String value = InspectorModel.formatDouble(robinValues[i]);
-						values[i] = new Object[] {
-							"" + timestamp,	date, value
-						};
+					try {
+						Archive arc = rrd.getArchive(arcIndex);
+						Robin robin = arc.getRobin(dsIndex);
+						long start = arc.getStartTime();
+						long step = arc.getArcStep();
+						double robinValues[] = robin.getValues();
+						values = new Object[robinValues.length][];
+						for (int i = 0; i < robinValues.length; i++) {
+							long timestamp = start + i * step;
+							String date = new Date(timestamp * 1000L).toString();
+							String value = InspectorModel.formatDouble(robinValues[i]);
+							values[i] = new Object[] {
+									"" + timestamp, date, value
+							};
+						}
 					}
-					rrd.close();
+					finally {
+						rrd.close();
+					}
 				}
 				catch (IOException e) {
 					Util.error(null, e);

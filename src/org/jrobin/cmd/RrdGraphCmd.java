@@ -203,16 +203,16 @@ class RrdGraphCmd extends RrdToolCmd implements RrdGraphConstants {
 		}
 		// create diagram finally
 		RrdGraphInfo info = new RrdGraph(gdef).getRrdGraphInfo();
-		if(info.getFilename().equals(RrdGraphConstants.IN_MEMORY_IMAGE)) {
+		if (info.getFilename().equals(RrdGraphConstants.IN_MEMORY_IMAGE)) {
 			println(new String(info.getBytes()));
 		}
 		else {
 			println(info.getWidth() + "x" + info.getHeight());
 			String[] plines = info.getPrintLines();
-			for(int i = 0; i < plines.length; i++) {
-				println(plines[i]);
+			for (String pline : plines) {
+				println(pline);
 			}
-			if(info.getImgInfo() != null && info.getImgInfo().length() > 0) {
+			if (info.getImgInfo() != null && info.getImgInfo().length() > 0) {
 				println(info.getImgInfo());
 			}
 		}
@@ -346,10 +346,10 @@ class RrdGraphCmd extends RrdToolCmd implements RrdGraphConstants {
 		if (colorOptions == null) {
 			return;
 		}
-		for (int i = 0; i < colorOptions.length; i++) {
-			String[] tokens = colorOptions[i].split("#");
+		for (String colorOption : colorOptions) {
+			String[] tokens = colorOption.split("#");
 			if (tokens.length != 2) {
-				throw new RrdException("Invalid COLOR specification: " + colorOptions[i]);
+				throw new RrdException("Invalid COLOR specification: " + colorOption);
 			}
 			String colorName = tokens[0];
 			Paint paint = Util.parseColor(tokens[1]);

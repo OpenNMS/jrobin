@@ -8,7 +8,7 @@
  * (C) Copyright 2003, by Sasa Markovic.
  *
  * Developers:    Sasa Markovic (saxon@jrobin.org)
- *                Arne Vandamme (cobralord@jrobin.org)
+ *
  *
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation;
@@ -47,16 +47,16 @@ class Util {
 		error(parent, e.toString());
 	}
 
-	private static Vector windows = new Vector();
+	private static Vector<Window> windows = new Vector<Window>();
 	private static final int WINDOW_POSITION_SHIFT = 20;
 
 	static void placeWindow(Window window) {
 		int count = windows.size();
-		if(count == 0) {
+		if (count == 0) {
 			centerOnScreen(window);
 		}
 		else {
-			Window last = (Window) windows.get(count - 1);
+			Window last = windows.get(count - 1);
 			int x = last.getX() + WINDOW_POSITION_SHIFT;
 			int y = last.getY() + WINDOW_POSITION_SHIFT;
 			window.setLocation(x, y);
@@ -66,7 +66,7 @@ class Util {
 
 	static void dismissWindow(Window window) {
 		windows.remove(window);
-		if(windows.size() == 0) {
+		if (windows.size() == 0) {
 			System.exit(0);
 		}
 	}

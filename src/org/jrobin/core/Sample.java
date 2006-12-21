@@ -5,10 +5,10 @@
  * Project Info:  http://www.jrobin.org
  * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
- * (C) Copyright 2003, by Sasa Markovic.
+ * (C) Copyright 2003-2005, by Sasa Markovic.
  *
  * Developers:    Sasa Markovic (saxon@jrobin.org)
- *                Arne Vandamme (cobralord@jrobin.org)
+ *
  *
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation;
@@ -33,23 +33,23 @@ import java.util.StringTokenizer;
  * class are never created directly (no public constructor is provided). To learn more how
  * to update RRDs, see RRDTool's
  * <a href="../../../../man/rrdupdate.html" target="man">rrdupdate man page</a>.
- *
+ * <p/>
  * <p>To update a RRD with JRobin use the following procedure:</p>
- *
+ * <p/>
  * <ol>
- * <li>Obtain empty Sample object by calling method {@link org.jrobin.core.RrdDb#createSample(long)
- * createSample()} on respective {@link org.jrobin.core.RrdDb RrdDb} object.
+ * <li>Obtain empty Sample object by calling method {@link RrdDb#createSample(long)
+ * createSample()} on respective {@link RrdDb RrdDb} object.
  * <li>Adjust Sample timestamp if necessary (see {@link #setTime(long) setTime()} method).
- * <li>Supply data source values (see {@link #setValue(java.lang.String, double) setValue()}).
+ * <li>Supply data source values (see {@link #setValue(String, double) setValue()}).
  * <li>Call Sample's {@link #update() update()} method.
  * </ol>
- *
+ * <p/>
  * <p>Newly created Sample object contains all data source values set to 'unknown'.
  * You should specifify only 'known' data source values. However, if you want to specify
  * 'unknown' values too, use <code>Double.NaN</code>.</p>
  *
  * @author <a href="mailto:saxon@jrobin.org">Sasa Markovic</a>
- */ 
+ */
 public class Sample {
 	private RrdDb parentDb;
 	private long time;
@@ -65,7 +65,7 @@ public class Sample {
 	}
 
 	private Sample clearCurrentValues() {
-		for(int i = 0; i < values.length; i++) {
+		for (int i = 0; i < values.length; i++) {
 			values[i] = Double.NaN;
 		}
 		return this;
@@ -73,14 +73,15 @@ public class Sample {
 
 	/**
 	 * Sets single data source value in the sample.
+	 *
 	 * @param dsName Data source name.
-	 * @param value Data source value.
-	 * @throws RrdException Thrown if invalid data source name is supplied.
+	 * @param value  Data source value.
 	 * @return This <code>Sample</code> object
+	 * @throws RrdException Thrown if invalid data source name is supplied.
 	 */
 	public Sample setValue(String dsName, double value) throws RrdException {
-		for(int i = 0; i < values.length; i++) {
-			if(dsNames[i].equals(dsName)) {
+		for (int i = 0; i < values.length; i++) {
+			if (dsNames[i].equals(dsName)) {
 				values[i] = value;
 				return this;
 			}
@@ -91,13 +92,14 @@ public class Sample {
 	/**
 	 * Sets single datasource value using data source index. Data sources are indexed by
 	 * the order specified during RRD creation (zero-based).
-	 * @param i Data source index
+	 *
+	 * @param i	 Data source index
 	 * @param value Data source values
- 	 * @return This <code>Sample</code> object
+	 * @return This <code>Sample</code> object
 	 * @throws RrdException Thrown if data source index is invalid.
 	 */
 	public Sample setValue(int i, double value) throws RrdException {
-		if(i < values.length) {
+		if (i < values.length) {
 			values[i] = value;
 			return this;
 		}
@@ -113,23 +115,22 @@ public class Sample {
 	 * @param values Data source values.
 	 * @return This <code>Sample</code> object
 	 * @throws RrdException Thrown if the number of supplied values is zero or greater
-	 * than the number of data sources defined in the RRD.
+	 *                      than the number of data sources defined in the RRD.
 	 */
 	public Sample setValues(double[] values) throws RrdException {
-		if(values.length <= this.values.length) {
-			for(int i = 0; i < values.length; i++) {
-				this.values[i] = values[i];
-			}
+		if (values.length <= this.values.length) {
+			System.arraycopy(values, 0, this.values, 0, values.length);
 			return this;
 		}
 		else {
 			throw new RrdException("Invalid number of values specified (found " +
-				values.length +	", only " + dsNames.length + " allowed)");
+					values.length + ", only " + dsNames.length + " allowed)");
 		}
 	}
 
 	/**
 	 * Returns all current data source values in the sample.
+	 *
 	 * @return Data source values.
 	 */
 	public double[] getValues() {
@@ -138,6 +139,7 @@ public class Sample {
 
 	/**
 	 * Returns sample timestamp (in seconds, without milliseconds).
+	 *
 	 * @return Sample timestamp.
 	 */
 	public long getTime() {
@@ -146,6 +148,7 @@ public class Sample {
 
 	/**
 	 * Sets sample timestamp. Timestamp should be defined in seconds (without milliseconds).
+	 *
 	 * @param time New sample timestamp.
 	 * @return This <code>Sample</code> object
 	 */
@@ -157,6 +160,7 @@ public class Sample {
 	/**
 	 * Returns an array of all data source names. If you try to set value for the data source
 	 * name not in this array, an exception is thrown.
+	 *
 	 * @return Acceptable data source names.
 	 */
 	public String[] getDsNames() {
@@ -167,42 +171,42 @@ public class Sample {
 	 * <p>Sets sample timestamp and data source values in a fashion similar to RRDTool.
 	 * Argument string should be composed in the following way:
 	 * <code>timestamp:value1:value2:...:valueN</code>.</p>
-	 *
+	 * <p/>
 	 * <p>You don't have to supply all datasource values. Unspecified values will be treated
 	 * as unknowns. To specify unknown value in the argument string, use letter 'U'
 	 *
 	 * @param timeAndValues String made by concatenating sample timestamp with corresponding
-	 * data source values delmited with colons. For example:<p>
-	 * <pre>
-	 * 1005234132:12.2:35.6:U:24.5
-	 * NOW:12.2:35.6:U:24.5
-	 * </pre>
-	 * 'N' stands for the current timestamp (can be replaced with 'NOW')<p>
-	 * Method will throw an exception if timestamp is invalid (cannot be parsed as Long, and is not 'N'
-	 * or 'NOW'). Datasource value which cannot be parsed as 'double' will be silently set to NaN.<p>
+	 *                      data source values delmited with colons. For example:<p>
+	 *                      <pre>
+	 *                      1005234132:12.2:35.6:U:24.5
+	 *                      NOW:12.2:35.6:U:24.5
+	 *                      </pre>
+	 *                      'N' stands for the current timestamp (can be replaced with 'NOW')<p>
+	 *                      Method will throw an exception if timestamp is invalid (cannot be parsed as Long, and is not 'N'
+	 *                      or 'NOW'). Datasource value which cannot be parsed as 'double' will be silently set to NaN.<p>
 	 * @return This <code>Sample</code> object
 	 * @throws RrdException Thrown if too many datasource values are supplied
 	 */
 	public Sample set(String timeAndValues) throws RrdException {
 		StringTokenizer tokenizer = new StringTokenizer(timeAndValues, ":", false);
 		int n = tokenizer.countTokens();
-		if(n > values.length + 1) {
+		if (n > values.length + 1) {
 			throw new RrdException("Invalid number of values specified (found " +
-				values.length +	", " + dsNames.length + " allowed)");
+					values.length + ", " + dsNames.length + " allowed)");
 		}
 		String timeToken = tokenizer.nextToken();
 		try {
 			time = Long.parseLong(timeToken);
 		}
-		catch(NumberFormatException nfe) {
-			if(timeToken.equalsIgnoreCase("N") || timeToken.equalsIgnoreCase("NOW")) {
+		catch (NumberFormatException nfe) {
+			if (timeToken.equalsIgnoreCase("N") || timeToken.equalsIgnoreCase("NOW")) {
 				time = Util.getTime();
 			}
 			else {
 				throw new RrdException("Invalid sample timestamp: " + timeToken);
 			}
 		}
-		for(int i = 0; tokenizer.hasMoreTokens(); i++) {
+		for (int i = 0; tokenizer.hasMoreTokens(); i++) {
 			try {
 				values[i] = Double.parseDouble(tokenizer.nextToken());
 			}
@@ -217,7 +221,7 @@ public class Sample {
 	 * Stores sample in the corresponding RRD. If the update operation succeedes,
 	 * all datasource values in the sample will be set to Double.NaN (unknown) values.
 	 *
-	 * @throws IOException Thrown in case of I/O error.
+	 * @throws IOException  Thrown in case of I/O error.
 	 * @throws RrdException Thrown in case of JRobin related error.
 	 */
 	public void update() throws IOException, RrdException {
@@ -233,12 +237,12 @@ public class Sample {
 	 *     set(timeAndValues);
 	 *     update();
 	 * </pre>
-	 * @param timeAndValues String made by concatenating sample timestamp with corresponding
-	 * data source values delmited with colons. For example:<br>
-	 * <code>1005234132:12.2:35.6:U:24.5</code><br>
-	 * <code>NOW:12.2:35.6:U:24.5</code>
 	 *
-	 * @throws IOException Thrown in case of I/O error.
+	 * @param timeAndValues String made by concatenating sample timestamp with corresponding
+	 *                      data source values delmited with colons. For example:<br>
+	 *                      <code>1005234132:12.2:35.6:U:24.5</code><br>
+	 *                      <code>NOW:12.2:35.6:U:24.5</code>
+	 * @throws IOException  Thrown in case of I/O error.
 	 * @throws RrdException Thrown in case of JRobin related error.
 	 */
 	public void setAndUpdate(String timeAndValues) throws IOException, RrdException {
@@ -248,14 +252,15 @@ public class Sample {
 
 	/**
 	 * Dumps sample content using the syntax of RRDTool's update command.
+	 *
 	 * @return Sample dump.
 	 */
 	public String dump() {
 		StringBuffer buffer = new StringBuffer("update \"");
-		buffer.append(parentDb.getRrdBackend().getPath() + "\" " + time);
-		for(int i = 0; i < values.length; i++) {
+		buffer.append(parentDb.getRrdBackend().getPath()).append("\" ").append(time);
+		for (double value : values) {
 			buffer.append(":");
-			buffer.append(Util.formatDouble(values[i], "U", false));
+			buffer.append(Util.formatDouble(value, "U", false));
 		}
 		return buffer.toString();
 	}

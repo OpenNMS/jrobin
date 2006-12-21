@@ -5,10 +5,10 @@
  * Project Info:  http://www.jrobin.org
  * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
- * (C) Copyright 2003, by Sasa Markovic.
+ * (C) Copyright 2003-2005, by Sasa Markovic.
  *
  * Developers:    Sasa Markovic (saxon@jrobin.org)
- *                Arne Vandamme (cobralord@jrobin.org)
+ *
  *
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation;
@@ -25,11 +25,10 @@
 
 package org.jrobin.cmd;
 
-import org.jrobin.core.RrdException;
-import org.jrobin.core.RrdDef;
 import org.jrobin.core.RrdDb;
-import org.jrobin.core.timespec.TimeParser;
-import org.jrobin.core.timespec.TimeSpec;
+import org.jrobin.core.RrdDef;
+import org.jrobin.core.RrdException;
+import org.jrobin.core.Util;
 
 import java.io.IOException;
 
@@ -45,21 +44,20 @@ class RrdCreateCmd extends RrdToolCmd {
 
 	Object execute() throws RrdException, IOException {
 		String startStr = getOptionValue("b", "start", DEFAULT_START);
-		TimeSpec spec = new TimeParser(startStr).parse();
-		long start = spec.getTimestamp();
+		long start = Util.getTimestamp(startStr);
 		String stepStr = getOptionValue("s", "step", DEFAULT_STEP);
 		long step = parseLong(stepStr);
 		String[] words = getRemainingWords();
-		if(words.length < 2) {
+		if (words.length < 2) {
 			throw new RrdException("RRD file path not specified");
 		}
 		String path = words[1];
 		rrdDef = new RrdDef(path, start, step);
-        for(int i = 2; i < words.length; i++) {
-			if(words[i].startsWith("DS:")) {
+		for (int i = 2; i < words.length; i++) {
+			if (words[i].startsWith("DS:")) {
 				parseDef(words[i]);
 			}
-			else if(words[i].startsWith("RRA:")) {
+			else if (words[i].startsWith("RRA:")) {
 				parseRra(words[i]);
 			}
 			else {
@@ -71,8 +69,8 @@ class RrdCreateCmd extends RrdToolCmd {
 
 	private void parseDef(String word) throws RrdException {
 		// DEF:name:type:heratbeat:min:max
-		String[] tokens = word.split(":");
-		if(tokens.length < 6) {
+		String[] tokens = new ColonSplitter(word).split();
+		if (tokens.length < 6) {
 			throw new RrdException("Invalid DS definition: " + word);
 		}
 		String dsName = tokens[1];
@@ -85,8 +83,8 @@ class RrdCreateCmd extends RrdToolCmd {
 
 	private void parseRra(String word) throws RrdException {
 		// RRA:cfun:xff:steps:rows
-		String[] tokens = word.split(":");
-		if(tokens.length < 5) {
+		String[] tokens = new ColonSplitter(word).split();
+		if (tokens.length < 5) {
 			throw new RrdException("Invalid RRA definition: " + word);
 		}
 		String cf = tokens[1];
