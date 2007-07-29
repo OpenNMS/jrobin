@@ -7,6 +7,9 @@
   <version>1.5.5-SNAPSHOT</version>
   <name>jrobin</name>
   <url>http://www.jrobin.org</url>
+  <build>
+    <sourceDirectory>src</sourceDirectory>
+  </build>
   <dependencies>
     <dependency>
       <groupId>junit</groupId>
