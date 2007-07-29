@@ -134,12 +134,10 @@ public class RrdGraphDef implements RrdGraphConstants {
 			InputStream fontStream = ClassLoader.getSystemClassLoader()
 					.getResourceAsStream("DejaVuSansMono.ttf");
 			smallFont = Font.createFont(Font.TRUETYPE_FONT, fontStream).deriveFont(11).deriveFont(Font.PLAIN);
-			System.err.println("Created font " + smallFont.toString());
 			fontStream.close();
 			fontStream = ClassLoader.getSystemClassLoader()
 					.getResourceAsStream("DejaVuSans-Bold.ttf");
 			largeFont = Font.createFont(Font.TRUETYPE_FONT, fontStream).deriveFont(12).deriveFont(Font.BOLD);
-			System.err.println("Created font " + largeFont.toString());
 			fontStream.close();
 		} catch (Exception ioe) {
 			// if we can't load custom fonts, fall back to the normal defaults
