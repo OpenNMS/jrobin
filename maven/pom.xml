@@ -4,7 +4,7 @@
   <groupId>org.jrobin</groupId>
   <artifactId>jrobin</artifactId>
   <name>jrobin</name>
-  <version>1.5.5-SNAPSHOT</version>
+  <version>1.5.5</version>
   <packaging>jar</packaging>
   <url>http://www.jrobin.org</url>
   <build>
@@ -18,13 +18,42 @@
       <plugin>
         <artifactId>maven-deploy-plugin</artifactId>
         <configuration>
-          <repositoryId>opennms-snapshot-repo</repositoryId>
-          <!--  <url>scpexe://repo.opennms.org/var/www/sites/opennms.org/site/repo/maven2</url> -->
+          <repositoryId>opennms-repo</repositoryId>
+          <!-- <repositoryId>opennms-snapshot-repo</repositoryId> -->
           <file>jrobin.jar</file>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-source-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
+  <reporting>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+      </plugin>
+    </plugins>
+  </reporting>
   <dependencies>
     <dependency>
       <groupId>junit</groupId>
@@ -48,4 +77,3 @@
   </snapshotRepository>
 </distributionManagement>
 </project>
-
