@@ -169,6 +169,8 @@ class ImageWorker {
 	void setAntiAliasing(boolean enable) {
 		gd.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
 				enable ? RenderingHints.VALUE_ANTIALIAS_ON : RenderingHints.VALUE_ANTIALIAS_OFF);
+		gd.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+		gd.setRenderingHint(RenderingHints.KEY_RENDERING,RenderingHints.VALUE_RENDER_QUALITY);
 	}
 
 	void dispose() {

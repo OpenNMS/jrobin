@@ -167,11 +167,13 @@ public interface RrdGraphConstants {
 	/**
 	 * Default minor grid color
 	 */
-	Color DEFAULT_GRID_COLOR = new Color(140, 140, 140);
+	Color DEFAULT_GRID_COLOR = new Color(171, 171, 171, 95);
+	// Color DEFAULT_GRID_COLOR = new Color(140, 140, 140);
 	/**
 	 * Default major grid color
 	 */
-	Color DEFAULT_MGRID_COLOR = new Color(130, 30, 30);
+	Color DEFAULT_MGRID_COLOR = new Color(255, 91, 91, 95);
+	// Color DEFAULT_MGRID_COLOR = new Color(130, 30, 30);
 	/**
 	 * Default font color
 	 */
@@ -321,8 +323,11 @@ public interface RrdGraphConstants {
 	/**
 	 * Stroke used to draw grid
 	 */
-	Stroke GRID_STROKE =
-			new BasicStroke(1, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 1, new float[] {1, 1}, 0);
+	// solid line
+	Stroke GRID_STROKE = new BasicStroke(1);
+	
+	// dotted line
+	// Stroke GRID_STROKE = new BasicStroke(1, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 1, new float[] {1, 1}, 0);
 	/**
 	 * Stroke used to draw ticks
 	 */

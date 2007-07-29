@@ -5,9 +5,25 @@
   <artifactId>jrobin</artifactId>
   <name>jrobin</name>
   <version>1.5.5-SNAPSHOT</version>
+  <packaging>jar</packaging>
   <url>http://www.jrobin.org</url>
   <build>
     <sourceDirectory>src</sourceDirectory>
+    <resources>
+      <resource>
+        <directory>fonts</directory>
+      </resource>
+    </resources>
+    <plugins>
+      <plugin>
+        <artifactId>maven-deploy-plugin</artifactId>
+        <configuration>
+          <repositoryId>opennms-snapshot-repo</repositoryId>
+          <!--  <url>scpexe://repo.opennms.org/var/www/sites/opennms.org/site/repo/maven2</url> -->
+          <file>jrobin.jar</file>
+        </configuration>
+      </plugin>
+    </plugins>
   </build>
   <dependencies>
     <dependency>
@@ -17,5 +33,19 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+  <distributionManagement>
+  <!-- use the following if you're not using a snapshot version. -->
+  <repository>
+    <id>opennms-repo</id>
+    <name>OpenNMS Release Repository</name>
+    <url>scpexe://repo.opennms.org/var/www/sites/opennms.org/site/repo/maven2</url>
+  </repository>
+  <!-- use the following if you ARE using a snapshot version. -->
+  <snapshotRepository>
+    <id>opennms-snapshot-repo</id>
+    <name>OpenNMS Snapshot Repository</name>
+    <url>scpexe://repo.opennms.org/var/www/sites/opennms.org/site/repo/snapshots</url>
+  </snapshotRepository>
+</distributionManagement>
 </project>
 

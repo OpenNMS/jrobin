@@ -29,6 +29,8 @@ import org.jrobin.core.Util;
 import org.jrobin.data.Plottable;
 
 import java.awt.*;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -124,9 +126,20 @@ public class RrdGraphDef implements RrdGraphConstants {
 	public RrdGraphDef() {
 		try {
 			setTimeSpan(Util.getTimestamps(DEFAULT_START, DEFAULT_END));
-		}
-		catch (RrdException e) {
+		} catch (RrdException e) {
 			throw new RuntimeException(e);
+		}
+		try {
+			InputStream fontStream = ClassLoader.getSystemClassLoader()
+					.getResourceAsStream("DejaVuSansMono.ttf");
+			smallFont = Font.createFont(Font.TRUETYPE_FONT, fontStream);
+			fontStream.close();
+			fontStream = ClassLoader.getSystemClassLoader()
+					.getResourceAsStream("DejaVuSans-Bold.ttf");
+			largeFont = Font.createFont(Font.TRUETYPE_FONT, fontStream);
+			fontStream.close();
+		} catch (Exception ioe) {
+			// if we can't load custom fonts, fall back to the normal defaults
 		}
 	}
 
