@@ -1,11 +1,10 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.jrobin</groupId>
   <artifactId>jrobin</artifactId>
-  <packaging>jar</packaging>
-  <version>1.5.5-SNAPSHOT</version>
   <name>jrobin</name>
+  <version>1.5.5-SNAPSHOT</version>
   <url>http://www.jrobin.org</url>
   <build>
     <sourceDirectory>src</sourceDirectory>
@@ -17,5 +16,16 @@
       <version>3.8.1</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.apache.xmlrpc</groupId>
+      <artifactId>xmlrpc-client</artifactId>
+      <version>3.0</version>
+    </dependency>
+    <dependency>
+      <groupId>westhawk</groupId>
+      <artifactId>snmp</artifactId>
+      <version>4_13</version>
+    </dependency>
   </dependencies>
 </project>
+
