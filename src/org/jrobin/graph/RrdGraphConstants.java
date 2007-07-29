@@ -258,10 +258,12 @@ public interface RrdGraphConstants {
 	 */
 	String DEFAULT_FONT_NAME = System.getProperty("os.name").toLowerCase().contains("windows") ?
 			"Lucida Sans Typewriter" : "Monospaced";
+	
 	/**
 	 * Default graph small font
 	 */
 	Font DEFAULT_SMALL_FONT = new Font(DEFAULT_FONT_NAME, Font.PLAIN, 10);
+	
 	/**
 	 * Default graph large font
 	 */

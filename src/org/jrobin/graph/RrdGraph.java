@@ -31,6 +31,7 @@ import org.jrobin.data.DataProcessor;
 import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * Class which actually creates JRobin graphs (does the hard work).
@@ -42,6 +43,7 @@ public class RrdGraph implements RrdGraphConstants {
 	ImageWorker worker;
 	Mapper mapper;
 	RrdGraphInfo info = new RrdGraphInfo();
+	private String signature;
 
 	/**
 	 * Creates graph from the corresponding {@link RrdGraphDef} object.
@@ -52,6 +54,7 @@ public class RrdGraph implements RrdGraphConstants {
 	 */
 	public RrdGraph(RrdGraphDef gdef) throws IOException, RrdException {
 		this.gdef = gdef;
+		signature = gdef.getSignature();
 		worker = new ImageWorker(100, 100); // Dummy worker, just to start with something
 		try {
 			createGraph();
@@ -135,11 +138,19 @@ public class RrdGraph implements RrdGraphConstants {
 
 	private void gator() {
 		if (!gdef.onlyGraph && gdef.showSignature) {
-			Font font = new Font(DEFAULT_FONT_NAME, Font.PLAIN, 9);
+			Font font;
+			try {
+				InputStream fontStream = ClassLoader.getSystemClassLoader().getResourceAsStream("DejaVuSansMono.ttf");
+				font = Font.createFont(Font.TRUETYPE_FONT, fontStream).deriveFont(9).deriveFont(Font.PLAIN);
+				fontStream.close();
+			} catch (Exception e) {
+				// fall back to the default font
+				font = new Font(DEFAULT_FONT_NAME, Font.PLAIN, 9);
+			}
 			int x = (int) (im.xgif - 2 - worker.getFontAscent(font));
 			int y = 4;
 			worker.transform(x, y, Math.PI / 2);
-			worker.drawString("Created with JRobin", 0, 0, font, Color.LIGHT_GRAY);
+			worker.drawString(signature, 0, 0, font, Color.LIGHT_GRAY);
 			worker.reset();
 		}
 	}

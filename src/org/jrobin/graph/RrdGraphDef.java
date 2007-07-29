@@ -85,6 +85,7 @@ public class RrdGraphDef implements RrdGraphConstants {
 	String backgroundImage = null; // ok
 	String overlayImage = null; // ok
 	String unit = null; // ok
+	String signature = "Created with JRobin"; // ok
 	boolean lazy = false; // ok
 	double minValue = Double.NaN; // ok
 	double maxValue = Double.NaN; // ok
@@ -132,17 +133,38 @@ public class RrdGraphDef implements RrdGraphConstants {
 		try {
 			InputStream fontStream = ClassLoader.getSystemClassLoader()
 					.getResourceAsStream("DejaVuSansMono.ttf");
-			smallFont = Font.createFont(Font.TRUETYPE_FONT, fontStream);
+			smallFont = Font.createFont(Font.TRUETYPE_FONT, fontStream).deriveFont(11).deriveFont(Font.PLAIN);
+			System.err.println("Created font " + smallFont.toString());
 			fontStream.close();
 			fontStream = ClassLoader.getSystemClassLoader()
 					.getResourceAsStream("DejaVuSans-Bold.ttf");
-			largeFont = Font.createFont(Font.TRUETYPE_FONT, fontStream);
+			largeFont = Font.createFont(Font.TRUETYPE_FONT, fontStream).deriveFont(12).deriveFont(Font.BOLD);
+			System.err.println("Created font " + largeFont.toString());
 			fontStream.close();
 		} catch (Exception ioe) {
 			// if we can't load custom fonts, fall back to the normal defaults
+			System.err.println("An error occurred loading fonts.");
+			ioe.printStackTrace();
 		}
 	}
 
+	/**
+	 * Sets the signature string that runs along the right-side of the graph.
+	 * Defaults to "Created with JRobin".
+	 * 
+	 * @param signature the string to print
+	 */
+	public void setSignature(String signature) {
+		this.signature = signature;
+	}
+
+	/**
+	 * Gets the signature string that runs along the right-side of the graph.
+	 * @return the signature string
+	 */
+	public String getSignature() {
+		return this.signature;
+	}
 
 	/**
 	 * Sets the time when the graph should begin. Time in seconds since epoch
