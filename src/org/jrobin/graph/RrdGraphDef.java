@@ -109,8 +109,8 @@ public class RrdGraphDef implements RrdGraphConstants {
 	boolean forceRulesLegend = false; // ok
 	String title = null; // ok
 	long step = 0; // ok
-	Font smallFont = RrdGraphConstants.DEFAULT_SMALL_FONT; // ok
-	Font largeFont = RrdGraphConstants.DEFAULT_LARGE_FONT; // ok
+	Font smallFont;
+	Font largeFont;
 	boolean drawXGrid = true; // ok
 	boolean drawYGrid = true; // ok
 	int firstDayOfWeek = FIRST_DAY_OF_WEEK; // ok
@@ -130,22 +130,33 @@ public class RrdGraphDef implements RrdGraphConstants {
 		} catch (RrdException e) {
 			throw new RuntimeException(e);
 		}
-		try {
-			InputStream fontStream = ClassLoader.getSystemClassLoader()
-					.getResourceAsStream("DejaVuSansMono.ttf");
-			smallFont = Font.createFont(Font.TRUETYPE_FONT, fontStream).deriveFont(11).deriveFont(Font.PLAIN);
-			fontStream.close();
-			fontStream = ClassLoader.getSystemClassLoader()
-					.getResourceAsStream("DejaVuSans-Bold.ttf");
-			largeFont = Font.createFont(Font.TRUETYPE_FONT, fontStream).deriveFont(12).deriveFont(Font.BOLD);
-			fontStream.close();
-		} catch (Exception ioe) {
-			// if we can't load custom fonts, fall back to the normal defaults
-			System.err.println("An error occurred loading fonts.");
-			ioe.printStackTrace();
-		}
+		smallFont = this.getSmallFont();
+		largeFont = this.getLargeFont();
 	}
 
+	protected Font getFontFromResourceName(String name) {
+		Font font;
+		
+		try {
+			InputStream fontStream = ClassLoader.getSystemClassLoader().getResourceAsStream(name);
+			font = Font.createFont(Font.TRUETYPE_FONT, fontStream);
+			fontStream.close();
+		} catch (Exception e) {
+			System.err.println("An error occurred loading the font '" + name + "'. Falling back to the default.");
+			e.printStackTrace();
+			font = new Font(DEFAULT_FONT_NAME, Font.PLAIN, 10);
+		}
+		return font;
+	}
+	
+	protected Font getSmallFont() {
+		return this.getFontFromResourceName(RrdGraphConstants.DEFAULT_SMALL_FONT_FILE).deriveFont(Font.PLAIN).deriveFont(10);
+	}
+	
+	protected Font getLargeFont() {
+		return this.getFontFromResourceName(RrdGraphConstants.DEFAULT_LARGE_FONT_FILE).deriveFont(Font.BOLD).deriveFont(12);
+	}
+	
 	/**
 	 * Sets the signature string that runs along the right-side of the graph.
 	 * Defaults to "Created with JRobin".
