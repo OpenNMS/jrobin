@@ -29,8 +29,12 @@ import org.jrobin.core.Util;
 import org.jrobin.data.Plottable;
 
 import java.awt.*;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -115,7 +119,8 @@ public class RrdGraphDef implements RrdGraphConstants {
 	boolean drawYGrid = true; // ok
 	int firstDayOfWeek = FIRST_DAY_OF_WEEK; // ok
 	boolean showSignature = true;
-
+	File fontDir = null;
+	
 	List<Source> sources = new ArrayList<Source>();
 	List<CommentText> comments = new ArrayList<CommentText>();
 	List<PlotElement> plotElements = new ArrayList<PlotElement>();
@@ -130,31 +135,59 @@ public class RrdGraphDef implements RrdGraphConstants {
 		} catch (RrdException e) {
 			throw new RuntimeException(e);
 		}
-		smallFont = this.getSmallFont();
-		largeFont = this.getLargeFont();
+		
+		String fontdirProperty = System.getProperty("jrobin.fontdir");
+		if (fontdirProperty != null && fontdirProperty.length() != 0) {
+			fontDir = new File(fontdirProperty);
+		}
+		
+		smallFont = this.getFontFromResourceName(RrdGraphConstants.DEFAULT_SMALL_FONT_FILE).deriveFont(Font.PLAIN, 10);
+		largeFont = this.getFontFromResourceName(RrdGraphConstants.DEFAULT_SMALL_FONT_FILE).deriveFont(Font.BOLD, 12);
 	}
 
 	protected Font getFontFromResourceName(String name) {
-		Font font;
+		Font font = null;
+		Exception exception = null;
+		URL file = null;
 		
-		try {
-			InputStream fontStream = this.getClass().getResourceAsStream(name);
-			font = Font.createFont(Font.TRUETYPE_FONT, fontStream);
-			fontStream.close();
-		} catch (Exception e) {
-			System.err.println("An error occurred loading the font '" + name + "'. Falling back to the default.");
-			// e.printStackTrace();
+		if (fontDir != null) {
+			try {
+				file = new URL("file://" + new File(fontDir, name).getAbsolutePath());
+			} catch (MalformedURLException e) {
+				// fall through to the jar
+				exception = e;
+			}
+		}
+		if (file == null) {
+			file = this.getClass().getResource(name);
+		}
+		
+		if (file != null) {
+			try {
+				InputStream fontStream = file.openStream();
+				font = Font.createFont(Font.TRUETYPE_FONT, fontStream);
+				fontStream.close();
+			} catch (Exception e) {
+				exception = e;
+			}
+		} else {
+			// we can't find our fonts, fall back to the system font
+			System.err.println("An error occurred loading the font '" + name + "'.  Falling back to the default.");
+			if (exception != null) {
+				System.err.println(exception.getLocalizedMessage());
+			}
 			font = new Font(DEFAULT_FONT_NAME, Font.PLAIN, 10);
 		}
+		
 		return font;
 	}
 	
 	protected Font getSmallFont() {
-		return this.getFontFromResourceName(RrdGraphConstants.DEFAULT_SMALL_FONT_FILE).deriveFont(Font.PLAIN).deriveFont(10);
+		return this.smallFont;
 	}
 	
 	protected Font getLargeFont() {
-		return this.getFontFromResourceName(RrdGraphConstants.DEFAULT_LARGE_FONT_FILE).deriveFont(Font.BOLD).deriveFont(12);
+		return this.largeFont;
 	}
 	
 	/**
@@ -671,7 +704,7 @@ public class RrdGraphDef implements RrdGraphConstants {
 	 * Sets default font for graphing. Note that JRobin will behave unpredictably if proportional
 	 * font is selected.
 	 *
-	 * @param smallFont Default font for graphing. Use only monospaced fonths.
+	 * @param smallFont Default font for graphing. Use only monospaced fonts.
 	 */
 	public void setSmallFont(Font smallFont) {
 		this.smallFont = smallFont;
