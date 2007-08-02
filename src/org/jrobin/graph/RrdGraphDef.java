@@ -163,6 +163,7 @@ public class RrdGraphDef implements RrdGraphConstants {
 		}
 		
 		if (file != null) {
+			// System.err.println("Found a font URL: " + file.toExternalForm());
 			try {
 				InputStream fontStream = file.openStream();
 				font = Font.createFont(Font.TRUETYPE_FONT, fontStream);
