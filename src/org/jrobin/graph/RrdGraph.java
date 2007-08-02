@@ -31,7 +31,6 @@ import org.jrobin.data.DataProcessor;
 import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
-import java.io.InputStream;
 
 /**
  * Class which actually creates JRobin graphs (does the hard work).

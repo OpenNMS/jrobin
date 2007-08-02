@@ -44,6 +44,7 @@ import java.io.IOException;
  * Utility application (swing) to analyze, change and plot content of JRobin RRD files.
  */
 public class RrdInspector extends JFrame {
+	private static final long serialVersionUID = 1L;
 	static final boolean SHOULD_CREATE_BACKUPS = true;
 	static final String TITLE = "RRD File Inspector";
 	static final boolean SHOULD_FIX_ARCHIVED_VALUES = false;
@@ -131,6 +132,7 @@ public class RrdInspector extends JFrame {
 		dataTable.getColumnModel().getColumn(0).setMaxWidth(100);
 		dataTable.getColumnModel().getColumn(1).setPreferredWidth(150);
 		dataTable.getColumnModel().getColumn(2).setCellRenderer(new DefaultTableCellRenderer() {
+			private static final long serialVersionUID = 1L;
 			{
 				setBackground(Color.YELLOW);
 			}

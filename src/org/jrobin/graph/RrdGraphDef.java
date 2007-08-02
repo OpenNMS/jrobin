@@ -24,19 +24,18 @@
  */
 package org.jrobin.graph;
 
-import org.jrobin.core.RrdException;
-import org.jrobin.core.Util;
-import org.jrobin.data.Plottable;
-
-import java.awt.*;
+import java.awt.Font;
+import java.awt.Paint;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.jrobin.core.RrdException;
+import org.jrobin.core.Util;
+import org.jrobin.data.Plottable;
 
 /**
  * Class which should be used to define new JRobin graph. Once constructed and populated with data

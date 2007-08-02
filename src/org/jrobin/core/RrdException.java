@@ -34,6 +34,8 @@ package org.jrobin.core;
  * @author <a href="mailto:saxon@jrobin.org">Sasa Markovic</a>
  */
 public class RrdException extends Exception {
+	private static final long serialVersionUID = 1L;
+
 	/**
 	 * Creates new RrdException with the supplied message in it.
 	 *

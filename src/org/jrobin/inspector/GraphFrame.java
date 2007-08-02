@@ -40,6 +40,7 @@ import java.io.RandomAccessFile;
 import java.util.Date;
 
 class GraphFrame extends JFrame {
+	private static final long serialVersionUID = 1L;
 	private static final Color COLOR = Color.RED;
 	private static final int WIDTH = 400, HEIGHT = 240;
 	private int deltaWidth = 0, deltaHeight = 0;
@@ -272,6 +273,7 @@ class GraphFrame extends JFrame {
 	}
 
 	class GraphPanel extends JPanel {
+		private static final long serialVersionUID = 1L;
 		public void paintComponent(Graphics g) {
 			rrdGraph.render(g);
 		}

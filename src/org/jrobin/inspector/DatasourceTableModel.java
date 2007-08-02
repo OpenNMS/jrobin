@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.io.File;
 
 class DatasourceTableModel extends AbstractTableModel {
+	private static final long serialVersionUID = 1L;
 	private static final Object[] DESCRIPTIONS = {
 			"name", "type", "heartbeat", "min value",
 			"max value", "last value", "accum. value", "NaN seconds"

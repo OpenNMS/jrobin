@@ -35,6 +35,7 @@ import java.io.IOException;
 import java.io.File;
 
 class HeaderTableModel extends AbstractTableModel {
+	private static final long serialVersionUID = 1L;
 	private static final Object[] DESCRIPTIONS = {
 			"path", "signature", "step", "last timestamp",
 			"datasources", "archives", "size"

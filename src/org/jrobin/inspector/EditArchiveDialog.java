@@ -35,6 +35,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 
 class EditArchiveDialog extends JDialog {
+	private static final long serialVersionUID = 1L;
 	private static final int FIELD_SIZE = 20;
 	private static final String TITLE_NEW = "New archive";
 	private static final String TITLE_EDIT = "Edit archive";

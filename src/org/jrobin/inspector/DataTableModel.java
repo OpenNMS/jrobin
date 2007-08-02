@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.util.Date;
 
 class DataTableModel extends AbstractTableModel {
+	private static final long serialVersionUID = 1L;
 	private static final String[] COLUMN_NAMES = {"timestamp", "date", "value"};
 
 	private File file;

@@ -35,6 +35,7 @@ import java.util.Date;
  * The current timestamp is displayed in the title bar :)<p>
  */
 public class Epoch extends JFrame {
+	private static final long serialVersionUID = 1L;
 	private static final String[] supportedFormats = {
 			"MM/dd/yy HH:mm:ss", "dd.MM.yy HH:mm:ss", "yy-MM-dd HH:mm:ss", "MM/dd/yy HH:mm",
 			"dd.MM.yy HH:mm", "yy-MM-dd HH:mm", "MM/dd/yy", "dd.MM.yy", "yy-MM-dd", "HH:mm MM/dd/yy",

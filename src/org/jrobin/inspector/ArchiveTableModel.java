@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.util.Date;
 
 class ArchiveTableModel extends AbstractTableModel {
+	private static final long serialVersionUID = 1L;
 	private static final Object[] DESCRIPTIONS = {
 			"consolidation", "xff", "steps", "rows", "accum. value", "NaN steps", "start", "end"
 	};
