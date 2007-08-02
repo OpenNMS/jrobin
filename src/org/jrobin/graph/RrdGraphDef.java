@@ -113,8 +113,8 @@ public class RrdGraphDef implements RrdGraphConstants {
 	boolean forceRulesLegend = false; // ok
 	String title = null; // ok
 	long step = 0; // ok
-	Font smallFont;
-	Font largeFont;
+	protected Font smallFont;
+	protected Font largeFont;
 	boolean drawXGrid = true; // ok
 	boolean drawYGrid = true; // ok
 	int firstDayOfWeek = FIRST_DAY_OF_WEEK; // ok
@@ -141,8 +141,10 @@ public class RrdGraphDef implements RrdGraphConstants {
 			fontDir = new File(fontdirProperty);
 		}
 		
-		smallFont = this.getFontFromResourceName(RrdGraphConstants.DEFAULT_SMALL_FONT_FILE).deriveFont(Font.PLAIN, 10);
-		largeFont = this.getFontFromResourceName(RrdGraphConstants.DEFAULT_LARGE_FONT_FILE).deriveFont(Font.BOLD, 12);
+		// smallFont = this.getFontFromResourceName(RrdGraphConstants.DEFAULT_MONOSPACE_FONT_FILE).deriveFont(10);
+		// largeFont = this.getFontFromResourceName(RrdGraphConstants.DEFAULT_MONOSPACE_FONT_FILE).deriveFont(12);
+		smallFont = new Font(DEFAULT_FONT_NAME, Font.PLAIN, 10);
+		largeFont = new Font(DEFAULT_FONT_NAME, Font.BOLD, 12);
 	}
 
 	protected Font getFontFromResourceName(String name) {
@@ -184,14 +186,6 @@ public class RrdGraphDef implements RrdGraphConstants {
 			font = new Font(null, Font.PLAIN, 10);
 		}
 		return font;
-	}
-	
-	protected Font getSmallFont() {
-		return this.smallFont;
-	}
-	
-	protected Font getLargeFont() {
-		return this.largeFont;
 	}
 	
 	/**
@@ -703,6 +697,23 @@ public class RrdGraphDef implements RrdGraphConstants {
 	public void setStep(long step) {
 		this.step = step;
 	}
+
+	/**
+	 * Get the default small font for graphing.
+	 * @return the font
+	 */
+	public Font getSmallFont() {
+		return this.smallFont;
+	}
+
+	/**
+	 * Get the default large font for graphing.
+	 * @return the font
+	 */
+	public Font getLargeFont() {
+		return this.largeFont;
+	}
+	
 
 	/**
 	 * Sets default font for graphing. Note that JRobin will behave unpredictably if proportional

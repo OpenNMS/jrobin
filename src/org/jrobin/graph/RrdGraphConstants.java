@@ -262,12 +262,12 @@ public interface RrdGraphConstants {
 	/**
 	 * Default graph small font
 	 */
-	String DEFAULT_SMALL_FONT_FILE = "DejaVuSansMono.ttf";
+	String DEFAULT_MONOSPACE_FONT_FILE = "DejaVuSansMono.ttf";
 
 	/**
 	 * Default graph large font
 	 */
-	String DEFAULT_LARGE_FONT_FILE = "DejaVuSans-Bold.ttf";
+	String DEFAULT_PROPORTIONAL_FONT_FILE = "DejaVuSans-Bold.ttf";
 
 	/**
 	 * Used internally

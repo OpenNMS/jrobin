@@ -138,15 +138,7 @@ public class RrdGraph implements RrdGraphConstants {
 
 	private void gator() {
 		if (!gdef.onlyGraph && gdef.showSignature) {
-			Font font;
-			try {
-				InputStream fontStream = ClassLoader.getSystemClassLoader().getResourceAsStream("DejaVuSansMono.ttf");
-				font = Font.createFont(Font.TRUETYPE_FONT, fontStream).deriveFont(9).deriveFont(Font.PLAIN);
-				fontStream.close();
-			} catch (Exception e) {
-				// fall back to the default font
-				font = new Font(DEFAULT_FONT_NAME, Font.PLAIN, 9);
-			}
+			Font font = gdef.getSmallFont().deriveFont(Font.PLAIN, 9);
 			int x = (int) (im.xgif - 2 - worker.getFontAscent(font));
 			int y = 4;
 			worker.transform(x, y, Math.PI / 2);
@@ -185,7 +177,7 @@ public class RrdGraph implements RrdGraphConstants {
 			}
 			if (gdef.verticalLabel != null) {
 				int x = PADDING_LEFT;
-				int y = im.yorigin - im.ysize / 2 + (int) worker.getStringWidth(gdef.verticalLabel, gdef.smallFont) / 2;
+				int y = im.yorigin - im.ysize / 2 + (int) worker.getStringWidth(gdef.verticalLabel, gdef.getSmallFont()) / 2;
 				int ascent = (int) worker.getFontAscent(gdef.smallFont);
 				worker.transform(x, y, -Math.PI / 2);
 				worker.drawString(gdef.verticalLabel, 0, ascent, gdef.smallFont, gdef.colors[COLOR_FONT]);
