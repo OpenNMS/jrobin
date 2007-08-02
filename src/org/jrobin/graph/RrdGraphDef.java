@@ -142,7 +142,7 @@ public class RrdGraphDef implements RrdGraphConstants {
 		}
 		
 		smallFont = this.getFontFromResourceName(RrdGraphConstants.DEFAULT_SMALL_FONT_FILE).deriveFont(Font.PLAIN, 10);
-		largeFont = this.getFontFromResourceName(RrdGraphConstants.DEFAULT_SMALL_FONT_FILE).deriveFont(Font.BOLD, 12);
+		largeFont = this.getFontFromResourceName(RrdGraphConstants.DEFAULT_LARGE_FONT_FILE).deriveFont(Font.BOLD, 12);
 	}
 
 	protected Font getFontFromResourceName(String name) {
@@ -179,7 +179,10 @@ public class RrdGraphDef implements RrdGraphConstants {
 			}
 			font = new Font(DEFAULT_FONT_NAME, Font.PLAIN, 10);
 		}
-		
+
+		if (font == null) {
+			font = new Font(null, Font.PLAIN, 10);
+		}
 		return font;
 	}
 	
