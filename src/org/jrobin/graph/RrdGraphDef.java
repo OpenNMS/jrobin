@@ -138,12 +138,12 @@ public class RrdGraphDef implements RrdGraphConstants {
 		Font font;
 		
 		try {
-			InputStream fontStream = ClassLoader.getSystemClassLoader().getResourceAsStream(name);
+			InputStream fontStream = this.getClass().getResourceAsStream(name);
 			font = Font.createFont(Font.TRUETYPE_FONT, fontStream);
 			fontStream.close();
 		} catch (Exception e) {
 			System.err.println("An error occurred loading the font '" + name + "'. Falling back to the default.");
-			e.printStackTrace();
+			// e.printStackTrace();
 			font = new Font(DEFAULT_FONT_NAME, Font.PLAIN, 10);
 		}
 		return font;
