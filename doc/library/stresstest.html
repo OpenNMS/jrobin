@@ -1,0 +1,138 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+
+<head>
+<meta name="generator" content="Fog Creek CityDesk 2.0.19" />
+<meta name="citydesk" content="852BB11B/55" />
+<title>JRobin :: RRDTool Choice for the Java World :: Stress test</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<meta name="keywords" content="jrobin,java,api,rrdtool,rrd,round,robin,database,round robin database,mrtg">
+<link rel="stylesheet" href="../css/jrobin.css" type="text/css">
+</head>
+
+<body bgcolor="#ffffcc" leftmargin="0" topmargin="0" marginwidth="0" marginheight="0">
+
+<!-- primary navigation -->
+
+<table cellspacing="0" cellpadding="0" width="800" bgcolor="#FFFFCC" border="0">
+<tbody>
+<tr>
+<td class="logo" colspan="7"><a href="../index.html"><img height="78" alt="JRobin Logo" src="../images/web-logo-2.png" width="800" border="0" /></a></td>
+</tr>
+<tr>
+<td class="top" onmouseover="this.className='tophover'" onmouseout="this.className='top'" width="16%">
+<div align="center"><a class="toplink" href="../index.html">HOME</a></div>
+</td>
+<td class="top" onmouseover="this.className='tophover'" onmouseout="this.className='top'" width="14%">
+<div align="center"><a class="toplink" href="index.html">Library</a></div>
+</td>
+<td class="top" onmouseover="this.className='tophover'" onmouseout="this.className='top'" width="14%">
+<div align="center"><a class="toplink" href="../api/index.html">JRobin API</a></div>
+</td>
+<td class="top" onmouseover="this.className='tophover'" onmouseout="this.className='top'" width="14%">
+<div align="center"><a class="toplink" href="../utilities/index.html">Utilities</a></div>
+</td>
+<td class="top" onmouseover="this.className='tophover'" onmouseout="this.className='top'" width="14%">
+<div align="center"><a class="toplink" href="../support/index.html">Support</a></div>
+</td>
+<td class="top" onmouseover="this.className='tophover'" onmouseout="this.className='top'" width="14%">
+<div align="center"><a class="toplink" href="../about/index.html">About Us</a></div>
+</td>
+<td class="top" onmouseover="this.className='tophover'" onmouseout="this.className='top'" width="14%">
+<div align="center"><a class="toplink" href="http://www.jrobin.org/phpBB2/" target="forum">Forum</a></div>
+</td>
+</tr>
+
+<!-- secondary navigation -->
+
+<tr>
+<td class="leftcolumn" valign="top" align="center" height="1200" colspan="1">
+<table cellpadding="1" width="100%" border="0"><tbody>
+
+<tr><td class="left2">
+<div align="left"><a class="left" href="index.html">Main library</a></div>
+</td></tr>
+
+<tr><td class="left2">
+<div align="left"><a class="left" href="simpledemo.html">Simple demo</a></div>
+</td></tr>
+
+<tr><td class="left2">
+<div align="left"><a class="left" href="complexdemo.html">Complex demo</a></div>
+</td></tr>
+
+<tr><td class="left2">
+<div align="left"><a class="left" href="stresstest.html">Stress test</a></div>
+</td></tr>
+
+<tr><td class="left2">
+<div align="left"><a class="left" href="otherdemos.html">Other demos</a></div>
+</td></tr>
+
+<tr><td class="left2">
+<div align="left"><a class="left" href="playingwithANT.html">Playing with ANT</a></div>
+</td></tr>
+
+</tbody></table>
+<p>&nbsp;</p>
+
+<!-- external links -->
+
+<!-- BYTEMARK -->
+
+<p><a href="http://www.bytemark-hosting.co.uk/r/jrobin" alt="Bytemark Hosting"><img src="../images/misc/bytemark.png" width="120" height="142" border="0" /></a></p>
+
+<!-- SourceForge logo -->
+
+<p align="center">
+<a href="http://sourceforge.net" target="sf"><img height="31" alt="SourceForge.net Logo" src="http://sourceforge.net/sflogo.php?group_id=82668&amp;type=1" width="88" border="0" /></a>&nbsp;
+</p>
+
+<!-- Firefox -->
+
+<p align="center">
+<a title="Get Firefox - Web Browsing Redefined" href="http://www.mozilla.org/products/firefox/" target="firefox"><img height="15" alt="Get Firefox" src="http://www.mozilla.org/products/firefox/buttons/firefox_80x15.png" width="80" border="0" /></a>
+</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+</td>
+
+<!-- CONTENT -->
+
+<td class="rightcolumn" valign="top" colspan="6">
+<h1>Stress test</h1>
+<a id="top" name="top"></a>
+
+<!-- OPTIONAL SIDEBAR -->
+
+
+
+<!-- body text -->
+
+
+<p>Vadim Tkachenko from the <a href="http://diy-zoning.sourceforge.net">DIY-Zoning</a> project sent us a huge data file (almost 30Mb raw, 5Mb compressed) which can be used for JRobin stress testing. The test creates one big RRD file (12Mb) with 6 datasources and 12 long archives performing more than 600.000 updates afterwards.</p>
+<p>If you want to run the stress test, you'll have to download the <em>stress-test.txt</em> file from our <a href="http://www.sourceforge.net/projects/jrobin">SourceForge</a> site. The file is placed in a separate package&nbsp;named <em>jrobin test data</em>. Place the file somewhere on your disk and issue the following command from your command line:</p>
+<pre>
+java -cp jrobin-demo-{version}.jar \
+    org.jrobin.demo.StressTest <em>path_to_stress-test.txt</em>
+</pre>
+<p align="left">or (if your X-server is not running):</p>
+<pre>
+java -Djava.awt.headless=true -cp jrobin-demo-{version}.jar \
+    org.jrobin.demo.StressTest <em>path_to_stress-test.txt</em>
+</pre>
+<p> With version 1.3.1 it takes about 40 minutes to complete the test on a 1.6GHz computer with 256Mb of RAM. It takes only 5 (five) minutes to complete the same test on the same machine with 1.4.0 version! <strong>You'll discover that JRobin 1.4.0 easily performs more than 2.500 RRD updates per second.</strong></p>
+<p>When the test is finished, you'll find two new files in your $HOME/<em>jrobin-demo</em> directory: <em>stress.rrd</em> (newly created RRD file) and <em>stress.png</em> (sample graph created from imported data). The graph should look like this one:</p>
+<p> <img height="356" alt="" src="../images/gallery/stress.png" width="497" border="0" /></p>
+
+<!-- footer -->
+
+<p><a href="#">Back to the top</a></p>
+<p>Copyright &copy; 2003, 2004 Sasa Markovic & Arne Vandamme. All Rights Reserved.</p>
+<p><a href="http://www.bytemark-hosting.co.uk/r/jrobin" alt="Bytemark Hosting"><img src="../images/misc/bytemark-transparent.gif" width="200" height="25" border="0"></a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</body>
+</html>

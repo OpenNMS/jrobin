@@ -1,0 +1,259 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+
+<head>
+<meta name="generator" content="Fog Creek CityDesk 2.0.19" />
+<meta name="citydesk" content="852BB11B/35" />
+<title>JRobin :: RRDTool Choice for the Java World :: Standalone graphing engine</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<meta name="keywords" content="jrobin,java,api,rrdtool,rrd,round,robin,database,round robin database,mrtg">
+<link rel="stylesheet" href="../css/jrobin.css" type="text/css">
+</head>
+
+<body bgcolor="#ffffcc" leftmargin="0" topmargin="0" marginwidth="0" marginheight="0">
+
+<!-- primary navigation -->
+
+<table cellspacing="0" cellpadding="0" width="800" bgcolor="#FFFFCC" border="0">
+<tbody>
+<tr>
+<td class="logo" colspan="7"><a href="../index.html"><img height="78" alt="JRobin Logo" src="../images/web-logo-2.png" width="800" border="0" /></a></td>
+</tr>
+<tr>
+<td class="top" onmouseover="this.className='tophover'" onmouseout="this.className='top'" width="16%">
+<div align="center"><a class="toplink" href="../index.html">HOME</a></div>
+</td>
+<td class="top" onmouseover="this.className='tophover'" onmouseout="this.className='top'" width="14%">
+<div align="center"><a class="toplink" href="../library/index.html">Library</a></div>
+</td>
+<td class="top" onmouseover="this.className='tophover'" onmouseout="this.className='top'" width="14%">
+<div align="center"><a class="toplink" href="index.html">JRobin API</a></div>
+</td>
+<td class="top" onmouseover="this.className='tophover'" onmouseout="this.className='top'" width="14%">
+<div align="center"><a class="toplink" href="../utilities/index.html">Utilities</a></div>
+</td>
+<td class="top" onmouseover="this.className='tophover'" onmouseout="this.className='top'" width="14%">
+<div align="center"><a class="toplink" href="../support/index.html">Support</a></div>
+</td>
+<td class="top" onmouseover="this.className='tophover'" onmouseout="this.className='top'" width="14%">
+<div align="center"><a class="toplink" href="../about/index.html">About Us</a></div>
+</td>
+<td class="top" onmouseover="this.className='tophover'" onmouseout="this.className='top'" width="14%">
+<div align="center"><a class="toplink" href="http://www.jrobin.org/phpBB2/" target="forum">Forum</a></div>
+</td>
+</tr>
+
+<!-- secondary navigation -->
+
+<tr>
+<td class="leftcolumn" valign="top" align="center" height="1200" colspan="1">
+<table cellpadding="1" width="100%" border="0"><tbody>
+
+<tr><td class="left2">
+<div align="left"><a class="left" href="index.html">JRobin API</a></div>
+</td></tr>
+
+<tr><td class="left2">
+<div align="left"><a class="left" href="jrobinandrrdtoolcompared.html">JRobin and RRDTool, compared</a></div>
+</td></tr>
+
+<tr><td class="left2">
+<div align="left"><a class="left" href="quickreference.html">Quick reference</a></div>
+</td></tr>
+
+<tr><td class="left2">
+<div align="left"><a class="left" href="tutorial.html">Tutorial</a></div>
+</td></tr>
+
+<tr><td class="left2">
+<div align="left"><a class="left" href="workingexample.html">Working example</a></div>
+</td></tr>
+
+<tr><td class="left2">
+<div align="left"><a class="left" href="coreapi.html">Core API</a></div>
+</td></tr>
+
+<tr><td class="left2">
+<div align="left"><a class="left" href="graphingapi.html">Graphing API</a></div>
+</td></tr>
+
+<tr><td class="left2">
+<div align="left"><a class="left" href="templatesapi.html">Templates API</a></div>
+</td></tr>
+
+<tr><td class="left2">
+<div align="left"><a class="left" href="standalonegraphingengine.html">Standalone graphing engine</a></div>
+</td></tr>
+
+<tr><td class="left2">
+<div align="left"><a class="left" href="backends.html">Backends</a></div>
+</td></tr>
+
+<tr><td class="left2">
+<div align="left"><a class="left" href="javadoc.html">Javadoc</a></div>
+</td></tr>
+
+</tbody></table>
+<p>&nbsp;</p>
+
+<!-- external links -->
+
+<!-- BYTEMARK -->
+
+<p><a href="http://www.bytemark-hosting.co.uk/r/jrobin" alt="Bytemark Hosting"><img src="../images/misc/bytemark.png" width="120" height="142" border="0" /></a></p>
+
+<!-- SourceForge logo -->
+
+<p align="center">
+<a href="http://sourceforge.net" target="sf"><img height="31" alt="SourceForge.net Logo" src="http://sourceforge.net/sflogo.php?group_id=82668&amp;type=1" width="88" border="0" /></a>&nbsp;
+</p>
+
+<!-- Firefox -->
+
+<p align="center">
+<a title="Get Firefox - Web Browsing Redefined" href="http://www.mozilla.org/products/firefox/" target="firefox"><img height="15" alt="Get Firefox" src="http://www.mozilla.org/products/firefox/buttons/firefox_80x15.png" width="80" border="0" /></a>
+</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+</td>
+
+<!-- CONTENT -->
+
+<td class="rightcolumn" valign="top" colspan="6">
+<h1>Standalone graphing engine</h1>
+<a id="top" name="top"></a>
+
+<!-- OPTIONAL SIDEBAR -->
+
+
+
+<!-- body text -->
+
+<p><img height="306" alt="" src="../images/gallery/plottable2.png" width="497" border="0" /></p>
+<p>With RRDTool you cannot great time series graphs if your data is not already stored in RRD files. On the contrary, JRobin's graphing engine (jrobin.graph.* package) can be used for general timeseries plotting since version 1.3.0. It means that you can use JRobin to create good looking graphs for time series of (almost) any kind. The implementation of it is quite simple: just inherit the <em>Plottable</em> abstract class and override one of its three methods. Probably, you'll do something like this:</p>
+<pre>
+Plottable plottable = new Plottable() {
+    public double getValue(long timestamp) { 
+    	// implement your own logic here and return a double value
+    	// which corresponds to the given timestamp
+    	// (note that timestamp is rounded to the nearest second)
+    	...
+    }
+}
+</pre>
+<p>This plottable object can be passed to RrdGraphDef object as an ordinary datasource:</p>
+<pre>
+RrdGraphDef gDef = new RrdGraphDef();
+...
+gDef.datasource("custom", plottable);
+...
+gDef.line("custom", Color.BLACK, "my custom function");
+...
+</pre>
+<p>This approach is good enough to plot any mathematical function of type y=f(t). But your data probably comes from periodic measurements. You'll probably end with a collection of isolated points (dots) in the (time, value) plane. JRobin has two suitable classes to address this issue (both inherit <em>Plottable</em> abstract class):</p>
+<ul>
+<li><em>LinearInterpolator</em>: use this class to connect the dots using simple linear interpolation (can't be simpler).
+</li>
+<li><em>CubicSplineInterpolator</em>: use this class to connect the dots using normal cubic spline interpolation (always produces nice, smooth curves).
+</li>
+</ul>
+<p>Suppose that on March 1st you monitored the level of water in a nearby tank. Measured water height (in inches) was:</p>
+<pre>
+time  |  height 
+----------------
+00:00  |  100
+02:00  |  250
+07:00  |  230
+14:00  |  370
+17:00  |  350
+19:00  |  300
+23:00  |  340	
+24:00  |  350
+</pre>
+<p>Suppose that I want to plot this data using both linear and spline interpolation. It's quite straightforward and suprisingly simple. First, you have to specify your physical data:</p>
+<pre>
+GregorianCalendar[] timestamps = {
+    new GregorianCalendar(2004, 2, 1, 0, 0, 0),
+    new GregorianCalendar(2004, 2, 1, 2, 0, 0),
+    new GregorianCalendar(2004, 2, 1, 7, 0, 0),
+    new GregorianCalendar(2004, 2, 1, 14, 0, 0),
+    new GregorianCalendar(2004, 2, 1, 17, 0, 0),
+    new GregorianCalendar(2004, 2, 1, 19, 0, 0),
+    new GregorianCalendar(2004, 2, 1, 23, 0, 0),
+    new GregorianCalendar(2004, 2, 1, 24, 0, 0)
+};
+double[] values = { 100, 250, 230, 370, 350, 300, 340, 350 };
+</pre>
+<p>Then I'll define two interpolating objects:</p>
+<pre>
+LinearInterpolator linear = new LinearInterpolator(timestamps, values); // (1)
+CubicSplineInterpolator spline = new CubicSplineInterpolator(timestamps, values);
+</pre>
+<p>Finally I'll create the graph with some statistical values printed on it.</p> 
+<pre>
+// graph range
+RrdGraphDef gDef = 
+    new RrdGraphDef(timestamps[0], timestamps[timestamps.length - 1]);
+
+// graph title, time and value axis labels
+gDef.setTitle("Plottable demonstration");
+gDef.setTimeAxisLabel("time");
+gDef.setVerticalLabel("water level [inches]");
+
+// interpolated datasources
+gDef.datasource("linear", linear);
+gDef.datasource("spline", spline);
+
+// splined plot will be an orange filled area
+gDef.area("spline", Color.ORANGE, "Spline interpolation");
+
+// simply interpolated plot will be a red line
+gDef.line("linear", Color.RED, "Linear inteprolation@r");
+
+// print average values for both interpolation methods
+gDef.gprint("spline", "AVERAGE", "Average spline value: @0 inches@r");
+gDef.gprint("linear", "AVERAGE", "Average linear value: @0 inches@r");
+
+// create the graph...
+RrdGraph graph = new RrdGraph(gDef);
+
+// ...and save it somewhere
+String filename = Util.getJRobinDemoPath("plottable.png");
+graph.saveAsPNG(filename, 300, 100);
+</pre>
+<p>And here is what you get:</p>
+<p><img height="234" alt="" src="../images/standalone_graphing/plottable1.png" width="397" border="0" /></p>
+<p>If you prefer to connect the dots with 'steps' (horizontal and vertical straight lines), just insert the following statement after the line (1):</p>
+<pre>
+linear.setInterpolationMethod(LinearInterpolator.INTERPOLATE_LEFT);
+</pre>
+<p>The difference is obvious:</p><p><img height="234" alt="" src="../images/standalone_graphing/plottable2.png" width="397" border="0" /></p>
+<p><strong>NOTE:</strong> Since 1.4.0 version, <em>LinearInterpolator</em> class supports additional interpolation method: <em>INTERPOLATE_REGRESSION</em>. This method uses simple linear regression to interpolate supplied data with a straight line which does not necessarily pass through all data points. The slope of the best-fit line will be chosen so that the total square distance of real data points from from the best-fit line is at minimum. Check javadoc for the <em>LinearInterpolator</em> class to see the full explanation of all available interpolating methods.</p>
+<p><strong>In conclusion: </strong> <em>Plottable</em> class is a good starting point if you plan to use JRobin for something even more serious. Right now, the two interpolating classes will probably serve for most purposes.</p>
+<h2>Plottable demo</h2>
+<p>To see both interpolator classes and <em>Plottable</em> class in action, run the the following demo (source code is provided with the distribution):
+</p>
+<pre>
+java -cp jrobin-demo-{version}.jar \
+	org.jrobin.demo.PlottableDemo </pre>
+<p>If you run this demo in a headless environment (without X-server), be sure to specify</p>
+<pre>
+-Djava.awt.headles=true
+</pre>
+<p>option on the command line. The <em>PlottableDemo</em> creates more than a dozen of different graphs in your $HOME directory. Many of them are 'regular' graphs with no special coding:</p>
+<p><img height="306" alt="" src="../images/standalone_graphing/plottable6.png" width="497" border="0" /></p>
+<p>...but some of them are quite dirty tricks:</p>
+<p><img height="306" alt="" src="../images/standalone_graphing/plottable17.png" width="497" border="0" /></p>
+<p> </p> 
+
+<!-- footer -->
+
+<p><a href="#">Back to the top</a></p>
+<p>Copyright &copy; 2003, 2004 Sasa Markovic & Arne Vandamme. All Rights Reserved.</p>
+<p><a href="http://www.bytemark-hosting.co.uk/r/jrobin" alt="Bytemark Hosting"><img src="../images/misc/bytemark-transparent.gif" width="200" height="25" border="0"></a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</body>
+</html>

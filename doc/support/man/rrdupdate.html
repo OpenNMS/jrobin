@@ -1,0 +1,52 @@
+<HTML><HEAD><TITLE>rrdupdate</TITLE><LINK rev=made href="mailto:compil@bi.mandrakesoft.com"></HEAD>
+<BODY><A name=__index__></A><!-- INDEX BEGIN --><!--
+
+<UL>
+
+	<LI><A HREF="#name">NAME</A></LI>
+	<LI><A HREF="#synopsis">SYNOPSIS</A></LI>
+	<LI><A HREF="#description">DESCRIPTION</A></LI>
+	<LI><A HREF="#example">EXAMPLE</A></LI>
+	<LI><A HREF="#author">AUTHOR</A></LI>
+</UL>
+--><!-- INDEX END -->
+<P>
+<H1><A name=name>NAME</A></H1>
+<P>rrdtool update - Store a new set of values into the rrd</P>
+<DIV align=right><A href="rrdupdate.pdf">PDF</A> version.</DIV>
+<P>
+<HR>
+
+<H1><A name=synopsis>SYNOPSIS</A></H1>
+<P><STRONG>rrdtool</STRONG> <STRONG>update</STRONG> <EM>filename</EM> [<STRONG>--template</STRONG>|<STRONG>-t</STRONG>&nbsp;<EM>ds-name</EM>[<STRONG>:</STRONG><EM>ds-name</EM>]...] <STRONG>N</STRONG>|<EM>timestamp</EM><STRONG>:</STRONG><EM>value</EM>[<STRONG>:</STRONG><EM>value</EM>...] [<EM>timestamp</EM><STRONG>:</STRONG><EM>value</EM>[<STRONG>:</STRONG><EM>value</EM>...]&nbsp;...]</P>
+<P>
+<HR>
+
+<H1><A name=description>DESCRIPTION</A></H1>
+<P>The <STRONG>update</STRONG> function feeds new data values into an <STRONG>RRD</STRONG>. The data gets time aligned according to the properties of the <STRONG>RRD</STRONG> to which the data is written.</P>
+<DL>
+<DT><STRONG><A name=item_filename><EM>filename</EM></A></STRONG><BR>
+<DD>The name of the <STRONG>RRD</STRONG> you want to update. 
+<P></P>
+<DT><STRONG><A name=item_%2D%2Dtemplate%7C%2Dt_ds%2Dname%5B%3Ads%2Dname%5D%><STRONG>--template</STRONG>|<STRONG>-t</STRONG> <EM>ds-name</EM>[<STRONG>:</STRONG><EM>ds-name</EM>]...</A></STRONG><BR>
+<DD>by default, the update function expects the data input in the order, the data sources are defined in the RRD. This is not very error resistant, as you might be sending the wrong data into a RRD. 
+<P>The template switch allows you to specify which data sources you are going to update and in which order. If the data sources specified in the template are not available in the rrd file, the update process will abort with an error message.</P>
+<P></P>
+<DT><STRONG><A name=item_N%7Ctimestamp%3Avalue%5B%3Avalue%2E%2E%2E%5D><STRONG>N</STRONG>|<EM>timestamp</EM><STRONG>:</STRONG><EM>value</EM>[<STRONG>:</STRONG><EM>value</EM>...]</A></STRONG><BR>
+<DD>The data used for updating the RRD was acquired at a certain time. This time can either be defined in seconds since 1970-01-01. Or by using the letter 'N' the update time is set to be the current time. Negative time values are subtracted from the current time. Getting the timing right to the second is especially important when you are working with data-sources of type <STRONG>COUNTER</STRONG>, <STRONG>DERIVE</STRONG> or <STRONG>ABSOLUTE</STRONG>. 
+<P>The remaining elements of the argument are DS updates. The order of this list is the same as the order the data sources were defined in the rra. If there is no data for a certain data-source, the letter <STRONG>U</STRONG> (eg. N:0.1:U:1) can be defined.</P>
+<P>The format of the value acquired from the data source is dependent of the data source type chosen. Normally it will be numeric, but the data acquisition modules may impose their very own parsing of this parameter as long as the colon (<STRONG>:</STRONG>) remains the data source value separator.</P>
+<P></P></DD></DL>
+<P>
+<HR>
+
+<H1><A name=example>EXAMPLE</A></H1>
+<P><CODE>rrdtool update demo1.rrd N:3.44:3.15:U:23</CODE></P>
+<P>Update the database file demo1.rrd with 3 known and one <EM>*UNKNOWN*</EM> value. Use the current time as the update time.</P>
+<P><CODE>rrdtool update demo2.rrd 887457267:U 887457521:22 88745790:2.7</CODE></P>
+<P>Update the database file demo2.rrd which expects data from a single data-source, three times. First with an <EM>*UNKNOWN*</EM> value then with two normal readings. The update interval seems to be around 300 seconds.</P>
+<P>
+<HR>
+
+<H1><A name=author>AUTHOR</A></H1>
+<P>Tobias Oetiker &lt;<A href="mailto:oetiker@ee.ethz.ch">oetiker@ee.ethz.ch</A>&gt;</P></BODY></HTML>

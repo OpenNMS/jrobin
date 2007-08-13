@@ -1,0 +1,479 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+
+<head>
+<meta name="generator" content="Fog Creek CityDesk 2.0.19" />
+<meta name="citydesk" content="852BB11B/36" />
+<title>JRobin :: RRDTool Choice for the Java World :: Templates API</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<meta name="keywords" content="jrobin,java,api,rrdtool,rrd,round,robin,database,round robin database,mrtg">
+<link rel="stylesheet" href="../css/jrobin.css" type="text/css">
+</head>
+
+<body bgcolor="#ffffcc" leftmargin="0" topmargin="0" marginwidth="0" marginheight="0">
+
+<!-- primary navigation -->
+
+<table cellspacing="0" cellpadding="0" width="800" bgcolor="#FFFFCC" border="0">
+<tbody>
+<tr>
+<td class="logo" colspan="7"><a href="../index.html"><img height="78" alt="JRobin Logo" src="../images/web-logo-2.png" width="800" border="0" /></a></td>
+</tr>
+<tr>
+<td class="top" onmouseover="this.className='tophover'" onmouseout="this.className='top'" width="16%">
+<div align="center"><a class="toplink" href="../index.html">HOME</a></div>
+</td>
+<td class="top" onmouseover="this.className='tophover'" onmouseout="this.className='top'" width="14%">
+<div align="center"><a class="toplink" href="../library/index.html">Library</a></div>
+</td>
+<td class="top" onmouseover="this.className='tophover'" onmouseout="this.className='top'" width="14%">
+<div align="center"><a class="toplink" href="index.html">JRobin API</a></div>
+</td>
+<td class="top" onmouseover="this.className='tophover'" onmouseout="this.className='top'" width="14%">
+<div align="center"><a class="toplink" href="../utilities/index.html">Utilities</a></div>
+</td>
+<td class="top" onmouseover="this.className='tophover'" onmouseout="this.className='top'" width="14%">
+<div align="center"><a class="toplink" href="../support/index.html">Support</a></div>
+</td>
+<td class="top" onmouseover="this.className='tophover'" onmouseout="this.className='top'" width="14%">
+<div align="center"><a class="toplink" href="../about/index.html">About Us</a></div>
+</td>
+<td class="top" onmouseover="this.className='tophover'" onmouseout="this.className='top'" width="14%">
+<div align="center"><a class="toplink" href="http://www.jrobin.org/phpBB2/" target="forum">Forum</a></div>
+</td>
+</tr>
+
+<!-- secondary navigation -->
+
+<tr>
+<td class="leftcolumn" valign="top" align="center" height="1200" colspan="1">
+<table cellpadding="1" width="100%" border="0"><tbody>
+
+<tr><td class="left2">
+<div align="left"><a class="left" href="index.html">JRobin API</a></div>
+</td></tr>
+
+<tr><td class="left2">
+<div align="left"><a class="left" href="jrobinandrrdtoolcompared.html">JRobin and RRDTool, compared</a></div>
+</td></tr>
+
+<tr><td class="left2">
+<div align="left"><a class="left" href="quickreference.html">Quick reference</a></div>
+</td></tr>
+
+<tr><td class="left2">
+<div align="left"><a class="left" href="tutorial.html">Tutorial</a></div>
+</td></tr>
+
+<tr><td class="left2">
+<div align="left"><a class="left" href="workingexample.html">Working example</a></div>
+</td></tr>
+
+<tr><td class="left2">
+<div align="left"><a class="left" href="coreapi.html">Core API</a></div>
+</td></tr>
+
+<tr><td class="left2">
+<div align="left"><a class="left" href="graphingapi.html">Graphing API</a></div>
+</td></tr>
+
+<tr><td class="left2">
+<div align="left"><a class="left" href="templatesapi.html">Templates API</a></div>
+</td></tr>
+
+<tr><td class="left2">
+<div align="left"><a class="left" href="standalonegraphingengine.html">Standalone graphing engine</a></div>
+</td></tr>
+
+<tr><td class="left2">
+<div align="left"><a class="left" href="backends.html">Backends</a></div>
+</td></tr>
+
+<tr><td class="left2">
+<div align="left"><a class="left" href="javadoc.html">Javadoc</a></div>
+</td></tr>
+
+</tbody></table>
+<p>&nbsp;</p>
+
+<!-- external links -->
+
+<!-- BYTEMARK -->
+
+<p><a href="http://www.bytemark-hosting.co.uk/r/jrobin" alt="Bytemark Hosting"><img src="../images/misc/bytemark.png" width="120" height="142" border="0" /></a></p>
+
+<!-- SourceForge logo -->
+
+<p align="center">
+<a href="http://sourceforge.net" target="sf"><img height="31" alt="SourceForge.net Logo" src="http://sourceforge.net/sflogo.php?group_id=82668&amp;type=1" width="88" border="0" /></a>&nbsp;
+</p>
+
+<!-- Firefox -->
+
+<p align="center">
+<a title="Get Firefox - Web Browsing Redefined" href="http://www.mozilla.org/products/firefox/" target="firefox"><img height="15" alt="Get Firefox" src="http://www.mozilla.org/products/firefox/buttons/firefox_80x15.png" width="80" border="0" /></a>
+</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+</td>
+
+<!-- CONTENT -->
+
+<td class="rightcolumn" valign="top" colspan="6">
+<h1>Templates API</h1>
+<a id="top" name="top"></a>
+
+<!-- OPTIONAL SIDEBAR -->
+
+
+
+<!-- body text -->
+
+<p>Creating JRobin RRD files and graphs from your Java code is quite straightforward (see <a href="coreapi.html">Core API</a>&nbsp;and <a href="graphingapi.html">Graphing API</a>&nbsp;pages for detailed instructions). This approach (all creation parameters are hard-coded in your java source) is probably sufficient in most cases, but in complex, live projects you will probably need something more flexible. Simply, you don't want to recompile your source code each time when you want to change the background color of the graph from white to yellow. JRobin templates should address this issue in a logical way. Now, you are able to put all RRD file/graph creation parameters and options in an external XML file and use it to create as many RRD files/graphs as needed.</p>
+<p>Template API is available since JRobin 1.3.0.</p>
+
+<h2>Creating RRD files from XML templates</h2>
+
+<p>Here is a sample XML code containing all available creation parameters and options of a new RRD file:</p>
+<pre>
+ &lt;rrd_def&gt;
+     &lt;path&gt;test.rrd&lt;/path&gt;
+     &lt;!-- not mandatory --&gt;
+     &lt;start&gt;1000123456&lt;/start&gt;
+     &lt;!-- not mandatory --&gt;
+     &lt;step&gt;300&lt;/step&gt;
+     &lt;!-- at least one datasource must be supplied --&gt;
+     &lt;datasource&gt;
+         &lt;name&gt;input&lt;/name&gt;
+         &lt;type&gt;COUNTER&lt;/type&gt;
+         &lt;heartbeat&gt;300&lt;/heartbeat&gt;
+         &lt;min&gt;0&lt;/min&gt;
+         &lt;max&gt;U&lt;/max&gt;
+     &lt;/datasource&gt;
+     &lt;datasource&gt;
+         &lt;name&gt;temperature&lt;/name&gt;
+         &lt;type&gt;GAUGE&lt;/type&gt;
+         &lt;heartbeat&gt;400&lt;/heartbeat&gt;
+         &lt;min&gt;U&lt;/min&gt;
+         &lt;max&gt;1000&lt;/max&gt;
+     &lt;/datasource&gt;
+     &lt;!-- at least one archive must be supplied --&gt;
+     &lt;archive&gt;
+         &lt;cf&gt;AVERAGE&lt;/cf&gt;
+         &lt;xff&gt;0.5&lt;/xff&gt;
+         &lt;steps&gt;1&lt;/steps&gt;
+         &lt;rows&gt;600&lt;/rows&gt;
+     &lt;/archive&gt;
+     &lt;archive&gt;
+         &lt;cf&gt;MAX&lt;/cf&gt;
+         &lt;xff&gt;0.6&lt;/xff&gt;
+         &lt;steps&gt;6&lt;/steps&gt;
+         &lt;rows&gt;7000&lt;/rows&gt;
+     &lt;/archive&gt;
+ &lt;/rrd_def&gt;
+</pre>
+
+<p>This XML template will be parsed by <em>RrdDefTemplate </em> class. Some notes on the template syntax:</p>
+<p> </p>
+<ul>
+<li>There is a strong relation between the XML template syntax and the syntax of <code><strong>RrdDef</strong></code> class methods. If you are not sure what some XML tag means, check javadoc for the corresponding class.
+</li>
+<li>starting timestamp can be supplied either as a long integer (like: 1000243567) or as an ISO formatted string (like: 2004-02-21 12:25:45)
+</li>
+<li>whitespaces are not harmful
+</li>
+<li>floating point values: anything that cannot be parsed will be treated as Double.NaN (like: U, unknown, 12r.23)
+</li>
+<li>comments are allowed.
+</li>
+</ul>
+<p><!--StartFragment --><u>Any part</u> of the text between <code>&lt;some_tag&gt;</code> and <code>&lt;/some_tag&gt;</code> in the template can be replaced with a variable of the following form: <code>${variable_name}</code>. Use <code>setVariable()</code> overloaded methods from the <em>RrdDefTemplate </em> class to replace template variables with real values at runtime.</p>
+<p><!--StartFragment --></p>
+<p>Typical usage scenario:</p>
+<p> </p>
+<ul>
+<li>Create your XML template and save it to a file (<strong>template.xml</strong>, for example)
+</li>
+<li>Replace hardcoded template values with variables if you want to change them during runtime (from your Java code). For example, file path should not be hardcoded in the template - you probably want to create many different RRD files starting from the same XML template. For example, your XML template could start with:
+<pre>
+ &lt;rrd_def&gt;
+     &lt;path&gt;${path}&lt;/path&gt;
+     &lt;step&gt;300&lt;/step&gt;
+     ...
+ 
+</pre>
+</li>
+<li>In your Java code, create <em>RrdDefTemplate</em> object using your XML template file:
+<pre>
+ RrdDefTemplate t = new RrdDefTemplate(new File(template.xml));
+ 
+</pre>
+</li>
+<li>Then, specify real values for template variables:
+<pre>
+ t.setVariable("path", "demo/test.rrd");
+ 
+</pre>
+</li>
+<li>Once all template variables are set, use the template object to create <em>RrdDef</em> object. This object is eventually used to create new JRobin RRD file:
+<pre>
+ RrdDef def = t.getRrdDef();
+ RrdDb rrd = new RrdDb(def);
+ rrd.close();
+ 
+</pre>
+</li>
+</ul>
+<p>You should create new RrdDefTemplate object only once for each XML template (this is recommended, but not mandatory). Single template object can be reused to create as many RrdDef objects as needed, with different values specified for template variables. XML synatax check is performed only once - the first definition object gets created relatively slowly, but it will be created much faster next time. If you change the XML template, you'll have to restart your Java application, but without source code recompilation.</p>
+<p>Note that <em>RrdDefTemplate</em> class is not thread safe: if you use the same <em>RrdDefTemplate</em> object in several different threads, you should synchronize their access to the template object.</p>
+<h2>Creating RRD graphs from XML templates</h2>
+
+<p><!--StartFragment -->Here is an example of a properly formatted XML template with all available options in it (unwanted options can be removed):</p>
+<pre> 
+&lt;rrd_graph_def&gt;
+     &lt;span&gt;
+         &lt;!-- ISO FORMAT: yyyy-MM-dd HH:mm:ss --&gt;
+         &lt;start&gt;2004-02-27 13:35:00&lt;/start&gt;
+         &lt;!-- timestamp in seconds is also allowed --&gt;
+         &lt;end&gt;1234567890&lt;/end&gt;
+     &lt;/span&gt;
+     &lt;options&gt;
+         &lt;anti_aliasing&gt;true&lt;/anti_aliasing&gt;
+         &lt;arrow_color&gt;#FF0000&lt;/arrow_color&gt;
+         &lt;axis_color&gt;#00FF00&lt;/axis_color&gt;
+         &lt;back_color&gt;#00FF00&lt;/back_color&gt;
+         &lt;background&gt;#FFFFFF&lt;/background&gt;
+         &lt;base_value&gt;1024&lt;/base_value&gt;
+         &lt;canvas&gt;#112211&lt;/canvas&gt;
+         &lt;left_padding&gt;55&lt;/left_padding&gt;
+         &lt;default_font&gt;
+             &lt;name&gt;Times&lt;/name&gt;
+             &lt;style&gt;BOLD ITALIC&lt;/style&gt;
+             &lt;size&gt;15&lt;/size&gt;
+         &lt;/default_font&gt;
+         &lt;default_font_color&gt;#000000&lt;/default_font_color&gt;
+         &lt;frame_color&gt;#0000FF&lt;/frame_color&gt;
+         &lt;front_grid&gt;true&lt;/front_grid&gt;
+         &lt;grid_range&gt;
+             &lt;lower&gt;100&lt;/lower&gt;
+             &lt;upper&gt;200&lt;/upper&gt;
+             &lt;rigid&gt;false&lt;/rigid&gt;
+         &lt;/grid_range&gt;
+         &lt;grid_x&gt;true&lt;/grid_x&gt;
+         &lt;grid_y&gt;false&lt;/grid_y&gt;
+         &lt;border&gt;
+             &lt;color&gt;#00FFFF&lt;/color&gt;
+             &lt;width&gt;2&lt;/width&gt;
+         &lt;/border&gt;
+         &lt;major_grid_color&gt;#00FF00&lt;/major_grid_color&gt;
+         &lt;major_grid_x&gt;true&lt;/major_grid_x&gt;
+         &lt;major_grid_y&gt;false&lt;/major_grid_y&gt;
+         &lt;minor_grid_color&gt;#00FFFF&lt;/minor_grid_color&gt;
+         &lt;minor_grid_x&gt;true&lt;/minor_grid_x&gt;
+         &lt;minor_grid_y&gt;false&lt;/minor_grid_y&gt;
+         &lt;overlay&gt;overlay_image.png&lt;/overlay&gt;
+         &lt;show_legend&gt;true&lt;/show_legend&gt;
+         &lt;show_signature&gt;false&lt;/show_signature&gt;
+         &lt;time_axis&gt;
+             &lt;!-- ALLOWED TIME UNITS: SECOND, MINUTE, HOUR, DAY, WEEK, MONTH, YEAR --&gt;
+             &lt;min_grid_time_unit&gt;HOUR&lt;/min_grid_time_unit&gt;
+             &lt;min_grid_unit_steps&gt;4&lt;/min_grid_unit_steps&gt;
+             &lt;maj_grid_time_unit&gt;DAY&lt;/maj_grid_time_unit&gt;
+             &lt;maj_grid_unit_steps&gt;2&lt;/maj_grid_unit_steps&gt;
+             &lt;date_format&gt;HH:mm&lt;/date_format&gt;
+             &lt;center_labels&gt;true&lt;/center_labels&gt;
+             &lt;first_day_of_week&gt;SUNDAY&lt;/first_day_of_week&gt;             
+         &lt;/time_axis&gt;
+         &lt;time_axis_label&gt;time&lt;/time_axis_label&gt;
+         &lt;title&gt;Graph title&lt;/title&gt;
+         &lt;title_font&gt;
+             &lt;name&gt;Verdana&lt;/name&gt;
+             &lt;style&gt;BOLD&lt;/style&gt;
+             &lt;size&gt;17&lt;/size&gt;
+         &lt;/title_font&gt;
+         &lt;title_font_color&gt;#FF0000&lt;/title_font_color&gt;
+         &lt;units_exponent&gt;6&lt;/units_exponent&gt;
+         &lt;value_axis&gt;
+             &lt;grid_step&gt;100&lt;/grid_step&gt;
+             &lt;label_step&gt;200&lt;/label_step&gt;
+         &lt;/value_axis&gt;
+         &lt;vertical_label&gt;voltage [V]&lt;/vertical_label&gt;
+     &lt;/options&gt;
+     &lt;datasources&gt;
+         &lt;def&gt;
+             &lt;name&gt;input&lt;/name&gt;
+             &lt;rrd&gt;test1.rrd&lt;/rrd&gt;
+             &lt;source&gt;inOctets&lt;/source&gt;
+             &lt;cf&gt;AVERAGE&lt;/cf&gt;
+         &lt;/def&gt;
+         &lt;def&gt;
+             &lt;name&gt;output&lt;/name&gt;
+             &lt;rrd&gt;test2.rrd&lt;/rrd&gt;
+             &lt;source&gt;outOctets&lt;/source&gt;
+             &lt;cf&gt;MAX&lt;/cf&gt;
+         &lt;/def&gt;
+         &lt;def&gt;
+             &lt;name&gt;input8&lt;/name&gt;
+             &lt;rpn&gt;input,8,*&lt;/rpn&gt;
+         &lt;/def&gt;
+         &lt;def&gt;
+             &lt;name&gt;output8&lt;/name&gt;
+             &lt;rpn&gt;output,8,*,-1,*&lt;/rpn&gt;
+         &lt;/def&gt;
+     &lt;/datasources&gt;
+     &lt;graph&gt;
+         &lt;area&gt;
+             &lt;datasource&gt;input&lt;/datasource&gt;
+             &lt;color&gt;#FF0000&lt;/color&gt;
+             &lt;legend&gt;Input traffic&lt;/legend&gt;
+         &lt;/area&gt;
+         &lt;area&gt;
+             &lt;datasource&gt;output&lt;/datasource&gt;
+             &lt;color&gt;#00FF00&lt;/color&gt;
+             &lt;legend&gt;Output traffic&lt;/legend&gt;
+         &lt;/area&gt;
+         &lt;stack&gt;
+             &lt;datasource&gt;input8&lt;/datasource&gt;
+             &lt;color&gt;#AA00AA&lt;/color&gt;
+             &lt;legend&gt;Stacked input@r&lt;/legend&gt;
+         &lt;/stack&gt;
+         &lt;line&gt;
+             &lt;datasource&gt;input&lt;/datasource&gt;
+             &lt;color&gt;#AB7777&lt;/color&gt;
+             &lt;legend&gt;Input traffic@l&lt;/legend&gt;
+         &lt;/line&gt;
+         &lt;line&gt;
+             &lt;datasource&gt;output&lt;/datasource&gt;
+             &lt;color&gt;#AA00AA&lt;/color&gt;
+             &lt;legend&gt;Output traffic@r&lt;/legend&gt;
+             &lt;width&gt;2&lt;/width&gt;
+         &lt;/line&gt;
+         &lt;area&gt;
+             &lt;time1&gt;2004-02-25 12:00:01&lt;/time1&gt;
+             &lt;time2&gt;1000222333&lt;/time2&gt;
+             &lt;value1&gt;1001.23&lt;/value1&gt;
+             &lt;value2&gt;2765.45&lt;/value2&gt;
+             &lt;color&gt;#AABBCC&lt;/color&gt;
+             &lt;legend&gt;simeple two point area&lt;/legend&gt;
+         &lt;/area&gt;
+         &lt;line&gt;
+             &lt;time1&gt;1000111444&lt;/time1&gt;
+             &lt;time2&gt;2004-02-25 12:00:01&lt;/time2&gt;
+             &lt;value1&gt;1009.23&lt;/value1&gt;
+             &lt;value2&gt;9002.45&lt;/value2&gt;
+             &lt;color&gt;#AABB33&lt;/color&gt;
+             &lt;legend&gt;simple two point line&lt;/legend&gt;
+             &lt;width&gt;5&lt;/width&gt;
+         &lt;/line&gt;
+         &lt;gprint&gt;
+             &lt;datasource&gt;input&lt;/datasource&gt;
+             &lt;cf&gt;AVERAGE&lt;/cf&gt;
+             &lt;format&gt;Average input: @2@c&lt;/format&gt;
+         &lt;/gprint&gt;
+         &lt;gprint&gt;
+             &lt;datasource&gt;output&lt;/datasource&gt;
+             &lt;cf&gt;TOTAL&lt;/cf&gt;
+             &lt;format&gt;Total output: @2@r&lt;/format&gt;
+             &lt;base&gt;1024&lt;/base&gt;             
+         &lt;/gprint&gt;
+         &lt;hrule&gt;
+             &lt;value&gt;1234.5678&lt;/value&gt;
+             &lt;color&gt;#112233&lt;/color&gt;
+             &lt;legend&gt;horizontal rule&lt;/legend&gt;
+             &lt;width&gt;3&lt;/width&gt;
+         &lt;/hrule&gt;
+         &lt;vrule&gt;
+             &lt;time&gt;2004-02-22 17:43:57&lt;/time&gt;
+             &lt;color&gt;#112299&lt;/color&gt;
+             &lt;legend&gt;vertical rule&lt;/legend&gt;
+             &lt;width&gt;6&lt;/width&gt;
+         &lt;/vrule&gt;
+         &lt;comment&gt;Created with JRobin&lt;/comment&gt;
+     &lt;/graph&gt;
+ &lt;/rrd_graph_def&gt;
+</pre>
+<p>This XML template will be parsed by <em>RrdGraphDefTemplate</em> class. There is a strong relation between the XML template syntax and the syntax of <code>RrdGraphDef</code> class methods. If you are not sure what some XML tag means, check javadoc for the corresponding class. Some notes on the template syntax:</p>
+<ul>
+<li>hard-coded timestamps in templates should be long integeres (like: 1000243567) or ISO formatted strings (like: 2004-02-21 12:25:45)
+</li>
+<li>whitespaces are not harmful
+</li>
+<li>use <code>true</code>, <code>on</code>, <code>yes</code>, <code>y</code>, or <code>1</code> to specify boolean <code>true</code> value (anything else will be treated as <code>false</code>).
+</li>
+<li>floating point values: anything that cannot be parsed will be treated as Double.NaN (like: U, unknown, 12r.23)
+</li>
+<li>use #RRGGBB format to specify colors.
+</li>
+<li>valid font styles are: PLAIN, ITALIC, BOLD, BOLD ITALIC
+</li>
+<li>comments are allowed.
+</li>
+</ul>
+<p><u>Any part</u> of the text between <code>&lt;some_tag&gt;</code> and <code>&lt;/some_tag&gt;</code> in the template can be replaced with a variable of the following form: <code>${variable_name}</code>. Use <code>setVariable()</code> overloaded methods from the <em>RrdGraphDefTemplate </em> class to replace template variables with real values at runtime (in your Java code).</p>
+<p>Typical usage scenario:</p>
+<p> </p>
+<ul>
+<li>Create your XML template and save it to a file (<strong>template.xml</strong>, for example)
+</li>
+<li>Replace template values with variables if you want to change them during runtime. For example, time span should not be hard-coded in the template - you probably want to create many different graphs with different time spans from the same XML template. The same is probably true for the graph title. For example, your XML template could look like:
+<pre>
+ &lt;rrd_graph_def&gt;
+     &lt;span&gt;
+         &lt;start&gt;${start}&lt;/start&gt;
+         &lt;end&gt;${end}&lt;/end&gt;
+     &lt;/span&gt;
+     &lt;options&gt;
+         &lt;title&gt;GRAPH: ${title}&lt;/title&gt;
+         ...
+     &lt;/options&gt;
+     ... 
+</pre>
+</li>
+<li>In your Java code, create <em>RrdGraphDefTemplate</em> object using your XML template file:
+<pre>
+ RrdGraphDefTemplate t = new RrdGraphDefTemplate(new File(template.xml));
+ 
+</pre>
+</li>
+<li>Then, specify real values for all template variables:
+<pre>
+ t.setVariable("start", new GregorianCalendar(2004, 2, 25));
+ t.setVariable("end", new GregorianCalendar(2004, 2, 26));
+ t.setVariable("title", "My first template based graph");
+</pre>
+</li>
+<li>Once all template variables are set, use the template object to create <em>RrdGraphDef</em> object. This object is eventually used to create JRobin grahps:
+<pre>
+ RrdGraphDef gdef = t.getRrdGraphDef();
+ RrdGraph g = new RrdGraph(gdef);
+ g.saveAsPNG("graph.png");
+ 
+</pre>
+</li>
+</ul>
+<p>You should create new <em>RrdGraphDefTemplate</em> object only once for each XML template. Single template object can be reused to create as many <em>RrdGraphDef</em> objects as needed, with different values specified for template variables. XML synatax check is performed only once - the first graph definition object gets created relatively slowly, but it will be created much faster next time. If you change the XML template, you'll have to restart your Java application, but without source code recompilation.</p>
+<p>
+Note that <em>RrdGraphDefTemplate</em> class is not thread safe: access to the template object from several threads should be synchronized.</p>
+<h2>Templates demo</h2>
+<p>
+To see both template classes in action, run the the following demo (source code is provided with the distribution):</p>
+<pre>
+java -cp jrobin-demo-{version}.jar \
+     org.jrobin.demo.TemplatesDemo </pre>
+<p>If you run this demo in a headless environment (without X-server), be sure to specify</p>
+<pre>
+-Djava.awt.headles=true
+</pre>
+<p>option on the command line.</p>
+
+<!-- footer -->
+
+<p><a href="#">Back to the top</a></p>
+<p>Copyright &copy; 2003, 2004 Sasa Markovic & Arne Vandamme. All Rights Reserved.</p>
+<p><a href="http://www.bytemark-hosting.co.uk/r/jrobin" alt="Bytemark Hosting"><img src="../images/misc/bytemark-transparent.gif" width="200" height="25" border="0"></a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</body>
+</html>

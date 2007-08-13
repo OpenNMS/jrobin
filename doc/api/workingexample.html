@@ -1,0 +1,374 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+
+<head>
+<meta name="generator" content="Fog Creek CityDesk 2.0.19" />
+<meta name="citydesk" content="852BB11B/58" />
+<title>JRobin :: RRDTool Choice for the Java World :: Working example</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<meta name="keywords" content="jrobin,java,api,rrdtool,rrd,round,robin,database,round robin database,mrtg">
+<link rel="stylesheet" href="../css/jrobin.css" type="text/css">
+</head>
+
+<body bgcolor="#ffffcc" leftmargin="0" topmargin="0" marginwidth="0" marginheight="0">
+
+<!-- primary navigation -->
+
+<table cellspacing="0" cellpadding="0" width="800" bgcolor="#FFFFCC" border="0">
+<tbody>
+<tr>
+<td class="logo" colspan="7"><a href="../index.html"><img height="78" alt="JRobin Logo" src="../images/web-logo-2.png" width="800" border="0" /></a></td>
+</tr>
+<tr>
+<td class="top" onmouseover="this.className='tophover'" onmouseout="this.className='top'" width="16%">
+<div align="center"><a class="toplink" href="../index.html">HOME</a></div>
+</td>
+<td class="top" onmouseover="this.className='tophover'" onmouseout="this.className='top'" width="14%">
+<div align="center"><a class="toplink" href="../library/index.html">Library</a></div>
+</td>
+<td class="top" onmouseover="this.className='tophover'" onmouseout="this.className='top'" width="14%">
+<div align="center"><a class="toplink" href="index.html">JRobin API</a></div>
+</td>
+<td class="top" onmouseover="this.className='tophover'" onmouseout="this.className='top'" width="14%">
+<div align="center"><a class="toplink" href="../utilities/index.html">Utilities</a></div>
+</td>
+<td class="top" onmouseover="this.className='tophover'" onmouseout="this.className='top'" width="14%">
+<div align="center"><a class="toplink" href="../support/index.html">Support</a></div>
+</td>
+<td class="top" onmouseover="this.className='tophover'" onmouseout="this.className='top'" width="14%">
+<div align="center"><a class="toplink" href="../about/index.html">About Us</a></div>
+</td>
+<td class="top" onmouseover="this.className='tophover'" onmouseout="this.className='top'" width="14%">
+<div align="center"><a class="toplink" href="http://www.jrobin.org/phpBB2/" target="forum">Forum</a></div>
+</td>
+</tr>
+
+<!-- secondary navigation -->
+
+<tr>
+<td class="leftcolumn" valign="top" align="center" height="1200" colspan="1">
+<table cellpadding="1" width="100%" border="0"><tbody>
+
+<tr><td class="left2">
+<div align="left"><a class="left" href="index.html">JRobin API</a></div>
+</td></tr>
+
+<tr><td class="left2">
+<div align="left"><a class="left" href="jrobinandrrdtoolcompared.html">JRobin and RRDTool, compared</a></div>
+</td></tr>
+
+<tr><td class="left2">
+<div align="left"><a class="left" href="quickreference.html">Quick reference</a></div>
+</td></tr>
+
+<tr><td class="left2">
+<div align="left"><a class="left" href="tutorial.html">Tutorial</a></div>
+</td></tr>
+
+<tr><td class="left2">
+<div align="left"><a class="left" href="workingexample.html">Working example</a></div>
+</td></tr>
+
+<tr><td class="left2">
+<div align="left"><a class="left" href="coreapi.html">Core API</a></div>
+</td></tr>
+
+<tr><td class="left2">
+<div align="left"><a class="left" href="graphingapi.html">Graphing API</a></div>
+</td></tr>
+
+<tr><td class="left2">
+<div align="left"><a class="left" href="templatesapi.html">Templates API</a></div>
+</td></tr>
+
+<tr><td class="left2">
+<div align="left"><a class="left" href="standalonegraphingengine.html">Standalone graphing engine</a></div>
+</td></tr>
+
+<tr><td class="left2">
+<div align="left"><a class="left" href="backends.html">Backends</a></div>
+</td></tr>
+
+<tr><td class="left2">
+<div align="left"><a class="left" href="javadoc.html">Javadoc</a></div>
+</td></tr>
+
+</tbody></table>
+<p>&nbsp;</p>
+
+<!-- external links -->
+
+<!-- BYTEMARK -->
+
+<p><a href="http://www.bytemark-hosting.co.uk/r/jrobin" alt="Bytemark Hosting"><img src="../images/misc/bytemark.png" width="120" height="142" border="0" /></a></p>
+
+<!-- SourceForge logo -->
+
+<p align="center">
+<a href="http://sourceforge.net" target="sf"><img height="31" alt="SourceForge.net Logo" src="http://sourceforge.net/sflogo.php?group_id=82668&amp;type=1" width="88" border="0" /></a>&nbsp;
+</p>
+
+<!-- Firefox -->
+
+<p align="center">
+<a title="Get Firefox - Web Browsing Redefined" href="http://www.mozilla.org/products/firefox/" target="firefox"><img height="15" alt="Get Firefox" src="http://www.mozilla.org/products/firefox/buttons/firefox_80x15.png" width="80" border="0" /></a>
+</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+</td>
+
+<!-- CONTENT -->
+
+<td class="rightcolumn" valign="top" colspan="6">
+<h1>Working example</h1>
+<a id="top" name="top"></a>
+
+<!-- OPTIONAL SIDEBAR -->
+
+
+
+<!-- body text -->
+
+<p>The following application monitors the CPU load of a workstation (or any other SNMP capable device) and stores its data in a single RRD file (named <em>load.rrd</em>). At the same time this application creates four different graphs (<em>load-daily.png</em>, <em>load-weekly.png</em>, <em>load-monthly.png</em> and <em>load-yearly.png</em>) showing the CPU load for the last day, week, month and year. Once started it runs until the end of the world and recreates all graphs every five minutes.&nbsp;</p>
+<p>RRD file and graphs will be created under <em>jrobin-demo</em> subdirectory of your home directory:</p>
+<ul>
+<li>On Linux: <em>~/jrobin-demo</em>
+</li>
+<li>On Windows: <em>C:\Documents and Settings\Administrator\jrobin-demo</em>
+</li>
+</ul>
+<p>Since Java has no API to read CPU load directly, it has to get it from somewhere else. This application obtains CPU load from a SNMP agent running on the same machine (localhost). Without this agent the demo will genereate only a huge number of IOExceptions. If you don't know how to install and run a SNMP agent, download the code and documentation from the&nbsp;<a href="http://net-snmp.sourceforge.net/">NET-SNMP</a> project. Be sure that the constants <em>SNMP_HOST</em>, <em>SNMP_PORT</em> and <em>SNMP_COMMUNITY</em> match the configuration of your running agent. Application assumes that the CPU load is available at OID <em>enterprises.ucdavis.laTable.laEntry.laLoad.1</em> (1.3.6.1.4.1.2021.10.1.3.1). Adjust this OID if necessary by setting appropriate value for the <em>SNMP_CPU_LOAD_OID</em> constant.</p>
+<p>The code is quite self-explanatory with many comments: it should demonstrate how easy it is to establish a bacis JRobin framework for complex everyday tasks. Put the following code in a file named <em>CpuLoadMonitor.java</em>:</p>
+<pre>
+import snmp.*;
+import java.net.*;
+import java.io.*;
+import java.awt.*;
+import java.util.Date;
+
+import org.jrobin.core.*;
+import org.jrobin.graph.*;
+
+public class CpuLoadMonitor {
+    // SNMP access parameters
+    public static final String SNMP_HOST = "localhost";
+    public static final int SNMP_PORT = 161;
+    public static final String SNMP_COMMUNITY = "public";
+    // CPU Load OID: enterprises.ucdavis.laTable.laEntry.laLoad.1
+    public static final String SNMP_CPU_LOAD_OID = "1.3.6.1.4.1.2021.10.1.3.1";
+
+    // All files and graphs will be created in jrobin-demo subdirectory
+    // of your HOME directory.
+    // 
+    // On Linux: ~/jrobin-demo 
+    // On Windows: C:\Documents and Settings\Administrator\jrobin-demo
+
+    // RRD file path
+    public static final String RRD_FILE = "load.rrd";
+
+    // Image file paths
+    public static final String IMAGE_DAILY = "load-daily.png";
+    public static final String IMAGE_WEEKLY = "load-weekly.png";
+    public static final String IMAGE_MONTHLY = "load-monthly.png";
+    public static final String IMAGE_YEARLY = "load-yearly.png";
+
+    // SNMP sampling resolution
+    public static final int SNMP_RESOLUTION = 60; // seconds
+    // Graph will be recreated each 5 minutes (300 seconds)
+    public static final int GRAPH_RESOLUTION = 300; // seconds
+
+    // SNMP communicator object
+    SNMPv1CommunicationInterface comm;
+    // pool of open RRD files (we have just a single one, but who cares)
+    RrdDbPool rrdPool = RrdDbPool.getInstance();
+
+    public CpuLoadMonitor() throws IOException, RrdException {
+        createSnmpCommObject();
+        createRrdFileIfNecessary();
+        startSnmpThread();
+        startGraphingThread();
+    }
+
+    // creates SNMP communicator object
+    private void createSnmpCommObject() throws IOException {
+        InetAddress snmpHost = InetAddress.getByName(SNMP_HOST);
+        comm = new SNMPv1CommunicationInterface(0, snmpHost,
+                SNMP_COMMUNITY, SNMP_PORT);
+    }
+
+    // creates RRD file only if it does not exist
+    private void createRrdFileIfNecessary() throws RrdException, IOException {
+        String rrdPath = Util.getJRobinDemoPath(RRD_FILE);
+        File rrdFile = new File(rrdPath);
+        if(!rrdFile.exists()) {
+            // create RRD file since it does not exist
+            RrdDef rrdDef = new RrdDef(rrdPath, SNMP_RESOLUTION);
+            // single gauge datasource, named 'load'
+            rrdDef.addDatasource("load", "GAUGE", 5 * SNMP_RESOLUTION, 0, Double.NaN);
+            // several archives
+            rrdDef.addArchive("AVERAGE", 0.5, 1, 4000);
+            rrdDef.addArchive("AVERAGE", 0.5, 6, 4000);
+            rrdDef.addArchive("AVERAGE", 0.5, 24, 4000);
+            rrdDef.addArchive("AVERAGE", 0.5, 288, 4000);
+            // create RRD file in the pool
+            RrdDb rrdDb = rrdPool.requestRrdDb(rrdDef);
+            rrdPool.release(rrdDb);
+        }
+    }
+
+    // creates and starts SNMP thread
+    private void startSnmpThread() {
+        // create thread
+        Runnable snmpThread = new Runnable() {
+            public void run() {
+                // until the end of the world
+                for(;;) {
+                    try {
+                        // read SNMP value
+                        SNMPVarBindList varList = comm.getMIBEntry(SNMP_CPU_LOAD_OID);
+                        SNMPSequence pair = (SNMPSequence)(varList.getSNMPObjectAt(0));
+                        // get CPU load as a string
+                        String cpuLoadString = pair.getSNMPObjectAt(1).toString().trim();
+                        // convert CPU load to double
+                        double cpuLoad = Double.parseDouble(cpuLoadString);
+                        // request RRD database reference from the pool
+                        RrdDb rrdDb = rrdPool.requestRrdDb(
+                                Util.getJRobinDemoPath(RRD_FILE));
+                        // create sample with the current timestamp
+                        Sample sample = rrdDb.createSample();
+                        // set value for load datasource
+                        sample.setValue("load", cpuLoad);
+                        // update database
+                        sample.update();
+                        // release RRD database reference
+                        rrdPool.release(rrdDb);
+                        // wait for a while
+                        Thread.sleep(SNMP_RESOLUTION * 1000L);
+                    } catch (IOException e) {
+                        reportException(e);
+                    } catch (SNMPBadValueException e) {
+                        reportException(e);
+                    } catch (SNMPGetException e) {
+                        reportException(e);
+                    } catch (RrdException e) {
+                        reportException(e);
+                    } catch (InterruptedException e) {
+                        reportException(e);
+                    }
+                }
+            }
+        };
+        // start SNMP thread
+        new Thread(snmpThread).start();
+    }
+
+    private void startGraphingThread() throws RrdException {
+    	// create common part of graph definition
+    	// time span will be set later
+        final RrdGraphDef graphDef = new RrdGraphDef();
+        graphDef.datasource("load",
+                Util.getJRobinDemoPath(RRD_FILE), "load", "AVERAGE");
+        graphDef.area("load", Color.RED, "CPU load@L");
+        graphDef.gprint("load", "AVERAGE", "Average CPU load: @3@r");
+        graphDef.comment("JRobin :: RRDTool Choice for the Java World@l");           
+        // create graphing thread
+        Runnable graphThread = new Runnable() {
+            public void run() {
+                // until the end of the world
+                for(;;) {
+                    // ending timestamp is the current timestamp
+                    // starting timestamp will be adjusted for each graph
+                    long startTime, endTime = Util.getTime();
+                    RrdGraph rrdGraph;
+                    try {
+                        // daily graph
+                        startTime = endTime - 86400; 
+                        graphDef.setTimePeriod(startTime, endTime);
+                        graphDef.setTitle("CPU Load - 1 day");
+                        rrdGraph = new RrdGraph(graphDef, true); // uses pool
+                        rrdGraph.saveAsPNG(Util.getJRobinDemoPath(IMAGE_DAILY));
+
+                        // weekly graph
+                        startTime = endTime - 86400 * 7;
+                        graphDef.setTimePeriod(startTime, endTime);
+                        graphDef.setTitle("CPU Load - 1 week");
+                        rrdGraph = new RrdGraph(graphDef, true); // uses pool
+                        rrdGraph.saveAsPNG(Util.getJRobinDemoPath(IMAGE_WEEKLY));
+
+                        // monthly graph
+                        startTime = endTime - 86400 * 31;
+                        graphDef.setTimePeriod(startTime, endTime);
+                        graphDef.setTitle("CPU Load - 1 month");
+                        rrdGraph = new RrdGraph(graphDef, true); // uses pool
+                        rrdGraph.saveAsPNG(Util.getJRobinDemoPath(IMAGE_MONTHLY));
+
+                        // yearly graph
+                        startTime = endTime - 86400 * 366;
+                        graphDef.setTimePeriod(startTime, endTime);
+                        graphDef.setTitle("CPU Load - 1 year");
+                        rrdGraph = new RrdGraph(graphDef, true); // uses pool
+                        rrdGraph.saveAsPNG(Util.getJRobinDemoPath(IMAGE_YEARLY));
+
+                        // sleep for a while
+                        Thread.sleep(GRAPH_RESOLUTION * 1000L);
+                    } catch (RrdException e) {
+                        reportException(e);
+                    } catch (IOException e) {
+                        reportException(e);
+                    } catch (InterruptedException e) {
+                        reportException(e);
+                    }
+                }
+            }
+        };
+        // start graphing thread
+        new Thread(graphThread).start();
+    }
+
+    // reports exception by printing it on the stderr device
+    private static void reportException(Exception e) {
+        System.err.println("ERROR [" + new Date() + "]: " + e);
+    }
+
+    public static void main(String[] args) throws IOException, RrdException {
+        new CpuLoadMonitor();
+    }
+}
+</pre>
+<p>To compile this code, you have to specify two external libraries in the classpath:</p>
+<ul>
+<li>jrobin-{version}.jar (core JRobin library)
+</li>
+<li>snmp-1.3.jar (SNMP library)
+</li>
+</ul>
+<p>Both libraries are provided with the latest JRobin distribution. Compile the code by executing the following command from the command line:
+</p>
+<pre>
+javac -classpath jrobin-{version}.jar:snmp-1.3.jar CpuLoadMonitor.java
+</pre>
+<p>To run the application, execute:</p>
+<pre>
+nohup java                                  \
+    -Djava.awt.headless=true                \
+    -cp .:jrobin-{version}.jar:snmp-1.3.jar \
+    CpuLoadMonitor &amp;
+</pre>
+<p>The second line (-D switch) is necessary only if you run this application without X-windows up and running (common situation on many newtwork servers).</p>
+
+<p>Once application is started, give it some time to produce some meaningful graphs (half an hour should be fair enough). If everything runs as expected, the daily graph should look like this one:</p>
+<p><img height="192" alt="" src="../images/misc/load-daily.png" width="483" border="0" /></p>
+<p>That Linux box is obviously idle most of the time :)</p>
+<p> </p>
+
+<!-- footer -->
+
+<p><a href="#">Back to the top</a></p>
+<p>Copyright &copy; 2003, 2004 Sasa Markovic & Arne Vandamme. All Rights Reserved.</p>
+<p><a href="http://www.bytemark-hosting.co.uk/r/jrobin" alt="Bytemark Hosting"><img src="../images/misc/bytemark-transparent.gif" width="200" height="25" border="0"></a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</body>
+</html>

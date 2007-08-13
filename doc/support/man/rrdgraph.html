@@ -1,0 +1,297 @@
+<HTML><HEAD><TITLE>rrdgraph</TITLE><LINK rev=made href="mailto:compil@bi.mandrakesoft.com"></HEAD>
+<BODY><A name=__index__></A><!-- INDEX BEGIN --><!--
+
+<UL>
+
+	<LI><A HREF="#name">NAME</A></LI>
+	<LI><A HREF="#synopsis">SYNOPSIS</A></LI>
+	<LI><A HREF="#description">DESCRIPTION</A></LI>
+	<LI><A HREF="#notes on legend arguments">NOTES on legend arguments</A></LI>
+	<UL>
+
+		<LI><A HREF="#escaping the colon">Escaping the colon</A></LI>
+		<LI><A HREF="#string formatting">String Formatting</A></LI>
+	</UL>
+
+	<LI><A HREF="#note on return values">NOTE on Return Values</A></LI>
+	<LI><A HREF="#example 1">EXAMPLE 1</A></LI>
+	<LI><A HREF="#example 2">EXAMPLE 2</A></LI>
+	<LI><A HREF="#example 3">EXAMPLE 3</A></LI>
+	<LI><A HREF="#author">AUTHOR</A></LI>
+	<LI><A HREF="#references">REFERENCES</A></LI>
+</UL>
+--><!-- INDEX END -->
+<P>
+<H1><A name=name>NAME</A></H1>
+<P>rrdtool graph - Create a graph based on data from one or several RRD</P>
+<DIV align=right><A href="rrdgraph.pdf">PDF</A> version.</DIV>
+<P>
+<HR>
+
+<H1><A name=synopsis>SYNOPSIS</A></H1>
+<P><STRONG>rrdtool</STRONG> <STRONG>graph</STRONG> <EM>filename</EM> [<STRONG>-s</STRONG>|<STRONG>--start</STRONG>&nbsp;<EM>seconds</EM>] [<STRONG>-e</STRONG>|<STRONG>--end</STRONG>&nbsp;<EM>seconds</EM>] [<STRONG>-x</STRONG>|<STRONG>--x-grid</STRONG>&nbsp;<EM>x-axis&nbsp;grid&nbsp;and&nbsp;label</EM>] [<STRONG>-y</STRONG>|<STRONG>--y-grid</STRONG>&nbsp;<EM>y-axis&nbsp;grid&nbsp;and&nbsp;label</EM>] [<STRONG>--alt-y-grid</STRONG>] [<STRONG>--alt-y-mrtg</STRONG>] [<STRONG>--alt-autoscale</STRONG>] [<STRONG>--alt-autoscale-max</STRONG>] [<STRONG>--units-exponent</STRONG>] <EM>value</EM>]&gt; [<STRONG>-v</STRONG>|<STRONG>--vertical-label</STRONG>&nbsp;<EM>text</EM>] [<STRONG>-w</STRONG>|<STRONG>--width</STRONG>&nbsp;<EM>pixels</EM>] [<STRONG>-h</STRONG>|<STRONG>--height</STRONG>&nbsp;<EM>pixels</EM>] [<STRONG>-i</STRONG>|<STRONG>--interlaced</STRONG>] [<STRONG>-f</STRONG>|<STRONG>--imginfo</STRONG>&nbsp;<EM>formatstring</EM>] [<STRONG>-a</STRONG>|<STRONG>--imgformat</STRONG>&nbsp;<STRONG>GIF</STRONG>|<STRONG>PNG</STRONG>|<STRONG>GD</STRONG>] [<STRONG>-B</STRONG>|<STRONG>--background</STRONG>&nbsp;<EM>value</EM>] [<STRONG>-O</STRONG>|<STRONG>--overlay</STRONG>&nbsp;<EM>value</EM>] [<STRONG>-U</STRONG>|<STRONG>--unit</STRONG>&nbsp;<EM>value</EM>] [<STRONG>-z</STRONG>|<STRONG>--lazy</STRONG>] [<STRONG>-o</STRONG>|<STRONG>--logarithmic</STRONG>] [<STRONG>-u</STRONG>|<STRONG>--upper-limit</STRONG>&nbsp;<EM>value</EM>] [<STRONG>-l</STRONG>|<STRONG>--lower-limit</STRONG>&nbsp;<EM>value</EM>] [<STRONG>-g</STRONG>|<STRONG>--no-legend</STRONG>] [<STRONG>-r</STRONG>|<STRONG>--rigid</STRONG>] [<STRONG>--step</STRONG>&nbsp;<EM>value</EM>] [<STRONG>-b</STRONG>|<STRONG>--base</STRONG>&nbsp;<EM>value</EM>] [<STRONG>-c</STRONG>|<STRONG>--color</STRONG>&nbsp;<EM>COLORTAG</EM><STRONG>#</STRONG><EM>rrggbb</EM>] [<STRONG>-t</STRONG>|<STRONG>--title</STRONG>&nbsp;<EM>title</EM>] [<STRONG>DEF:</STRONG><EM>vname</EM><STRONG>=</STRONG><EM>rrd</EM><STRONG>:</STRONG><EM>ds-name</EM><STRONG>:</STRONG><EM>CF</EM>] [<STRONG>CDEF:</STRONG><EM>vname</EM><STRONG>=</STRONG><EM>rpn-expression</EM>] [<STRONG>PRINT:</STRONG><EM>vname</EM><STRONG>:</STRONG><EM>CF</EM><STRONG>:</STRONG><EM>format</EM>] [<STRONG>GPRINT:</STRONG><EM>vname</EM><STRONG>:</STRONG><EM>CF</EM><STRONG>:</STRONG><EM>format</EM>] [<STRONG>COMMENT:</STRONG><EM>text</EM>] [<STRONG>HRULE:</STRONG><EM>value</EM><STRONG>#</STRONG><EM>rrggbb</EM>[<STRONG>:</STRONG><EM>legend</EM>]] [<STRONG>VRULE:</STRONG><EM>time</EM><STRONG>#</STRONG><EM>rrggbb</EM>[<STRONG>:</STRONG><EM>legend</EM>]] [<STRONG>LINE</STRONG>{<STRONG>1</STRONG>|<STRONG>2</STRONG>|<STRONG>3</STRONG>}<STRONG>:</STRONG><EM>vname</EM>[<STRONG>#</STRONG><EM>rrggbb</EM>[<STRONG>:</STRONG><EM>legend</EM>]]] [<STRONG>AREA:</STRONG><EM>vname</EM>[<STRONG>#</STRONG><EM>rrggbb</EM>[<STRONG>:</STRONG><EM>legend</EM>]]] [<STRONG>STACK:</STRONG><EM>vname</EM>[<STRONG>#</STRONG><EM>rrggbb</EM>[<STRONG>:</STRONG><EM>legend</EM>]]]</P>
+<P>
+<HR>
+
+<H1><A name=description>DESCRIPTION</A></H1>
+<P>The <STRONG>graph</STRONG> functions main purpose is to create graphical representations of the data stored in one or several <STRONG>RRD</STRONG>s. Apart from generating graphs, it can also extract numerical reports.</P>
+<DL>
+<DT><STRONG><A name=item_filename><EM>filename</EM></A></STRONG><BR>
+<DD>The name of the graph to generate. Since <STRONG>rrdtool</STRONG> outputs GIFs and PNGs, it's recommended that the filename end in either <EM>.gif</EM> or <EM>.png</EM>. <STRONG>rrdtool</STRONG> does not enforce this, however. If the <EM>filename</EM> is set to '-' the image file will be written to standard out. All other output will get suppressed. 
+<P>PNG output is recommended, since it takes up to 40% less disk space and 20-30% less time to generate than a GIF file.</P>
+<P>If no graph functions are called, the graph will not be created.</P>
+<P></P>
+<DT><STRONG><A name=item_seconds><STRONG>-s</STRONG>|<STRONG>--start</STRONG> <EM>seconds</EM> (default end-1day)</A></STRONG><BR>
+<DD>The time when the graph should begin. Time in seconds since epoch (1970-01-01) is required. Negative numbers are relative to the current time. By default one day worth of data will be graphed. See also AT-STYLE TIME SPECIFICATION section in the <EM>rrdfetch</EM> documentation for a detailed explanation on how to specify time. 
+<P></P>
+<DT><STRONG><STRONG>-e</STRONG>|<STRONG>--end</STRONG> <EM>seconds</EM> (default now)</STRONG><BR>
+<DD>The time when the graph should end. Time in seconds since epoch. See also AT-STYLE TIME SPECIFICATION section in the <EM>rrdfetch</EM> documentation for a detailed explanation of ways to specify time. 
+<P></P>
+<DT><STRONG><A name=item_label><STRONG>-x</STRONG>|<STRONG>--x-grid</STRONG> <EM>x-axis grid and label</EM> (default autoconfigure)</A></STRONG><BR>
+<DD>The x-axis label is quite complex to configure. So if you don't have very special needs, you can rely on the autoconfiguration to get this right. 
+<P>If you want no x-grid at all, use the magic setting <STRONG>none</STRONG>.</P>
+<P>The x-axis label and grid can be configured, using the following format:</P>
+<P><EM>GTM</EM><STRONG>:</STRONG><EM>GST</EM><STRONG>:</STRONG><EM>MTM</EM><STRONG>:</STRONG><EM>MST</EM><STRONG>:</STRONG><EM>LTM</EM>:<EM>LST</EM><STRONG>:</STRONG><EM>LPR</EM><STRONG>:</STRONG><EM>LFM</EM></P>
+<P>You have to configure three elements making up the x-axis labels and grid. The base grid (<EM>G??</EM>), the major grid (<EM>M??</EM>) and the labels (<EM>L??</EM>). The configuration is based on the idea that you first specify a well known amount of time (<EM>?TM</EM>) and then say how many times it has to pass between each grid line or label (<EM>?ST</EM>). For the label you have to define two additional items: The precision of the label in seconds (<EM>LPR</EM>) and the strftime format used to generate the text of the label (<EM>LFM</EM>).</P>
+<P>The <EM>?TM</EM> elements must be one of the following keywords: <STRONG>SECOND</STRONG>, <STRONG>MINUTE</STRONG>, <STRONG>HOUR</STRONG>, <STRONG>DAY</STRONG>, <STRONG>WEEK</STRONG>, <STRONG>MONTH</STRONG> or <STRONG>YEAR</STRONG>.</P>
+<P>If you wanted a graph with a base grid every 10 minutes and a major one every hour, with labels every hour you would use the following x-axis definition.</P>
+<P><CODE>MINUTE:10:HOUR:1:HOUR:1:0:%X</CODE></P>
+<P>The precision in this example is 0 because the %X format is exact. If the label was the name of the day, we would have had a precision of 24 hours, because when you say something like 'Monday' you mean the whole day and not Monday morning 00:00. Thus the label should be positioned at noon. By defining a precision of 24 hours or rather 86400 seconds, you make sure that this happens.</P>
+<P>If you want to alter the genertated text to another language, use the LC_TIME environment variable to set the locale you prefere prior to calling the graph function.</P>
+<P></P>
+<DT><STRONG><A name=item_factor><STRONG>-y</STRONG>|<STRONG>--y-grid</STRONG> <EM>grid step</EM>:<EM>label factor</EM> (default autoconfigure)</A></STRONG><BR>
+<DD>Makes vertical grid lines appear at <EM>grid step</EM> interval. Every <EM>label factor</EM> gridstep, a major grid line is printed, along with label showing the value of the grid line. 
+<P>If you want no y-grid at all set specify the magic word <STRONG>none</STRONG>.</P>
+<P></P>
+<DT><STRONG><A name=item_%2D%2Dalt%2Dy%2Dgrid><STRONG>--alt-y-grid</STRONG></A></STRONG><BR>
+<DD>Place Y grid dynamically based on graph Y range. Algorithm ensures that you always have grid, that there are enough but not too many grid lines and the grid is metric. That is grid lines are placed every 1, 2, 5 or 10 units. (contributed by Sasha Mikheev) 
+<P></P>
+<DT><STRONG><A name=item_%2D%2Dalt%2Dy%2Dmrtg><STRONG>--alt-y-mrtg</STRONG></A></STRONG><BR>
+<DD>Y grid placed on graph Y range mimmics mrtg's (rateup-generated) graphs. Currently axis is split into 4 parts, just as rateup does. 
+<P></P>
+<DT><STRONG><A name=item_%2D%2Dalt%2Dautoscale><STRONG>--alt-autoscale</STRONG></A></STRONG><BR>
+<DD>Compute Y range based on function absolute minimum and maximum values. Default algorithm uses predefined set of ranges. This is good in many cases but it fails miserably when you need to graph something like 260 + 0.001 * sin(x). Default algorithm will use Y range from 250 to 300 and on the graph you will see almost straight line. With --alt-autoscale Y range will be from slightly less the 260 - 0.001 to slightly more then 260 + 0.001 and periodic behavior will be seen. (contributed by Sasha Mikheev) 
+<P></P>
+<DT><STRONG><A name=item_%2D%2Dalt%2Dautoscale%2Dmax><STRONG>--alt-autoscale-max</STRONG></A></STRONG><BR>
+<DD>Where --alt-autoscale will modify both the absolute maximum AND minimum values, this option will only affect the maximum value. The minimum value, if not defined on the command line, will be 0. This option can be useful when graphing router traffic when the WAN line uses compression, and thus the throughput may be higher than the WAN line speed. 
+<P></P>
+<DT><STRONG><A name=item_value><STRONG>--units-exponent</STRONG> <EM>value</EM> (default autoconfigure)</A></STRONG><BR>
+<DD>This sets the 10**exponent scaling of the y-axis values. Normally values will be scaled to the appropriate units (k, M, etc.). However you may wish to display units always in k (Kilo, 10e3) even if the data is in the M (Mega, 10e6) range for instance. Value should be an integer which is a multiple of 3 between -18 and 18 inclusive. It is the exponent on the units you which to use. For example, use 3 to display the y-axis values in k (Kilo, 10e3, thousands), use -6 to display the y-axis values in u (Micro, 10e-6, millionths). Use a value of 0 to prevent any scaling of the y-axis values. 
+<P></P>
+<DT><STRONG><A name=item_%2Dv%7C%2D%2Dvertical%2Dlabel_text><STRONG>-v</STRONG>|<STRONG>--vertical-label</STRONG> <EM>text</EM></A></STRONG><BR>
+<DD>vertical label on the left side of the graph. This is normally used to specify the units used. 
+<P></P>
+<DT><STRONG><A name=item_pixels><STRONG>-w</STRONG>|<STRONG>--width</STRONG> <EM>pixels</EM> (default 400 pixel)</A></STRONG><BR>
+<DD>Width of the drawing area within the graph. This affects the size of the gif. 
+<P></P>
+<DT><STRONG><STRONG>-h</STRONG>|<STRONG>--height</STRONG> <EM>pixels</EM> (default 100 pixel)</STRONG><BR>
+<DD>Width of the drawing area within the graph. This affects the size of the gif. 
+<P></P>
+<DT><STRONG><A name=item_interlaced><STRONG>-i</STRONG>|<STRONG>--interlaced</STRONG> (default: false)</A></STRONG><BR>
+<DD>If you set this option, then the resulting GIF will be interlaced. Most web browsers display these incrementally as they load. If you do not use this option, the GIFs default to being progressive scanned. The only effect of this option is to control the format of the GIF on disk. It makes no changes to the layout or contents of the graph. 
+<P></P>
+<DT><STRONG><A name=item_%2Df%7C%2D%2Dimginfo_formatstring><STRONG>-f</STRONG>|<STRONG>--imginfo</STRONG> <EM>formatstring</EM></A></STRONG><BR>
+<DD>After the image has been created, the graph function uses printf together with this format string to create output similar to the PRINT function, only that the printf is supplied with the parameters <EM>filename</EM>, <EM>xsize</EM> and <EM>ysize</EM>. In order to generate an <STRONG>IMG</STRONG> tag suitable for including the graph into a web page, the command line would look like this: <PRE> --imginfo '&lt;IMG SRC="/img/%s" WIDTH="%lu" HEIGHT="%lu" ALT="Demo"&gt;'</PRE>
+<P></P>
+<DT><STRONG><A name=item_GD><STRONG>-a</STRONG>|<STRONG>--imgformat</STRONG> <STRONG>GIF</STRONG>|<STRONG>PNG</STRONG>|<STRONG>GD</STRONG> (default: GIF)</A></STRONG><BR>
+<DD>Allows you to produce PNG or GD output from rrdtool. 
+<P></P>
+<DT><STRONG><A name=item_%2DB%7C%2D%2Dbackground_value><STRONG>-B</STRONG>|<STRONG>--background</STRONG> <EM>value</EM></A></STRONG><BR>
+<DD>You could use image in (currently only) GD format for background. It is used as background at the very beginning of graph creation. 
+<P></P>
+<DT><STRONG><A name=item_%2DO%7C%2D%2Doverlay_value><STRONG>-O</STRONG>|<STRONG>--overlay</STRONG> <EM>value</EM></A></STRONG><BR>
+<DD>You could use image in (currently only) GD format as overlay. It is placed over created graph so that white pixel (color 255,255,255) is considered transparent, all other is replacing corresponding pixel in created graph. 
+<P></P>
+<DT><STRONG><A name=item_%2DU%7C%2D%2Dunit_value><STRONG>-U</STRONG>|<STRONG>--unit</STRONG> <EM>value</EM></A></STRONG><BR>
+<DD>You could use unit to be displayed on y axis. It is wise to use only short units on graph, however. 
+<P></P>
+<DT><STRONG><A name=item_lazy><STRONG>-z</STRONG>|<STRONG>--lazy</STRONG> (default: false)</A></STRONG><BR>
+<DD>Only generate the graph, if the current gif is out of date or not existent. 
+<P></P>
+<DT><STRONG><STRONG>-u</STRONG>|<STRONG>--upper-limit</STRONG> <EM>value</EM> (default autoconfigure)</STRONG><BR>
+<DD>Defines the value normally located at the upper border of the graph. If the graph contains higher values, the upper border will move upwards to accomodate these values as well. 
+<P>If you want to define an upper-limit which will not move in any event you have to set the <STRONG>--rigid</STRONG> option as well.</P>
+<P></P>
+<DT><STRONG><STRONG>-l</STRONG>|<STRONG>--lower-limit</STRONG> <EM>value</EM> (default autoconfigure)</STRONG><BR>
+<DD>This is not the lower limit of a graph. But rather, this is the maximum lower bound of a graph. For example, the value -100 will result in a graph that has a lower limit of -100 or less. Use this keyword to expand graphs down. 
+<P></P>
+<DT><STRONG><A name=item_%2Dr%7C%2D%2Drigid><STRONG>-r</STRONG>|<STRONG>--rigid</STRONG></A></STRONG><BR>
+<DD>rigid boundaries mode. Normally rrdgraph will automatically expand the lower and upper limit if the graph contains a value outside the valid range. With the r option you can disable this behavior 
+<P></P>
+<DT><STRONG><A name=item_%2Db%7C%2D%2Dbase_value><STRONG>-b</STRONG>|<STRONG>--base</STRONG> <EM>value</EM></A></STRONG><BR>
+<DD>if you are graphing memory (and NOT network traffic) this switch should be set to 1024 so that one Kb is 1024 byte. For traffic measurement, 1 kb/s is 1000 b/s. 
+<P></P>
+<DT><STRONG><A name=item_%2Do%7C%2D%2Dlogarithmic><STRONG>-o</STRONG>|<STRONG>--logarithmic</STRONG></A></STRONG><BR>
+<DD>logarithmic y-axis scaling 
+<P></P>
+<DT><STRONG><A name=item_rrggbb><STRONG>-c</STRONG>|<STRONG>--color</STRONG> <EM>COLORTAG</EM><STRONG>#</STRONG><EM>rrggbb</EM> (default colors)</A></STRONG><BR>
+<DD>override the colors for the standard elements of the graph. The <EM>COLORTAG</EM> must be one of the following symbolic names: <STRONG>BACK</STRONG> ground, <STRONG>CANVAS</STRONG>, <STRONG>SHADEA</STRONG> left/top border, <STRONG>SHADEB</STRONG> right/bottom border, <STRONG>GRID</STRONG>, <STRONG>MGRID</STRONG> major grid, <STRONG>FONT</STRONG>, <STRONG>FRAME</STRONG> and axis of the graph or <STRONG>ARROW</STRONG>. This option can be called multiple times to set several colors. 
+<P></P>
+<DT><STRONG><A name=item_%2Dg%7C%2D%2Dno%2Dlegend><STRONG>-g</STRONG>|<STRONG>--no-legend</STRONG></A></STRONG><BR>
+<DD>Suppress generation of legend; only render the graph. 
+<P></P>
+<DT><STRONG><A name=item_text><STRONG>-t</STRONG>|<STRONG>--title</STRONG> <EM>text</EM> (default no title)</A></STRONG><BR>
+<DD>Define a title to be written into the graph 
+<P></P>
+<DT><STRONG><STRONG>--step</STRONG> <EM>value</EM> (default automatic)</STRONG><BR>
+<DD>By default rrdgraph calculates the width of one pixle in the time domain and tries to get data at that resolution from the RRD. With this switch you can override this behaviour. If you want rrdgraph to get data at 1 hour resolution from the RRD, then you can set the step to 3600 seconds. Note, that a step smaller than 1 pixle will be silently ignored. 
+<P></P>
+<DT><STRONG><A name=item_DEF%3Avname%3Drrd%3Ads%2Dname%3ACF><STRONG>DEF:</STRONG><EM>vname</EM><STRONG>=</STRONG><EM>rrd</EM><STRONG>:</STRONG><EM>ds-name</EM><STRONG>:</STRONG><EM>CF</EM></A></STRONG><BR>
+<DD>Define virtual name for a data source. This name can then be used in the functions explained below. The DEF call automatically chooses an <STRONG>RRA</STRONG> which contains <EM>CF</EM> consolidated data in a resolution appropriate for the size of the graph to be drawn. Ideally this means that one data point from the <STRONG>RRA</STRONG> should be represented by one pixel in the graph. If the resolution of the <STRONG>RRA</STRONG> is higher than the resolution of the graph, the data in the RRA will be further consolidated according to the consolidation function (<EM>CF</EM>) chosen. 
+<P></P>
+<DT><STRONG><A name=item_CDEF%3Avname%3Drpn%2Dexpression><STRONG>CDEF:</STRONG><EM>vname</EM><STRONG>=</STRONG><EM>rpn-expression</EM></A></STRONG><BR>
+<DD>Create a new virtual data source by evaluating a mathematical expression, specified in Reverse Polish Notation (RPN). If you have ever used a traditional HP calculator you already know RPN. The idea behind RPN notation is, that you have a stack and push your data onto this stack. When ever you execute an operation, it takes as many data values from the stack as needed. The pushing of data is implicit, so when ever you specify a number or a variable, it gets pushed automatically. 
+<P>If this is all a big load of incomprehensible words for you, maybe an example helps (a more complete explanation is given in [1]): The expression <EM>vname+3/2</EM> becomes <CODE>vname,3,2,/,+</CODE> in RPN. First the three values get pushed onto the stack (which now contains (the current value of) vname, a 3 and a 2). Then the / operator pops two values from the stack (3 and 2), divides the first argument by the second (3/2) and pushes the result (1.5) back onto the stack. Then the + operator pops two values (vname and 1.5) from the stack; both values are added up and the result gets pushes back onto the stack. In the end there is only one value left on the stack: The result of the expression.</P>
+<P>The <EM>rpn-expression</EM> in the <STRONG>CDEF</STRONG> function takes both, constant values as well as <EM>vname</EM> variables. The following operators can be used on these values:</P>
+<DL>
+<DT><STRONG><A name=item_%2B%2C_%2D%2C_%2A%2C_%2F%2C_%25>+, -, *, /, %</A></STRONG><BR>
+<DD>pops two values from the stack applies the selected operator and pushes the result back onto the stack. The % operator stands for the modulo operation. 
+<P></P>
+<DT><STRONG><A name=item_SIN%2C_COS%2C_LOG%2C_EXP%2C_FLOOR%2C_CEIL>SIN, COS, LOG, EXP, FLOOR, CEIL</A></STRONG><BR>
+<DD>pops one value from the stack, applies the selected function and pushes the result back onto the stack. 
+<P></P>
+<DT><STRONG><A name=item_LT%2C_LE%2C_GT%2C_GE%2C_EQ>LT, LE, GT, GE, EQ</A></STRONG><BR>
+<DD>pops two values from the stack, compares them according to the selected condition and pushes either 1 back onto the stack if the condition is true and 0 if the condition was not true. 
+<P></P>
+<DT><STRONG><A name=item_IF>IF</A></STRONG><BR>
+<DD>pops three values from the stack. If the last value is not 0, the second value will be pushed back onto the stack, otherwise the first value is pushed back. 
+<P>If the stack contains the values A, B, C, D, E are presently on the stack, the IF operator will pop the values E D and C of the stack. It will look at C and if it is not 0 it will push D back onto the stack, otherwise E will be sent back to the stack.</P>
+<P></P>
+<DT><STRONG><A name=item_MIN%2C_MAX>MIN, MAX</A></STRONG><BR>
+<DD>selects the lesser or larger of the two top stack values respectively 
+<P></P>
+<DT><STRONG><A name=item_LIMIT>LIMIT</A></STRONG><BR>
+<DD>replaces the value with <EM>*UNKNOWN*</EM> if it is outside the limits specified by the two values above it on the stack. <PRE> CDEF:a=alpha,0,100,LIMIT</PRE>
+<P></P>
+<DT><STRONG><A name=item_DUP%2C_EXC%2C_POP>DUP, EXC, POP</A></STRONG><BR>
+<DD>These manipulate the stack directly. DUP will duplicate the top of the stack, pushing the result back onto the stack. EXC will exchange the top two elements of the stack, and POP will pop off the top element of the stack. Having insufficient elements on the stack for these operations is an error. 
+<P></P>
+<DT><STRONG><A name=item_UN>UN</A></STRONG><BR>
+<DD>Pops one value off the stack, if it is <EM>*UNKNOWN*</EM>, 1 will be pushed back otherwise 0. 
+<P></P>
+<DT><STRONG><A name=item_UNKN>UNKN</A></STRONG><BR>
+<DD>Push an <EM>*UNKNOWN*</EM> value onto the stack. 
+<P></P>
+<DT><STRONG><A name=item_PREV>PREV</A></STRONG><BR>
+<DD>Push <EM>*UNKNOWN*</EM> if its at the first value of a data set or otherwise the value of this CDEF at the previous time step. This allows you to perform calculations across the data. 
+<P></P>
+<DT><STRONG><CODE>PREV(vname)</CODE></STRONG><BR>
+<DD>Push <EM>*UNKNOWN*</EM> if its at the first value of the data set named vname or otherwise the value of the CDEF named vname at the previous time step. This allows you to perform complex calculations across the data. 
+<P></P>
+<DT><STRONG><A name=item_INF%2C_NEGINF>INF, NEGINF</A></STRONG><BR>
+<DD>Push a positive or negative infinite (oo) value onto the stack. When drawing an infinite number it appears right at the top or bottom edge of the graph, depending whether you have a positive or negative infinite number. 
+<P></P>
+<DT><STRONG><A name=item_NOW>NOW</A></STRONG><BR>
+<DD>Push the current (real world) time onto the stack. 
+<P></P>
+<DT><STRONG><A name=item_TIME>TIME</A></STRONG><BR>
+<DD>Push the time the current sample was taken onto the stack. This is the number of non-skip seconds since 0:00:00 January 1, 1970. 
+<P></P>
+<DT><STRONG><A name=item_LTIME>LTIME</A></STRONG><BR>
+<DD>This is like TIME <STRONG>+ current timezone offset in seconds</STRONG>. The current offset takes daylight saving time into account, given your OS supports this. If you were looking at a sample, in Zurich, in summer, the offset would be 2*3600 seconds, as Zurich at that time of year is 2 hours ahead of UTC. 
+<P>Note that the timezone offset is always calculated for the time the current sample was taken at. It has nuthing todo with the time you are doing the calculation.</P>
+<P></P></DD></DL>
+<P>Please note that you may only use <EM>vname</EM> variables that you previously defined by either <STRONG>DEF</STRONG> or <STRONG>CDEF</STRONG>. Furthermore, as of this writing (version 0.99.25), you must use at least one <EM>vname</EM> per expression, that is ``CDEF:fourtytwo=2,40,+'' will yield an error message but not a <EM>vname</EM> fourtytwo that's always equal to 42.</P>
+<DT><STRONG><A name=item_PRINT%3Avname%3ACF%3Aformat><STRONG>PRINT:</STRONG><EM>vname</EM><STRONG>:</STRONG><EM>CF</EM><STRONG>:</STRONG><EM>format</EM></A></STRONG><BR>
+<DD>Calculate the chosen consolidation function <EM>CF</EM> over the data-source variable <EM>vname</EM> and <CODE>printf</CODE> the result to stdout using <EM>format</EM>. In the <EM>format</EM> string there should be a '%lf' or '%le' marker in the place where the number should be printed. 
+<P>If an additional '%s' is found AFTER the marker, the value will be scaled and an appropriate SI magnitude unit will be printed in place of the '%s' marker. The scaling will take the '--base' argument into consideration!</P>
+<P>If a '%S' is used instead of a '%s', then instead of calculating the appropriate SI magnitude unit for this value, the previously calculated SI magnitude unit will be used. This is useful if you want all the values in a PRINT statement to have the same SI magnitude unit. If there was no previous SI magnitude calculation made, then '%S' behaves like a '%s', unless the value is 0, in which case it does not remember a SI magnitude unit and a SI magnitude unit will only be calculated when the next '%s' is seen or the next '%S' for a non-zero value.</P>
+<P>If you want to put a '%' into your PRINT string, use '%%' instead.</P>
+<P></P>
+<DT><STRONG><A name=item_GPRINT%3Avname%3ACF%3Aformat><STRONG>GPRINT:</STRONG><EM>vname</EM><STRONG>:</STRONG><EM>CF</EM><STRONG>:</STRONG><EM>format</EM></A></STRONG><BR>
+<DD>Same as <STRONG>PRINT</STRONG> but the result is printed into the graph below the legend. 
+<P></P></DD></DL>
+<P><STRONG>Caveat:</STRONG> When using the <STRONG>PRINT</STRONG> and <STRONG>GRPRINT</STRONG> functions to calculate data summaries over time periods bounded by the current time, it is important to note that the last sample will almost always yield a value of UNKNOWN as it lies after the last update time. This can result in slight data skewing, particularly with the <STRONG>AVERAGE</STRONG> function. In order to avoid this, make sure that your end time is at least one heartbeat prior to the current time.</P>
+<DL>
+<DT><STRONG><A name=item_COMMENT%3Atext><STRONG>COMMENT:</STRONG><EM>text</EM></A></STRONG><BR>
+<DD>Like <STRONG>GPRINT</STRONG> but the <EM>text</EM> is simply printed into the graph. 
+<P></P>
+<DT><STRONG><A name=item_HRULE%3Avalue%23rrggbb%5B%3Alegend%5D><STRONG>HRULE:</STRONG><EM>value</EM><STRONG>#</STRONG><EM>rrggbb</EM>[<STRONG>:</STRONG><EM>legend</EM>]</A></STRONG><BR>
+<DD>Draw a horizontal rule into the graph and optionally add a legend 
+<P></P>
+<DT><STRONG><A name=item_VRULE%3Atime%23rrggbb%5B%3Alegend%5D><STRONG>VRULE:</STRONG><EM>time</EM><STRONG>#</STRONG><EM>rrggbb</EM>[<STRONG>:</STRONG><EM>legend</EM>]</A></STRONG><BR>
+<DD>Draw a vertical rule into the graph and optionally add a legend 
+<P></P>
+<DT><STRONG><A name=item_LINE%7B1%7C2%7C3%7D%3Avname%5B%23rrggbb%5B%3Alegen><STRONG>LINE</STRONG>{<STRONG>1</STRONG>|<STRONG>2</STRONG>|<STRONG>3</STRONG>}<STRONG>:</STRONG><EM>vname</EM>[<STRONG>#</STRONG><EM>rrggbb</EM>[<STRONG>:</STRONG><EM>legend</EM>]]</A></STRONG><BR>
+<DD>Plot for the requested data, using the color specified. Write a legend into the graph. The 3 possible keywords <STRONG>LINE1</STRONG>, <STRONG>LINE2</STRONG>, and <STRONG>LINE3</STRONG> generate increasingly wide lines. If no color is defined, the drawing is done 'blind' this is useful in connection with the <STRONG>STACK</STRONG> function when you want to ADD the values of two data-sources without showing it in the graph. 
+<P></P>
+<DT><STRONG><A name=item_AREA%3Avname%5B%23rrggbb%5B%3Alegend%5D%5D><STRONG>AREA</STRONG>:<EM>vname</EM>[<STRONG>#</STRONG><EM>rrggbb</EM>[<STRONG>:</STRONG><EM>legend</EM>]]</A></STRONG><BR>
+<DD>Does the same as <STRONG>LINE?</STRONG>, but the area between 0 and the graph will be filled with the color specified. 
+<P></P>
+<DT><STRONG><A name=item_STACK%3Avname%5B%23rrggbb%5B%3Alegend%5D%5D><STRONG>STACK</STRONG>:<EM>vname</EM>[<STRONG>#</STRONG><EM>rrggbb</EM>[<STRONG>:</STRONG><EM>legend</EM>]]</A></STRONG><BR>
+<DD>Does the same as <STRONG>LINE?</STRONG>, but the graph gets stacked on top of the previous <STRONG>LINE?</STRONG>, <STRONG>AREA</STRONG> or <STRONG>STACK</STRONG> graph. Depending on the type of the previous graph, the <STRONG>STACK</STRONG> will be either a <STRONG>LINE?</STRONG> or an <STRONG>AREA</STRONG>. This obviously implies that the first <STRONG>STACK</STRONG> must be preceded by an <STRONG>AREA</STRONG> or <STRONG>LINE?</STRONG> -- you need something to stack something onto in the first place ;) 
+<P>Note, that when you STACK onto *UNKNOWN* data, rrdtool will not draw any graphics ... *UNKNOWN* is not zero ... if you want it to zero then you might want to use a CDEF argument with IF and UN functions to turn *UNKNOWN* into zero ...</P>
+<P></P></DD></DL>
+<P>
+<HR>
+
+<H1><A name="notes on legend arguments">NOTES on legend arguments</A></H1>
+<P>
+<H2><A name="escaping the colon">Escaping the colon</A></H2>
+<P>In a ':' in a <EM>legend</EM> argument will mark the end of the legend. To enter a ':' into a legend, the colon must be escaped with a backslash '\:'. Beware, that many environments look for backslashes themselves, so it may be necessary to write two backslashes so that one is passed onto rrd_graph.</P>
+<P>
+<H2><A name="string formatting">String Formatting</A></H2>
+<P>The text printed below the actual graph can be formated by appending special escaped characters at the end of a text. When ever such a character occurs, all pending text is pushed onto the graph according to the character specified.</P>
+<P>Valid markers are: <STRONG>\j</STRONG> for justified, <STRONG>\l</STRONG> for left aligned, <STRONG>\r</STRONG> for right aligned and <STRONG>\c</STRONG> for centered. In the next section there is an example showing how to use centered formating.</P>
+<P>Normally there are two space characters inserted between every two items printed into the graph. The space following a string can be suppressed by putting a <STRONG>\g</STRONG> at the end of the string. The <STRONG>\g</STRONG> also squshes any space inside the string if it is at the very end of the string. This can be used in connection with <STRONG>%s</STRONG> to supress empty unit strings.</P><PRE> GPRINT:a:MAX:%lf%s\g</PRE>
+<P>A special case is COMMENT:<STRONG>\s</STRONG> this inserts some additional vertical space before placing the next row of legends.</P>
+<P>
+<HR>
+
+<H1><A name="note on return values">NOTE on Return Values</A></H1>
+<P>Whenever rrd_graph gets called, it prints a line telling the size of the gif it has just created to STDOUT. This line looks like this: XSIZExYSIZE.</P>
+<P>
+<HR>
+
+<H1><A name="example 1">EXAMPLE 1</A></H1><PRE>  rrdtool graph demo.gif --title="Demo Graph" \
+          DEF:cel=demo.rrd:exhaust:AVERAGE \
+          "CDEF:far=cel,1.8,*,32,+"" \
+          LINE2:cel#00a000:"D. Celsius" \
+          LINE2:far#ff0000:"D. Fahrenheit\c"</PRE>
+<P>
+<HR>
+
+<H1><A name="example 2">EXAMPLE 2</A></H1>
+<P>This example demonstrates the syntax for using IF and UN to set <EM>*UNKNOWN*</EM> values to 0. This technique is useful if you are aggregating interface data where the start dates of the data sets doesn't match.</P><PRE>  rrdtool graph demo.gif --title="Demo Graph" \
+         DEF:idat1=interface1.rrd:ds0:AVERAGE \
+         DEF:idat2=interface2.rrd:ds0:AVERAGE \
+         DEF:odat1=interface1.rrd:ds1:AVERAGE \
+         DEF:odat2=interface2.rrd:ds1:AVERAGE \
+         CDEF:agginput=idat1,UN,0,idat1,IF,idat2,UN,0,idat2,IF,+,8,* \
+         CDEF:aggoutput=odat1,UN,0,odat1,IF,odat2,UN,0,odat2,IF,+,8,* \
+         AREA:agginput#00cc00:Input Aggregate \
+         LINE1:aggoutput#0000FF:Output Aggregate
+</PRE><PRE>
+Assuming that idat1 has a data value of I&lt;*UNKNOWN*&gt;, the CDEF expression</PRE><PRE> idat1,UN,0,idat1,IF</PRE>
+<P>leaves us with a stack with contents of 1,0,NaN and the IF function will pop off the 3 values and replace them with 0. If idat1 had a real value like 7942099, then the stack would have 0,0,7942099 and the real value would be the replacement.</P>
+<P>
+<HR>
+
+<H1><A name="example 3">EXAMPLE 3</A></H1>
+<P>This example shows two ways to use the INF function. First it makes the background change color during half of the hours. Then, it uses AREA and STACK to draw a picture. If one of the inputs was UNKNOWN, all inputs are overlaid with another AREA.</P><PRE>  rrdtool graph example.png --title="INF demo" \
+         DEF:val1=some.rrd:ds0:AVERAGE \
+         DEF:val2=some.rrd:ds1:AVERAGE \
+         DEF:val3=some.rrd:ds2:AVERAGE \
+         DEF:val4=other.rrd:ds0:AVERAGE \
+         CDEF:background=val4,POP,TIME,7200,%,3600,LE,INF,UNKN,IF \
+         CDEF:wipeout=val1,val2,val3,val4,+,+,+,UN,INF,UNKN,IF \
+         AREA:background#F0F0F0 \
+         AREA:val1#0000FF:Value1 \
+         STACK:val2#00C000:Value2 \
+         STACK:val3#FFFF00:Value3 \
+         STACK:val4#FFC000:Value4 \
+         AREA:wipeout#FF0000:Unknown</PRE>
+<P>The first CDEF uses val4 as a dummy value. It's value is removed immediately from the stack. Then a decision is made based on the time that a sample was taken. If it is an even hour (UTC time !) then the area will be filled. If it is not, the value is set to UNKN and is not plotted.</P>
+<P>The second CDEF looks if any of val1,val2,val3,val4 is unknown. It does so by checking the outcome of sum(val1,val2,val3,val4). Again, INF is returned when the condition is true, UNKN is used to not plot the data.</P>
+<P>The different items are plotted in a particular order. First do the background, then use a normal area to overlay it with data. Stack the other data until they are all plotted. Last but not least, overlay everything with eye-hurting red to signal any unknown data.</P>
+<P>Note that this example assumes that your data is in the positive half of the y-axis otherwhise you would would have to add NEGINF in order to extend the coverage of the rea to whole graph.</P>
+<P>
+<HR>
+
+<H1><A name=author>AUTHOR</A></H1>
+<P>Tobias Oetiker &lt;<A href="mailto:oetiker@ee.ethz.ch">oetiker@ee.ethz.ch</A>&gt;</P>
+<P>
+<HR>
+
+<H1><A name=references>REFERENCES</A></H1>
+<P>[1] <A href="http://www.dotpoint.com/xnumber/rpn_or_adl.htm">http://www.dotpoint.com/xnumber/rpn_or_adl.htm</A></P></BODY></HTML>

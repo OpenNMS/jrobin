@@ -1,0 +1,110 @@
+td.top {
+	background-color: #663333;
+}
+td.tophover {
+	background-color: #CC0000;
+}
+a.toplink {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 14px;
+	font-weight: bold;
+	color: #FFFFFF;
+	text-decoration: none;
+	line-height: 28px;
+}
+td.logo {
+	border: #FFCC66 solid; 
+	border-width: 0px 0px 1px;
+}
+p {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+}
+a.left {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-weight: bold;
+    color: #000000;
+	text-decoration: none;
+}
+a.left:hover {
+	color: #FF0000;
+}
+td.left {
+	line-height: normal;
+	border: thin none #000033;
+	background-color: #663333;
+	padding: 8px;
+}
+td.left2 {
+	padding: 6px;
+	border-style: solid;
+	border-color: #FFFFCC;
+	border-bottom-width: 1px;
+	border-top-width: 0px;
+	border-left-width: 0px;
+	border-right-width: 0px;
+}
+td.leftcolumn {
+	border-right-style: dotted;
+	border-color: black #663333 black black; 
+	border-style: solid; 
+	border-top-width: 0px; 
+	border-right-width: 1px; 
+	border-bottom-width: 0px; 
+	border-left-width: 0px; 
+	background-color: #FFCC00;
+}
+td.rightcolumn {
+	line-height: normal;
+	background-color: #FFFFCC;
+	padding-left: 8px;
+	padding-top: 10px;
+	padding-right: 0px;
+	border-top: thin none #000033;
+	border-right: thin none #000033;
+	border-bottom: thin none #000033;
+	border-left: thin none #000033;
+}
+h1 {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 24px;
+	font-weight: bold;
+	color: #663333;
+	line-height: 24px;
+}
+table.sidebar {
+	border: 2px solid #663333;
+	margin-left: 15px;
+	background-color: #FFCC66;
+	margin-bottom: 15px;
+}
+li {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	margin-bottom: 5px;
+}
+pre {
+	font-family: "Courier New", Courier, mono;
+	font-size: 12px;
+	padding-left: 25px;
+	color: #505050;
+	font-weight: normal;
+}
+code {
+	font-family: "Courier New", Courier, mono;
+	font-size: 12px;
+	color: #505050;
+}
+h2 {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 18px;
+	font-weight: bold;
+	color: #663333;
+}
+h3 {
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 14px;
+	font-weight: bold;
+	color: #663333;
+}
