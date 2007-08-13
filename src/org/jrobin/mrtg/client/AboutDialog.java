@@ -2,8 +2,8 @@
  * JRobin : Pure java implementation of RRDTool's functionality
  * ============================================================
  *
- * Project Info:  http://www.sourceforge.net/projects/jrobin
- * Project Lead:  Sasa Markovic (saxon@eunet.yu);
+ * Project Info:  http://www.jrobin.org
+ * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
  * (C) Copyright 2003, by Sasa Markovic.
  *
@@ -34,7 +34,8 @@ import java.awt.event.WindowEvent;
 
 class AboutDialog extends JDialog {
 	static final String TITLE = "About JRobin";
-	static final String LOGO = "res/logo.png";
+	static final String EMAIL = "saxon@eunet.yu";
+	static final String LOGO = Client.RESOURCE_PATH + "logo.png";
 	private static final int GAP = 3;
 
 	AboutDialog(Frame parent) {
@@ -78,7 +79,7 @@ class AboutDialog extends JDialog {
 		copyrightLabel.setMaximumSize(logoLabel.getPreferredSize());
 		box.add(copyrightLabel);
 		box.add(Box.createVerticalStrut(GAP));
-		JLabel emailLabel = new JLabel("saxon@eunet.yu");
+		JLabel emailLabel = new JLabel(EMAIL);
 		emailLabel.setHorizontalAlignment(JLabel.CENTER);
 		emailLabel.setAlignmentX(0.5F);
 		emailLabel.setMaximumSize(logoLabel.getPreferredSize());

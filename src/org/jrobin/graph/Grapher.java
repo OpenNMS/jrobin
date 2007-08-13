@@ -26,10 +26,7 @@ package org.jrobin.graph;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Vector;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
+import java.util.*;
 import javax.imageio.ImageIO;
 import java.awt.Font;
 import java.awt.Color;
@@ -39,8 +36,6 @@ import java.awt.RenderingHints;
 import java.awt.image.RenderedImage;
 import java.awt.image.BufferedImage;
 
-import org.jrobin.core.Util;
-import org.jrobin.core.RrdDb;
 import org.jrobin.core.RrdException;
 
 /**
@@ -48,7 +43,7 @@ import org.jrobin.core.RrdException;
  * 
  * @author Arne Vandamme (cobralord@jrobin.org)
  */
-class Grapher 
+class Grapher extends RrdExporter
 {
 	// ================================================================
 	// -- Members
@@ -90,18 +85,15 @@ class Grapher
 	private int graphOriginX, graphOriginY, x_offset, y_offset;
 	
 	private RrdGraphDef graphDef;
-	private RrdGraph rrdGraph;
-	
-	private Source[] sources;
-	private HashMap sourceIndex;
-	private long[] timestamps;
+
+	private PlotDef[] plotDefs;
+	private long[] tsChart;
 
 	private ValueFormatter valueFormat;
 	private BasicStroke	defaultStroke;
 	private ValueGrid vGrid;
 	private TimeGrid tGrid;
-	
-	
+
 	// ================================================================
 	// -- Constructors
 	// ================================================================
@@ -113,8 +105,8 @@ class Grapher
 	 */
 	Grapher( RrdGraphDef graphDef, RrdGraph rrdGraph )
 	{
+		super( graphDef, rrdGraph );
 		this.graphDef = graphDef;
-		this.rrdGraph = rrdGraph;
 		
 		// Set font dimension specifics
 		if ( graphDef.getDefaultFont() != null )
@@ -135,12 +127,82 @@ class Grapher
 		
 		// Set default graph stroke
 		defaultStroke	= new BasicStroke();
+
+		startTime		= graphDef.getStartTime();
+		endTime			= graphDef.getStartTime();
 	}
 	
 	
 	// ================================================================
 	// -- Protected (package) methods
 	// ================================================================
+	/**
+	 * Calculates the graph and chart dimensions.
+	 * @param cWidth Width of the chart area in pixels.
+	 * @param cHeight Height of the chart area in pixels.
+	 */
+	private void calculateDimensions( int cWidth, int cHeight )
+	{
+		// Calculate chart dimensions
+		chartWidth			= ( cWidth == 0 ? DEFAULT_WIDTH : cWidth );
+		chartHeight			= ( cHeight == 0 ? DEFAULT_HEIGHT : cHeight );
+
+		if ( cWidth > 0 ) numPoints = cWidth;
+
+		// Padding depends on grid visibility
+		chart_lpadding 		= ( graphDef.showMajorGridY() ? graphDef.getChartLeftPadding() : CHART_LPADDING_NM );
+		chart_bpadding 		= ( graphDef.showMajorGridX() ? CHART_BPADDING : CHART_BPADDING_NM );
+
+		// Size of all lines below chart
+		commentBlock		= 0;
+		if ( graphDef.showLegend() )
+			commentBlock 	= graphDef.getCommentLineCount() * (nfont_height + LINE_PADDING) - LINE_PADDING;
+
+		// x_offset and y_offset define the starting corner of the actual graph
+		x_offset			= LBORDER_SPACE;
+		if ( graphDef.getVerticalLabel() != null )
+			x_offset 		+= nfont_height + LINE_PADDING;
+		imgWidth			= chartWidth + x_offset + RBORDER_SPACE + chart_lpadding + CHART_RPADDING;
+
+		y_offset			= UBORDER_SPACE;
+		if ( graphDef.getTitle() != null )			// Title *always* gets a extra LF automatically
+			y_offset		+= ((tfont_height + LINE_PADDING) * graphDef.getTitle().getLineCount() + tfont_height) + LINE_PADDING;
+		imgHeight 			= chartHeight + commentBlock + y_offset + BBORDER_SPACE + CHART_UPADDING + CHART_BPADDING;
+	}
+
+	/**
+	 * Calculates the graph and chart dimensions.
+	 * @param cWidth Width of the entire image in pixels.
+	 * @param cHeight Height of the entire image in pixels.
+	 */
+	private void calculateDimensionsGlobal( int cWidth, int cHeight )
+	{
+		imgWidth			= cWidth;
+		imgHeight			= cHeight;
+
+		if ( cWidth > 0 ) numPoints = cWidth;
+
+		// Padding depends on grid visibility
+		chart_lpadding 		= ( graphDef.showMajorGridY() ? graphDef.getChartLeftPadding() : CHART_LPADDING_NM );
+		chart_bpadding 		= ( graphDef.showMajorGridX() ? CHART_BPADDING : CHART_BPADDING_NM );
+
+		// Size of all lines below chart
+		commentBlock		= 0;
+		if ( graphDef.showLegend() )
+			commentBlock 	= graphDef.getCommentLineCount() * (nfont_height + LINE_PADDING) - LINE_PADDING;
+
+		// x_offset and y_offset define the starting corner of the actual graph
+		x_offset			= LBORDER_SPACE;
+		if ( graphDef.getVerticalLabel() != null )
+			x_offset 		+= nfont_height + LINE_PADDING;
+		chartWidth			= imgWidth - x_offset - RBORDER_SPACE - chart_lpadding - CHART_RPADDING;
+
+		y_offset			= UBORDER_SPACE;
+		if ( graphDef.getTitle() != null )			// Title *always* gets a extra LF automatically
+			y_offset		+= ((tfont_height + LINE_PADDING) * graphDef.getTitle().getLineCount() + tfont_height) + LINE_PADDING;
+		chartHeight 		= imgHeight - commentBlock - y_offset - BBORDER_SPACE - CHART_UPADDING - CHART_BPADDING;
+	}
+
 	/**
 	 * Creates the actual graph based on the GraphDef definition.
 	 * The graph is created as a <code>java.awt.image.BufferedImage</code>.
@@ -152,143 +214,157 @@ class Grapher
 	 */
 	protected BufferedImage createImage( int cWidth, int cHeight, int colorType ) throws RrdException, IOException
 	{
-		// Calculate chart dimensions
-		chartWidth			= ( cWidth == 0 ? DEFAULT_WIDTH : cWidth );
-		chartHeight			= ( cHeight == 0 ? DEFAULT_HEIGHT : cHeight );
+		calculateDimensions( cWidth, cHeight );
 
-		if ( cWidth > 0 ) numPoints = cWidth;
-
-		// Padding depends on grid visibility
-		chart_lpadding 		= ( graphDef.showMajorGridY() ? graphDef.getChartLeftPadding() : CHART_LPADDING_NM );
-		chart_bpadding 		= ( graphDef.showMajorGridX() ? CHART_BPADDING : CHART_BPADDING_NM );
-		
-		// Size of all lines below chart
-		commentBlock		= 0;
-		if ( graphDef.showLegend() )
-			commentBlock 	= graphDef.getCommentLineCount() * (nfont_height + LINE_PADDING) - LINE_PADDING;		
-	
-		// x_offset and y_offset define the starting corner of the actual graph 
-		x_offset			= LBORDER_SPACE;
-		if ( graphDef.getVerticalLabel() != null ) 
-			x_offset 		+= nfont_height + LINE_PADDING;
-		imgWidth			= chartWidth + x_offset + RBORDER_SPACE + chart_lpadding + CHART_RPADDING;
-		
-		y_offset			= UBORDER_SPACE;
-		if ( graphDef.getTitle() != null )			// Title *always* gets a extra LF automatically 
-			y_offset		+= ((tfont_height + LINE_PADDING) * graphDef.getTitle().getLineCount() + tfont_height) + LINE_PADDING;
-		imgHeight 			= chartHeight + commentBlock + y_offset + BBORDER_SPACE + CHART_UPADDING + CHART_BPADDING;
-		
 		// Create graphics object
 		BufferedImage bImg 	= new BufferedImage( imgWidth, imgHeight, colorType );
 		Graphics2D graphics	= (Graphics2D) bImg.getGraphics();
-		
-		// Do the actual graphing
-		calculateSeries();							// calculate all datasources
-						
-		plotImageBackground( graphics );			// draw the image background
-			
-		plotChart( graphics );						// draw the actual chart
-			
-		plotComments( graphics );					// draw all comment lines
-			
-		plotOverlay( graphics );					// draw a possible image overlay
-			
-		plotSignature( graphics );					// draw the JRobin signature
 
-		
+		render( graphics );
+
 		// Dispose graphics context
 		graphics.dispose();
-		
+
 		return bImg;
 	}
-	
-	
+
+	/**
+	 * Creates the actual graph based on the GraphDef definition.
+	 * The graph is created as a <code>java.awt.image.BufferedImage</code>.
+	 * @param cWidth Width of the entire image in pixels.
+	 * @param cHeight Height of the entire image in pixels.
+	 * @return The created graph as a BufferedImage.
+	 * @throws RrdException Thrown in case of a JRobin specific error.
+	 * @throws IOException Thrown in case of a I/O related error.
+	 */
+	protected BufferedImage createImageGlobal( int cWidth, int cHeight, int colorType ) throws RrdException, IOException
+	{
+		calculateDimensionsGlobal( cWidth, cHeight );
+
+		// Create graphics object
+		BufferedImage bImg 	= new BufferedImage( imgWidth, imgHeight, colorType );
+		Graphics2D graphics	= (Graphics2D) bImg.getGraphics();
+
+		render( graphics );
+
+		// Dispose graphics context
+		graphics.dispose();
+
+		return bImg;
+	}
+
+	/**
+	 * Creates the actual graph based on the GraphDef definition.
+	 * The graph is rendered on the Graphics2D object passed as a parameter.
+	 * @param cWidth Width of the entire image in pixels.
+	 * @param cHeight Height of the entire image in pixels.
+	 * @param graphics The handle to the Graphics2D object to render the graph on.
+	 * @param useGlobal True if the dimensions specified are those of the entire image.
+	 * @throws RrdException Thrown in case of a JRobin specific error.
+	 * @throws IOException Thrown in case of a I/O related error.
+	 */
+	protected void renderImage( int cWidth, int cHeight, Graphics2D graphics, boolean useGlobal ) throws RrdException, IOException
+	{
+		if ( useGlobal )
+			calculateDimensionsGlobal( cWidth, cHeight );
+		else
+			calculateDimensions( cWidth, cHeight );
+
+		render( graphics );
+	}
+
+	/**
+	 * If the lazy flag of the GraphDef has been set, this method will
+	 * check the most recent update stamp of the FetchSources, and return
+	 * true if the update timestamp is larger than the timestamp of the
+	 * previous graph generation (passed on as a parameter).
+	 *
+	 * @param prevGenTime Timestamp of the previous graph generation.
+	 * @return True if the graph should be generated, false if not.
+	 */
+	protected boolean shouldGenerate( long prevGenTime ) throws RrdException, IOException
+	{
+		FetchSourceList fetchSources = graphDef.getFetchSources();
+		fetchSources.setRrdOpener( getRrdOpener() );
+
+		fetchSources.openAll();
+
+		if ( graphDef.isLazy() && fetchSources.getLastUpdateTime() * 1000 < prevGenTime )
+		{
+			// Should not generate, release immediately
+			fetchSources.releaseAll();
+
+			return false;
+		}
+
+		return true;
+	}
+
 	// ================================================================
 	// -- Private methods
 	// ================================================================
 	/**
+	 * Renders the actual graph onto the specified Graphics2D object
+	 * @param graphics The handle to the Graphics2D object to render the graph on.
+	 * @throws RrdException Thrown in case of a JRobin specific error.
+	 * @throws IOException Thrown in case of a I/O related error.
+	 */
+	private void render( Graphics2D graphics ) throws RrdException, IOException
+	{
+		// Do the actual graphing
+		calculateSeries();							// calculate all datasources
+
+		plotImageBackground( graphics );			// draw the image background
+
+		plotChart( graphics );						// draw the actual chart
+
+		plotComments( graphics );					// draw all comment lines
+
+		plotOverlay( graphics );					// draw a possible image overlay
+
+		plotSignature( graphics );					// draw the JRobin signature
+
+		// Dispose graphics context
+		graphics.dispose();
+	}
+
+	/**
 	 * Fetches and calculates all datasources used in the graph.
+	 *
 	 * @throws RrdException Thrown in case of a JRobin specific error.
 	 * @throws IOException Thrown in case of a I/O related error.
 	 */
 	private void calculateSeries() throws RrdException, IOException
 	{
-		ValueExtractor ve;
-		FetchSource src;
-		RrdDb rrd;
-		String[] varList;
-		
-		long startTime 			= graphDef.getStartTime();
-		long endTime			= graphDef.getEndTime();
-	
-		int numDefs				= graphDef.getNumDefs();
-		
-		Cdef[] cdefList			= graphDef.getCdefs();
-		int numCdefs			= cdefList.length;
-	
-		// Set up the array with all datasources (both Def and Cdef)
-		sources 				= new Source[ numDefs + numCdefs ];
-		sourceIndex 			= new HashMap( numDefs + numCdefs );
-		int tblPos				= 0;
-		int vePos				= 0;
-	
-		ValueExtractor[] veList	= new ValueExtractor[ graphDef.getFetchSources().size() ];
-		Iterator fetchSources 	= graphDef.getFetchSources().values().iterator();
-		
-		while ( fetchSources.hasNext() )
-		{
-			// Get the rrdDb
-			src 	= (FetchSource) fetchSources.next();
-			rrd		= rrdGraph.getRrd( src.getRrdFile() ); 
-		
-			// Fetch all required datasources
-			ve 		= src.fetch( rrd, startTime,  endTime );
-			varList = ve.getNames();
-		
-			for (int i= 0; i < varList.length; i++) {
-				sources[tblPos]	= new Def(varList[i], numPoints);
-				sourceIndex.put( varList[i], new Integer(tblPos++) );
-			}
-			
-			veList[ vePos++ ] = ve;
-		}
-	
-		// Add all Cdefs to the source table		
-		// Reparse all RPN datasources to use indices of the correct variables
-		for ( int i = 0; i < cdefList.length; i++ )
-		{
-			cdefList[i].prepare( sourceIndex, numPoints );
-		
-			sources[tblPos]	= cdefList[i];
-			sourceIndex.put( cdefList[i].getName(), new Integer(tblPos++) );	
-		}
-	
-		// RPN calculator for the Cdefs
-		RpnCalculator rpnCalc 	= new RpnCalculator( sources );
-	
-		// Fill the array for all datasources
-		timestamps 				= new long[numPoints];
-	
-		for (int i = 0; i < numPoints; i++) 
-		{
-			long t 	= (long) (startTime + i * ((endTime - startTime) / (double)(numPoints - 1)));
-			int pos = 0;
-		
-			// Get all fetched datasources
-			for (int j = 0; j < veList.length; j++)
-				pos = veList[j].extract( t, sources, i, pos );
-		
-			// Get all combined datasources
-			for (int j = pos; j < sources.length; j++)
-				sources[j].set(i, t, rpnCalc.evaluate( (Cdef) sources[j], i, t ) );
+		// Calculate the reduced set of datasources
+		super.calculateSeries( chartWidth );
 
-			timestamps[i] = t;
+		numPoints			= numRows;
+
+		/**
+		 * Expand the reduced set back to a set matching the chart width,
+		 * this allows for much nicer graphing.
+		 */
+		tsChart 	= new long[ chartWidth ];
+		plotDefs 	= graphDef.getPlotDefs();
+
+		for ( int i = 0; i < plotDefs.length; i++ )
+		{
+			plotDefs[i].setSource( sources, sourceIndex );
+			plotDefs[i].prepareValues( chartWidth );
 		}
-	
-		// Clean up the fetched datasources forcibly
-		veList = null;
+
+		for ( int i = 0; i < chartWidth; i++ )
+		{
+			long t 		= (long) (startTime + i * ((endTime - startTime) / (double) (chartWidth - 1)));
+
+			for ( int j = 0; j < plotDefs.length; j++ )
+				plotDefs[j].setValue( i, t, timestamps );
+
+			tsChart[i]	= t;
+		}
 	}
-	
+
 	/**
 	 * Draws the image background, title and value axis label.
 	 * @param g Handle of a Graphics2D context to draw on.
@@ -342,7 +418,7 @@ class Grapher
 	}
 	
 	/**
-	 * Plots all datasources on the graph, uses all values gathered in {@link #CalculateSeries() }.
+	 * Plots all datasources on the graph, uses all values gathered in {@link #calculateSeries() }.
 	 * @param graphics Handle of a Graphics2D context to draw on.
 	 * @throws RrdException Thrown in case of a JRobin specific error.
 	 */
@@ -361,20 +437,28 @@ class Grapher
 		// Draw the chart area frame
 		graphics.setColor( graphDef.getFrameColor() );
 		graphics.drawRect( lux, luy, chartWidth, chartHeight );
-			
+
 		double val;
 		double[] tmpSeries 	= new double[numPoints];
-		
+
+		boolean rigid		= false;
+		double lowerValue	= Double.MAX_VALUE;
+		double upperValue	= Double.MIN_VALUE;
+
 		GridRange range		= graphDef.getGridRange();
-		boolean rigid		= ( range != null ? range.isRigid() : false );
-		double lowerValue	= ( range != null ? range.getLowerValue() : Double.MAX_VALUE );
-		double upperValue	= ( range != null ? range.getUpperValue() : Double.MIN_VALUE );
-		
+		if ( range != null )
+		{
+			rigid		= range.isRigid();
+			lowerValue	= range.getLowerValue();
+			upperValue	= range.getUpperValue();
+
+			if ( Double.isNaN(lowerValue) ) lowerValue = Double.MAX_VALUE;
+			if ( Double.isNaN(upperValue) ) upperValue = Double.MIN_VALUE;
+		}
+
 		// For autoscale, detect lower and upper limit of values
-		PlotDef[] plotDefs 	= graphDef.getPlotDefs();
 		for ( int i = 0; i < plotDefs.length; i++ )
 		{
-			plotDefs[i].setSource( sources, sourceIndex );
 			Source src = plotDefs[i].getSource();
 		
 			// Only try autoscale when we do not have a rigid grid
@@ -382,7 +466,7 @@ class Grapher
 			{
 				double min = src.getAggregate( Source.AGG_MINIMUM );
 				double max = src.getAggregate( Source.AGG_MAXIMUM );
-			
+
 				// If the plotdef is a stack, evaluate ALL previous values to find a possible max
 				if ( plotDefs[i].plotType == PlotDef.PLOT_STACK && i >= 1 ) 
 				{
@@ -420,19 +504,19 @@ class Grapher
 			}
 		
 		}
-		
-		vGrid 			= new ValueGrid( range, lowerValue, upperValue, graphDef.getValueAxis() );
-		tGrid			= new TimeGrid( graphDef.getStartTime(), graphDef.getEndTime(), graphDef.getTimeAxis() );
+
+		vGrid 			= new ValueGrid( range, lowerValue, upperValue, graphDef.getValueAxis(), graphDef.getBaseValue() );
+		tGrid			= new TimeGrid( startTime, endTime, graphDef.getTimeAxis(), graphDef.getFirstDayOfWeek() );
 		
 		lowerValue		= vGrid.getLowerValue();
 		upperValue		= vGrid.getUpperValue();
-						
+
 		// Use a special graph 'object' that takes care of resizing and reversing y coordinates
 		ChartGraphics g 	= new ChartGraphics( graphics );
 		g.setDimensions( chartWidth, chartHeight );
 		g.setXRange( tGrid.getStartTime(), tGrid.getEndTime() );
 		g.setYRange( lowerValue, upperValue );
-		
+
 		// Set the chart origin point
 		double diff = 1.0d;
 		if ( lowerValue < 0 )
@@ -451,21 +535,22 @@ class Grapher
 		graphics.setClip( lux, luy, chartWidth, chartHeight);
 		graphics.translate( graphOriginX, graphOriginY );
  
-		int lastPlotType 	= PlotDef.PLOT_LINE;
-		int[] parentSeries 	= new int[numPoints];
+		int lastPlotType 		= PlotDef.PLOT_LINE;
+		double[] parentSeries 	= new double[tsChart.length];
 
 		// Pre calculate x positions of the corresponding timestamps
-		int[] xValues		= new int[timestamps.length];
-		for (int i = 0; i < timestamps.length; i++)
-			xValues[i]		= g.getX(timestamps[i]);
-	
+		int[] xValues			= new int[tsChart.length];
+		for (int i = 0; i < tsChart.length; i++)
+			xValues[i]		= g.getX(tsChart[i]);
+
 		// Draw all graphed values
-		for (int i = 0; i < plotDefs.length; i++) 
+		for ( int i = 0; i < plotDefs.length; i++ )
 		{
 			plotDefs[i].draw( g, xValues, parentSeries, lastPlotType );
-			lastPlotType = plotDefs[i].plotType;
+			if( plotDefs[i].plotType != PlotDef.PLOT_STACK )
+				lastPlotType = plotDefs[i].plotType;
 		}
-		
+
 		// Reset clipping area, origin and AA settings
 		graphics.translate( -graphOriginX, -graphOriginY );
 		graphics.setClip( 0, 0, imgWidth, imgHeight);
@@ -576,7 +661,7 @@ class Grapher
 			for (int i = 0; i < valueList.length; i++)
 			{
 				int valRel 		= chartGraph.getY( valueList[i].getValue() );
-				
+
 				valueFormat.setFormat( valueList[i].getValue(), 2, 0 );
 				String label	= (valueFormat.getScaledValue() + " " + valueFormat.getPrefix()).trim();
 	
@@ -617,7 +702,7 @@ class Grapher
 		LinkedList markerList = new LinkedList();
 		
 		// Position the cursor just below the chart area
-		int posy			= y_offset + chartHeight + CHART_UPADDING + CHART_BPADDING + nfont_height;
+		int posy			= y_offset + chartHeight + CHART_UPADDING + CHART_BPADDING + ( graphDef.showMajorGridX() ? nfont_height : 0 );
 		int posx			= LBORDER_SPACE;
 
 		g.setColor( normalFontColor );
@@ -639,12 +724,12 @@ class Grapher
 			else if ( clist[i].commentType == Comment.CMT_GPRINT )
 				((Gprint) clist[i]).setValue( sources, sourceIndex, valueFormat );
 			
-			Vector tknpairs = clist[i].getTokens();
+			ArrayList tknpairs = clist[i].getTokens();
 			
 			for (int j = 0; j < tknpairs.size(); j++)
 			{
-				String str 	= (String) tknpairs.elementAt(j++);
-				Byte tkn	= (Byte) tknpairs.elementAt(j);
+				String str 	= (String) tknpairs.get(j++);
+				Byte tkn	= (Byte) tknpairs.get(j);
 				
 				if ( clist[i].trimString() )
 					tmpStr.append( str.trim() );
@@ -679,6 +764,7 @@ class Grapher
 								
 				// Plot the string
 				if ( drawText ) {
+					
 					graphString( g, tmpStr.toString(), posx, posy );
 					tmpStr		= new StringBuffer(""); 
 					drawText	= false;
@@ -783,11 +869,11 @@ class Grapher
 		StringBuffer tmpStr	= new StringBuffer("");
 		boolean newLine		= false;
 
-		Vector tknpairs = graphTitle.getTokens();
+		ArrayList tknpairs = graphTitle.getTokens();
 		for (int j = 0; j < tknpairs.size(); j++)
 		{
-			String str 	= (String) tknpairs.elementAt(j++);
-			Byte tkn	= (Byte) tknpairs.elementAt(j);
+			String str 	= (String) tknpairs.get(j++);
+			Byte tkn	= (Byte) tknpairs.get(j);
 
 			tmpStr.append( str );
 			if ( tkn != Comment.TKN_NULL )
@@ -798,7 +884,7 @@ class Grapher
 				} 
 				else if ( tkn == Comment.TKN_ARF ) {
 					newLine	= true;
-					posx 	= imgWidth - RBORDER_SPACE - (tmpStr.length() * tfont_width);
+					posx 	= imgWidth - RBORDER_SPACE - (tmpStr.length() * tfont_width) - tfont_width;
 				}
 				else if ( tkn == Comment.TKN_ACF ) {
 					newLine	= true;
@@ -807,7 +893,7 @@ class Grapher
 				else if ( tkn == Comment.TKN_AL )
 					posx	= LBORDER_SPACE;
 				else if ( tkn == Comment.TKN_AR )
-					posx 	= imgWidth - RBORDER_SPACE - (tmpStr.length() * tfont_width);
+					posx 	= imgWidth - RBORDER_SPACE - (tmpStr.length() * tfont_width) - tfont_width;
 				else if ( tkn == Comment.TKN_AC )
 					posx 	= imgWidth / 2 - (tmpStr.length() * tfont_width) / 2;
 			}

@@ -33,18 +33,18 @@ import java.io.IOException;
 public class RrdMemoryBackend extends RrdBackend {
 	private byte[] buffer = new byte[0];
 
-	RrdMemoryBackend(String path) {
+	protected RrdMemoryBackend(String path) {
 		super(path);
 	}
 
-	protected void write(long offset, byte[] b) throws IOException {
+	protected synchronized void write(long offset, byte[] b) throws IOException {
 		int pos = (int) offset;
 		for(int i = 0; i < b.length; i++) {
 			buffer[pos++] = b[i];
 		}
 	}
 
-	protected void read(long offset, byte[] b) throws IOException {
+	protected synchronized void read(long offset, byte[] b) throws IOException {
 		int pos = (int) offset;
 		if(pos + b.length <= buffer.length) {
 			for(int i = 0; i < b.length; i++) {
@@ -77,7 +77,8 @@ public class RrdMemoryBackend extends RrdBackend {
 	}
 
 	/**
-	 * This method is required by the base class definition, but has no effect at all.
+	 * This method is required by the base class definition, but it does not
+	 * releases any memory resources at all.
 	 */
 	public void close() {
 		// NOP

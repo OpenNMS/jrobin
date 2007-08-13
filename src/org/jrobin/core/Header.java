@@ -2,8 +2,8 @@
  * JRobin : Pure java implementation of RRDTool's functionality
  * ============================================================
  *
- * Project Info:  http://www.sourceforge.net/projects/jrobin
- * Project Lead:  Sasa Markovic (saxon@eunet.yu);
+ * Project Info:  http://www.jrobin.org
+ * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
  * (C) Copyright 2003, by Sasa Markovic.
  *
@@ -28,14 +28,14 @@ package org.jrobin.core;
 import java.io.IOException;
 
 /**
- * Class to represent RRD file header. Header information is mainly static (once set, it
+ * Class to represent RRD header. Header information is mainly static (once set, it
  * cannot be changed), with the exception of last update time (this value is changed whenever
- * RRD file gets updated).<p>
+ * RRD gets updated).<p>
  *
  * Normally, you don't need to manipulate the Header object directly - JRobin framework
  * does it for you.<p>
  *
- * @author <a href="mailto:saxon@eunet.yu">Sasa Markovic</a>*
+ * @author <a href="mailto:saxon@jrobin.org">Sasa Markovic</a>*
  */
 public class Header implements RrdUpdater {
 	static final String SIGNATURE = "JRobin, version 0.1";
@@ -48,87 +48,83 @@ public class Header implements RrdUpdater {
 	private RrdInt dsCount, arcCount;
 	private RrdLong lastUpdateTime;
 
-	Header(RrdDb parentDb) throws IOException, RrdException {
+	Header(RrdDb parentDb, RrdDef rrdDef) throws IOException {
+		boolean shouldInitialize = rrdDef != null;
 		this.parentDb = parentDb;
 		signature = new RrdString(this);
-		if(!signature.get().equals(SIGNATURE)) {
-			throw new RrdException("Not a JRobin RRD file");
-		}
 		step = new RrdLong(this);
 		dsCount = new RrdInt(this);
 		arcCount = new RrdInt(this);
 		lastUpdateTime = new RrdLong(this);
+		if(shouldInitialize) {
+			signature.set(SIGNATURE);
+			step.set(rrdDef.getStep());
+			dsCount.set(rrdDef.getDsCount());
+			arcCount.set(rrdDef.getArcCount());
+			lastUpdateTime.set(rrdDef.getStartTime());
+		}
 	}
 
-	Header(RrdDb parentDb, RrdDef rrdDef) throws IOException, RrdException {
-		this.parentDb = parentDb;
-		signature = new RrdString(SIGNATURE, this);
-		step = new RrdLong(rrdDef.getStep(), this);
-		dsCount = new RrdInt(rrdDef.getDsCount(), this);
-		arcCount = new RrdInt(rrdDef.getArcCount(), this);
-		lastUpdateTime = new RrdLong(rrdDef.getStartTime(), this);
-	}
-
-	Header(RrdDb parentDb, XmlReader reader) throws IOException, RrdException {
-		this.parentDb = parentDb;
+	Header(RrdDb parentDb, DataImporter reader) throws IOException, RrdException {
+		this(parentDb, (RrdDef) null);
 		String version = reader.getVersion();
 		if(!version.equals(RRDTOOL_VERSION)) {
 			throw new RrdException("Could not unserilalize xml version " + version);
 		}
-		signature = new RrdString(SIGNATURE, this);
-		step = new RrdLong(reader.getStep(), this);
-		dsCount = new RrdInt(reader.getDsCount(), this);
-		arcCount = new RrdInt(reader.getArcCount(), this);
-		lastUpdateTime = new RrdLong(reader.getLastUpdateTime(), this);
+		signature.set(SIGNATURE);
+		step.set(reader.getStep());
+		dsCount.set(reader.getDsCount());
+		arcCount.set(reader.getArcCount());
+		lastUpdateTime.set(reader.getLastUpdateTime());
 	}
 
 	/**
-	 * Returns RRD file signature. The returned string will be always
-	 * of the form <b><i>JRobin, version x.x</i></b>. Note: RRD file format did not
+	 * Returns RRD signature. The returned string will be always
+	 * of the form <b><i>JRobin, version x.x</i></b>. Note: RRD format did not
 	 * change since Jrobin 1.0.0 release (and probably never will).
 	 *
-	 * @return RRD file signature
-	 * @throws IOException Thrown in case of IO specific error
+	 * @return RRD signature
+	 * @throws IOException Thrown in case of I/O error
 	 */
 	public String getSignature() throws IOException {
 		return signature.get();
 	}
 
 	/**
-	 * Returns the last update time of the RRD file.
+	 * Returns the last update time of the RRD.
 	 *
 	 * @return Timestamp (Unix epoch, no milliseconds) corresponding to the last update time.
-	 * @throws IOException Thrown in case of IO specific error
+	 * @throws IOException Thrown in case of I/O error
 	 */
 	public long getLastUpdateTime() throws IOException {
 		return lastUpdateTime.get();
 	}
 
 	/**
-	 * Returns primary RRD file time step.
+	 * Returns primary RRD time step.
 	 *
 	 * @return Primary time step in seconds
-	 * @throws IOException Thrown in case of IO specific error
+	 * @throws IOException Thrown in case of I/O error
 	 */
 	public long getStep() throws IOException {
 		return step.get();
 	}
 
 	/**
-	 * Returns the number of datasources defined in the RRD file.
+	 * Returns the number of datasources defined in the RRD.
 	 *
 	 * @return Number of datasources defined
-	 * @throws IOException Thrown in case of IO specific error
+	 * @throws IOException Thrown in case of I/O error
 	 */
 	public int getDsCount() throws IOException {
 		return dsCount.get();
 	}
 
 	/**
-	 * Returns the number of archives defined in the RRD file.
+	 * Returns the number of archives defined in the RRD.
 	 *
 	 * @return Number of archives defined
-	 * @throws IOException Thrown in case of IO specific error
+	 * @throws IOException Thrown in case of I/O error
 	 */
 	public int getArcCount() throws IOException {
 		return arcCount.get();
@@ -147,15 +143,6 @@ public class Header implements RrdUpdater {
 			" arcCount:" + getArcCount() + "\n";
 	}
 
-	/**
-	 * Returns the underlying RrdFile object.
-	 *
-	 * @return Underlying RrdFile object.
-	 */
-	public RrdFile getRrdFile() {
-		return parentDb.getRrdFile();
-	}
-
     void appendXml(XmlWriter writer) throws IOException {
 		writer.writeTag("version", RRDTOOL_VERSION);
 		writer.writeComment("Seconds");
@@ -164,4 +151,45 @@ public class Header implements RrdUpdater {
 		writer.writeTag("lastupdate", lastUpdateTime.get());
 	}
 
+	/**
+	 * Copies object's internal state to another Header object.
+	 * @param other New Header object to copy state to
+	 * @throws IOException Thrown in case of I/O error
+	 * @throws RrdException Thrown if supplied argument is not a Header object
+	 */
+	public void copyStateTo(RrdUpdater other) throws IOException, RrdException {
+		if(!(other instanceof Header)) {
+			throw new RrdException(
+				"Cannot copy Header object to " + other.getClass().getName());
+		}
+		Header header = (Header) other; 
+		header.lastUpdateTime.set(lastUpdateTime.get());
+	}
+
+	/**
+	 * Returns the underlying storage (backend) object which actually performs all
+	 * I/O operations.
+	 * @return I/O backend object
+	 */
+	public RrdBackend getRrdBackend() {
+		return parentDb.getRrdBackend();
+	}
+
+	boolean isJRobinHeader() throws IOException {
+		return signature.get().equals(SIGNATURE);
+	}
+
+	void validateHeader() throws IOException, RrdException {
+		if(!isJRobinHeader()) {
+			throw new RrdException("Not a JRobin RRD!");
+		}
+	}
+
+	/**
+	 * Required to implement RrdUpdater interface. You should never call this method directly.
+	 * @return Allocator object
+	 */
+	public RrdAllocator getRrdAllocator() {
+		return parentDb.getRrdAllocator();
+	}
 }

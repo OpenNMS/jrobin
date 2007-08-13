@@ -29,6 +29,7 @@ import java.awt.BasicStroke;
 import java.util.HashMap;
 
 import org.jrobin.core.RrdException;
+import org.jrobin.core.XmlWriter;
 
 /**
  * <p>Class used to represent a line defined by two points in a graph.  The line is drawn between those two points.</p>
@@ -71,7 +72,7 @@ class CustomLine extends Line
 		this.xVal2 = endTime;
 		this.yVal1 = startValue;
 		this.yVal2 = endValue;
-		
+
 		try
 		{
 			long xc	   = xVal2 - xVal1;
@@ -111,13 +112,13 @@ class CustomLine extends Line
 	 * @param stackValues Datapoint values of previous PlotDefs, used to stack on if necessary.
 	 * @param lastPlotType Type of the previous PlotDef, used to determine PlotDef type of a stack.
 	 */	
-	void draw( ChartGraphics g, int[] xValues, int[] stackValues, int lastPlotType ) throws RrdException
+	void draw( ChartGraphics g, int[] xValues, double[] stackValues, int lastPlotType ) throws RrdException
 	{
 		g.setColor( color );
-		g.setStroke( new BasicStroke(lineWidth) );
+		g.setStroke( lineWidth != 1 ? new BasicStroke(lineWidth) : DEF_LINE_STROKE );
 		
 		int ax, ay, nx, ny;
-		
+
 		// Get X positions
 		if ( xVal1 == Long.MIN_VALUE )
 			ax = g.getMinX();
@@ -159,18 +160,17 @@ class CustomLine extends Line
 			double rc = ((ny - ay) * 1.0d) / rx;
 			for (int i = 0; i < xValues.length; i++) {
 				if ( xValues[i] < ax || xValues[i] > nx ) 
-					stackValues[i] = 0;
+					stackValues[i] = g.getInverseY(0);
 				else if ( ay == ny )
-					stackValues[i] = ay;
+					stackValues[i] = g.getInverseY(ay);
 				else
-					stackValues[i] = new Double(rc * (xValues[i] - ax) + ay).intValue();
+					stackValues[i] = g.getInverseY( (int) (rc * (xValues[i] - ax) + ay) );
 			}
 		}
-		
-				 
-		g.setStroke( new BasicStroke() );
+
+		g.setStroke( STROKE );
 	}
-	
+
 	/**
 	 * Retrieves the value for a specific point of the CustomLine.  The corresponding value is calculated based
 	 * on the mathematical line function with the timestamp as a X value.
@@ -204,5 +204,42 @@ class CustomLine extends Line
 	
 	// Stubbed method, irrelevant for this PlotDef
 	void setSource( Source[] sources, HashMap sourceIndex ) throws RrdException	{
+	}
+
+	// Stubbed, we don't need to set value for a Custom plotdef
+	void setValue( int tableRow, long preciseTime, long[] reducedTimestamps ) {
+	}
+
+	void exportXmlTemplate( XmlWriter xml, String legend ) {
+		if(yVal1 == yVal2 && xVal1 != xVal2) {
+			// hrule
+			xml.startTag("hrule");
+			xml.writeTag("value", yVal1);
+			xml.writeTag("color", color);
+			xml.writeTag("legend", legend);
+			xml.writeTag("width", lineWidth);
+			xml.closeTag(); // hrule
+		}
+		else if(yVal1 != yVal2 && xVal1 == xVal2) {
+			// vrule
+			xml.startTag("vrule");
+			xml.writeTag("time", xVal1);
+			xml.writeTag("color", color);
+			xml.writeTag("legend", legend);
+			xml.writeTag("width", lineWidth);
+			xml.closeTag(); // vrule
+		}
+		else if(yVal1 != yVal2 && xVal1 != xVal2) {
+			// general line
+			xml.startTag("line");
+			xml.writeTag("time1", xVal1);
+			xml.writeTag("value1", yVal1);
+			xml.writeTag("time2", xVal2);
+			xml.writeTag("value2", yVal2);
+			xml.writeTag("color", color);
+			xml.writeTag("legend", legend);
+			xml.writeTag("width", lineWidth);
+			xml.closeTag(); //line
+		}
 	}
 }

@@ -2,8 +2,8 @@
  * JRobin : Pure java implementation of RRDTool's functionality
  * ============================================================
  *
- * Project Info:  http://www.sourceforge.net/projects/jrobin
- * Project Lead:  Sasa Markovic (saxon@eunet.yu);
+ * Project Info:  http://www.jrobin.org
+ * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
  * (C) Copyright 2003, by Sasa Markovic.
  *
@@ -26,7 +26,7 @@
 package org.jrobin.core;
 
 /**
- * Class to represent single data source definition within the RRD file.
+ * Class to represent single data source definition within the RRD.
  * Datasource definition consists of the following five elements:
  *
  * <ul>
@@ -37,9 +37,9 @@ package org.jrobin.core;
  * <li>maximal value
  * </ul>
  * <p>For the complete explanation of all source definition parameters, see RRDTool's
- * <a href="../../../man/rrdcreate.html" target="man">rrdcreate man page</a>.</p>
+ * <a href="../../../../man/rrdcreate.html" target="man">rrdcreate man page</a>.</p>
  *
- * @author <a href="mailto:saxon@eunet.yu">Sasa Markovic</a>
+ * @author <a href="mailto:saxon@jrobin.org">Sasa Markovic</a>
  */
 public class DsDef {
 	/** array of valid source types */
@@ -55,7 +55,7 @@ public class DsDef {
 	 * {@link org.jrobin.core.RrdDb RrdDb} object.</p>
 	 *
      * <p>For the complete explanation of all source definition parameters, see RRDTool's
-     * <a href="../../../man/rrdcreate.html" target="man">rrdcreate man page</a></p>
+     * <a href="../../../../man/rrdcreate.html" target="man">rrdcreate man page</a></p>
 	 *
 	 * @param dsName Data source name.
 	 * @param dsType Data source type. Valid values are "COUNTER", "GAUGE", "DERIVE"
@@ -152,14 +152,14 @@ public class DsDef {
 	 */
 	public String dump() {
 		return "DS:" + dsName + ":" + dsType + ":" + heartbeat +
-			":" + Util.formatDouble(minValue, "U") +
-			":" + Util.formatDouble(maxValue, "U");
+			":" + Util.formatDouble(minValue, "U", false) +
+			":" + Util.formatDouble(maxValue, "U", false);
 	}
 
 	/**
-	 * Checks if two source definitions are equal.
+	 * Checks if two datasource definitions are equal.
 	 * Source definitions are treated as equal if they have the same source name.
-	 * It is not possible to create RRD file with two equal archive definitions.
+	 * It is not possible to create RRD with two equal archive definitions.
 	 * @param obj Archive definition to compare with.
 	 * @return <code>true</code> if archive definitions are equal,
 	 * <code>false</code> otherwise.
@@ -172,4 +172,9 @@ public class DsDef {
 		return false;
 	}
 
+	boolean exactlyEqual(DsDef def) {
+		return dsName.equals(def.dsName) && dsType.equals(def.dsType) &&
+				heartbeat == def.heartbeat && Util.equal(minValue, def.minValue) &&
+				Util.equal(maxValue, def.maxValue);
+	}
 }

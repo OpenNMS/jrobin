@@ -22,37 +22,39 @@
  * library; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+
 package org.jrobin.core;
 
 import java.io.IOException;
 
 class RrdDoubleArray extends RrdPrimitive {
-	
 	private int length;
 
 	RrdDoubleArray(RrdUpdater updater, int length) throws IOException {
-		super(updater, length * RrdDouble.SIZE);
+		super(updater, RrdPrimitive.RRD_DOUBLE, length);
 		this.length = length;
-	}
-	
-	RrdDoubleArray(RrdUpdater updater, int length, double initVal) throws IOException {
-		super(updater, length * RrdDouble.SIZE);
-		this.length = length;
-		for(int i = 0; i < length; i++) {
-			set(i, initVal);
-		}
 	}
 
 	void set(int index, double value) throws IOException {
-		RrdFile rrdFile = getRrdFile();
-		rrdFile.seek(getPointer() + index * RrdDouble.SIZE);
-		rrdFile.writeDouble(value);
+		set(index, value, 1);
+	}
+
+	void set(int index, double value, int count) throws IOException {
+		// rollovers not allowed!
+		assert index + count <= length:	"Invalid robin index supplied: index=" + index +
+			", count=" + count + ", length=" + length;
+		writeDouble(index, value, count);
 	}
 
 	double get(int index) throws IOException {
-		RrdFile rrdFile = getRrdFile();
-		rrdFile.seek(getPointer() + index * RrdDouble.SIZE);
-		return rrdFile.readDouble();
+		assert index < length: "Invalid index supplied: " + index + ", length=" + length;
+		return readDouble(index);
+	}
+
+	double[] get(int index, int count) throws IOException {
+		assert index + count <= length: "Invalid index/count supplied: " + index +
+			"/" + count + " (length=" + length + ")";
+		return readDouble(index, count);
 	}
 
 }

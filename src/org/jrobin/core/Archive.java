@@ -1,9 +1,9 @@
 /* ============================================================
  * JRobin : Pure java implementation of RRDTool's functionality
  * ============================================================
- *
- * Project Info:  http://www.sourceforge.net/projects/jrobin
- * Project Lead:  Sasa Markovic (saxon@eunet.yu);
+ *  
+ * Project Info:  http://www.jrobin.org
+ * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
  * (C) Copyright 2003, by Sasa Markovic.
  *
@@ -28,7 +28,7 @@ package org.jrobin.core;
 import java.io.IOException;
 
 /**
- * Class to represent single RRD archive in a RRD file with its internal state.
+ * Class to represent single RRD archive in a RRD with its internal state.
  * Normally, you don't need methods to manipulate archive objects directly
  * because JRobin framework does it automatically for you.<p>
  *
@@ -36,83 +36,67 @@ import java.io.IOException;
  * (one state object for each datasource) and round robin archives (one round robin for
  * each datasource). API (read-only) is provided to access each of theese parts.<p>
  *
- * @author <a href="mailto:saxon@eunet.yu">Sasa Markovic</a>
+ * @author <a href="mailto:saxon@jrobin.org">Sasa Markovic</a>
  */
 public class Archive implements RrdUpdater {
 	private RrdDb parentDb;
 	// definition
 	private RrdString consolFun;
 	private RrdDouble xff;
-	private RrdInt steps, rows;
+	private RrdInt steps, rows; 
+	// state
 	private Robin[] robins;
 	private ArcState[] states;
 
-	// first time creation
 	Archive(RrdDb parentDb, ArcDef arcDef) throws IOException {
-		this.parentDb = parentDb;
-		consolFun = new RrdString(arcDef.getConsolFun(), this);
-		xff = new RrdDouble(arcDef.getXff(), this);
-		steps = new RrdInt(arcDef.getSteps(), this);
-		rows = new RrdInt(arcDef.getRows(), this);
-		int n = parentDb.getHeader().getDsCount();
-		robins = new Robin[n];
-		states = new ArcState[n];
-		for(int i = 0; i < n; i++) {
-            states[i] = new ArcState(this, true);
-			robins[i] = new Robin(this, rows.get(), true);
-		}
-	}
-
-	// read from file
-	Archive(RrdDb parentDb) throws IOException {
+		boolean shouldInitialize = arcDef != null;
 		this.parentDb = parentDb;
 		consolFun = new RrdString(this);
 		xff = new RrdDouble(this);
 		steps = new RrdInt(this);
 		rows = new RrdInt(this);
+		if(shouldInitialize) {
+			consolFun.set(arcDef.getConsolFun());
+			xff.set(arcDef.getXff());
+			steps.set(arcDef.getSteps());
+			rows.set(arcDef.getRows());
+		}
 		int n = parentDb.getHeader().getDsCount();
 		states = new ArcState[n];
 		robins = new Robin[n];
 		for(int i = 0; i < n; i++) {
-			states[i] = new ArcState(this, false);
-            robins[i] = new Robin(this, rows.get(), false);
+			states[i] = new ArcState(this, shouldInitialize);
+            robins[i] = new Robin(this, rows.get(), shouldInitialize);
 		}
 	}
 
-	Archive(RrdDb parentDb, XmlReader reader, int arcIndex) throws IOException, RrdException {
-		this.parentDb = parentDb;
-		consolFun = new RrdString(reader.getConsolFun(arcIndex), this);
-		xff = new RrdDouble(reader.getXff(arcIndex), this);
-		steps = new RrdInt(reader.getSteps(arcIndex), this);
-		rows = new RrdInt(reader.getRows(arcIndex), this);
-		int dsCount = reader.getDsCount();
-		robins = new Robin[dsCount];
-		states = new ArcState[dsCount];
-		for(int dsIndex = 0; dsIndex < dsCount; dsIndex++) {
+	// read from XML
+	Archive(RrdDb parentDb, DataImporter reader, int arcIndex) throws IOException, RrdException {
+		this(parentDb, new ArcDef(
+			reader.getConsolFun(arcIndex), reader.getXff(arcIndex),
+			reader.getSteps(arcIndex), reader.getRows(arcIndex)));
+		int n = parentDb.getHeader().getDsCount();
+		for(int i = 0; i < n; i++) {
 			// restore state
-            states[dsIndex] = new ArcState(this, true);
-			states[dsIndex].setAccumValue(reader.getStateAccumValue(arcIndex, dsIndex));
-			states[dsIndex].setNanSteps(reader.getStateNanSteps(arcIndex, dsIndex));
+			states[i].setAccumValue(reader.getStateAccumValue(arcIndex, i));
+			states[i].setNanSteps(reader.getStateNanSteps(arcIndex, i));
 			// restore robins
-			robins[dsIndex] = new Robin(this, rows.get(), true);
-			double[] values = reader.getValues(arcIndex, dsIndex);
-			for(int j = 0; j < values.length; j++) {
-				robins[dsIndex].store(values[j]);
-			}
+			double[] values = reader.getValues(arcIndex, i);
+			robins[i].update(values);
 		}
 	}
 
 	/**
-	 * Returns archive time step in seconds. Archive step is equal to RRD file step
+	 * Returns archive time step in seconds. Archive step is equal to RRD step
 	 * multiplied with the number of archive steps.
 	 *
 	 * @return Archive time step in seconds
-	 * @throws IOException Thrown in case of IO error
+	 * @throws IOException Thrown in case of I/O error.
 	 */
 	public long getArcStep() throws IOException {
 		long step = parentDb.getHeader().getStep();
 		return step * steps.get();
-	}
+	} 
 
 	String dump() throws IOException {
 		StringBuffer buffer = new StringBuffer("== ARCHIVE ==\n");
@@ -128,14 +112,6 @@ public class Archive implements RrdUpdater {
 
 	RrdDb getParentDb() {
 		return parentDb;
-	}
-
-	/**
-	 * Returns the underlying RrdFile object.
-	 * @return Underlying RrdFile object
-	 */
-	public RrdFile getRrdFile() {
-		return parentDb.getRrdFile();
 	}
 
 	void archive(int dsIndex, double value, long numUpdates) throws IOException {
@@ -158,10 +134,8 @@ public class Archive implements RrdUpdater {
 			}
 		}
 		// update robin in bulk
-		long bulkUpdates = Math.min(numUpdates / steps.get(), (long) rows.get());
-		for(long i = 0; i < bulkUpdates; i++) {
-			robin.store(value);
-		}
+		int bulkUpdateCount = (int) Math.min(numUpdates / steps.get(), (long) rows.get());
+		robin.bulkStore(value, bulkUpdateCount);
 		// update remaining steps
 		long remainingUpdates = numUpdates % steps.get();
 		for(long i = 0; i < remainingUpdates; i++) {
@@ -192,10 +166,11 @@ public class Archive implements RrdUpdater {
 	private void finalizeStep(ArcState state, Robin robin) throws IOException {
 		// should store
 		long arcSteps = steps.get();
+		double arcXff = xff.get();
 		long nanSteps = state.getNanSteps();
-		double nanPct = (double) nanSteps / (double) arcSteps;
+		//double nanPct = (double) nanSteps / (double) arcSteps;
 		double accumValue = state.getAccumValue();
-		if(nanPct <= xff.get() && !Double.isNaN(accumValue)) {
+		if(nanSteps <= arcXff * arcSteps && !Double.isNaN(accumValue)) {
 			if(consolFun.get().equals("AVERAGE")) {
 				accumValue /= (arcSteps - nanSteps);
 			}
@@ -211,7 +186,7 @@ public class Archive implements RrdUpdater {
 	/**
 	 * Returns archive consolidation function (AVERAGE, MIN, MAX or LAST).
 	 * @return Archive consolidation function.
-	 * @throws IOException Thrown in case of IO related error
+	 * @throws IOException Thrown in case of I/O error.
 	 */
 	public String getConsolFun() throws IOException {
 		return consolFun.get();
@@ -220,7 +195,7 @@ public class Archive implements RrdUpdater {
 	/**
 	 * Returns archive X-files factor.
 	 * @return Archive X-files factor (between 0 and 1).
-	 * @throws IOException Thrown in case of IO related error
+	 * @throws IOException Thrown in case of I/O error.
 	 */
 	public double getXff() throws IOException {
 		return xff.get();
@@ -229,7 +204,7 @@ public class Archive implements RrdUpdater {
 	/**
 	 * Returns the number of archive steps.
 	 * @return Number of archive steps.
-	 * @throws IOException Thrown in case of IO related error
+	 * @throws IOException Thrown in case of I/O error.
 	 */
 	public int getSteps() throws IOException {
 		return steps.get();
@@ -238,16 +213,16 @@ public class Archive implements RrdUpdater {
 	/**
 	 * Returns the number of archive rows.
 	 * @return Number of archive rows.
-	 * @throws IOException Thrown in case of IO related error
+	 * @throws IOException Thrown in case of I/O error.
 	 */
-	public int getRows() throws IOException{
+	public int getRows() throws IOException {
 		return rows.get();
 	}
 
 	/**
 	 * Returns current starting timestamp. This value is not constant.
 	 * @return Timestamp corresponding to the first archive row
-	 * @throws IOException Thrown in case of IO related error
+	 * @throws IOException Thrown in case of I/O error.
 	 */
 	public long getStartTime() throws IOException {
 		long endTime = getEndTime();
@@ -259,7 +234,7 @@ public class Archive implements RrdUpdater {
 	/**
 	 * Returns current ending timestamp. This value is not constant.
 	 * @return Timestamp corresponding to the last archive row
-	 * @throws IOException Thrown in case of IO related error
+	 * @throws IOException Thrown in case of I/O error.
 	 */
 	public long getEndTime() throws IOException {
 		long arcStep = getArcStep();
@@ -281,7 +256,7 @@ public class Archive implements RrdUpdater {
 	/**
 	 * Returns the underlying round robin archive. Robins are used to store actual
 	 * archive values on a per-datasource basis.
-	 * @param dsIndex Index of the datasource in the RRD file.
+	 * @param dsIndex Index of the datasource in the RRD.
 	 * @return Underlying round robin archive for the given datasource.
 	 */
 	public Robin getRobin(int dsIndex) {
@@ -335,22 +310,30 @@ public class Archive implements RrdUpdater {
 		int ptsCount = (int) ((fetchEnd - fetchStart) / arcStep + 1);
 		long[] timestamps = new long[ptsCount];
 		double[][] values = new double[dsCount][ptsCount];
+		long matchStartTime = Math.max(fetchStart, startTime);
+		long matchEndTime = Math.min(fetchEnd, endTime);
+		double[][] robinValues = null;
+		if(matchStartTime <= matchEndTime) {
+			// preload robin values
+			int matchCount = (int)((matchEndTime - matchStartTime) / arcStep + 1);
+			int matchStartIndex = (int)((matchStartTime - startTime) / arcStep);
+			robinValues = new double[dsCount][];
+			for(int i = 0; i < dsCount; i++) {
+				int dsIndex = parentDb.getDsIndex(dsToFetch[i]);
+				robinValues[i] = robins[dsIndex].getValues(matchStartIndex, matchCount);
+			}
+		}
 		for(int ptIndex = 0; ptIndex < ptsCount; ptIndex++) {
 			long time = fetchStart + ptIndex * arcStep;
 			timestamps[ptIndex] = time;
-			if(time >= startTime && time <= endTime) {
-				// inbound time
-				int robinIndex = (int)((time - startTime) / arcStep);
-				for(int i = 0; i < dsCount; i++) {
-					int dsIndex = parentDb.getDsIndex(dsToFetch[i]);
-					values[i][ptIndex] = robins[dsIndex].getValue(robinIndex);
+			for(int i = 0; i < dsCount; i++) {
+				double value = Double.NaN;
+				if(time >= matchStartTime && time <= matchEndTime) {
+					// inbound time
+					int robinValueIndex = (int)((time - matchStartTime) / arcStep);
+					value = robinValues[i][robinValueIndex];
 				}
-			}
-			else {
-				// time out of bounds
-				for(int i = 0; i < dsCount; i++) {
-					values[i][ptIndex] = Double.NaN;
-				}
+				values[i][ptIndex] = value;
 			}
 		}
 		FetchData fetchData = new FetchData(this, request);
@@ -385,4 +368,61 @@ public class Archive implements RrdUpdater {
 		writer.closeTag(); // rra
 	}
 
+	/**
+	 * Copies object's internal state to another Archive object.
+	 * @param other New Archive object to copy state to
+	 * @throws IOException Thrown in case of I/O error
+	 * @throws RrdException Thrown if supplied argument is not an Archive object
+	 */
+	public void copyStateTo(RrdUpdater other) throws IOException, RrdException {
+		if(!(other instanceof Archive)) {
+			throw new RrdException(
+				"Cannot copy Archive object to " + other.getClass().getName());
+		}
+		Archive arc = (Archive) other;
+		if(!arc.consolFun.get().equals(consolFun.get())) {
+			throw new RrdException("Incompatible consolidation functions");
+		}
+		if(arc.steps.get() != steps.get()) {
+			throw new RrdException("Incompatible number of steps");
+		}
+		int count = parentDb.getHeader().getDsCount();
+		for(int i = 0; i < count; i++) {
+			int j = Util.getMatchingDatasourceIndex(parentDb, i, arc.parentDb);
+			if(j >= 0) {
+				states[i].copyStateTo(arc.states[j]);
+				robins[i].copyStateTo(arc.robins[j]);
+			}
+		}
+	}
+
+	/**
+	 * Sets X-files factor to a new value.
+	 * @param xff New X-files factor value. Must be >= 0 and < 1.
+	 * @throws RrdException Thrown if invalid value is supplied
+	 * @throws IOException Thrown in case of I/O error
+	 */
+	public void setXff(double xff) throws RrdException, IOException {
+		if(xff < 0D || xff >= 1D) {
+			throw new RrdException("Invalid xff supplied (" + xff + "), must be >= 0 and < 1");
+		}
+		this.xff.set(xff);
+	}
+
+	/**
+	 * Returns the underlying storage (backend) object which actually performs all
+	 * I/O operations.
+	 * @return I/O backend object
+	 */
+	public RrdBackend getRrdBackend() {
+		return parentDb.getRrdBackend();
+	}
+
+	/**
+	 * Required to implement RrdUpdater interface. You should never call this method directly.
+	 * @return Allocator object
+	 */
+	public RrdAllocator getRrdAllocator() {
+		return parentDb.getRrdAllocator();
+	}
 }

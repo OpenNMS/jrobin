@@ -24,7 +24,7 @@
  */
 package org.jrobin.graph;
 
-import java.awt.Graphics;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import javax.swing.JPanel;
 
@@ -37,10 +37,14 @@ public class ChartPanel extends JPanel
 {
 	private BufferedImage chart;
 	
-	void setChart( BufferedImage chart ) {
+	public void setChart( BufferedImage chart ) {
 		this.chart = chart;
 	}
-	
+
+	/**
+	 * Overrides inhereted <code>paintComponent()</code> method from the base class.
+	 * @param g Graphics object
+	 */
 	public void paintComponent( Graphics g )
 	{
 		if ( chart != null ) g.drawImage( chart, 0, 0, null );

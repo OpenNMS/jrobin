@@ -25,10 +25,8 @@
 package org.jrobin.graph;
 
 import java.io.IOException;
-import java.io.File;
-import java.io.OutputStream;
 import java.util.HashMap;
-import java.awt.*;
+import java.util.ArrayList;
 
 import org.jrobin.core.*;
 
@@ -49,31 +47,27 @@ class RrdExporter
 	protected long[] timestamps;
 	protected Source[] sources;
 	protected HashMap sourceIndex;
-	protected FetchSourceList fetchSources;
 
 	RrdExporter( RrdExportDef def )
 	{
-		rrdOpener = new RrdOpener( false, true );
+		setRrdOpener( new RrdOpener( false, true ) );
 		setExportDef( def );
 	}
 
 	RrdExporter( RrdExportDef def, RrdOpener rrdOpener )
 	{
-		this.rrdOpener	= rrdOpener;
+		setRrdOpener( rrdOpener );
 		setExportDef( def );
 	}
 
 	void setExportDef( RrdExportDef def )
 	{
 		this.def 			= def;
-		this.fetchSources	= def.getFetchSources();
-		fetchSources.setRrdOpener( rrdOpener );
 	}
 
 	void setRrdOpener( RrdOpener rrdOpener )
 	{
-		if ( fetchSources != null )
-			fetchSources.setRrdOpener( rrdOpener );
+		this.rrdOpener = rrdOpener;
 	}
 
 	/**
@@ -88,9 +82,13 @@ class RrdExporter
 	 */
 	protected void calculateSeries( int maxRows ) throws RrdException, IOException
 	{
+		FetchSourceList fetchSources;
 		ValueExtractor ve;
 		FetchSource src;
 		String[] varList;
+
+		fetchSources			= def.getFetchSources();
+		fetchSources.setRrdOpener( rrdOpener );
 
 		long finalEndTime 		= Long.MAX_VALUE;
 		boolean changingEndTime = false;
@@ -110,22 +108,52 @@ class RrdExporter
 		Pdef[] pdefList			= def.getPdefs();
 		int numPdefs			= pdefList.length;
 
+		ExportData[] edata		= def.getExportData();
+		int[] edefTs;
+		Source[] edefList;
+		if ( edata.length > 0 )
+		{
+			ArrayList tsList	= new ArrayList( 30 );
+			ArrayList list		= new ArrayList( 30 );
+			for ( int i = 0; i < edata.length; i++ )
+			{
+				Source[] esrc = edata[i].getSources();
+
+				for ( int j = 0; j < esrc.length; j++ )
+				{
+					list.add( esrc[j] );
+					tsList.add( new Integer(i) );
+				}
+			}
+			edefTs				= new int[ tsList.size() ];
+			for ( int i = 0; i < edefTs.length; i++ )
+				edefTs[i]		= ((Integer) tsList.get(i)).intValue();
+			edefList			= (Source[]) list.toArray( new Source[] {} );
+		}
+		else
+		{
+			edefTs				= new int[0];
+			edefList			= new Source[0];
+		}
+		int numEdefs			= edefList.length;
+
 		// Set up the array with all datasources (both Def, Cdef and Pdef)
-		sources 				= new Source[ numDefs + numCdefs + numPdefs ];
-		sourceIndex 			= new HashMap( numDefs + numCdefs + numPdefs );
+		sources 				= new Source[ numDefs + numEdefs + numCdefs + numPdefs ];
+		sourceIndex 			= new HashMap( numDefs + numEdefs + numCdefs + numPdefs );
 		int tblPos				= 0;
 		int vePos				= 0;
 
 		ValueExtractor[] veList	= new ValueExtractor[ fetchSources.size() ];
 
 		long requestedStep		= (long) (endTime - startTime) / maxRows;
+		if ( requestedStep <= 0 ) requestedStep = 1;
 
 		// Shift start and endTime
 		int minReduceFactor 	= 1;
 		long minStep 			= Integer.MAX_VALUE, maxStep = Integer.MIN_VALUE, vStartTime, vEndTime, fetchEndTime;
 
-		// Open all datasources
-		if ( fetchSources.size() > 0 )
+		// -- Open all fetch datasources
+		if ( fetchSources.size() > 0 || numEdefs > 0 )
 		{
 			try
 			{
@@ -144,10 +172,11 @@ class RrdExporter
 							finalEndTime = endTime;
 
 						requestedStep = (long) (endTime - startTime) / maxRows;
+						if ( requestedStep <= 0 ) requestedStep = 1;
 					}
 
 					// Calculate the step for data retrieval
-					long[] steps	= src.getFetchStep( startTime, endTime, def.getResolution() );
+					long[] steps		= src.getFetchStep( startTime, endTime, def.getResolution() );
 
 					int reduceFactor	= (int) Math.ceil( (double) requestedStep / (double) steps[0] );
 					steps[0]			= steps[0] * reduceFactor;
@@ -159,6 +188,22 @@ class RrdExporter
 					}
 					if ( steps[1] > maxStep )
 						maxStep			= steps[1];
+				}
+
+				for ( int i = 0; i < edata.length; i++ )
+				{
+					long step = edata[i].getStep();
+
+					int reduceFactor	= (int) Math.ceil( (double) requestedStep / (double) step );
+					step				= step * reduceFactor;
+
+					if ( step < minStep )
+					{
+						minStep 		= step;
+						minReduceFactor = reduceFactor;
+					}
+					if ( step > maxStep )
+						maxStep			= step;
 				}
 
 				vStartTime			= Util.normalize( startTime, minStep );
@@ -217,9 +262,9 @@ class RrdExporter
 		else
 		{
 			// The range should be used exactly as specified
-			minStep				= requestedStep;
-			vStartTime			= Util.normalize( startTime, minStep );
-			vStartTime			= ( vStartTime > startTime ? vStartTime - minStep : vStartTime );
+			minStep					= requestedStep;
+			vStartTime				= Util.normalize( startTime, minStep );
+			vStartTime				= ( vStartTime > startTime ? vStartTime - minStep : vStartTime );
 
 			if ( !changingEndTime )
 			{
@@ -237,9 +282,20 @@ class RrdExporter
 			reducedStep				= minStep;
 			reducedNumRows			= (int) ((reducedEndTime - reducedStartTime) / reducedStep) + 1;
 			finalEndTime			= endTime;
+
+			vEndTime				+= minStep;
+			numRows					= reducedNumRows; //(int) ((vEndTime - vStartTime) / minStep) + 1;
 		}
 
-		// Add all Pdefs to the source table
+		// -- Add all Export datasources to the source table
+		for ( int i = 0; i < edefList.length; i++ )
+		{
+			sources[tblPos] = new Def( edefList[i].getName(), numRows, reducedNumRows );
+			sources[tblPos].setFetchedStep( edefList[i].getStep() );
+			sourceIndex.put( edefList[i].getName(), new Integer(tblPos++) );
+		}
+
+		// -- Add all Pdefs to the source table
 		for ( int i = 0; i < pdefList.length; i++ )
 		{
 			pdefList[i].prepare( numRows, reducedNumRows );
@@ -251,7 +307,7 @@ class RrdExporter
 
 		int cdefStart = tblPos;		// First Cdef element, necessary for tree descend calculation
 
-		// Add all Cdefs to the source table
+		// -- Add all Cdefs to the source table
 		// Reparse all RPN datasources to use indices of the correct variables
 		for ( int i = 0; i < cdefList.length; i++ )
 		{
@@ -321,6 +377,11 @@ class RrdExporter
 						for (int j = 0; j < veList.length; j++)
 							pos = veList[j].extract( t, sources, i, pos );
 
+						// Get all export datasources
+						for (int j = pos; j < pos + numEdefs; j++ )
+							sources[j].set( i, t, edefList[j - pos].get( t, edata[ edefTs[j - pos] ].getTimestamps() ) );
+						pos += numEdefs;
+
 						// Get all custom datasources
 						for (int j = pos; j < pos + numPdefs; j++)
 							((Pdef) sources[j]).set( i, t );
@@ -358,6 +419,11 @@ class RrdExporter
 				// Get all fetched datasources
 				for (int j = 0; j < veList.length; j++)
 					pos = veList[j].extract( t, sources, i, pos );
+
+				// Get all export datasources
+				for (int j = pos; j < pos + numEdefs; j++ )
+					sources[j].set( i, t, edefList[j - pos].get( t, edata[ edefTs[j - pos] ].getTimestamps() ) );
+				pos += numEdefs;
 
 				// Get all custom datasources
 				for (int j = pos; j < pos + numPdefs; j++)
@@ -397,6 +463,9 @@ class RrdExporter
 	 */
 	protected ExportData createExportData() throws RrdException
 	{
+		if ( sources == null)
+			throw new RrdException( "Sources not calculated, no data to return." );
+		
 		// Now create a RrdDataSet object containing the results
 		Source[] sourceSet;
 		String[][] export 	= def.getExportDatasources();
@@ -447,5 +516,13 @@ class RrdExporter
 		calculateSeries( maxRows );
 
 		return createExportData();
+	}
+
+	public RrdExportDef getExportDef() {
+		return def;
+	}
+
+	public RrdOpener getRrdOpener() {
+		return rrdOpener;
 	}
 }

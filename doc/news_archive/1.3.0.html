@@ -1,0 +1,122 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+
+<head>
+<meta name="generator" content="Fog Creek CityDesk 2.0.19" />
+<meta name="citydesk" content="852BB11B/61" />
+<title>JRobin :: RRDTool Choice for the Java World :: JRobin 1.3.0 released</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<meta name="keywords" content="jrobin,java,api,rrdtool,rrd,round,robin,database,round robin database,mrtg">
+<link rel="stylesheet" href="../css/jrobin.css" type="text/css">
+</head>
+
+<body bgcolor="#ffffcc" leftmargin="0" topmargin="0" marginwidth="0" marginheight="0">
+
+<!-- primary navigation -->
+
+<table cellspacing="0" cellpadding="0" width="800" bgcolor="#FFFFCC" border="0">
+<tbody>
+<tr>
+<td class="logo" colspan="7"><a href="../index.html"><img height="78" alt="JRobin Logo" src="../images/web-logo-2.png" width="800" border="0" /></a></td>
+</tr>
+<tr>
+<td class="top" onmouseover="this.className='tophover'" onmouseout="this.className='top'" width="16%">
+<div align="center"><a class="toplink" href="../index.html">HOME</a></div>
+</td>
+<td class="top" onmouseover="this.className='tophover'" onmouseout="this.className='top'" width="14%">
+<div align="center"><a class="toplink" href="../library/index.html">Library</a></div>
+</td>
+<td class="top" onmouseover="this.className='tophover'" onmouseout="this.className='top'" width="14%">
+<div align="center"><a class="toplink" href="../api/index.html">JRobin API</a></div>
+</td>
+<td class="top" onmouseover="this.className='tophover'" onmouseout="this.className='top'" width="14%">
+<div align="center"><a class="toplink" href="../utilities/index.html">Utilities</a></div>
+</td>
+<td class="top" onmouseover="this.className='tophover'" onmouseout="this.className='top'" width="14%">
+<div align="center"><a class="toplink" href="../support/index.html">Support</a></div>
+</td>
+<td class="top" onmouseover="this.className='tophover'" onmouseout="this.className='top'" width="14%">
+<div align="center"><a class="toplink" href="../about/index.html">About Us</a></div>
+</td>
+<td class="top" onmouseover="this.className='tophover'" onmouseout="this.className='top'" width="14%">
+<div align="center"><a class="toplink" href="http://www.jrobin.org/phpBB2/" target="forum">Forum</a></div>
+</td>
+</tr>
+
+<!-- secondary navigation -->
+
+<tr>
+<td class="leftcolumn" valign="top" align="center" height="1200" colspan="1">
+<table cellpadding="1" width="100%" border="0"><tbody>
+
+<tr><td class="left2">
+<div align="left"><a class="left" href="index.html">JRobin 1.4.0 released</a></div>
+</td></tr>
+
+<tr><td class="left2">
+<div align="left"><a class="left" href="1.3.1.html">JRobin 1.3.1 released</a></div>
+</td></tr>
+
+<tr><td class="left2">
+<div align="left"><a class="left" href="1.3.0.html">JRobin 1.3.0 released</a></div>
+</td></tr>
+
+<tr><td class="left2">
+<div align="left"><a class="left" href="1.2.x.html">JRobin 1.2.x released</a></div>
+</td></tr>
+
+</tbody></table>
+<p>&nbsp;</p>
+
+<!-- external links -->
+
+<!-- BYTEMARK -->
+
+<p><a href="http://www.bytemark-hosting.co.uk/r/jrobin" alt="Bytemark Hosting"><img src="../images/misc/bytemark.png" width="120" height="142" border="0" /></a></p>
+
+<!-- SourceForge logo -->
+
+<p align="center">
+<a href="http://sourceforge.net" target="sf"><img height="31" alt="SourceForge.net Logo" src="http://sourceforge.net/sflogo.php?group_id=82668&amp;type=1" width="88" border="0" /></a>&nbsp;
+</p>
+
+<!-- Firefox -->
+
+<p align="center">
+<a title="Get Firefox - Web Browsing Redefined" href="http://www.mozilla.org/products/firefox/" target="firefox"><img height="15" alt="Get Firefox" src="http://www.mozilla.org/products/firefox/buttons/firefox_80x15.png" width="80" border="0" /></a>
+</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+</td>
+
+<!-- CONTENT -->
+
+<td class="rightcolumn" valign="top" colspan="6">
+<h1>JRobin 1.3.0 released</h1>
+<a id="top" name="top"></a>
+
+<!-- OPTIONAL SIDEBAR -->
+
+
+
+<!-- body text -->
+
+<h2>What's new?</h2>
+<p><strong><a href="../api/templatesapi.html">Templates.</a></strong> You can create RRD files and graphs starting from external XML template files. You don't have to embed all creation parameters and options in your Java code and recompile it whenever you want to change some minor detail (like background color or datasource heartbeat). And your XML templates may contain placeholders if you want to provide some portion of the template at runtime (path to RRD file, graph title or time span, for example).</p>
+<p><a href="../api/coreapi.html"><strong>Core improvements</strong></a>: <strong>RrdToolkit</strong> class is introduced. It can be used to add, update or remove datasource and archive definitions in already existing RRD files. <strong>RrdDbPool&nbsp;</strong>class has been greatly improved too. You should use this class in productive environments with many RRD files updated simultaneously. It offers great performance benefits and better scalability. The underlying 'garbage collector' (which closes references to RRD files returned to the pool<strong>&nbsp;</strong>when necessary) now runs in a separate thread.</p>
+<p><a href="../api/standalonegraphingengine.html"><strong>Stand-alone graphing engine:</strong></a> If you don't need RRD files at all, but still have some time series to plot, JRobin could be a tool for you. You don't have to know anything about the RRD concept to use JRobin as a graphing tool (there are also two nice classes to perform linear and normal cubic spline interpolation of your data, so you can start plotting right away).</p>
+<p><a href="../utilities/inspector.html"><strong>Utilities:</strong></a> Inspector application has been greatly improved by adding a possibility to play with the structure of your RRD files. And there is a new utility to convert your old RRDTool files to JRobin compatible format in bulk.</p>
+<p><strong>Under the hub</strong>: Many bugfixes, richer API for developers, redesigned core classes.</p>
+
+
+<!-- footer -->
+
+<p><a href="#">Back to the top</a></p>
+<p>Copyright &copy; 2003, 2004 Sasa Markovic & Arne Vandamme. All Rights Reserved.</p>
+<p><a href="http://www.bytemark-hosting.co.uk/r/jrobin" alt="Bytemark Hosting"><img src="../images/misc/bytemark-transparent.gif" width="200" height="25" border="0"></a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</body>
+</html>

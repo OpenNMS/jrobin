@@ -67,21 +67,23 @@ class Sdef extends Cdef
 	// -- Protected methods
 	// ================================================================
 	/**
-	 * Prepares the Sef for faster value calculation by setting the internal
+	 * Prepares the Sdef for faster value calculation by setting the internal
 	 * array and references.  Override from Cdef parent class.
 	 *
 	 * @param sourceIndex Lookup table holding the name - index pairs for all datasources.
 	 * @param numPoints Number of points used as graph resolution (size of the value table).
 	 * @throws RrdException Thrown in case of the requested datasource is not available in the sourceIndex
 	 */
-	void prepare( HashMap sourceIndex, int numPoints ) throws RrdException
+	void prepare( HashMap sourceIndex, int numPoints, int aggregatePoints ) throws RrdException
 	{
 		if ( sourceIndex.containsKey( defName ) )
 			defIndex = ( (Integer) sourceIndex.get( defName ) ).intValue();
 		else
 			throw new RrdException( "Datasource not found: " + defName );
 
-		values = new double[ numPoints ];
+		values 					= new double[ numPoints ];
+		this.aggregatePoints	= aggregatePoints;
+		calculated				= false;
 	}
 
 	/**

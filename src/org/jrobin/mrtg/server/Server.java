@@ -2,8 +2,8 @@
  * JRobin : Pure java implementation of RRDTool's functionality
  * ============================================================
  *
- * Project Info:  http://www.sourceforge.net/projects/jrobin
- * Project Lead:  Sasa Markovic (saxon@eunet.yu);
+ * Project Info:  http://www.jrobin.org
+ * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
  * (C) Copyright 2003, by Sasa Markovic.
  *
@@ -25,7 +25,10 @@
 package org.jrobin.mrtg.server;
 
 import org.jrobin.core.RrdDb;
+import org.jrobin.core.RrdDbPool;
+import org.jrobin.core.RrdException;
 import org.jrobin.mrtg.MrtgException;
+import org.jrobin.mrtg.MrtgConstants;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -40,29 +43,54 @@ import javax.xml.transform.stream.StreamResult;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.FileWriter;
 import java.util.Date;
 import java.util.Hashtable;
 import java.util.Vector;
 
-class Server {
+public class Server implements MrtgConstants {
 	private static Server instance;
 
-	private Hardware hardware = new Hardware();
-	private Scheduler scheduler = new Scheduler();
-	private Archiver archiver = new Archiver();
-	private RpcServer webServer = new RpcServer();
-	private Date startDate = new Date();
+	private DeviceList deviceList;
+	private Date startDate;
 
-	public synchronized static Server getInstance() throws MrtgException {
+	private Timer timer;
+	private RrdWriter rrdWriter;
+	private Listener listener;
+
+	private boolean active = false;
+
+	public synchronized static Server getInstance() {
 		if (instance == null) {
 			instance = new Server();
 		}
 		return instance;
 	}
 
-	private Server() throws MrtgException {
-		// set RrdDb locking mode
-		RrdDb.setLockMode(RrdDb.WAIT_IF_LOCKED);
+	private Server() {
+		RrdDb.setLockMode(RrdDb.NO_LOCKS);
+		RrdDbPool.getInstance().setCapacity(POOL_CAPACITY);
+	}
+
+	public synchronized void start(String[] acceptedClients) throws MrtgException {
+		if(active) {
+			throw new MrtgException("Cannot start Server, already started");
+		}
+		// set default backend factory
+		try {
+			RrdDb.setDefaultFactory(BACKEND_FACTORY_NAME);
+		} catch (RrdException e) {
+			throw new MrtgException("Inavlide backend factory (" + BACKEND_FACTORY_NAME + ")");
+		}
+		// create template files
+		try {
+			createXmlTemplateIfNecessary(Config.getRrdTemplateFile(), RRD_TEMPLATE_STR);
+			createXmlTemplateIfNecessary(Config.getGraphTemplateFile(), GRAPH_TEMPLATE_STR);
+		}
+		catch(IOException ioe) {
+			throw new MrtgException(ioe);
+		}
+		// load configuration
 		String hwFile = Config.getHardwareFile();
 		if(new File(hwFile).exists()) {
 			loadHardware();
@@ -70,12 +98,44 @@ class Server {
 		else {
 			saveHardware();
 		}
-		// start scheduler and archiver
-		archiver.start();
-		scheduler.start();
+		// create threads
+		rrdWriter = new RrdWriter();
+		timer = new Timer();
+		listener = new Listener(acceptedClients);
+		startDate = new Date();
+		active = true;
+	}
+
+	private void createXmlTemplateIfNecessary(String filePath, String fileContent)
+		throws IOException {
+		File file = new File(filePath);
+		if(!file.exists()) {
+			FileWriter writer = new FileWriter(filePath, false);
+			writer.write(fileContent);
+			writer.flush();
+			writer.close();
+		}
+	}
+
+	public synchronized void stop() throws MrtgException {
+		if(!active) {
+			throw new MrtgException("Cannot stop Server, not started");
+		}
+		rrdWriter.terminate();
+		timer.terminate();
+		listener.terminate();
+		active = false;
+		try {
+			RrdDbPool.getInstance().reset();
+		} catch (IOException e) {
+			throw new MrtgException(e);
+		}
 	}
 
 	void saveHardware() throws MrtgException {
+		if(deviceList == null) {
+			deviceList = new DeviceList();
+		}
 		try {
 			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 			factory.setValidating(false);
@@ -84,9 +144,9 @@ class Server {
 			Document doc = builder.newDocument();
 			Element root = doc.createElement("mrtg");
 			doc.appendChild(root);
-			Vector routers = hardware.getRouters();
+			Vector routers = deviceList.getRouters();
 			for(int i = 0; i < routers.size(); i++) {
-				Router router = (Router) routers.get(i);
+				Device router = (Device) routers.get(i);
 				router.appendXml(root);
 			}
 			TransformerFactory tFactory = TransformerFactory.newInstance();
@@ -115,10 +175,10 @@ class Server {
 			Document doc = builder.parse(new File(Config.getHardwareFile()));
 			Element root = doc.getDocumentElement();
 			NodeList nodes = root.getElementsByTagName("router");
-			hardware = new Hardware();
-			Vector routers = hardware.getRouters();
+			deviceList = new DeviceList();
+			Vector routers = deviceList.getRouters();
 			for(int i = 0; i < nodes.getLength(); i++) {
-				routers.add(new Router(nodes.item(i)));
+				routers.add(new Device(nodes.item(i)));
 			}
 		} catch (Exception e) {
 			throw new MrtgException(e);
@@ -126,63 +186,80 @@ class Server {
 	}
 
 	public String toString() {
-		return hardware.toString();
+		return deviceList.toString();
 	}
 
 	synchronized int addRouter(String host, String community, String descr, boolean active)
 		throws MrtgException {
-		int retCode = hardware.addRouter(host, community, descr, active);
-		saveHardware();
+		int retCode = deviceList.addRouter(host, community, descr, active);
+		if(retCode == 0) {
+			saveHardware();
+		}
 		return retCode;
 	}
 
 	synchronized int updateRouter(String host, String community, String descr, boolean active)
 		throws MrtgException {
-		int retCode = hardware.updateRouter(host, community, descr, active);
-		saveHardware();
+		int retCode = deviceList.updateRouter(host, community, descr, active);
+		if(retCode == 0) {
+			saveHardware();
+		}
 		return retCode;
 	}
 
 	synchronized int removeRouter(String host) throws MrtgException {
-		int retCode = hardware.removeRouter(host);
-		saveHardware();
+		int retCode = deviceList.removeRouter(host);
+		if(retCode == 0) {
+			saveHardware();
+		}
 		return retCode;
 	}
 
 	synchronized int addLink(String host, String ifDescr, String descr, int samplingInterval,
 							 boolean active)
 		throws MrtgException {
-		int retCode = hardware.addLink(host, ifDescr, descr, samplingInterval, active);
-		saveHardware();
+		int retCode = deviceList.addLink(host, ifDescr, descr, samplingInterval, active);
+		if(retCode == 0) {
+			saveHardware();
+		}
 		return retCode;
 	}
 
 	synchronized int updateLink(String host, String ifDescr, String descr,
 								int samplingInterval, boolean active)
 		throws MrtgException {
-		int retCode = hardware.updateLink(host, ifDescr, descr, samplingInterval, active);
-		saveHardware();
+		int retCode = deviceList.updateLink(host, ifDescr, descr, samplingInterval, active);
+		if(retCode == 0) {
+			saveHardware();
+		}
 		return retCode;
 	}
 
 	synchronized int removeLink(String host, String ifDescr) throws MrtgException {
-		int retCode = hardware.removeLink(host, ifDescr);
-		saveHardware();
+		int retCode = deviceList.removeLink(host, ifDescr);
+		if(retCode == 0) {
+			saveHardware();
+			if(REMOVE_RRD_FOR_DEACTIVATED_LINK) {
+				// remove the underlying RRD file
+        		String rrdFile = RrdWriter.getRrdFilename(host, ifDescr);
+				new File(rrdFile).delete();
+			}
+		}
 		return retCode;
 	}
 
 	synchronized byte[] getPngGraph(String host, String ifDescr, long start, long stop)
 		throws MrtgException {
-		Grapher grapher = new Grapher(host, ifDescr);
+		Plotter grapher = new Plotter(host, ifDescr);
 		return grapher.getPngGraphBytes(start, stop);
 	}
 
-	synchronized Router[] getRouters() {
-		return (Router[]) hardware.getRouters().toArray(new Router[0]);
+	synchronized Device[] getRouters() {
+		return (Device[]) deviceList.getRouters().toArray(new Device[0]);
 	}
 
 	String[] getAvailableLinks(String host) throws MrtgException {
-		Router router = hardware.getRouterByHost(host);
+		Device router = deviceList.getRouterByHost(host);
 		try {
 			if(router != null) {
 				return router.getAvailableLinks();
@@ -195,30 +272,33 @@ class Server {
 		}
 	}
 
-    Hardware getHardware() {
-		return hardware;
+    DeviceList getDeviceList() {
+		return deviceList;
 	}
 
-	Archiver getArchiver() {
-		return archiver;
+	RrdWriter getRrdWriter() {
+		return rrdWriter;
 	}
 
-	public Date getStartDate() {
+	Date getStartDate() {
 		return startDate;
 	}
 
 	Hashtable getServerInfo() {
 		Hashtable hash = new Hashtable();
-		hash.put("sampleCount", new Integer(archiver.getSampleCount()));
-		hash.put("savesCount", new Integer(archiver.getSavesCount()));
-		hash.put("goodSavesCount", new Integer(archiver.getGoodSavesCount()));
-		hash.put("badSavesCount", new Integer(archiver.getBadSavesCount()));
+		hash.put("sampleCount", new Integer(rrdWriter.getSampleCount()));
+		hash.put("savesCount", new Integer(rrdWriter.getSavesCount()));
+		hash.put("goodSavesCount", new Integer(rrdWriter.getGoodSavesCount()));
+		hash.put("badSavesCount", new Integer(rrdWriter.getBadSavesCount()));
 		hash.put("startDate", startDate);
+		hash.put("poolEfficency", new Double(RrdDbPool.getInstance().getPoolEfficency()));
 		return hash;
 	}
 
-	public static void main(String[] args) throws Exception {
+	public static void main(String[] acceptedClients) throws Exception {
         Server s = Server.getInstance();
+		s.start(acceptedClients);
 	}
+
 }
 

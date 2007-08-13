@@ -35,7 +35,7 @@ import java.io.InputStreamReader;
 
 /**
  * <p>Simple command line application that allows you to generate a graph
- * from a RrdGraphDefTemplate.  Pretty straightforward use.</p>
+ * from a RrdGraphDefTemplate.  Pretty straightforward in use.</p>
  * 
  * @author Arne Vandamme (cobralord@jrobin.org)
  */
@@ -111,6 +111,7 @@ public class GraphTemplate
 			System.out.println( ">>> Reading XML template" );
 			RrdGraphDefTemplate template = new RrdGraphDefTemplate( new File(templateFile) );
 
+			// -- Set the parameters (if there are any)
 			System.out.println( ">>> Setting template variables" );
 			if ( template.hasVariables() )
 			{
@@ -125,6 +126,7 @@ public class GraphTemplate
 
 			long start 		= System.currentTimeMillis();
 
+			// -- Generate the actual graph
 			RrdGraph graph	= new RrdGraph( template.getRrdGraphDef() );
 
 			if ( format.equalsIgnoreCase("png") )

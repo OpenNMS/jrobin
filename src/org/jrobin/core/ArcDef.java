@@ -2,8 +2,8 @@
  * JRobin : Pure java implementation of RRDTool's functionality
  * ============================================================
  *
- * Project Info:  http://www.sourceforge.net/projects/jrobin
- * Project Lead:  Sasa Markovic (saxon@eunet.yu);
+ * Project Info:  http://www.jrobin.org
+ * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
  * (C) Copyright 2003, by Sasa Markovic.
  *
@@ -26,7 +26,7 @@
 package org.jrobin.core;
 
 /**
- * Class to represent single archive definition within the RRD file.
+ * Class to represent single archive definition within the RRD.
  * Archive definition consists of the following four elements:
  *
  * <ul>
@@ -36,10 +36,10 @@ package org.jrobin.core;
  * <li>number of rows.
  * </ul>
  * <p>For the complete explanation of all archive definition parameters, see RRDTool's
- * <a href="../../../man/rrdcreate.html" target="man">rrdcreate man page</a>
+ * <a href="../../../../man/rrdcreate.html" target="man">rrdcreate man page</a>
  * </p>
  *
- * @author <a href="mailto:saxon@eunet.yu">Sasa Markovic</a>
+ * @author <a href="mailto:saxon@jrobin.org">Sasa Markovic</a>
  */
 
 public class ArcDef {
@@ -56,7 +56,7 @@ public class ArcDef {
 	 * {@link org.jrobin.core.RrdDb RrdDb} object.</p>
 	 *
      * <p>For the complete explanation of all archive definition parameters, see RRDTool's
-	 * <a href="../../../man/rrdcreate.html" target="man">rrdcreate man page</a></p>
+	 * <a href="../../../../man/rrdcreate.html" target="man">rrdcreate man page</a></p>
 	 *
 	 * @param consolFun Consolidation function. Allowed values are "AVERAGE", "MIN",
 	 * "MAX" and "LAST".
@@ -109,7 +109,7 @@ public class ArcDef {
 		if(!isValidConsolFun(consolFun)) {
 			throw new RrdException("Invalid consolidation function specified: " + consolFun);
 		}
-		if(xff < 0.0 || xff >= 1.0) {
+		if(Double.isNaN(xff) || xff < 0.0 || xff >= 1.0) {
 			throw new RrdException("Invalid xff, must be >= 0 and < 1: " + xff);
 		}
 		if(steps <= 0 || rows <= 0) {
@@ -128,7 +128,7 @@ public class ArcDef {
 	/**
 	 * Checks if two archive definitions are equal.
 	 * Archive definitions are considered equal if they have the same number of steps
-	 * and the same consolidation function. It is not possible to create RRD file with two
+	 * and the same consolidation function. It is not possible to create RRD with two
 	 * equal archive definitions.
 	 * @param obj Archive definition to compare with.
 	 * @return <code>true</code> if archive definitions are equal,
@@ -157,4 +157,12 @@ public class ArcDef {
 		return false;
 	}
 
+	void setRows(int rows) {
+		this.rows = rows;
+	}
+
+	boolean exactlyEqual(ArcDef def) {
+		return consolFun.equals(def.consolFun) && xff == def.xff &&
+				steps == def.steps && rows == def.rows;
+	}
 }

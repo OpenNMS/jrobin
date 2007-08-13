@@ -26,6 +26,8 @@ package org.jrobin.mrtg.server;
 
 import org.jrobin.core.*;
 import org.jrobin.mrtg.Debug;
+import org.jrobin.mrtg.MrtgConstants;
+import org.jrobin.mrtg.MrtgException;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,7 +35,8 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
-class RrdWriter extends Thread {
+class RrdWriter extends Thread implements MrtgConstants {
+	private RrdDefTemplate rrdDefTemplate;
 	private int sampleCount, badSavesCount, goodSavesCount;
 	private List queue = Collections.synchronizedList(new LinkedList());
 
@@ -41,7 +44,15 @@ class RrdWriter extends Thread {
 
 	private volatile boolean active = true;
 
-	RrdWriter() {
+	RrdWriter() throws MrtgException {
+		// get definition from template
+		try {
+			rrdDefTemplate = new RrdDefTemplate(new File(Config.getRrdTemplateFile()));
+		} catch (IOException e) {
+			throw new MrtgException(e);
+		} catch (RrdException e) {
+			throw new MrtgException(e);
+		}
 		start();
 	}
 
@@ -107,16 +118,15 @@ class RrdWriter extends Thread {
 	}
 
 	static String getRrdFilename(String host, String ifDescr) {
-		String filename = ifDescr.replaceAll("[^0-9a-zA-Z]", "_") + "@" + host + ".rrd";
+		String filename = ifDescr.replaceAll("[^0-9a-zA-Z]", "_") +
+			"@" + host.replaceFirst(":", "_") + ".rrd";
 		return Config.getRrdDir() + filename;
 	}
 
-	void store(RawSample sample) {
+	synchronized void store(RawSample sample) {
 		queue.add(sample);
 		sampleCount++;
-		synchronized(this) {
-			notify();
-		}
+		notify();
 	}
 
 	private RrdDb openRrdFileFor(RawSample rawSample)
@@ -127,41 +137,26 @@ class RrdWriter extends Thread {
 		}
 		else {
 			// create RRD file first
-			final RrdDef rrdDef = new RrdDef(rrdFile);
-			rrdDef.setStep(300);
-			rrdDef.setStartTime(rawSample.getTimestamp() - 10);
-			rrdDef.addDatasource("in", "COUNTER", 600, Double.NaN, Double.NaN);
-			rrdDef.addDatasource("out", "COUNTER", 600, Double.NaN, Double.NaN);
-			rrdDef.addArchive("AVERAGE", 0.5, 1, 600);
-			rrdDef.addArchive("AVERAGE", 0.5, 6, 700);
-			rrdDef.addArchive("AVERAGE", 0.5, 24, 775);
-			rrdDef.addArchive("AVERAGE", 0.5, 288, 797);
-			rrdDef.addArchive("MAX", 0.5, 1, 600);
-			rrdDef.addArchive("MAX", 0.5, 6, 700);
-			rrdDef.addArchive("MAX", 0.5, 24, 775);
-			rrdDef.addArchive("MAX", 0.5, 288, 797);
-			rrdDef.addArchive("MIN", 0.5, 1, 600);
-			rrdDef.addArchive("MIN", 0.5, 6, 700);
-			rrdDef.addArchive("MIN", 0.5, 24, 775);
-			rrdDef.addArchive("MIN", 0.5, 288, 797);
-			Debug.print("Created: " + rrdFile);
+			rrdDefTemplate.setVariable("path", rrdFile);
+			RrdDef rrdDef = rrdDefTemplate.getRrdDef();
+			Debug.print("Creating: " + rrdFile);
 			return pool.requestRrdDb(rrdDef);
 		}
 	}
 
-	public int getSampleCount() {
+	int getSampleCount() {
 		return sampleCount;
 	}
 
-	public int getBadSavesCount() {
+	int getBadSavesCount() {
 		return badSavesCount;
 	}
 
-	public int getGoodSavesCount() {
+	int getGoodSavesCount() {
 		return goodSavesCount;
 	}
 
-	public int getSavesCount() {
+	int getSavesCount() {
 		return getGoodSavesCount() + getBadSavesCount();
 	}
 

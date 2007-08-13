@@ -8,7 +8,7 @@
  * (C) Copyright 2003, by Sasa Markovic.
  *
  * Developers:    Sasa Markovic (saxon@jrobin.org)
- *
+ *                Arne Vandamme (cobralord@jrobin.org)
  *
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation;
@@ -28,7 +28,6 @@ package org.jrobin.inspector;
 import org.jrobin.core.*;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.event.TreeSelectionEvent;
@@ -40,17 +39,13 @@ import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
 
-/**
- * Utility application (swing) to analyze, change and plot content of JRobin RRD files.
- */
-public class RrdInspector extends JFrame {
-	static final boolean SHOULD_CREATE_BACKUPS = true;
+class RrdInspector extends JFrame {
 	static final String TITLE = "RRD File Inspector";
 	static final boolean SHOULD_FIX_ARCHIVED_VALUES = false;
-	static final Dimension MAIN_TREE_SIZE = new Dimension(250, 400);
-	static final Dimension INFO_PANE_SIZE = new Dimension(450, 400);
-	static final String ABOUT = "JRobinLite project\nRrdInspector utility\n" +
-			"Copyright (C) 2003-2005 Sasa Markovic. All rights reserved.";
+	static final boolean SHOULD_CREATE_BACKUPS = true;
+
+	static Dimension MAIN_TREE_SIZE = new Dimension(250, 400);
+	static Dimension INFO_PANE_SIZE = new Dimension(450, 400);
 
 	JTabbedPane tabbedPane = new JTabbedPane();
 	private JTree mainTree = new JTree();
@@ -66,15 +61,23 @@ public class RrdInspector extends JFrame {
 	private RrdInspector(String path) {
 		super(TITLE);
 		constructUI();
-		pack();
-		Util.placeWindow(this);
-		setVisible(true);
-		if (path == null) {
+		showCentered();
+		if(path == null) {
 			selectFile();
 		}
 		else {
 			loadFile(new File(path));
 		}
+	}
+
+	private void showCentered() {
+		pack();
+		Toolkit t = Toolkit.getDefaultToolkit();
+		Dimension screenSize = t.getScreenSize(), frameSize = getPreferredSize();
+		double x = (screenSize.getWidth() - frameSize.getWidth()) / 2;
+		double y = (screenSize.getHeight() - frameSize.getHeight()) / 2;
+		setLocation((int) x, (int) y);
+		setVisible(true);
 	}
 
 	private void constructUI() {
@@ -130,11 +133,6 @@ public class RrdInspector extends JFrame {
 		dataTable.getColumnModel().getColumn(0).setPreferredWidth(100);
 		dataTable.getColumnModel().getColumn(0).setMaxWidth(100);
 		dataTable.getColumnModel().getColumn(1).setPreferredWidth(150);
-		dataTable.getColumnModel().getColumn(2).setCellRenderer(new DefaultTableCellRenderer() {
-			{
-				setBackground(Color.YELLOW);
-			}
-		});
 		spData.setPreferredSize(INFO_PANE_SIZE);
 		tabbedPane.add("Archive data", spData);
 
@@ -144,12 +142,9 @@ public class RrdInspector extends JFrame {
 		// MENU
 		////////////////////////////////////////
 		JMenuBar menuBar = new JMenuBar();
-
-		// FILE MENU
+		// FILE
 		JMenu fileMenu = new JMenu("File");
 		fileMenu.setMnemonic(KeyEvent.VK_F);
-
-		// Open file
 		JMenuItem fileMenuItem = new JMenuItem("Open RRD file...", KeyEvent.VK_O);
 		fileMenuItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -157,18 +152,7 @@ public class RrdInspector extends JFrame {
 			}
 		});
 		fileMenu.add(fileMenuItem);
-
-		// Open file in new window
-		JMenuItem fileMenuItem2 = new JMenuItem("Open RRD file in new window...");
-		fileMenuItem2.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				new RrdInspector(null);
-			}
-		});
-		fileMenu.add(fileMenuItem2);
 		fileMenu.addSeparator();
-
-		// Add datasource
 		JMenuItem addDatasourceMenuItem = new JMenuItem("Add datasource...");
 		addDatasourceMenuItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -176,8 +160,6 @@ public class RrdInspector extends JFrame {
 			}
 		});
 		fileMenu.add(addDatasourceMenuItem);
-
-		// Edit datasource
 		JMenuItem editDatasourceMenuItem = new JMenuItem("Edit datasource...");
 		editDatasourceMenuItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -185,8 +167,6 @@ public class RrdInspector extends JFrame {
 			}
 		});
 		fileMenu.add(editDatasourceMenuItem);
-
-		// Remove datasource
 		JMenuItem removeDatasourceMenuItem = new JMenuItem("Remove datasource");
 		removeDatasourceMenuItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -195,8 +175,6 @@ public class RrdInspector extends JFrame {
 		});
 		fileMenu.add(removeDatasourceMenuItem);
 		fileMenu.addSeparator();
-
-		// Add archive
 		JMenuItem addArchiveMenuItem = new JMenuItem("Add archive...");
 		addArchiveMenuItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -204,8 +182,6 @@ public class RrdInspector extends JFrame {
 			}
 		});
 		fileMenu.add(addArchiveMenuItem);
-
-		// Edit archive
 		JMenuItem editArchiveMenuItem = new JMenuItem("Edit archive...");
 		editArchiveMenuItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -213,8 +189,6 @@ public class RrdInspector extends JFrame {
 			}
 		});
 		fileMenu.add(editArchiveMenuItem);
-
-		// Remove archive
 		JMenuItem removeArchiveMenuItem = new JMenuItem("Remove archive...");
 		removeArchiveMenuItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -222,18 +196,7 @@ public class RrdInspector extends JFrame {
 			}
 		});
 		fileMenu.add(removeArchiveMenuItem);
-
-		// Plot archive values
-		JMenuItem plotArchiveMenuItem = new JMenuItem("Plot archive values...");
-		plotArchiveMenuItem.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				plotArchive();
-			}
-		});
-		fileMenu.add(plotArchiveMenuItem);
 		fileMenu.addSeparator();
-
-		// Exit
 		JMenuItem exitMenuItem = new JMenuItem("Exit", KeyEvent.VK_X);
 		exitMenuItem.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -241,39 +204,16 @@ public class RrdInspector extends JFrame {
 			}
 		});
 		fileMenu.add(exitMenuItem);
-
-		// HELP MENU
-		JMenu helpMenu = new JMenu("Help");
-		fileMenu.setMnemonic(KeyEvent.VK_H);
-
-		// About
-		JMenuItem aboutMenuItem = new JMenuItem("About...");
-		aboutMenuItem.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				about();
-			}
-		});
-		helpMenu.add(aboutMenuItem);
-
 		menuBar.add(fileMenu);
-		menuBar.add(helpMenu);
 		setJMenuBar(menuBar);
 
 		// finalize UI
-		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent e) {
-				closeWindow();
+				System.exit(0);
 			}
 		});
-	}
 
-	private void closeWindow() {
-		Util.dismissWindow(this);
-	}
-
-	private void about() {
-		JOptionPane.showMessageDialog(this, ABOUT, "About", JOptionPane.INFORMATION_MESSAGE);
 	}
 
 	private void nodeChangedAction() {
@@ -285,11 +225,9 @@ public class RrdInspector extends JFrame {
 				if (tabbedPane.getSelectedIndex() < 2) {
 					tabbedPane.setSelectedIndex(2);
 				}
-			}
-			else if (rrdNode.getDsIndex() >= 0) {
+			} else if (rrdNode.getDsIndex() >= 0) {
 				tabbedPane.setSelectedIndex(1);
-			}
-			else {
+			} else {
 				tabbedPane.setSelectedIndex(0);
 			}
 		}
@@ -311,26 +249,23 @@ public class RrdInspector extends JFrame {
 	private void selectFile() {
 		JFileChooser chooser = new JFileChooser(lastDirectory);
 		FileFilter filter = new FileFilter() {
-			public boolean accept(File file) {
-				String path = file.getAbsolutePath().toLowerCase();
-				return file.isDirectory() || path.endsWith(".rrd") ||
-						path.endsWith(".jrb") || path.endsWith(".jrobin");
+			public boolean accept(File f) {
+				return f.isDirectory() ? true :
+					f.getAbsolutePath().toLowerCase().endsWith(".rrd");
 			}
 
 			public String getDescription() {
-				return "JRobin RRD files (*.rrd;*.jrb;*.jrobin)";
+				return "JRobin RRD files";
 			}
 		};
 		chooser.setFileFilter(filter);
 		int returnVal = chooser.showOpenDialog(this);
 		if (returnVal == JFileChooser.APPROVE_OPTION) {
 			File file = chooser.getSelectedFile();
-			if (file != null) {
-				lastDirectory = file.getParent();
-				//inspectorModel.setFile(file);
-				//tabbedPane.setSelectedIndex(0);
-				loadFile(file);
-			}
+			lastDirectory = file.getParent();
+			//inspectorModel.setFile(file);
+			//tabbedPane.setSelectedIndex(0);
+			loadFile(file);
 		}
 	}
 
@@ -348,17 +283,16 @@ public class RrdInspector extends JFrame {
 		DsDef newDsDef = new EditDatasourceDialog(this, null).getDsDef();
 		if (newDsDef != null) {
 			// action
+			RrdToolkit toolkit = RrdToolkit.getInstance();
 			try {
 				String sourcePath = inspectorModel.getFile().getCanonicalPath();
-				RrdToolkit .addDatasource(sourcePath, newDsDef, SHOULD_CREATE_BACKUPS);
+				toolkit.addDatasource(sourcePath, newDsDef, SHOULD_CREATE_BACKUPS);
 				inspectorModel.refresh();
 				tabbedPane.setSelectedIndex(0);
-			}
-			catch (IOException e) {
-				Util.error(this, e);
-			}
-			catch (RrdException e) {
-				Util.error(this, e);
+			} catch (IOException e) {
+				Util.error(this, e.toString());
+			} catch (RrdException e) {
+				Util.error(this, e.toString());
 			}
 		}
 	}
@@ -371,17 +305,16 @@ public class RrdInspector extends JFrame {
 		ArcDef newArcDef = new EditArchiveDialog(this, null).getArcDef();
 		if (newArcDef != null) {
 			// action
+			RrdToolkit toolkit = RrdToolkit.getInstance();
 			try {
 				String sourcePath = inspectorModel.getFile().getCanonicalPath();
-				RrdToolkit.addArchive(sourcePath, newArcDef, SHOULD_CREATE_BACKUPS);
+				toolkit.addArchive(sourcePath, newArcDef, SHOULD_CREATE_BACKUPS);
 				inspectorModel.refresh();
 				tabbedPane.setSelectedIndex(0);
-			}
-			catch (IOException e) {
-				Util.error(this, e);
-			}
-			catch (RrdException e) {
-				Util.error(this, e);
+			} catch (IOException e) {
+				Util.error(this, e.toString());
+			} catch (RrdException e) {
+				Util.error(this, e.toString());
 			}
 		}
 	}
@@ -393,36 +326,31 @@ public class RrdInspector extends JFrame {
 		}
 		RrdNode rrdNode = getSelectedRrdNode();
 		int dsIndex = -1;
-		if (rrdNode == null || (dsIndex = rrdNode.getDsIndex()) < 0) {
+		if(rrdNode == null || (dsIndex = rrdNode.getDsIndex()) < 0) {
 			Util.error(this, "Select datasource first");
 			return;
 		}
 		try {
 			String sourcePath = inspectorModel.getFile().getCanonicalPath();
-			RrdDb rrd = new RrdDb(sourcePath, true);
-			try {
-				DsDef dsDef = rrd.getRrdDef().getDsDefs()[dsIndex];
-				rrd.close();
-				DsDef newDsDef = new EditDatasourceDialog(this, dsDef).getDsDef();
-				if (newDsDef != null) {
-					// action!
-					RrdToolkit.setDsHeartbeat(sourcePath, newDsDef.getDsName(),
-							newDsDef.getHeartbeat());
-					RrdToolkit.setDsMinMaxValue(sourcePath, newDsDef.getDsName(),
-							newDsDef.getMinValue(), newDsDef.getMaxValue(), SHOULD_FIX_ARCHIVED_VALUES);
-					inspectorModel.refresh();
-					tabbedPane.setSelectedIndex(0);
-				}
+			RrdDb rrd = new RrdDb(sourcePath);
+			DsDef dsDef = rrd.getRrdDef().getDsDefs()[dsIndex];
+			rrd.close();
+			DsDef newDsDef = new EditDatasourceDialog(this, dsDef).getDsDef();
+			if(newDsDef != null) {
+				// action!
+				RrdToolkit toolkit = RrdToolkit.getInstance();
+				toolkit.setDsHeartbeat(sourcePath, newDsDef.getDsName(),
+					newDsDef.getHeartbeat());
+				toolkit.setDsMinMaxValue(sourcePath, newDsDef.getDsName(),
+					newDsDef.getMinValue(), newDsDef.getMaxValue(),	SHOULD_FIX_ARCHIVED_VALUES);
+				inspectorModel.refresh();
+				tabbedPane.setSelectedIndex(0);
 			}
-			finally {
-				rrd.close();
-			}
-		}
-		catch (IOException e) {
-			Util.error(this, e);
-		}
-		catch (RrdException e) {
-			Util.error(this, e);
+			rrd.close();
+		} catch (IOException e) {
+			Util.error(this, e.toString());
+		} catch (RrdException e) {
+			Util.error(this, e.toString());
 		}
 	}
 
@@ -433,38 +361,33 @@ public class RrdInspector extends JFrame {
 		}
 		RrdNode rrdNode = getSelectedRrdNode();
 		int arcIndex = -1;
-		if (rrdNode == null || (arcIndex = rrdNode.getArcIndex()) < 0) {
+		if(rrdNode == null || (arcIndex = rrdNode.getArcIndex()) < 0) {
 			Util.error(this, "Select archive first");
 			return;
 		}
 		try {
 			String sourcePath = inspectorModel.getFile().getCanonicalPath();
-			RrdDb rrd = new RrdDb(sourcePath, true);
-			try {
-				ArcDef arcDef = rrd.getRrdDef().getArcDefs()[arcIndex];
-				rrd.close();
-				ArcDef newArcDef = new EditArchiveDialog(this, arcDef).getArcDef();
-				if (newArcDef != null) {
-					// action!
-					// fix X-files factor
-					RrdToolkit.setArcXff(sourcePath, newArcDef.getConsolFun(),
-							newArcDef.getSteps(), newArcDef.getXff());
-					// fix archive size
-					RrdToolkit.resizeArchive(sourcePath, newArcDef.getConsolFun(),
-							newArcDef.getSteps(), newArcDef.getRows(), SHOULD_CREATE_BACKUPS);
-					inspectorModel.refresh();
-					tabbedPane.setSelectedIndex(0);
-				}
+			RrdDb rrd = new RrdDb(sourcePath);
+			ArcDef arcDef = rrd.getRrdDef().getArcDefs()[arcIndex];
+			rrd.close();
+			ArcDef newArcDef = new EditArchiveDialog(this, arcDef).getArcDef();
+			if(newArcDef != null) {
+				// action!
+				RrdToolkit toolkit = RrdToolkit.getInstance();
+				// fix X-files factor
+				toolkit.setArcXff(sourcePath, newArcDef.getConsolFun(),
+					newArcDef.getSteps(), newArcDef.getXff());
+                // fix archive size
+				toolkit.resizeArchive(sourcePath, newArcDef.getConsolFun(),
+					newArcDef.getSteps(), newArcDef.getRows(), SHOULD_CREATE_BACKUPS);
+				inspectorModel.refresh();
+				tabbedPane.setSelectedIndex(0);
 			}
-			finally {
-				rrd.close();
-			}
-		}
-		catch (IOException e) {
-			Util.error(this, e);
-		}
-		catch (RrdException e) {
-			Util.error(this, e);
+			rrd.close();
+		} catch (IOException e) {
+			Util.error(this, e.toString());
+		} catch (RrdException e) {
+			Util.error(this, e.toString());
 		}
 	}
 
@@ -475,28 +398,23 @@ public class RrdInspector extends JFrame {
 		}
 		RrdNode rrdNode = getSelectedRrdNode();
 		int dsIndex = -1;
-		if (rrdNode == null || (dsIndex = rrdNode.getDsIndex()) < 0) {
+		if(rrdNode == null || (dsIndex = rrdNode.getDsIndex()) < 0) {
 			Util.error(this, "Select datasource first");
 			return;
 		}
 		try {
-			String sourcePath = inspectorModel.getFile().getCanonicalPath(), dsName;
-			RrdDb rrd = new RrdDb(sourcePath, true);
-			try {
-				dsName = rrd.getRrdDef().getDsDefs()[dsIndex].getDsName();
-			}
-			finally {
-				rrd.close();
-			}
-			RrdToolkit.removeDatasource(sourcePath, dsName, SHOULD_CREATE_BACKUPS);
+			String sourcePath = inspectorModel.getFile().getCanonicalPath();
+			RrdDb rrd = new RrdDb(sourcePath);
+			String dsName = rrd.getRrdDef().getDsDefs()[dsIndex].getDsName();
+			rrd.close();
+			RrdToolkit toolkit = RrdToolkit.getInstance();
+			toolkit.removeDatasource(sourcePath, dsName, SHOULD_CREATE_BACKUPS);
 			inspectorModel.refresh();
 			tabbedPane.setSelectedIndex(0);
-		}
-		catch (IOException e) {
-			Util.error(this, e);
-		}
-		catch (RrdException e) {
-			Util.error(this, e);
+		} catch (IOException e) {
+			Util.error(this, e.toString());
+		} catch (RrdException e) {
+			Util.error(this, e.toString());
 		}
 	}
 
@@ -507,48 +425,26 @@ public class RrdInspector extends JFrame {
 		}
 		RrdNode rrdNode = getSelectedRrdNode();
 		int arcIndex = -1;
-		if (rrdNode == null || (arcIndex = rrdNode.getArcIndex()) < 0) {
+		if(rrdNode == null || (arcIndex = rrdNode.getArcIndex()) < 0) {
 			Util.error(this, "Select archive first");
 			return;
 		}
 		try {
-			String sourcePath = inspectorModel.getFile().getCanonicalPath(), consolFun;
-			int steps;
-			RrdDb rrd = new RrdDb(sourcePath, true);
-			try {
-				ArcDef arcDef = rrd.getRrdDef().getArcDefs()[arcIndex];
-				consolFun = arcDef.getConsolFun();
-				steps = arcDef.getSteps();
-			}
-			finally {
-				rrd.close();
-			}
-			RrdToolkit.removeArchive(sourcePath, consolFun, steps, SHOULD_CREATE_BACKUPS);
+			String sourcePath = inspectorModel.getFile().getCanonicalPath();
+			RrdDb rrd = new RrdDb(sourcePath);
+			ArcDef arcDef = rrd.getRrdDef().getArcDefs()[arcIndex];
+			String consolFun = arcDef.getConsolFun();
+			int steps = arcDef.getSteps();
+			rrd.close();
+			RrdToolkit toolkit = RrdToolkit.getInstance();
+			toolkit.removeArchive(sourcePath, consolFun, steps, SHOULD_CREATE_BACKUPS);
 			inspectorModel.refresh();
 			tabbedPane.setSelectedIndex(0);
+		} catch (IOException e) {
+			Util.error(this, e.toString());
+		} catch (RrdException e) {
+			Util.error(this, e.toString());
 		}
-		catch (IOException e) {
-			Util.error(this, e);
-		}
-		catch (RrdException e) {
-			Util.error(this, e);
-		}
-	}
-
-	private void plotArchive() {
-		if (!inspectorModel.isOk()) {
-			Util.error(this, "Open a valid RRD file first.");
-			return;
-		}
-		RrdNode rrdNode = getSelectedRrdNode();
-		int arcIndex = -1;
-		if (rrdNode == null || (arcIndex = rrdNode.getArcIndex()) < 0) {
-			Util.error(this, "Select archive first");
-			return;
-		}
-		String sourcePath = inspectorModel.getFile().getAbsolutePath();
-		int dsIndex = rrdNode.getDsIndex();
-		new GraphFrame(sourcePath, dsIndex, arcIndex);
 	}
 
 	private static void printUsageAndExit() {
@@ -556,19 +452,11 @@ public class RrdInspector extends JFrame {
 		System.exit(1);
 	}
 
-	/**
-	 * <p>To start the application use the following syntax:</p>
-	 * <pre>
-	 * java -cp JRobinLite.jar org.jrobin.inspector.RrdInspector
-	 * java -cp JRobinLite.jar org.jrobin.inspector.RrdInspector [path to RRD file]
-	 * </pre>
-	 * @param args
-	 */
 	public static void main(String[] args) {
 		if (args.length > 1) {
 			printUsageAndExit();
 		}
-		String path = (args.length == 1) ? args[0] : null;
+		String path = (args.length == 1)? args[0]: null;
 		new RrdInspector(path);
 	}
 }

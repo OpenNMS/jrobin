@@ -2,8 +2,8 @@
  * JRobin : Pure java implementation of RRDTool's functionality
  * ============================================================
  *
- * Project Info:  http://www.sourceforge.net/projects/jrobin
- * Project Lead:  Sasa Markovic (saxon@eunet.yu);
+ * Project Info:  http://www.jrobin.org
+ * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
  * (C) Copyright 2003, by Sasa Markovic.
  *
@@ -34,7 +34,7 @@ import java.awt.event.WindowEvent;
 
 class HelpDialog extends JDialog {
 	static final String TITLE = "Help";
-	static final String HTML = "res/help.html";
+	static final String HTML = Client.RESOURCE_PATH + "help.html";
 	static final Dimension SIZE = new Dimension(600, 300);
 
 	HelpDialog(Frame parent) {

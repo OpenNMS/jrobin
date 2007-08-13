@@ -8,7 +8,7 @@
  * (C) Copyright 2003, by Sasa Markovic.
  *
  * Developers:    Sasa Markovic (saxon@jrobin.org)
- *
+ *                Arne Vandamme (cobralord@jrobin.org)
  *
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation;
@@ -35,7 +35,7 @@ import java.io.File;
 
 class MainTreeModel extends DefaultTreeModel {
 	private static final DefaultMutableTreeNode INVALID_NODE =
-			new DefaultMutableTreeNode("No valid RRD file specified");
+		new DefaultMutableTreeNode("No valid RRD file specified");
 
 	private File file;
 
@@ -46,35 +46,27 @@ class MainTreeModel extends DefaultTreeModel {
 	boolean setFile(File newFile) {
 		try {
 			file = newFile;
-			RrdDb rrd = new RrdDb(file.getAbsolutePath(), true);
-			try {
-				DefaultMutableTreeNode root = new DefaultMutableTreeNode(new RrdNode(rrd));
-				int dsCount = rrd.getRrdDef().getDsCount();
-				int arcCount = rrd.getRrdDef().getArcCount();
-				for (int dsIndex = 0; dsIndex < dsCount; dsIndex++) {
-					DefaultMutableTreeNode dsNode =
-							new DefaultMutableTreeNode(new RrdNode(rrd, dsIndex));
-					for (int arcIndex = 0; arcIndex < arcCount; arcIndex++) {
-						DefaultMutableTreeNode arcNode =
-								new DefaultMutableTreeNode(new RrdNode(rrd, dsIndex, arcIndex));
-						dsNode.add(arcNode);
-					}
-					root.add(dsNode);
+			RrdDb rrd = new RrdDb(file.getAbsolutePath());
+			DefaultMutableTreeNode root = new DefaultMutableTreeNode(new RrdNode(rrd));
+			int dsCount = rrd.getRrdDef().getDsCount();
+			int arcCount = rrd.getRrdDef().getArcCount();
+			for (int dsIndex = 0; dsIndex < dsCount; dsIndex++) {
+				DefaultMutableTreeNode dsNode =
+					new DefaultMutableTreeNode(new RrdNode(rrd, dsIndex));
+				for (int arcIndex = 0; arcIndex < arcCount; arcIndex++) {
+					DefaultMutableTreeNode arcNode =
+						new DefaultMutableTreeNode(new RrdNode(rrd, dsIndex, arcIndex));
+					dsNode.add(arcNode);
 				}
-				setRoot(root);
+				root.add(dsNode);
 			}
-			finally {
-				rrd.close();
-			}
+			rrd.close();
+			setRoot(root);
 			return true;
-		}
-		catch (IOException e) {
+		} catch (IOException e) {
 			setRoot(INVALID_NODE);
-			Util.error(null, e);
-		}
-		catch (RrdException e) {
+		} catch (RrdException e) {
 			setRoot(INVALID_NODE);
-			Util.error(null, e);
 		}
 		return false;
 	}

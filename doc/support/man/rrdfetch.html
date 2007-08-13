@@ -1,0 +1,114 @@
+<HTML><HEAD><TITLE>rrdfetch</TITLE><LINK rev=made href="mailto:compil@bi.mandrakesoft.com"></HEAD>
+<BODY><A name=__index__></A><!-- INDEX BEGIN --><!--
+
+<UL>
+
+	<LI><A HREF="#name">NAME</A></LI>
+	<LI><A HREF="#synopsis">SYNOPSIS</A></LI>
+	<LI><A HREF="#description">DESCRIPTION</A></LI>
+	<UL>
+
+		<LI><A HREF="#resolution interval">RESOLUTION INTERVAL</A></LI>
+		<LI><A HREF="#atstyle time specification">AT-STYLE TIME SPECIFICATION</A></LI>
+		<LI><A HREF="#time reference specification">TIME REFERENCE SPECIFICATION</A></LI>
+		<LI><A HREF="#time offset specification">TIME OFFSET SPECIFICATION</A></LI>
+		<LI><A HREF="#time specification examples">TIME SPECIFICATION EXAMPLES</A></LI>
+	</UL>
+
+	<LI><A HREF="#author">AUTHOR</A></LI>
+</UL>
+--><!-- INDEX END -->
+<P>
+<H1><A name=name>NAME</A></H1>
+<P>rrdtool fetch - fetch data from an rrd.</P>
+<DIV align=right><A href="rrdfetch.pdf">PDF</A> version.</DIV>
+<P>
+<HR>
+
+<H1><A name=synopsis>SYNOPSIS</A></H1>
+<P><STRONG>rrdtool</STRONG> <STRONG>fetch</STRONG> <EM>filename</EM> <EM>CF</EM> [<STRONG>--resolution</STRONG>|<STRONG>-r</STRONG>&nbsp;<EM>resolution</EM>] [<STRONG>--start</STRONG>|<STRONG>-s</STRONG>&nbsp;<EM>start</EM>] [<STRONG>--end</STRONG>|<STRONG>-e</STRONG>&nbsp;<EM>end</EM>]</P>
+<P>
+<HR>
+
+<H1><A name=description>DESCRIPTION</A></H1>
+<P>The <STRONG>fetch</STRONG> function is normally used internally by the graph function, to get data from <STRONG>RRD</STRONG>s. <STRONG>fetch</STRONG> will analyze the <STRONG>RRD</STRONG> and will try to retrieve the data in the resolution requested. The data fetched is printed to stdout. <EM>*UNKNOWN*</EM> data is often represented by the string ``NaN'' depending on your OSs printf function.</P>
+<DL>
+<DT><STRONG><A name=item_filename><EM>filename</EM></A></STRONG><BR>
+<DD>the name of the <STRONG>RRD</STRONG> you want to fetch the data from. 
+<P></P>
+<DT><STRONG><A name=item_CF><EM>CF</EM></A></STRONG><BR>
+<DD>which consolidation function should have been applied to the data you want to fetch? (AVERAGE,MIN,MAX,LAST) 
+<P></P>
+<DT><STRONG><A name=item_resolution><STRONG>--resolution</STRONG>|<STRONG>-r</STRONG> <EM>resolution</EM> (default is the highest resolution)</A></STRONG><BR>
+<DD>what interval should the values have (seconds per value). <STRONG>rrdfetch</STRONG> will try to match your request, but it will return data even if no absolute match is possible. <STRONG>NB.</STRONG> See note below. 
+<P></P>
+<DT><STRONG><A name=item_start><STRONG>--start</STRONG>|<STRONG>-s</STRONG> <EM>start</EM> (default end-1day)</A></STRONG><BR>
+<DD>when should the data begin. A time in seconds since epoch (1970-01-01) is required. Negative numbers are relative to the current time. By default one day worth of data will be fetched. See also AT-STYLE TIME SPECIFICATION section for a detailed explanation on ways to specify start time. 
+<P></P>
+<DT><STRONG><A name=item_end><STRONG>--end</STRONG>|<STRONG>-e</STRONG> <EM>end</EM> (default now)</A></STRONG><BR>
+<DD>when should the data end. Time in seconds since epoch. See also AT-STYLE TIME SPECIFICATION section for a detailed explanation of how to specify end time. 
+<P></P></DD></DL>
+<P>
+<H2><A name="resolution interval">RESOLUTION INTERVAL</A></H2>
+<P>In order to get rrdtool to fetch anything other than the finest resolution RRA <STRONG>both</STRONG> the start and end time must be specified on boundaries that are multiples of the wanted resolution. Consider the following example:</P><PRE> rrdtool create subdata.rrd -s 10 DS:ds0:GAUGE:300:0:U \
+  RRA:AVERAGE:0.5:30:3600 \
+  RRA:AVERAGE:0.5:90:1200 \
+  RRA:AVERAGE:0.5:360:1200 \
+  RRA:MAX:0.5:360:1200 \
+  RRA:AVERAGE:0.5:8640:600 \
+  RRA:MAX:0.5:8640:600</PRE>
+<P>This RRD collects data every 10 seconds and stores its averages over 5 minutes, 15 minutes, 1 hour and 1 day as well as the maxima for 1 hour and 1 day.</P>
+<P>Consider now that you want too fetch the 15 minute average data for last hour. So you might try</P><PRE> rrdtool fetch subdata.rrd AVERAGE -r 900 -s -1h</PRE>
+<P>However, this will almost always result in a time series that is <STRONG>NOT</STRONG> in the 15 minute RRA. Therefore the highest resolution RRA, i.e. 5 minute averages, will be chosen which, in this case, is not what you want.</P>
+<P>Hence, make sure that</P>
+<OL>
+<LI>both start and end time are a multiple of 900 
+<P></P>
+<LI>both start and end time are within the wanted RRA 
+<P></P></LI></OL>
+<P>So, if time now is called ``t'',</P><PRE> do end time == int(t/900)*900,
+ start time == end time -1hour, resolution == 900.</PRE>
+<P>In e.g. bash this could look as:</P><PRE> TIME=$(date +%s); RRDRES=900; rrdtool fetch subdata.rrd AVERAGE -r $RRDRES \
+ -e $(echo $(($TIME/$RRDRES*$RRDRES))) -s e-1h</PRE>
+<P>Or in perl:</P><PRE> perl -e '$ctime = time; $rrdres = 900; system "rrdtool fetch subdata.rrd AVERAGE \
+ -r $rrdres -e @{[int($ctime/$rrdres)*$rrdres]} -s e-1h"'</PRE>
+<P>
+<H2><A name="atstyle time specification">AT-STYLE TIME SPECIFICATION</A></H2>
+<P>Apart from the traditional <EM>Seconds since epoch</EM>, rrdtool does also understand at-style time specification. The specification is called ``at-style'' after Unix command <CODE>at(1)</CODE> that has moderately complex ways to specify time to run your job at. The at-style specification consists of two parts: <STRONG>TIME REFERENCE</STRONG> specification and <STRONG>TIME OFFSET</STRONG> specification.</P>
+<P>
+<H2><A name="time reference specification">TIME REFERENCE SPECIFICATION</A></H2>
+<P>Time reference specification is used, well,... to establish a reference moment in time (for time offset to be applied to). When present, it should come first, when omitted, it defaults to <STRONG>now</STRONG>. On its own part, time reference consists of <EM>time-of-day</EM> reference (which should come first, if present) and <EM>day</EM> reference.</P>
+<P><EM>Time-of-day</EM> can be specified as <STRONG>HH:MM</STRONG>, <STRONG>HH.MM</STRONG>, or just <STRONG>HH</STRONG>, you can suffix it with <STRONG>am</STRONG> or <STRONG>pm</STRONG> or use 24-hours clock. The few special times of day are understood as well, these include <STRONG>midnight</STRONG> (00:00), <STRONG>noon</STRONG> (12:00) and British <STRONG>teatime</STRONG> (16:00).</P>
+<P>The <EM>day</EM> can be specified as <EM>month-name</EM> <EM>day-of-the-month</EM> and optional 2- or 4-digit <EM>year</EM> number (e.g. March 8 1999). Alternatively, you can use <EM>day-of-week-name</EM> (e.g. Monday), or one of the words: <STRONG>yesterday</STRONG>, <STRONG>today</STRONG>, <STRONG>tomorrow</STRONG>. You can also specify <EM>day</EM> as a full date in several numerical formats; these include: <STRONG>MM/DD/[YY]YY</STRONG>, <STRONG>DD.MM.[YY]YY</STRONG>, <STRONG>YYYYMMDD</STRONG>.</P>
+<P><EM>NOTE1</EM>: this is different from the original <CODE>at(1)</CODE> behavior, which interprets a single-number date as MMDD[YY]YY.</P>
+<P><EM>NOTE2</EM>: if you specify <EM>day</EM> this way, the <EM>time-of-day</EM> is REQUIRED to be present.</P>
+<P>Finally, you can use words <STRONG>now</STRONG>, <STRONG>start</STRONG>, or <STRONG>end</STRONG> as your time reference. <STRONG>Now</STRONG> refers to the current moment (and is also a default time reference). <STRONG>Start</STRONG> (<STRONG>end</STRONG>) can be used to specify time relative to the start (end) time for those tools that use these categories (rrdfetch, rrdgraph).</P>
+<P>Month and weekday names can be used in their naturally abbreviated form (e.g., Dec for December, Sun for Sunday, etc.). The words <STRONG>now</STRONG>, <STRONG>start</STRONG>, <STRONG>end</STRONG> can be abbreviated to <STRONG>n</STRONG>, <STRONG>s</STRONG>, <STRONG>e</STRONG>.</P>
+<P>
+<H2><A name="time offset specification">TIME OFFSET SPECIFICATION</A></H2>
+<P>Time offset specification is used to add (or subtract) certain time interval to (from) the time reference moment. It consists of <EM>sign</EM> (<STRONG>+</STRONG>&nbsp;or&nbsp;<STRONG>-</STRONG>) and <EM>amount</EM>. The following time units can be used to specify the <EM>amount</EM>: <STRONG>years</STRONG>, <STRONG>months</STRONG>, <STRONG>weeks</STRONG>, <STRONG>days</STRONG>, <STRONG>hours</STRONG>, <STRONG>minutes</STRONG>, <STRONG>seconds</STRONG>, these can be used in singular or plural form, and abbreviated naturally or to a single letter (e.g. +3days, -1wk, -3y). Several time units can be combined together (e.g., -5mon1w2d), as well as several time offsets can be concatenated (e.g., -5h45min = -5h-45min = -6h+15min = -7h+1h30m-15min, etc.)</P>
+<P><EM>NOTE3</EM>: If you specify time offset in days, weeks, months, or years, you will end with the time offset that may vary depending on you time reference, because all those time units have no single well defined time interval value (1&nbsp;year contains either 365 or 366 days, 1&nbsp;month is 28 to 31 days long, and even 1&nbsp;day may be not equal to 24 hours twice a year, when DST-related clock adjustments take place). To cope with this, when you use days, weeks, months, or years as your time offset units your time reference date is adjusted accordingly without taking too much further effort to ensure anything about it (in the hope that <CODE>mktime(3)</CODE> will take care of this later). This may lead to some surprising (or even invalid!) results, e.g. 'May&nbsp;31&nbsp;-1month' = 'Apr&nbsp;31' (meaningless) = 'May&nbsp;1' (after <CODE>mktime(3)</CODE> normalization); in the EET timezone '3:30am Mar 29 1999 -1 day' yields '3:30am Mar 28 1999' (Sunday) which is invalid time/date combination (because of 3am -&gt; 4am DST forward clock adjustment, see the below example). On the other hand, hours, minutes, and seconds are well defined time intervals, and these are guaranteed to always produce time offsets exactly as specified (e.g. for EET timezone, '8:00&nbsp;Mar&nbsp;27&nbsp;1999&nbsp;+2&nbsp;days' = '8:00&nbsp;Mar&nbsp;29&nbsp;1999', but since there is 1-hour DST forward clock adjustment takes place around 3:00&nbsp;Mar&nbsp;28&nbsp;1999, the actual time interval between 8:00&nbsp;Mar&nbsp;27&nbsp;1999 and 8:00&nbsp;Mar&nbsp;29&nbsp;1999 equals 47 hours; on the other hand, '8:00&nbsp;Mar&nbsp;27&nbsp;1999&nbsp;+48&nbsp;hours' = '9:00&nbsp;Mar&nbsp;29&nbsp;1999', as expected)</P>
+<P><EM>NOTE4</EM>: The single-letter abbreviation for both <STRONG>months</STRONG> and <STRONG>minutes</STRONG> is <STRONG>m</STRONG>. To disambiguate, the parser tries to read your mind&nbsp;:) by applying the following two heuristics:</P>
+<OL>
+<LI>If <STRONG>m</STRONG> is used in context of (i.e. right after the) years, months, weeks, or days it is assumed to mean <STRONG>months</STRONG>, while in the context of hours, minutes, and seconds it means minutes. (e.g., in -1y6m or +3w1m <STRONG>m</STRONG> means <STRONG>months</STRONG>, while in -3h20m or +5s2m <STRONG>m</STRONG> means <STRONG>minutes</STRONG>) 
+<P></P>
+<LI>Out of context (i.e. right after the <STRONG>+</STRONG> or <STRONG>-</STRONG> sign) the meaning of <STRONG>m</STRONG> is guessed from the number it directly follows. Currently, if the number absolute value is below 25 it is assumed that <STRONG>m</STRONG> means <STRONG>months</STRONG>, otherwise it is treated as <STRONG>minutes</STRONG>. (e.g., -25m == -25 minutes, while +24m == +24 months) 
+<P></P></LI></OL>
+<P><EM>Final NOTES</EM>: Time specification is case-insensitive. Whitespace can be inserted freely or omitted altogether, there are, however, cases when whitespace is required (e.g., 'midnight&nbsp;Thu'). In this case you should either quote the whole phrase to prevent it from being taken apart by your shell or use '_' (underscore) or ',' (comma) which also count as whitespace (e.g., midnight_Thu or midnight,Thu)</P>
+<P>
+<H2><A name="time specification examples">TIME SPECIFICATION EXAMPLES</A></H2>
+<P><EM>Oct 12</EM> -- October 12 this year</P>
+<P><EM>-1month</EM> or <EM>-1m</EM> -- current time of day, only a month before (may yield surprises, see the NOTE3 above)</P>
+<P><EM>noon yesterday -3hours</EM> -- yesterday morning; can be put also as <EM>9am-1day</EM></P>
+<P><EM>23:59 31.12.1999</EM> -- 1 minute to the year 2000</P>
+<P><EM>12/31/99 11:59pm</EM> -- 1 minute to the year 2000 for imperialists</P>
+<P><EM>12am 01/01/01</EM> -- start of the new millennium</P>
+<P><EM>end-3weeks</EM> or <EM>e-3w</EM> -- 3 weeks before end time (may be used as start time specification)</P>
+<P><EM>start+6hours</EM> or <EM>s+6h</EM> -- 6 hours after start time (may be used as end time specification)</P>
+<P><EM>931225537</EM> -- 18:45 July 5th, 1999 (yes, seconds since 1970 are valid as well)</P>
+<P><EM>19970703 12:45</EM> -- 12:45 July 3th, 1997 (not quote standard, but I love this ...)</P>
+<P>
+<HR>
+
+<H1><A name=author>AUTHOR</A></H1>
+<P>Tobias Oetiker &lt;<A href="mailto:oetiker@ee.ethz.ch">oetiker@ee.ethz.ch</A>&gt;</P></BODY></HTML>

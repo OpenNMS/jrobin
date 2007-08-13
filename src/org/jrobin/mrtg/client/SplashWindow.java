@@ -2,8 +2,8 @@
  * JRobin : Pure java implementation of RRDTool's functionality
  * ============================================================
  *
- * Project Info:  http://www.sourceforge.net/projects/jrobin
- * Project Lead:  Sasa Markovic (saxon@eunet.yu);
+ * Project Info:  http://www.jrobin.org
+ * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
  * (C) Copyright 2003, by Sasa Markovic.
  *
@@ -40,7 +40,7 @@ class SplashWindow extends JWindow {
 	SplashWindow() {
 		JLabel imageLabel = new JLabel();
 		try {
-			imageLabel.setIcon(Resources.getImageIcon("res/logo.png"));
+			imageLabel.setIcon(Resources.getImageIcon(Client.RESOURCE_PATH + "logo.png"));
 		} catch (MrtgException e) {
 			// NOP
 		}

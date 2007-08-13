@@ -8,7 +8,7 @@
  * (C) Copyright 2003, by Sasa Markovic.
  *
  * Developers:    Sasa Markovic (saxon@jrobin.org)
- *
+ *                Arne Vandamme (cobralord@jrobin.org)
  *
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation;
@@ -35,10 +35,8 @@ import java.io.IOException;
 import java.io.File;
 
 class HeaderTableModel extends AbstractTableModel {
-	private static final Object[] DESCRIPTIONS = {
-		"path", "signature", "step", "last timestamp",
-		"datasources", "archives", "size"
-	};
+	private static final Object[] DESCRIPTIONS = {"path", "signature", "step", "last timestamp",
+												  "datasources", "archives", "size"};
 	private static final String[] COLUMN_NAMES = {"description", "value"};
 
 	private File file;
@@ -55,12 +53,10 @@ class HeaderTableModel extends AbstractTableModel {
 	public Object getValueAt(int rowIndex, int columnIndex) {
 		if (columnIndex == 0) {
 			return DESCRIPTIONS[rowIndex];
-		}
-		else if (columnIndex == 1) {
+		} else if (columnIndex == 1) {
 			if (values != null) {
 				return values[rowIndex];
-			}
-			else {
+			} else {
 				return "--";
 			}
 		}
@@ -71,36 +67,29 @@ class HeaderTableModel extends AbstractTableModel {
 		return COLUMN_NAMES[column];
 	}
 
-
 	void setFile(File newFile) {
 		try {
 			file = newFile;
 			values = null;
 			String path = file.getAbsolutePath();
-			RrdDb rrd = new RrdDb(path, true);
-			try {
-				Header header = rrd.getHeader();
-				String signature = header.getSignature();
-				String step = "" + header.getStep();
-				String lastTimestamp = header.getLastUpdateTime() + " [" +
-						new Date(header.getLastUpdateTime() * 1000L) + "]";
-				String datasources = "" + header.getDsCount();
-				String archives = "" + header.getArcCount();
-				String size = rrd.getRrdBackend().getLength() + " bytes";
-				values = new Object[]{
-					path, signature, step, lastTimestamp, datasources, archives, size
-				};
-			}
-			finally {
-				rrd.close();
-			}
+			RrdDb rrd = new RrdDb(path);
+			Header header = rrd.getHeader();
+			String signature = header.getSignature();
+			String step = "" + header.getStep();
+			String lastTimestamp = header.getLastUpdateTime() + " [" +
+				new Date(header.getLastUpdateTime() * 1000L) + "]";
+			String datasources = "" + header.getDsCount();
+			String archives = "" + header.getArcCount();
+			String size = rrd.getRrdBackend().getLength() + " bytes";
+			rrd.close();
+			values = new Object[]{
+				path, signature, step, lastTimestamp, datasources, archives, size
+			};
 			fireTableDataChanged();
-		}
-		catch (IOException e) {
-			Util.error(null, e);
-		}
-		catch (RrdException e) {
-			Util.error(null, e);
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (RrdException e) {
+			e.printStackTrace();
 		}
 	}
 }

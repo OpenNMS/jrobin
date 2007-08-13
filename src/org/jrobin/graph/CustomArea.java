@@ -28,6 +28,7 @@ import java.awt.Color;
 import java.util.HashMap;
 
 import org.jrobin.core.RrdException;
+import org.jrobin.core.XmlWriter;
 
 /**
  * <p>Class used to represent an area defined by two points in a graph.  The area is drawn as a rectangle 
@@ -86,7 +87,7 @@ class CustomArea extends PlotDef
 	 * @param stackValues Datapoint values of previous PlotDefs, used to stack on if necessary.
 	 * @param lastPlotType Type of the previous PlotDef, used to determine PlotDef type of a stack.
 	 */	
-	void draw( ChartGraphics g, int[] xValues, int[] stackValues, int lastPlotType ) throws RrdException
+	void draw( ChartGraphics g, int[] xValues, double[] stackValues, int lastPlotType ) throws RrdException
 	{
 		g.setColor( color );
 	
@@ -136,11 +137,11 @@ class CustomArea extends PlotDef
 		if ( yVal2 != Double.MAX_VALUE )
 			for (int i = 0; i < stackValues.length; i++)
 				if ( xValues[i] < ax || xValues[i] > nx ) 
-					stackValues[i] = 0;
+					stackValues[i] = g.getInverseY(0);
 				else
-					stackValues[i] = ny;
+					stackValues[i] = g.getInverseY(ny);
 	}
-	
+
 	/**
 	 * Retrieves the value for a specific point of the CustomArea.  The CustomArea is always a rectangle,
 	 * this means the returned double value will always be equal to the (Y) value of the second datapoint.
@@ -166,5 +167,20 @@ class CustomArea extends PlotDef
 
 	// Stubbed method, irrelevant for this PlotDef
 	void setSource( Source[] sources, HashMap sourceIndex ) throws RrdException {
+	}
+
+	// Stubbed, we don't need to set value for a Custom plotdef
+	void setValue( int tableRow, long preciseTime, long[] reducedTimestamps ) {
+	}
+
+	void exportXmlTemplate( XmlWriter xml, String legend ) {
+		xml.startTag("area");
+		xml.writeTag("time1", xVal1);
+		xml.writeTag("value1", yVal1);
+		xml.writeTag("time2", xVal2);
+		xml.writeTag("value2", yVal2);
+		xml.writeTag("color", color);
+		xml.writeTag("legend", legend);
+		xml.closeTag(); //area
 	}
 }

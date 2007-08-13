@@ -25,8 +25,10 @@
 package org.jrobin.graph;
 
 import java.util.Vector;
+import java.util.ArrayList;
 
 import org.jrobin.core.RrdException;
+import org.jrobin.core.XmlWriter;
 
 /**
  * <p>Represent a piece of aligned text to be drawn on the graph.</p>
@@ -41,6 +43,7 @@ class Comment
 	protected static final int CMT_DEFAULT	= 0;
 	protected static final int CMT_LEGEND	= 1;
 	protected static final int CMT_GPRINT	= 2;
+	protected static final int CMT_NOLEGEND	= 3;
 	
 	protected static final Byte TKN_ALF		= new Byte( (byte) 1);		// Align left with Linefeed
 	protected static final Byte TKN_ARF		= new Byte( (byte) 2);		// Align right with linefeed
@@ -58,7 +61,7 @@ class Comment
 	protected Byte lfToken					= TKN_ALF;
 	
 	protected String text;
-	protected Vector oList 					= new Vector();
+	protected ArrayList oList 				= new ArrayList(3);
 
 
 	// ================================================================
@@ -77,7 +80,9 @@ class Comment
 	Comment( String text ) throws RrdException
 	{
 		this.text = text;
-		parseComment();		
+		
+		if ( text != null )
+			parseComment();
 	}
 
 
@@ -221,10 +226,10 @@ class Comment
 	}
 	
 	/**
-	 * Retrieves a <code>Vector</code> containing all string/token pairs in order of <code>String</code> - <code>Byte</code>.
-	 * @return Vector containing all string/token pairs of this Comment.
+	 * Retrieves a <code>ArrayList</code> containing all string/token pairs in order of <code>String</code> - <code>Byte</code>.
+	 * @return ArrayList containing all string/token pairs of this Comment.
 	 */
-	Vector getTokens()
+	ArrayList getTokens()
 	{
 		return oList;
 	}
@@ -244,5 +249,13 @@ class Comment
 	
 	boolean trimString() {
 		return trimString;
+	}
+
+	String getText() {
+		return text;
+	}
+
+	void exportXmlTemplate(XmlWriter xml) {
+		xml.writeTag("comment", getText());
 	}
 }

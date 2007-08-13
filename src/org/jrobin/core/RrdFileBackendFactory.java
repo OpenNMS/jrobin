@@ -29,8 +29,8 @@ import java.io.IOException;
 import java.io.File;
 
 /**
- * Factory class which creates actual {@link RrdFileBackend} objects. This is the default
- * backend factory in JRobin.
+ * Factory class which creates actual {@link RrdFileBackend} objects. This was the default
+ * backend factory in JRobin before 1.4.0 release.
  */
 public class RrdFileBackendFactory extends RrdBackendFactory {
 	/** factory name, "FILE" */
@@ -41,8 +41,8 @@ public class RrdFileBackendFactory extends RrdBackendFactory {
 	 * @param path File path
 	 * @param readOnly True, if the file should be accessed in read/only mode.
 	 * False otherwise.
-	 * @param lockMode One of the following constants: {@link RrdDb.NO_LOCKS},
-	 * {@link RrdDb.EXCEPTION_IF_LOCKED} or {@link RrdDb.WAIT_IF_LOCKED}.
+	 * @param lockMode One of the following constants: {@link RrdDb#NO_LOCKS},
+	 * {@link RrdDb#EXCEPTION_IF_LOCKED} or {@link RrdDb#WAIT_IF_LOCKED}.
 	 * @return RrdFileBackend object which handles all I/O operations for the given file path
 	 * @throws IOException Thrown in case of I/O error.
 	 */
@@ -60,19 +60,10 @@ public class RrdFileBackendFactory extends RrdBackendFactory {
 	}
 
 	/**
-	 * Removes the file from the disk.
-	 * @param path File path
-	 * @return True, if the file is deleted, false otherwise.
-	 */
-	protected boolean delete(String path) {
-		return new File(path).delete();
-	}
-
-	/**
 	 * Returns the name of this factory.
 	 * @return Factory name (equals to string "FILE")
 	 */
-	protected String getFactoryName() {
+	public String getFactoryName() {
 		return NAME;
 	}
 }

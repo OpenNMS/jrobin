@@ -27,7 +27,7 @@ package org.jrobin.graph;
 /**
  * <p>Plottable Def, reprents a custom datasource that can be graphed by JRobin.
  * All the Pdef needs, is a reference to a Plottable class, and it will get the datapoint values (based
- * on timestamps) from that external class.  Any class implementing the public Plottable interface will do,
+ * on timestamps) from that external class.  Any class extending the public Plottable class will do,
  * meaning that the class could get its values from ANY source... like a RDBMS for example.
  * </p>
  * 
@@ -35,18 +35,26 @@ package org.jrobin.graph;
  */
 class Pdef extends Source
 {
+	// ================================================================
+	// -- Members
+	// ================================================================
 	private Plottable plottable;
 	
 	private int index 				= 0;
 	private String sourceName		= null;
 	private boolean indexed 		= false;
 	private boolean named			= false;
-		
+
+
+	// ================================================================
+	// -- Constructors
+	// ================================================================
 	/**
 	 * Constructs a new Plottable Def: a custom external datasource 
 	 * (represented as a Plottable class) that can be graphed by JRobin.
+	 * 
 	 * @param name Name of the datasource in the graph definition.
-	 * @param plottable Reference to the class implementing the Plottable interface and providing the datapoints.
+	 * @param plottable Reference to the class extending Plottable and providing the datapoints.
 	 */
 	Pdef( String name, Plottable plottable ) 
 	{
@@ -57,8 +65,9 @@ class Pdef extends Source
 	/**
 	 * Constructs a new Plottable Def: a custom external datasource 
 	 * (represented as a Plottable class) that can be graphed by JRobin.
+	 *
 	 * @param name Name of the datasource in the graph definition.
-	 * @param plottable Reference to the class implementing the Plottable interface and providing the datapoints.
+	 * @param plottable Reference to the class extending Plottable and providing the datapoints.
 	 * @param index Integer number used for referring to the series of datapoints to use in the Plottable class.
 	 */
 	Pdef( String name, Plottable plottable, int index ) 
@@ -72,8 +81,9 @@ class Pdef extends Source
 	/**
 	 * Constructs a new Plottable Def: a custom external datasource 
 	 * (represented as a Plottable class) that can be graphed by JRobin.
+	 *
 	 * @param name Name of the datasource in the graph definition.
-	 * @param plottable Reference to the class implementing the Plottable interface and providing the datapoints.
+	 * @param plottable Reference to the class extending Plottable and providing the datapoints.
 	 * @param sourceName String used for referring to the series of datapoints to use in the Plottable class.
 	 */
 	Pdef( String name, Plottable plottable, String sourceName) 
@@ -84,33 +94,49 @@ class Pdef extends Source
 		named			= true;
 	}
 
+
+	// ================================================================
+	// -- Protected methods
+	// ================================================================
 	/**
 	 * Prepares the array that will hold the values.
+	 *
 	 * @param numPoints Number of datapoints that will be used.
 	 */
-	void prepare( int numPoints )
+	void prepare( int numPoints, int aggregatePoints )
 	{
 		// Create values table of correct size
-		values = new double[numPoints];
+		values 					= new double[numPoints];
+
+		// Set the number of points that should be used for aggregate calculation
+		this.aggregatePoints	= aggregatePoints;
 	}
 	
 	/**
 	 * Sets the value of a specific datapoint for this Pdef.  The Pdef gets the datapoint by retrieving
 	 * the value from the Plottable interface using an appropriate getValue() method.
+	 *
 	 * @param pos Position (index in the value table) of the new datapoint.
 	 * @param timestamp Timestamp of the new datapoint in number of seconds.
 	 */
 	void set( int pos, long timestamp )
 	{
 		double val = Double.NaN;
-		
+
+		/**
+		 * With the new calculation algorithm we expect the value for a period to be defined
+		 * by the first timestamp AFTER that period.  The implementation of Pdef is different,
+		 * and works with 'point' value instead of period.  Converted to period this would mean
+		 * that the period is defined by the starting timestamp, or another timestamp IN that
+		 * period.  As a result, we shift the requested timestamp one step back in time.
+		 */
 		if ( indexed )
-			val = plottable.getValue( timestamp, index );
+			val = plottable.getValue( timestamp - step, index );
 		else if ( named )
-			val = plottable.getValue( timestamp, sourceName );
+			val = plottable.getValue( timestamp - step, sourceName );
 		else
-			val = plottable.getValue( timestamp );
-		
+			val = plottable.getValue( timestamp - step );
+
 		super.set( pos, timestamp, val );
 		
 		values[pos] = val;

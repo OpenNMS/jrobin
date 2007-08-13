@@ -2,8 +2,8 @@
  * JRobin : Pure java implementation of RRDTool's functionality
  * ============================================================
  *
- * Project Info:  http://www.sourceforge.net/projects/jrobin
- * Project Lead:  Sasa Markovic (saxon@eunet.yu);
+ * Project Info:  http://www.jrobin.org
+ * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
  * (C) Copyright 2003, by Sasa Markovic.
  *
@@ -40,11 +40,11 @@ class TreeRenderer extends DefaultTreeCellRenderer {
 
 	static {
 		try {
-			MRTG_ICON = Resources.getImageIcon("res/mrtg.png");
-			ROUTER_ICON = Resources.getImageIcon("res/router.png");
-			LINK_ICON = Resources.getImageIcon("res/link.png");
-			INACTIVE_ROUTER_ICON = Resources.getImageIcon("res/router_inactive.png");
-			INACTIVE_LINK_ICON = Resources.getImageIcon("res/link_inactive.png");
+			MRTG_ICON = Resources.getImageIcon(Client.RESOURCE_PATH + "mrtg.png");
+			ROUTER_ICON = Resources.getImageIcon(Client.RESOURCE_PATH + "router.png");
+			LINK_ICON = Resources.getImageIcon(Client.RESOURCE_PATH + "link.png");
+			INACTIVE_ROUTER_ICON = Resources.getImageIcon(Client.RESOURCE_PATH + "router_inactive.png");
+			INACTIVE_LINK_ICON = Resources.getImageIcon(Client.RESOURCE_PATH + "link_inactive.png");
 		} catch (MrtgException e) {
 			e.printStackTrace();
 		}

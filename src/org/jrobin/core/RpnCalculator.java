@@ -2,8 +2,8 @@
  * JRobin : Pure java implementation of RRDTool's functionality
  * ============================================================
  *
- * Project Info:  http://www.sourceforge.net/projects/jrobin
- * Project Lead:  Sasa Markovic (saxon@eunet.yu);
+ * Project Info:  http://www.jrobin.org
+ * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
  * (C) Copyright 2003, by Sasa Markovic.
  *
@@ -22,6 +22,7 @@
  * library; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+
 package org.jrobin.core;
 
 import java.util.StringTokenizer;
@@ -396,9 +397,11 @@ class RpnCalculator {
 		}
 	}
 
+/*
 	public static void main(String[] args) throws RrdException {
 		RpnCalculator c = new RpnCalculator("2,3,/,value,+");
 		c.setValue(5);
 		System.out.println(c.calculate());
 	}
+*/
 }

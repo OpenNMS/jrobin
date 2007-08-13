@@ -2,8 +2,8 @@
  * JRobin : Pure java implementation of RRDTool's functionality
  * ============================================================
  *
- * Project Info:  http://www.sourceforge.net/projects/jrobin
- * Project Lead:  Sasa Markovic (saxon@eunet.yu);
+ * Project Info:  http://www.jrobin.org
+ * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
  * (C) Copyright 2003, by Sasa Markovic.
  *
@@ -219,6 +219,7 @@ class MrtgData {
 		info.setGoodSavesCount(Integer.parseInt(serverInfo.get("goodSavesCount").toString()));
 		info.setSavesCount(Integer.parseInt(serverInfo.get("savesCount").toString()));
 		info.setSampleCount(Integer.parseInt(serverInfo.get("sampleCount").toString()));
+		info.setPoolEfficency(Double.parseDouble(serverInfo.get("poolEfficency").toString()));
 		info.setStartDate((Date)serverInfo.get("startDate"));
 		return info;
 	}

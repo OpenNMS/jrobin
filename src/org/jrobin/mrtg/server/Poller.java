@@ -29,9 +29,7 @@ import snmp.*;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.SocketException;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
 class Poller {
 	static final int SNMP_TIMEOUT = 10; // seconds
@@ -56,14 +54,24 @@ class Poller {
 	// state variables
 	private SNMPv1CommunicationInterface comm;
 
-    public Poller(String host, String community)
+    Poller(String host, String community)
 		throws IOException {
-		InetAddress hostAddress = InetAddress.getByName(host);
-		comm = new SNMPv1CommunicationInterface(0, hostAddress, community);
+		// check for port information
+		String snmpHost = host;
+		int snmpPort = SNMPv1CommunicationInterface.DEFAULT_SNMPPORT;
+		int colonIndex = host.indexOf(":");
+		if(colonIndex != -1) {
+			// port specified
+            snmpHost = host.substring(0, colonIndex);
+			String portStr = host.substring(colonIndex + 1);
+			snmpPort = Integer.parseInt(portStr);
+		}
+		InetAddress snmpHostAddress = InetAddress.getByName(snmpHost);
+		comm = new SNMPv1CommunicationInterface(0, snmpHostAddress, community, snmpPort);
 		comm.setSocketTimeout(SNMP_TIMEOUT * 1000);
     }
 
-    public String getNumericOid(String oid) {
+    String getNumericOid(String oid) {
     	int n = OIDS.length;
     	for(int i = 0; i < n; i++) {
     		String name = OIDS[i][0], value = OIDS[i][1];
@@ -75,7 +83,7 @@ class Poller {
     	return oid;
     }
 
-	public String get(String oid) throws IOException {
+	String get(String oid) throws IOException {
 		String numericOid = getNumericOid(oid);
 		try {
 	    	SNMPVarBindList newVars = comm.getMIBEntry(numericOid);
@@ -91,11 +99,11 @@ class Poller {
 		}
 	}
 
-	public String get(String oid, int index) throws IOException {
+	String get(String oid, int index) throws IOException {
 		return get(oid + "." + index);
 	}
 
-	public String[] get(String[] oids) throws IOException {
+	String[] get(String[] oids) throws IOException {
 		int count = oids.length;
 		String[] result = new String[count];
 		for(int i = 0; i < count; i++) {
@@ -104,8 +112,8 @@ class Poller {
 		return result;
 	}
 
-	public Map walk(String base) throws IOException {
-		TreeMap map = new TreeMap();
+	SortedMap walk(String base) throws IOException {
+		SortedMap map = new TreeMap();
 		String baseOid = getNumericOid(base);
 		String currentOid = baseOid;
 		try {
@@ -132,8 +140,30 @@ class Poller {
 		return map;
 	}
 
-	public int getIfIndexByIfDescr(String ifDescr) throws IOException {
-		Map map = walk("ifDescr");
+	SortedMap walkIfDescr() throws IOException {
+		SortedMap rawInterfacesMap = walk("ifDescr");
+		SortedMap enumeratedInterfacesMap = new TreeMap();
+		Collection enumeratedInterfaces = enumeratedInterfacesMap.values();
+		// check for duplicate interface names
+		// append integer suffix to duplicated name
+		Iterator iter = rawInterfacesMap.keySet().iterator();
+		while(iter.hasNext()) {
+			Integer ifIndex = (Integer) iter.next();
+			String ifDescr = (String) rawInterfacesMap.get(ifIndex);
+			if(enumeratedInterfaces.contains(ifDescr)) {
+				int ifDescrSuffix = 1;
+				while(enumeratedInterfaces.contains(ifDescr + "#" + ifDescrSuffix)) {
+					ifDescrSuffix++;
+				}
+				ifDescr += "#" + ifDescrSuffix;
+			}
+			enumeratedInterfacesMap.put(ifIndex, ifDescr);
+		}
+		return enumeratedInterfacesMap;
+	}
+
+	int getIfIndexByIfDescr(String ifDescr) throws IOException {
+		SortedMap map = walkIfDescr();
 		Iterator it = map.keySet().iterator();
 		while(it.hasNext()) {
 			Integer ix = (Integer) it.next();
@@ -145,7 +175,7 @@ class Poller {
 		return -1;
 	}
 
-	public void close() {
+	void close() {
 		if(comm != null) {
 			try {
 				comm.closeConnection();

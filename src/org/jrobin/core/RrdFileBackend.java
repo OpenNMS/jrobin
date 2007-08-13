@@ -30,29 +30,49 @@ import java.io.RandomAccessFile;
 import java.io.File;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
+import java.util.HashSet;
 
 /**
- * Default JRobin backend which is used to store RRD data to ordinary files on the disk.<p>
+ * JRobin backend which is used to store RRD data to ordinary files on the disk. This was the
+ * default factory before 1.4.0 version<p>
  *
  * This backend is based on the RandomAccessFile class (java.io.* package).
  */
 public class RrdFileBackend extends RrdBackend {
 	static final long LOCK_DELAY = 100; // 0.1sec
 
+	private static HashSet openFiles = new HashSet();
+
 	protected RandomAccessFile file;
+	protected FileChannel channel;
 	protected FileLock fileLock;
 
-	RrdFileBackend(String path, boolean readOnly, int lockMode) throws IOException {
+	protected RrdFileBackend(String path, boolean readOnly, int lockMode) throws IOException {
 		super(path);
 		file = new RandomAccessFile(path, readOnly? "r": "rw");
-		lockFile(lockMode);
+		channel = file.getChannel();
+		if(!readOnly) {
+			lockFile(lockMode);
+			// We'll try to lock the file only in "rw" mode
+			registerWriter(path);
+		}
+	}
+
+	private static synchronized void registerWriter(String path) throws IOException {
+		String canonicalPath = getCanonicalPath(path);
+		if(openFiles.contains(canonicalPath)) {
+			throw new IOException("File \"" + path + "\" already open for R/W access. " +
+					"You cannot open the same file for R/W access twice");
+		}
+		else {
+			openFiles.add(canonicalPath);
+		}
 	}
 
 	private void lockFile(int lockMode) throws IOException {
 		if(lockMode == RrdDb.WAIT_IF_LOCKED || lockMode == RrdDb.EXCEPTION_IF_LOCKED) {
-			FileChannel fileChannel = file.getChannel();
 			do {
-				fileLock = fileChannel.tryLock();
+				fileLock = channel.tryLock();
 				if(fileLock == null) {
 					// could not obtain lock
 					if(lockMode == RrdDb.WAIT_IF_LOCKED) {
@@ -77,8 +97,16 @@ public class RrdFileBackend extends RrdBackend {
 	 * @throws IOException Thrown in case of I/O error
 	 */
 	public void close() throws IOException {
+		super.close(); // calls sync()
+		unregisterWriter(getPath());
 		unlockFile();
+		channel.close();
 		file.close();
+	}
+
+	private static synchronized void unregisterWriter(String path) throws IOException {
+		String canonicalPath = getCanonicalPath(path);
+		openFiles.remove(canonicalPath);
 	}
 
 	private void unlockFile() throws IOException {

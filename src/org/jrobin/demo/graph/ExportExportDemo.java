@@ -52,17 +52,7 @@ public class ExportExportDemo
 
 	private static void prepare( String[] args )
 	{
-		if ( args.length != 1 )
-		{
-			println( "Usage: ExportExportDemo <path_to_demo_resources>" );
-			println( "  The only argument to this program should be the path to the JRobin" );
-			println( "  demo resources.  These are normally included in the JRobin distribution" );
-			println( "  in the <jrobin>/res/demo directory." );
-
-			System.exit( 1 );
-		}
-
-		demoResources = new File(args[0]).getAbsolutePath() + "/";
+		demoResources = Util.getJRobinHomeDirectory() + "/res/demo/";
 	}
 
 	public static void main( String[] args ) throws RrdException, IOException

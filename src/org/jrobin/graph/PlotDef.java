@@ -24,10 +24,11 @@
  */
 package org.jrobin.graph;
 
-import java.awt.Color;
+import java.awt.*;
 import java.util.HashMap;
 
 import org.jrobin.core.RrdException;
+import org.jrobin.core.XmlWriter;
 
 /**
  * <p>Class used to represent a drawn datasource in the graph.
@@ -41,19 +42,21 @@ abstract class PlotDef
 	// ================================================================
 	// -- Members
 	// ================================================================
-	protected static final int PLOT_LINE 	= 0;
-	protected static final int PLOT_AREA 	= 1;
-	protected static final int PLOT_STACK	= 2;
-	
-	protected boolean visible 				= true;
-	protected boolean stacked				= false;
-	protected int plotType					= PLOT_LINE;	// Unknown plotdef is a line
+	protected static final int PLOT_LINE 		= 0;
+	protected static final int PLOT_AREA 		= 1;
+	protected static final int PLOT_STACK		= 2;
+	protected static final BasicStroke STROKE	= new BasicStroke();
+
+	protected boolean visible 					= true;
+	protected boolean stacked					= false;
+	protected int plotType						= PLOT_LINE;	// Unknown plotdef is a line
 		
-	protected String sourceName				= "";
-	protected Source source					= null;
-	protected Color color					= Color.BLACK;	// Default color is black
-	
-	
+	protected String sourceName					= "";
+	protected Source source						= null;
+	protected Color color						= Color.BLACK;	// Default color is black
+
+	protected double[] values					= null;
+
 	// ================================================================
 	// -- Constructors
 	// ================================================================
@@ -84,15 +87,15 @@ abstract class PlotDef
 	 * @param stacked True if this PlotDef is stacked on the previous one, false if not.
 	 * @param visible True if this PlotDef should be graphed, false if not.
 	 */
-	PlotDef( Source source, Color color, boolean stacked, boolean visible )
+	PlotDef( Source source, double[] values, Color color, boolean stacked, boolean visible )
 	{
 		this.source		= source;
+		this.values		= values;
 		this.color		= color;
 		this.stacked	= stacked;
 		this.visible	= visible;
 	}
-	
-	
+
 	// ================================================================
 	// -- Protected methods
 	// ================================================================	
@@ -110,7 +113,17 @@ abstract class PlotDef
 		else
 			throw new RrdException( "Invalid DEF or CDEF: " + sourceName );
 	}
-	
+
+	void prepareValues( int arraySize )
+	{
+		values = new double[ arraySize ];
+	}
+
+	void setValue( int tableRow, long preciseTime, long[] reducedTimestamps )
+	{
+		values[ tableRow ] = source.get( preciseTime, reducedTimestamps );
+	}
+
 	/**
 	 * Retrieves the value for a specific datapoint of the PlotDef.
 	 * @param tblPos Table index of the datapoint to be retrieved.
@@ -119,14 +132,14 @@ abstract class PlotDef
 	 */
 	double getValue( int tblPos, long[] timestamps )
 	{
-		return source.values[tblPos];	
+		return source.get( tblPos );	
 	}
 	
 	/**
 	 * Abstract draw method, must be implemented in all child classes.
 	 * This method is responsible for the actual drawing of the PlotDef.
 	 */
-	abstract void draw( ChartGraphics g, int[] xValues, int[] stackValues, int lastPlotType ) throws RrdException;
+	abstract void draw( ChartGraphics g, int[] xValues, double[] stackValues, int lastPlotType ) throws RrdException;
 	
 	Source getSource() {
 		return source;
@@ -142,5 +155,9 @@ abstract class PlotDef
 	
 	Color getColor() {
 		return color;
+	}
+
+	void exportXmlTemplate(XmlWriter xml, String legend) {
+
 	}
 }

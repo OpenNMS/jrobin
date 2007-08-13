@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.StringTokenizer;
 
 import org.jrobin.core.RrdException;
+import org.jrobin.core.XmlWriter;
 
 /**
  * <p>Represents a 'calculated' datasource for a graph.  A calculated datasource is always based on a RPN
@@ -49,7 +50,19 @@ class Cdef extends Source
 	
 	// ================================================================
 	// -- Constructors
-	// ================================================================	
+	// ================================================================
+	/**
+	 * Constructs a new simple Cdef object based on an empty RPN expression,.
+	 *
+	 * @param name Name of the datasource in the graph definition.
+	 */
+	Cdef( String name )
+	{
+		super( name );
+
+		strTokens	= new String[0];
+	}
+
 	/**
 	 * Constructs a new Cdef object holding a number of datapoints for a graph.
 	 * A Cdef is always based on a RPN expression holding the calculation algorithm.
@@ -79,11 +92,12 @@ class Cdef extends Source
 	 * @param numPoints Number of points used as graph resolution (size of the value table).
 	 * @throws RrdException Thrown in case of a JRobin specific error.
 	 */	
-	void prepare( HashMap sourceIndex, int numPoints ) throws RrdException
+	void prepare( HashMap sourceIndex, int numPoints, int aggregatePoints ) throws RrdException
 	{
 		// Create values table of correct size
-		values = new double[numPoints];
-		
+		values 					= new double[numPoints];
+		this.aggregatePoints	= aggregatePoints;
+
 		// Parse rpn expression for better performance
 		String tkn;
 		
@@ -177,16 +191,40 @@ class Cdef extends Source
 				tokens[i]		= RpnCalculator.TKN_OR;
 			else if ( tkn.equals("XOR") )
 				tokens[i]		= RpnCalculator.TKN_XOR;
+			// Extra tokens for JRobin
+			else if ( tkn.equals("SAMPLES") )
+				tokens[i]		= RpnCalculator.TKN_SAMPLES;
+			else if ( tkn.equals("STEP") )
+				tokens[i]		= RpnCalculator.TKN_STEP;
 			else
-				throw new RrdException("Unknown token enocuntered: " + tkn);	
+				throw new RrdException("Unknown token encountered: " + tkn);	
 			
 		}
 	}
 
 	/**
+	 * Returns the level this Cdef would have in the calculation tree.  The level defines when
+	 * the Cdef can be calculated.  The level depends on the number of Sdefs this Cdef is depending
+	 * on, and their corresponding calculation levels.
+	 *
+	 * @param levels Array containing the previously calculated calculation levels.
+	 * @return Level of this Sdef in the calculation tree.
+	 */
+	int calculateLevel( int[] levels )
+	{
+		int level 	= 0;
+
+		for ( int i = 0; i < dsIndices.length; i++ )
+			if ( levels[ dsIndices[i] ] > level )
+				level = levels[ dsIndices[i] ];
+
+		return level;
+	}
+
+	/**
 	 * Sets the value of a specific datapoint for this Cdef.
 	 * @param pos Position (index in the value table) of the new datapoint.
-	 * @param time Timestamp of the new datapoint in number of seconds.
+	 * @param timestamp Timestamp of the new datapoint in number of seconds.
 	 * @param val Double value of the new datapoint.
 	 */
 	void set( int pos, long timestamp, double val )
@@ -207,6 +245,18 @@ class Cdef extends Source
 		return dsIndices;
 	}
 	
+	String getRpnString()
+	{
+		StringBuffer tmpStr = new StringBuffer("");
+		for (int i = 0; i < strTokens.length - 1; i++) {
+			tmpStr.append( strTokens[i] );
+			tmpStr.append( ',' );
+		}
+		if ( strTokens.length > 0 )
+			tmpStr.append( strTokens[strTokens.length - 1] );
+		
+		return tmpStr.toString();
+	}
 	
 	// ================================================================
 	// -- Private methods
@@ -227,5 +277,12 @@ class Cdef extends Source
 		catch (NumberFormatException nfe) {
 			return false;
 		}
+	}
+
+	void exportXml(XmlWriter xml) {
+		xml.startTag("def");
+		xml.writeTag("name", getName());
+		xml.writeTag("rpn", getRpnString());
+		xml.closeTag(); // def
 	}
 }

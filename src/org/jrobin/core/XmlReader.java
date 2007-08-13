@@ -2,8 +2,8 @@
  * JRobin : Pure java implementation of RRDTool's functionality
  * ============================================================
  *
- * Project Info:  http://www.sourceforge.net/projects/jrobin
- * Project Lead:  Sasa Markovic (saxon@eunet.yu);
+ * Project Info:  http://www.jrobin.org
+ * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
  * (C) Copyright 2003, by Sasa Markovic.
  *
@@ -25,51 +25,32 @@
 
 package org.jrobin.core;
 
-import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
-
-import javax.xml.parsers.*;
 import java.io.IOException;
 import java.io.File;
-import java.util.ArrayList;
 
-class XmlReader {
+class XmlReader extends DataImporter {
 
 	private Element root;
 	private Node[] dsNodes, arcNodes;
 
     XmlReader(String xmlFilePath) throws IOException, RrdException {
-		try {
-			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-			factory.setValidating(false);
-			factory.setNamespaceAware(false);
-			DocumentBuilder builder = factory.newDocumentBuilder();
-			Document doc = builder.parse(new File(xmlFilePath));
-			root = doc.getDocumentElement();
-			dsNodes = getChildNodes(root, "ds");
-			arcNodes = getChildNodes(root, "rra");
-		} catch (FactoryConfigurationError e) {
-			throw new RrdException("XML error: " + e);
-		} catch (ParserConfigurationException e) {
-			throw new RrdException("XML error: " + e);
-		} catch (SAXException e) {
-			throw new RrdException("XML error: " + e);
-		}
+		root = Util.Xml.getRootElement(new File(xmlFilePath));
+		dsNodes = Util.Xml.getChildNodes(root, "ds");
+		arcNodes = Util.Xml.getChildNodes(root, "rra");
 	}
 
 	String getVersion() throws RrdException {
-		return getChildValue(root, "version");
+		return Util.Xml.getChildValue(root, "version");
 	}
 
 	long getLastUpdateTime() throws RrdException {
-		return getChildValueAsLong(root, "lastupdate");
+		return Util.Xml.getChildValueAsLong(root, "lastupdate");
 	}
 
 	long getStep() throws RrdException {
-		return getChildValueAsLong(root, "step");
+		return Util.Xml.getChildValueAsLong(root, "step");
 	}
 
 	int getDsCount() {
@@ -81,124 +62,76 @@ class XmlReader {
 	}
 
     String getDsName(int dsIndex) throws RrdException {
-		return getChildValue(dsNodes[dsIndex], "name");
+		return Util.Xml.getChildValue(dsNodes[dsIndex], "name");
 	}
 
 	String getDsType(int dsIndex) throws RrdException {
-		return getChildValue(dsNodes[dsIndex], "type");
+		return Util.Xml.getChildValue(dsNodes[dsIndex], "type");
 	}
 
 	long getHeartbeat(int dsIndex) throws RrdException {
-		return getChildValueAsLong(dsNodes[dsIndex], "minimal_heartbeat");
+		return Util.Xml.getChildValueAsLong(dsNodes[dsIndex], "minimal_heartbeat");
 	}
 
 	double getMinValue(int dsIndex) throws RrdException {
-		return getChildValueAsDouble(dsNodes[dsIndex], "min");
+		return Util.Xml.getChildValueAsDouble(dsNodes[dsIndex], "min");
 	}
 
 	double getMaxValue(int dsIndex) throws RrdException {
-		return getChildValueAsDouble(dsNodes[dsIndex], "max");
+		return Util.Xml.getChildValueAsDouble(dsNodes[dsIndex], "max");
 	}
 
 	double getLastValue(int dsIndex) throws RrdException {
-		return getChildValueAsDouble(dsNodes[dsIndex], "last_ds");
+		return Util.Xml.getChildValueAsDouble(dsNodes[dsIndex], "last_ds");
 	}
 
 	double getAccumValue(int dsIndex) throws RrdException {
-		return getChildValueAsDouble(dsNodes[dsIndex], "value");
+		return Util.Xml.getChildValueAsDouble(dsNodes[dsIndex], "value");
 	}
 
 	long getNanSeconds(int dsIndex) throws RrdException {
-		return getChildValueAsLong(dsNodes[dsIndex], "unknown_sec");
+		return Util.Xml.getChildValueAsLong(dsNodes[dsIndex], "unknown_sec");
 	}
 
     String getConsolFun(int arcIndex) throws RrdException {
-		return getChildValue(arcNodes[arcIndex], "cf");
+		return Util.Xml.getChildValue(arcNodes[arcIndex], "cf");
 	}
 
 	double getXff(int arcIndex) throws RrdException {
-		return getChildValueAsDouble(arcNodes[arcIndex], "xff");
+		return Util.Xml.getChildValueAsDouble(arcNodes[arcIndex], "xff");
 	}
 
 	int getSteps(int arcIndex) throws RrdException {
-		return getChildValueAsInt(arcNodes[arcIndex], "pdp_per_row");
+		return Util.Xml.getChildValueAsInt(arcNodes[arcIndex], "pdp_per_row");
 	}
 
 	double getStateAccumValue(int arcIndex, int dsIndex) throws RrdException {
-        Node cdpNode = getFirstChildNode(arcNodes[arcIndex], "cdp_prep");
-        Node[] dsNodes = getChildNodes(cdpNode, "ds");
-		return getChildValueAsDouble(dsNodes[dsIndex], "value");
+        Node cdpNode = Util.Xml.getFirstChildNode(arcNodes[arcIndex], "cdp_prep");
+        Node[] dsNodes = Util.Xml.getChildNodes(cdpNode, "ds");
+		return Util.Xml.getChildValueAsDouble(dsNodes[dsIndex], "value");
 	}
 
 	int getStateNanSteps(int arcIndex, int dsIndex) throws RrdException {
-        Node cdpNode = getFirstChildNode(arcNodes[arcIndex], "cdp_prep");
-        Node[] dsNodes = getChildNodes(cdpNode, "ds");
-		return getChildValueAsInt(dsNodes[dsIndex], "unknown_datapoints");
+        Node cdpNode = Util.Xml.getFirstChildNode(arcNodes[arcIndex], "cdp_prep");
+        Node[] dsNodes = Util.Xml.getChildNodes(cdpNode, "ds");
+		return Util.Xml.getChildValueAsInt(dsNodes[dsIndex], "unknown_datapoints");
 	}
 
 	int getRows(int arcIndex) throws RrdException {
-		Node dbNode = getFirstChildNode(arcNodes[arcIndex], "database");
-        Node[] rows = getChildNodes(dbNode, "row");
+		Node dbNode = Util.Xml.getFirstChildNode(arcNodes[arcIndex], "database");
+        Node[] rows = Util.Xml.getChildNodes(dbNode, "row");
 		return rows.length;
 	}
 
 	double[] getValues(int arcIndex, int dsIndex) throws RrdException {
-		Node dbNode = getFirstChildNode(arcNodes[arcIndex], "database");
-        Node[] rows = getChildNodes(dbNode, "row");
+		Node dbNode = Util.Xml.getFirstChildNode(arcNodes[arcIndex], "database");
+        Node[] rows = Util.Xml.getChildNodes(dbNode, "row");
 		double[] values = new double[rows.length];
 		for(int i = 0; i < rows.length; i++) {
-            Node[] vNodes = getChildNodes(rows[i], "v");
+            Node[] vNodes = Util.Xml.getChildNodes(rows[i], "v");
 			Node vNode = vNodes[dsIndex];
 			values[i] = Util.parseDouble(vNode.getFirstChild().getNodeValue().trim());
 		}
 		return values;
-	}
-
-	// utility functions for DOM tree traversing
-
-	static Node[] getChildNodes(Node parentNode, String childName) {
-		ArrayList nodes = new ArrayList();
-		NodeList nodeList = parentNode.getChildNodes();
-		for(int i = 0; i < nodeList.getLength(); i++) {
-			Node node = nodeList.item(i);
-			if(node.getNodeName().equals(childName)) {
-				nodes.add(node);
-			}
-		}
-		return (Node[]) nodes.toArray(new Node[0]);
-	}
-
-	static Node getFirstChildNode(Node parentNode, String childName) throws RrdException {
-		Node[] childs = getChildNodes(parentNode, childName);
-		if(childs.length > 0) {
-			return childs[0];
-		}
-		throw new RrdException("XML Error, no such child: " + childName);
-	}
-
-	static String getChildValue(Node parentNode, String childName) throws RrdException {
-		NodeList children = parentNode.getChildNodes();
-		for(int i = 0; i < children.getLength(); i++) {
-			Node child = children.item(i);
-			if(child.getNodeName().equals(childName)) {
-				return child.getFirstChild().getNodeValue().trim();
-			}
-		}
-		throw new RrdException("XML Error, no such child: " + childName);
-	}
-
-	static int getChildValueAsInt(Node parentNode, String childName) throws RrdException {
-		String valueStr = getChildValue(parentNode, childName);
-		return Integer.parseInt(valueStr);
-	}
-
-	static long getChildValueAsLong(Node parentNode, String childName) throws RrdException {
-		String valueStr = getChildValue(parentNode, childName);
-		return Long.parseLong(valueStr);
-	}
-
-	static double getChildValueAsDouble(Node parentNode, String childName) throws RrdException {
-		String valueStr = getChildValue(parentNode, childName);
-		return Util.parseDouble(valueStr);
 	}
 }

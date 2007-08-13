@@ -35,10 +35,61 @@ import java.io.File;
 import java.util.GregorianCalendar;
 
 /**
- * <p>Class used to create an arbitrary number of RrdExportDef (export) objects
+ * <p>Class used to create a RrdExportDef (export) object
  * from a single XML template. XML template can be supplied as an XML InputSource,
  * XML file or XML formatted string.<p>
  *
+ * <p>Below is an exmple XML template, not all options are required:</p>
+ *
+ * <xmp>
+ * <rrd_export_def>
+ *	<span>
+ *		<start>${start}</start>
+ *		<end>${end}</end>
+ *	</span>
+ *  <options>
+ * 		<resolution>300</resolution>
+ * 		<strict_export>true</strict_export>
+ *  </options>
+ *	<datasources>
+ *		<def>
+ *			<name>bytesIn</name>
+ *			<rrd>${rrd}</rrd>
+ *			<source>ifInOctets</source>
+ *			<cf>AVERAGE</cf>
+ *		</def>
+ *		<def>
+ *			<name>bytesOut</name>
+ *			<rrd>${rrd}</rrd>
+ *			<source>ifOutOctets</source>
+ *			<cf>AVERAGE</cf>
+ *		</def>
+ *		<def>
+ *			<name>bitsIn</name>
+ *			<rpn>bytesIn,8,*</rpn>
+ *		</def>
+ *		<def>
+ *			<name>bitsOut</name>
+ *			<rpn>bytesOut,8,*</rpn>
+ *		</def>
+ *	</datasources>
+ *	<exports>
+ *		<export>
+ *			<datasource>bitsIn</datasource>
+ *			<legend>Incoming traffic</legend>
+ *		</export>
+ *		<export>
+ *			<datasource>bitsOut</datasource>
+ *			<legend>Outgoing traffic</legend>
+ *		</export>
+ *	</exports>
+ * </rrd_export_def>
+ * </xmp>
+ *
+ * <p><b>Note:</b> for more information on JRobin XML templates in general, refer to the {@link RrdGraphDefTemplate}</p>
+ * <p><b>Note:</b> the <code>RrdExportDefTemplate</code> <code>datasources</code> section can contain all the same options
+ * as the corresponding section in {@link RrdGraphDefTemplate}
+ * </p>
  * @author Arne Vandamme (arne.vandamme@jrobin.org)
  */
 public class RrdExportDefTemplate extends XmlTemplate
@@ -133,7 +184,7 @@ public class RrdExportDefTemplate extends XmlTemplate
 
 	private void resolveDatasources(Node datasourceNode) throws RrdException
 	{
-		validateTagsOnlyOnce(datasourceNode, new String[] { "def*" });
+		validateTagsOnlyOnce(datasourceNode, new String[] { "def*", "export_data*" });
 		Node[] nodes = getChildNodes(datasourceNode, "def");
 		for(int i = 0; i < nodes.length; i++) {
 			if(hasChildNode(nodes[i], "rrd"))
@@ -170,6 +221,32 @@ public class RrdExportDefTemplate extends XmlTemplate
 			}
 			else {
 				throw new RrdException("Unrecognized <def> format");
+			}
+		}
+
+		nodes = getChildNodes(datasourceNode, "export_data");
+		for ( int i = 0; i < nodes.length; i++ )
+		{
+			validateTagsOnlyOnce( nodes[i], new String[] {"file", "ds_name_prefix", "use_legend_names"} );
+			String file 			= getChildValue( nodes[i], "file" );
+            String prefix			= "d";
+			boolean use_legends		= false;
+
+			if ( Util.Xml.hasChildNode( nodes[i], "ds_name_prefix" ) )
+				prefix 			= getChildValue(nodes[i], "ds_name_prefix");
+
+			if ( Util.Xml.hasChildNode( nodes[i], "use_legend_names" ) )
+				use_legends 	= getChildValueAsBoolean(nodes[i], "use_legend_names");
+
+			try
+			{
+				if ( !prefix.equals("d") )
+					def.addExportData( new ExportData( new File(file), prefix ) );
+				else
+					def.addExportData( new ExportData( new File(file), use_legends ) );
+			}
+			catch ( IOException ioe ) {
+				throw new RrdException( ioe );
 			}
 		}
 	}

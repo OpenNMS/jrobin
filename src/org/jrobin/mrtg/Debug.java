@@ -2,8 +2,8 @@
  * JRobin : Pure java implementation of RRDTool's functionality
  * ============================================================
  *
- * Project Info:  http://www.sourceforge.net/projects/jrobin
- * Project Lead:  Sasa Markovic (saxon@eunet.yu);
+ * Project Info:  http://www.jrobin.org
+ * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
  * (C) Copyright 2003, by Sasa Markovic.
  *
@@ -32,8 +32,7 @@ package org.jrobin.mrtg;
  * Time: 11:25:12 AM
  * To change this template use Options | File Templates.
  */
-public class Debug {
-	static final boolean DEBUG = false;
+public class Debug implements MrtgConstants {
 
 	public static void print(String msg) {
 		if(DEBUG) {

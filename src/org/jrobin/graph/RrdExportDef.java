@@ -24,13 +24,14 @@
  */
 package org.jrobin.graph;
 
-import java.io.Serializable;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
 import org.jrobin.core.Util;
 import org.jrobin.core.RrdException;
+import org.jrobin.core.XmlWriter;
 
 /**
  * <p>Class used to collect information for a JRobin export.</p>
@@ -65,7 +66,7 @@ public class RrdExportDef implements Serializable
 	protected ArrayList pdefList				= new ArrayList( 10 );				// holds the list of Plottable datasources
 	protected ArrayList cdefList				= new ArrayList( 10 );				// holds the list of Cdef datasources
 	protected ArrayList exportList				= new ArrayList( 10 );				// holds the list of datasources to export
-
+	protected ArrayList edefList				= new ArrayList( 3 );				// holds the list of export data objects
 
 	// ================================================================
 	// -- Constructors
@@ -308,6 +309,16 @@ public class RrdExportDef implements Serializable
 	}
 
 	/**
+	 * Adds a set of ExportData to the datasource list.
+	 *
+	 * @param edata ExportData to add.
+	 */
+	public void addExportData( ExportData edata )
+	{
+		edefList.add( edata );
+	}
+
+	/**
 	 * Sets a specific datasource to be exported (if export is strict).
 	 * The expor legend for this datasource will be empty. 
 	 *
@@ -356,6 +367,100 @@ public class RrdExportDef implements Serializable
 		this.strict = ( strict ? STRICT_EXPLICIT_ON : STRICT_EXPLICIT_OFF );
 	}
 
+	/**
+	 * Exports RrdExportDef (export definition) object in XML format to output stream.
+	 * Generated code can be parsed with {@link RrdExportDefTemplate} class.
+	 *
+	 * @param stream Output stream to send XML code to.
+	 */
+	public void exportXmlTemplate( OutputStream stream )
+	{
+		XmlWriter xml = new XmlWriter( stream );
+
+		xml.startTag("rrd_export_def");
+
+        // SPAN
+		xml.startTag("span");
+		xml.writeTag("start", getStartTime() );
+		xml.writeTag("end", getEndTime() );
+		xml.closeTag(); // span
+
+		// OPTIONS
+		xml.startTag( "options" );
+		if ( resolution > 1 )
+			xml.writeTag( "resolution", resolution );
+		xml.writeTag( "strict_export", ( strict == STRICT_IMPLICIT_ON || strict == STRICT_EXPLICIT_ON ? "true" : "false" ) );
+		xml.closeTag();
+
+		// DATASOURCES
+		xml.startTag("datasources");
+		// defs
+		for ( int i = 0; i < fetchSources.size(); i++ )
+			fetchSources.get( i ).exportXml(xml);
+		// cdefs and sdefs
+		for (int i = 0; i < cdefList.size(); i++ )
+		{
+			Cdef cdef = (Cdef) cdefList.get(i);
+			cdef.exportXml(xml);
+		}
+		xml.closeTag(); // datasources
+
+		// EXPORTS
+		xml.startTag("exports");
+		String[][] list = getExportDatasources();
+		for ( int i = 0; i < list.length; i++ )
+		{
+			xml.startTag( "export" );
+			xml.writeTag( "datasource", list[i][0] );
+			xml.writeTag( "legend", list[i][1] );
+			xml.closeTag();
+		}
+		xml.closeTag(); // exports
+
+		xml.closeTag(); // rrd_export_def
+		xml.flush();
+
+		xml.flush();
+	}
+
+	/**
+	 * Exports RrdExportDef (export definition) object in XML format to string.
+	 * Generated code can be parsed with {@link RrdExportDefTemplate} class, see
+	 * {@link RrdExportDef#exportXmlTemplate()}.
+	 *
+	 * @return String representing graph definition in XML format.
+	 */
+	public String getXmlTemplate()
+	{
+		return exportXmlTemplate();
+	}
+
+	/**
+	 * Exports RrdExportDef (export definition) object in XML format to string.
+	 * Generated code can be parsed with {@link RrdExportDefTemplate} class.
+	 *
+	 * @return String representing graph definition in XML format.
+	 */
+	public String exportXmlTemplate()
+	{
+		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+		exportXmlTemplate(outputStream);
+		return outputStream.toString();
+	}
+
+	/**
+	 * Exports RrdExportDef (export definition) object in XML format to file.
+	 * Generated code can be parsed with {@link RrdExportDefTemplate} class.
+	 *
+	 * @param filePath destination file
+	 */
+	public void exportXmlTemplate(String filePath) throws IOException
+	{
+		FileOutputStream outputStream = new FileOutputStream(filePath, false);
+		exportXmlTemplate(outputStream);
+		outputStream.close();
+	}
+
 	// ================================================================
 	// -- Protected (package) methods
 	// ================================================================
@@ -384,6 +489,11 @@ public class RrdExportDef implements Serializable
 	protected Pdef[] getPdefs()
 	{
 		return (Pdef[]) pdefList.toArray( new Pdef[] {} );
+	}
+
+	protected ExportData[] getExportData()
+	{
+		return (ExportData[]) edefList.toArray( new ExportData[] {} );
 	}
 
 	protected int getNumSdefs()

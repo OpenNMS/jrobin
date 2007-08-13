@@ -2,8 +2,8 @@
  * JRobin : Pure java implementation of RRDTool's functionality
  * ============================================================
  *
- * Project Info:  http://www.sourceforge.net/projects/jrobin
- * Project Lead:  Sasa Markovic (saxon@eunet.yu);
+ * Project Info:  http://www.jrobin.org
+ * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
  * (C) Copyright 2003, by Sasa Markovic.
  *
@@ -27,58 +27,21 @@ package org.jrobin.core;
 
 import java.io.IOException;
 
-/**
- *
- */
-class RrdDouble {
-	private RrdFile file;
-	private long pointer;
-	private int count;
-
-	private boolean cached = false;
-	private double cachedValue;
-
-	RrdDouble(RrdUpdater updater, int count) throws IOException {
-		this.count = count;
-		file = updater.getRrdFile();
-		pointer = file.allocate(RrdFile.DOUBLE_SIZE, count);
-	}
-
+class RrdDouble extends RrdPrimitive {
 	RrdDouble(RrdUpdater updater) throws IOException {
-		this(updater, 1);
-	}
-
-	RrdDouble(double initValue, RrdUpdater updater) throws IOException {
-		this.count = 1;
-		file = updater.getRrdFile();
-		pointer = file.allocate(initValue);
-		cached = true;
-		cachedValue = initValue;
-	}
-
-	void set(int index, double value) throws IOException {
-		assert index < count;
-		long readPointer = pointer + index * RrdFile.DOUBLE_SIZE;
-		file.writeDouble(readPointer, value);
+		super(updater, RrdDouble.RRD_DOUBLE);
 	}
 
 	void set(double value) throws IOException {
-		cached = true;
-		cachedValue = value;
-		set(0, value);
-	}
-
-	double get(int index) throws IOException {
-		assert index < count;
-		long readPointer = pointer + index * RrdFile.DOUBLE_SIZE;
-		return file.readDouble(readPointer);
+		if(cache.setDouble(value)) {
+			writeDouble(value);
+		}
 	}
 
 	double get() throws IOException {
-		if(!cached) {
-			cachedValue = get(0);
-			cached = true;
+		if(cache.isEmpty()) {
+			cache.setDouble(readDouble());
 		}
-		return cachedValue;
+		return cache.getDouble();
 	}
 }

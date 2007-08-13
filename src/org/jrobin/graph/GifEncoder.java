@@ -6,9 +6,9 @@
  * Project Lead:  Sasa Markovic (saxon@jrobin.org)
  *
  * Developers:    Sasa Markovic (saxon@jrobin.org)
+ *                Arne Vandamme (cobralord@jrobin.org)
  *
- *
- * (C) Copyright 2003-2005, by Sasa Markovic.
+ * (C) Copyright 2003, by Sasa Markovic.
  *
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation;
@@ -23,17 +23,15 @@
  * Boston, MA 02111-1307, USA.
  */
 
-///////////////////////////////////////////////////////////////////
-// GifEncoder from J.M.G. Elliott
-// http://jmge.net/java/gifenc/
-///////////////////////////////////////////////////////////////////
-
+/*
+ * GifEncoder from J.M.G. Elliott
+ * http://jmge.net/java/gifenc/
+ */
 package org.jrobin.graph;
 
 import java.awt.*;
 import java.awt.image.PixelGrabber;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.util.Vector;
 
 class GifEncoder
@@ -43,7 +41,7 @@ class GifEncoder
 	private int bgIndex = 0;
 	private int loopCount = 1;
 	private String theComments;
-	private Vector<Gif89Frame> vFrames = new Vector<Gif89Frame>();
+	private Vector vFrames = new Vector();
 
 	GifEncoder() {
 		colorTable = new GifColorTable();
@@ -69,7 +67,7 @@ class GifEncoder
 	}
 
 	Gif89Frame getFrameAt(int index) {
-		return isOk(index) ? vFrames.elementAt(index) : null;
+		return isOk(index) ? (Gif89Frame) vFrames.elementAt(index) : null;
 	}
 
 	void addFrame(Gif89Frame gf) throws IOException {
@@ -110,7 +108,7 @@ class GifEncoder
 
 	void setUniformDelay(int interval) {
 		for (int i = 0; i < vFrames.size(); ++i)
-			vFrames.elementAt(i).setDelay(interval);
+			((Gif89Frame) vFrames.elementAt(i)).setDelay(interval);
 	}
 
 	void encode(OutputStream out) throws IOException {
@@ -125,7 +123,7 @@ class GifEncoder
 		if (theComments != null && theComments.length() > 0)
 			writeCommentExtension(out);
 		for (int i = 0; i < nframes; ++i)
-			vFrames.elementAt(i).encode(
+			((Gif89Frame) vFrames.elementAt(i)).encode(
 				out, is_sequence, colorTable.getDepth(), colorTable.getTransparent()
 			);
 		out.write((int) ';');

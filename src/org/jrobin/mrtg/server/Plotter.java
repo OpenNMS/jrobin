@@ -26,19 +26,35 @@ package org.jrobin.mrtg.server;
 
 import org.jrobin.core.RrdException;
 import org.jrobin.graph.RrdGraph;
+import org.jrobin.graph.RrdGraphDefTemplate;
 import org.jrobin.graph.RrdGraphDef;
 import org.jrobin.mrtg.MrtgConstants;
 import org.jrobin.mrtg.MrtgException;
 
-import java.awt.*;
 import java.io.IOException;
+import java.io.File;
 import java.util.Date;
 
 class Plotter implements MrtgConstants {
 
 	private String ifDescr, host, alias;
+	private static RrdGraphDefTemplate rrdGraphDefTemplate = null;
+
+	static {
+		try {
+			rrdGraphDefTemplate =
+				new RrdGraphDefTemplate(new File(Config.getGraphTemplateFile()));
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (RrdException e) {
+			e.printStackTrace();
+		}
+	}
 
 	Plotter(String host, String ifDescr) throws MrtgException {
+		if(rrdGraphDefTemplate == null) {
+			throw new MrtgException("Could not load graph XML template");
+		}
 		this.host = host;
 		this.ifDescr = ifDescr;
 		this.alias = Server.getInstance().getDeviceList().
@@ -56,35 +72,25 @@ class Plotter implements MrtgConstants {
 		}
 	}
 
-	RrdGraph getRrdGraph(long start, long stop) throws MrtgException {
-		String filename = RrdWriter.getRrdFilename(host, ifDescr);
-		RrdGraph graph = new RrdGraph(true);
-		RrdGraphDef graphDef = new RrdGraphDef();
-		try {
-			graphDef.setImageBorder(Color.WHITE, 0);	// Don't show border
-			graphDef.setTimePeriod(start, stop);
-			graphDef.setTitle(ifDescr + "@" + host);
-			graphDef.setVerticalLabel("transfer speed [bits/sec]");
-			graphDef.datasource("in", filename, "in", "AVERAGE");
-			graphDef.datasource("out", filename, "out", "AVERAGE");
-			graphDef.datasource("in8", "in,8,*");
-			graphDef.datasource("out8", "out,8,*");
-			graphDef.area("out8", Color.GREEN, "output traffic\n");
-			graphDef.line("in8", Color.BLUE, "input traffic");
-			graphDef.comment("\n");
-			graphDef.gprint("in8", "AVERAGE", "Average input: @7.2 @sbits/s");
-			graphDef.gprint("in8", "MAX", "Maximum input: @7.2 @Sbits/s\n");
-			graphDef.gprint("out8", "AVERAGE", "Average output:@7.2 @sbits/s");
-			graphDef.gprint("out8", "MAX", "Maximum output:@7.2 @Sbits/s\n");
-			graphDef.comment("\n");
-			graphDef.comment("Description on device: " + alias);
-			graphDef.comment("\n");
-			graphDef.comment("Graph from " + new Date(start * 1000L));
-			graphDef.comment("to " + new Date(stop * 1000L + 1));
-			graph.setGraphDef(graphDef);
-			return graph;
-		} catch (RrdException e) {
-			throw new MrtgException(e);
+	RrdGraph getRrdGraph(long start, long end) throws MrtgException {
+		RrdGraphDef rrdGraphDef;
+		// only one template parsed, many threads plotting
+		synchronized(rrdGraphDefTemplate) {
+			rrdGraphDefTemplate.setVariable("start", start);
+			rrdGraphDefTemplate.setVariable("end", end);
+			rrdGraphDefTemplate.setVariable("interface", ifDescr);
+			rrdGraphDefTemplate.setVariable("host", host);
+			rrdGraphDefTemplate.setVariable("rrd", RrdWriter.getRrdFilename(host, ifDescr));
+			rrdGraphDefTemplate.setVariable("alias", alias);
+			rrdGraphDefTemplate.setVariable("date_start", new Date(start * 1000L).toString());
+			rrdGraphDefTemplate.setVariable("date_end", new Date(end * 1000L).toString());
+			try {
+				rrdGraphDef = rrdGraphDefTemplate.getRrdGraphDef();
+			} catch (RrdException e) {
+				throw new MrtgException(e);
+			}
 		}
+		RrdGraph graph = new RrdGraph(rrdGraphDef, true); // use pool
+		return graph;
 	}
 }

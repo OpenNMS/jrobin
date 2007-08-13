@@ -157,7 +157,7 @@ class Device {
 		Poller comm = null;
 		try {
 			comm = new Poller(host, community);
-			Map links = comm.walk("ifDescr");
+			Map links = comm.walkIfDescr();
 			return (String[]) links.values().toArray(new String[0]);
 		}
 		finally {

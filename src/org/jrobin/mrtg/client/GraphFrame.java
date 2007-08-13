@@ -2,8 +2,8 @@
  * JRobin : Pure java implementation of RRDTool's functionality
  * ============================================================
  *
- * Project Info:  http://www.sourceforge.net/projects/jrobin
- * Project Lead:  Sasa Markovic (saxon@eunet.yu);
+ * Project Info:  http://www.jrobin.org
+ * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
  * (C) Copyright 2003, by Sasa Markovic.
  *
@@ -229,7 +229,7 @@ class GraphFrame extends JFrame {
 		refreshButton.setMnemonic(KeyEvent.VK_F);
         leftButton.setMnemonic(KeyEvent.VK_L);
 		rightButton.setMnemonic(KeyEvent.VK_R);
-		setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 		try {
 			setIconImage(Resources.getImage(Client.ICON));
 		} catch (MrtgException e) {
@@ -330,6 +330,12 @@ class GraphFrame extends JFrame {
 			}
 			graphBytes = client.getPngGraph(routerInfo, linkInfo, start, end);
 			ImageIcon icon = new ImageIcon(graphBytes, "PNG graph");
+			if(icon.getIconWidth() != GRAPH_SIZE.getWidth() ||
+					icon.getIconHeight() != GRAPH_SIZE.getHeight()) {
+				GRAPH_SIZE = new Dimension(icon.getIconWidth(), icon.getIconHeight());
+				graphLabel.setPreferredSize(GRAPH_SIZE);
+				pack();
+			}
 			graphLabel.setIcon(icon);
 			if(start.getTime() <= now.getTime() && now.getTime() < end.getTime()) {
 				refresher = new Refresher();

@@ -39,8 +39,8 @@ class Legend extends Comment
 	// ================================================================
 	// -- Members
 	// ================================================================
-	private Color color = Color.WHITE;
-	
+	private Color color 	= Color.WHITE;
+	private int refPlotDef	= -1;
 	
 	// ================================================================
 	// -- Constructors
@@ -66,8 +66,25 @@ class Legend extends Comment
 	Legend( String text, Color color ) throws RrdException
 	{
 		super(text);
-		this.commentType = Comment.CMT_LEGEND;
-		this.color = color;
+		if ( text == null )
+			this.commentType = Comment.CMT_NOLEGEND;
+		else
+			this.commentType = Comment.CMT_LEGEND;
+		this.color 			= color;
+	}
+	
+	/**
+	 * 
+	 * @param text
+	 * @param color
+	 * @param referredPlotDef
+	 * @throws RrdException
+	 */
+	Legend( String text, Color color, int referredPlotDef ) throws RrdException
+	{
+		this( text, color );
+		
+		refPlotDef = referredPlotDef;
 	}
 	
 	
@@ -76,5 +93,9 @@ class Legend extends Comment
 	// ================================================================
 	Color getColor() {
 		return color;
+	}
+	
+	int getPlofDefIndex() {
+		return refPlotDef;
 	}
 }

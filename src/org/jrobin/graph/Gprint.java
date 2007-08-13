@@ -25,10 +25,12 @@
 package org.jrobin.graph;
 
 import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.jrobin.core.RrdException;
+import org.jrobin.core.XmlWriter;
 
 /**
  * <p>Represents a piece of aligned text (containing a retrieved datasource value) to be drawn on the graph.</p>
@@ -50,18 +52,21 @@ class Gprint extends Comment
 	private int aggregate; 
 	private int numDec									= 3;		// Show 3 decimal values by default
 	private int strLen									= -1;
+	private double baseValue							= -1;		// Default: use global base value
 	private boolean normalScale							= false;
 	private boolean uniformScale						= false;
-	
-	
+
+	protected ArrayList parsedList;
+
+
 	// ================================================================
 	// -- Constructors
 	// ================================================================
 	/**
 	 * Constructs a Gprint object based on a string of text (with a specific placement
 	 * marker in), a source from which to retrieve a value, and a consolidation function that
-	 * specifies which value to retrieve.  Possible consolidation functions are <code>AVERAGE, MAX, MIN, FIRST</code>
-	 * and <code>LAST</code>.
+	 * specifies which value to retrieve.  Possible consolidation functions are <code>AVERAGE, MAX, MIN, FIRST, LAST</code>
+	 * and <code>TOTAL</code>.
 	 * @param sourceName Name of the datasource from which to retrieve the consolidated value.
 	 * @param consolFunc Consolidation function to use.
 	 * @param text String of text with a placement marker for the resulting value.
@@ -72,9 +77,9 @@ class Gprint extends Comment
 		this.text = text;
 		checkValuePlacement();		// First see if this GPRINT is valid
 		super.parseComment();
-		
-		this.commentType = Comment.CMT_GPRINT;
-		this.sourceName = sourceName;
+
+		this.commentType 	= Comment.CMT_GPRINT;
+		this.sourceName 	= sourceName;
 		
 		if ( consolFunc.equalsIgnoreCase("AVERAGE") || consolFunc.equalsIgnoreCase("AVG") )
 			aggregate = Source.AGG_AVERAGE;
@@ -86,10 +91,29 @@ class Gprint extends Comment
 			aggregate = Source.AGG_LAST;
 		else if ( consolFunc.equalsIgnoreCase("FIRST") )
 			aggregate = Source.AGG_FIRST;
+		else if ( consolFunc.equalsIgnoreCase("TOTAL") )
+			aggregate = Source.AGG_TOTAL;
 		else
 			throw new RrdException( "Invalid consolidation function specified." );
 	}
 	
+	/**
+	 * Constructs a Gprint object based on a string of text (with a specific placement
+	 * marker in), a source from which to retrieve a value, and a consolidation function that
+	 * specifies which value to retrieve.  Possible consolidation functions are <code>AVERAGE, MAX, MIN, FIRST</code>
+	 * and <code>LAST</code>.
+	 * @param sourceName Name of the datasource from which to retrieve the consolidated value.
+	 * @param consolFunc Consolidation function to use.
+	 * @param text String of text with a placement marker for the resulting value.
+	 * @param base Base value to use for formatting the value that needs to be printed.
+	 * @throws RrdException Thrown in case of a JRobin specific error.
+	 */
+	Gprint( String sourceName, String consolFunc, String text, double base ) throws RrdException
+	{
+		this( sourceName, consolFunc, text );
+		
+		baseValue	= base;
+	}
 	
 	// ================================================================
 	// -- Protected methods
@@ -110,30 +134,51 @@ class Gprint extends Comment
 		{
 			double value 	= sources[ ((Integer) sourceIndex.get(sourceName)).intValue() ].getAggregate( aggregate );
 						
+			// See if we need to use a specific value for the formatting
+			double oldBase	= vFormat.getBase();
+			if ( baseValue != -1 && baseValue != vFormat.getBase() )
+				vFormat.setBase( baseValue );
+			
 			vFormat.setFormat( value, numDec, strLen );
 			vFormat.setScaling( normalScale, uniformScale );
 			
 			String valueStr = vFormat.getFormattedValue();
 			String prefix	= vFormat.getPrefix();
-			
+
+			// Create a copy of the token/pair list
+			parsedList		= new ArrayList( oList );
+
 			// Replace all values
 			for (int i = 0; i < oList.size(); i += 2 )
 			{
-				String str = (String) oList.elementAt(i);
+				String str = (String) oList.get(i);
 				
 				str = str.replaceAll(VALUE_MARKER, valueStr);
 				if ( normalScale ) str = str.replaceAll(SCALE_MARKER, prefix);
 				if ( uniformScale ) str = str.replaceAll(UNIFORM_SCALE_MARKER, prefix);
 				
-				oList.set( i, str );
+				parsedList.set( i, str );
 			}
+			
+			// Reset the base value of the formatter
+			if ( baseValue != -1 )
+				vFormat.setBase( oldBase );
 		}
 		catch (Exception e) {
 			throw new RrdException( "Could not find datasource: " + sourceName );
 		}
 	}
-	
-	
+
+	/**
+	 * Retrieves a <code>ArrayList</code> containing all string/token pairs in order of <code>String</code> - <code>Byte</code>.
+	 * @return ArrayList containing all string/token pairs of this Comment.
+	 */
+	ArrayList getTokens()
+	{
+		return parsedList;
+	}
+
+
 	// ================================================================
 	// -- Private methods
 	// ================================================================
@@ -174,4 +219,14 @@ class Gprint extends Comment
 			throw new RrdException( "Could not find where to place value. No @ placeholder found." );
 	}
 	
+	void exportXmlTemplate(XmlWriter xml) {
+		xml.startTag("gprint");
+		xml.writeTag("datasource", sourceName);
+		xml.writeTag("cf", Source.aggregates[aggregate]);
+		xml.writeTag("format", text);
+		if ( baseValue != -1 )
+			xml.writeTag( "base", baseValue );
+		xml.closeTag(); // gprint
+	}
+
 }

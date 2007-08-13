@@ -2,8 +2,8 @@
  * JRobin : Pure java implementation of RRDTool's functionality
  * ============================================================
  *
- * Project Info:  http://www.sourceforge.net/projects/jrobin
- * Project Lead:  Sasa Markovic (saxon@eunet.yu);
+ * Project Info:  http://www.jrobin.org
+ * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
  * (C) Copyright 2003, by Sasa Markovic.
  *
@@ -32,7 +32,7 @@ import java.io.IOException;
  * class are never manipulated directly, it's up to JRobin framework to manage
  * internal arcihve states.<p>
  *
- * @author <a href="mailto:saxon@eunet.yu">Sasa Markovic</a>
+ * @author <a href="mailto:saxon@jrobin.org">Sasa Markovic</a>
  */
 public class ArcState implements RrdUpdater {
 	private Archive parentArc;
@@ -40,30 +40,20 @@ public class ArcState implements RrdUpdater {
 	private RrdDouble accumValue;
 	private RrdLong nanSteps;
 
-	// create for the first time
-	ArcState(Archive parentArc, boolean newState) throws IOException {
+	ArcState(Archive parentArc, boolean shouldInitialize) throws IOException {
 		this.parentArc = parentArc;
 		accumValue = new RrdDouble(this);
 		nanSteps = new RrdLong(this);
-		if(newState) {
-			// should initialize
+		if(shouldInitialize) {
 			Header header = parentArc.getParentDb().getHeader();
 			long step = header.getStep();
 			long lastUpdateTime = header.getLastUpdateTime();
 			long arcStep = parentArc.getArcStep();
-			long nan = (Util.normalize(lastUpdateTime, step) -
+			long initNanSteps = (Util.normalize(lastUpdateTime, step) -
 				Util.normalize(lastUpdateTime, arcStep)) / step;
-			nanSteps.set(nan);
 			accumValue.set(Double.NaN);
+			nanSteps.set(initNanSteps);
 		}
-	}
-
-	/**
-	 * Returns the underlying RrdFile object.
-	 * @return Underlying RrdFile object.
-	 */
-	public RrdFile getRrdFile() {
-		return parentArc.getParentDb().getRrdFile();
 	}
 
 	String dump() throws IOException {
@@ -78,7 +68,7 @@ public class ArcState implements RrdUpdater {
 	 * Returns the number of currently accumulated NaN steps.
 	 *
 	 * @return Number of currently accumulated NaN steps.
-	 * @throws IOException Thrown in case of IO specific error
+	 * @throws IOException Thrown in case of I/O error
 	 */
 	public long getNanSteps() throws IOException {
 		return nanSteps.get();
@@ -92,7 +82,7 @@ public class ArcState implements RrdUpdater {
 	 * Returns the value accumulated so far.
 	 *
 	 * @return Accumulated value
-	 * @throws IOException Thrown in case of IO specific error
+	 * @throws IOException Thrown in case of I/O error
 	 */
 	public double getAccumValue() throws IOException {
 		return accumValue.get();
@@ -114,4 +104,36 @@ public class ArcState implements RrdUpdater {
 		writer.closeTag(); // ds
 	}
 
+	/**
+	 * Copies object's internal state to another ArcState object.
+	 * @param other New ArcState object to copy state to
+	 * @throws IOException Thrown in case of I/O error
+	 * @throws RrdException Thrown if supplied argument is not an ArcState object
+	 */
+	public void copyStateTo(RrdUpdater other) throws IOException, RrdException {
+		if(!(other instanceof ArcState)) {
+			throw new RrdException(
+				"Cannot copy ArcState object to " + other.getClass().getName());
+		}
+		ArcState arcState = (ArcState) other;
+		arcState.accumValue.set(accumValue.get());
+		arcState.nanSteps.set(nanSteps.get());
+	}
+
+	/**
+	 * Returns the underlying storage (backend) object which actually performs all
+	 * I/O operations.
+	 * @return I/O backend object
+	 */
+	public RrdBackend getRrdBackend() {
+		return parentArc.getRrdBackend();
+	}
+
+	/**
+	 * Required to implement RrdUpdater interface. You should never call this method directly.
+	 * @return Allocator object
+	 */
+	public RrdAllocator getRrdAllocator() {
+		return parentArc.getRrdAllocator();
+	}
 }

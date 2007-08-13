@@ -2,8 +2,8 @@
  * JRobin : Pure java implementation of RRDTool's functionality
  * ============================================================
  *
- * Project Info:  http://www.sourceforge.net/projects/jrobin
- * Project Lead:  Sasa Markovic (saxon@eunet.yu);
+ * Project Info:  http://www.jrobin.org
+ * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
  * (C) Copyright 2003, by Sasa Markovic.
  *
@@ -25,36 +25,45 @@
 
 package org.jrobin.core;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 
 /**
- * <p>Main class used for RRD files manipulation. Use this class to perform
- * update and fetch operations on exisiting
- * RRD files. This class is also used to create new RRD file from
+ * <p>Main class used to create and manipulate round robin databases (RRDs). Use this class to perform
+ * update and fetch operations on exisiting RRDs, to create new RRD from
  * the definition (object of class {@link org.jrobin.core.RrdDef RrdDef}) or
  * from XML file (dumped content of RRDTool's or JRobin's RRD file).</p>
  *
- * <p>
- * Note that JRobin uses binary format different from RRDTool's format. You cannot
+ * <p>Each RRD is backed with some kind of storage. For example, RRDTool supports only one kind of
+ * storage (disk file). On the contrary, JRobin gives you freedom to use other storage (backend) types
+ * even to create your own backend types for some special purposes. JRobin by default stores
+ * RRD data in files (as RRDTool), but you might choose to store RRD data in memory (this is
+ * supported in JRobin), to use java.nio.* instead of java.io.* package for file manipulation
+ * (also supported) or to store whole RRDs in the SQL database
+ * (you'll have to extend some classes to do this).</p>
+ *
+ * <p>Note that JRobin uses binary format different from RRDTool's format. You cannot
  * use this class to manipulate RRD files created with RRDTool. <b>However, if you perform
  * the same sequence of create, update and fetch operations, you will get exactly the same
- * results from JRobin and RRDTool.</b>
- * </p>
+ * results from JRobin and RRDTool.</b><p>
  *
  * <p>
  * You will not be able to use JRobin API if you are not familiar with
- * basic RRDTool concepts. Good place to start is
+ * basic RRDTool concepts. Good place to start is the
  * <a href="http://people.ee.ethz.ch/~oetiker/webtools/rrdtool/tutorial/rrdtutorial.html">official RRD tutorial</a>
- * and relevant RRDTool man pages: <a href="../../../man/rrdcreate.html" target="man">rrdcreate</a>,
- * <a href="../../../man/rrdupdate.html" target="man">rrdupdate</a>,
- * <a href="../../../man/rrdfetch.html" target="man">rrdfetch</a> and
- * <a href="../../../man/rrdgraph.html" target="man">rrdgraph</a>.
+ * and relevant RRDTool man pages: <a href="../../../../man/rrdcreate.html" target="man">rrdcreate</a>,
+ * <a href="../../../../man/rrdupdate.html" target="man">rrdupdate</a>,
+ * <a href="../../../../man/rrdfetch.html" target="man">rrdfetch</a> and
+ * <a href="../../../../man/rrdgraph.html" target="man">rrdgraph</a>.
  * For RRDTool's advanced graphing capabilities (RPN extensions), also supported in JRobin,
  * there is an excellent
  * <a href="http://people.ee.ethz.ch/~oetiker/webtools/rrdtool/tutorial/cdeftutorial.html" target="man">CDEF tutorial</a>.
  * </p>
  *
- * @author <a href="mailto:saxon@eunet.yu">Sasa Markovic</a>
+ * @see RrdBackend
+ * @see RrdBackendFactory
  */
 public class RrdDb implements RrdUpdater {
 	/** See {@link #getLockMode() getLockMode()} for explanation */
@@ -64,20 +73,28 @@ public class RrdDb implements RrdUpdater {
 	/** See {@link #getLockMode() getLockMode()} for explanation */
 	public static final int EXCEPTION_IF_LOCKED = 2;
 
-    static final String RRDTOOL = "rrdtool";
-	static boolean DEBUG = false;
+    // static final String RRDTOOL = "rrdtool";
 	static final int XML_INITIAL_BUFFER_CAPACITY = 100000; // bytes
+	private static int lockMode = NO_LOCKS;
 
-	private RrdFile file;
+	private RrdBackend backend;
+	private RrdAllocator allocator = new RrdAllocator();
+
 	private Header header;
 	private Datasource[] datasources;
 	private Archive[] archives;
 
+	private boolean closed = false;
+
 	/**
-	 * <p>Constructor used to create new RRD file from the definition. New RRD file structure is specified by object of class
-	 * {@link org.jrobin.core.RrdDef <b>RrdDef</b>}. RRD file is created on
-	 * the disk as soon as this constructor returns. Once created, the structure and size
-	 * of the newly created RRD file cannot be modified.</p>
+	 * <p>Constructor used to create new RRD object from the definition. This RRD object will be backed
+	 * with a storage (backend) of the default type. Initially, storage type defaults to "NIO"
+	 * (RRD bytes will be put in a file on the disk). Default storage type can be changed with a static
+	 * {@link RrdBackendFactory#setDefaultFactory(String)} method call.</p>
+	 *
+	 * <p>New RRD file structure is specified with an object of class
+	 * {@link org.jrobin.core.RrdDef <b>RrdDef</b>}. The underlying RRD storage is created as soon
+	 * as the constructor returns.</p>
 	 *
 	 * <p>Typical scenario:</p>
 	 *
@@ -95,18 +112,57 @@ public class RrdDb implements RrdUpdater {
      * def.addArchive("MAX", 0.5, 24, 797);
      * def.addArchive("MAX", 0.5, 288, 775);
      *
-     * // RRD file definition is now completed, create the database!
+     * // RRD definition is now completed, create the database!
      * RrdDb rrd = new RrdDb(def);
 	 * // new RRD file has been created on your disk
-	 * </code>
+	 * </pre>
 	 *
 	 * @param rrdDef Object describing the structure of the new RRD file.
 	 * @throws IOException Thrown in case of I/O error.
 	 * @throws RrdException Thrown if invalid RrdDef object is supplied.
 	 */
-	public RrdDb(RrdDef rrdDef) throws IOException, RrdException {
+	public RrdDb(RrdDef rrdDef) throws RrdException, IOException {
+		this(rrdDef, RrdFileBackendFactory.getDefaultFactory());
+	}
+
+	/**
+	 * <p>Constructor used to create new RRD object from the definition object but with a storage
+	 * (backend) different from default.</p>
+	 *
+	 * <p>JRobin uses <i>factories</i> to create RRD backend objecs. There are three different
+	 * backend factories supplied with JRobin, and each factory has its unique name:</p>
+	 *
+	 * <ul>
+	 * <li><b>FILE</b>: backends created from this factory will store RRD data to files by using
+	 * java.io.* classes and methods
+	 * <li><b>NIO</b>: backends created from this factory will store RRD data to files by using
+	 * java.nio.* classes and methods
+	 * <li><b>MEMORY</b>: backends created from this factory will store RRD data in memory. This might
+	 * be useful in runtime environments which prohibit disk utilization, or for storing temporary,
+	 * non-critical data (it gets lost as soon as JVM exits).
+	 * </ul>
+	 *
+	 * <p>For example, to create RRD in memory, use the following code</p>
+	 * <pre>
+	 * RrdBackendFactory factory = RrdBackendFactory.getFactory("MEMORY");
+	 * RrdDb rrdDb = new RrdDb(rrdDef, factory);
+	 * rrdDb.close();
+	 * </pre>
+	 *
+	 * <p>New RRD file structure is specified with an object of class
+	 * {@link org.jrobin.core.RrdDef <b>RrdDef</b>}. The underlying RRD storage is created as soon
+	 * as the constructor returns.</p>
+	 * @param rrdDef RRD definition object
+	 * @param factory The factory which will be used to create storage for this RRD
+	 * @throws RrdException Thrown if invalid factory or definition is supplied
+	 * @throws IOException Thrown in case of I/O error
+	 * @see RrdBackendFactory
+	 */
+	public RrdDb(RrdDef rrdDef, RrdBackendFactory factory) throws RrdException, IOException {
 		rrdDef.validate();
-		initializeSetup(rrdDef.getPath());
+		String path = rrdDef.getPath();
+		backend = factory.open(path, false, lockMode);
+		backend.setLength(rrdDef.getEstimatedSize());
 		// create header
 		header = new Header(this, rrdDef);
 		// create datasources
@@ -121,53 +177,98 @@ public class RrdDb implements RrdUpdater {
 		for(int i = 0; i < arcDefs.length; i++) {
 			archives[i] = new Archive(this, arcDefs[i]);
 		}
-		// finalize
-		finalizeSetup(true);
-		Util.debug(rrdDef.getRrdToolCommand());
+		backend.afterCreate();
 	}
 
 	/**
-	 * <p>Constructor used to open already existing RRD file.
-	 * Obtains read/write access to RRD file so that future
-	 * fetch and update operations are possible.</p>
+	 * <p>Constructor used to open already existing RRD. This RRD object will be backed
+	 * with a storage (backend) of the default type (file on the disk). Constructor
+	 * obtains read or read/write access to this RRD.</p>
 	 *
-	 * @param path Path to existing RRD file.
+	 * @param path Path to existing RRD.
+	 * @param readOnly Should be set to <code>false</code> if you want to update
+	 * the underlying RRD. If you want just to fetch data from the RRD file
+	 * (read-only access), specify <code>true</code>. If you try to update RRD file
+	 * open in read-only mode (<code>readOnly</code> set to <code>true</code>),
+	 * <code>IOException</code> will be thrown.
+	 * @throws IOException Thrown in case of I/O error.
+	 * @throws RrdException Thrown in case of JRobin specific error.
+	 */
+	public RrdDb(String path, boolean readOnly)	throws IOException, RrdException {
+		this(path, readOnly, RrdBackendFactory.getDefaultFactory());
+	}
+
+	/**
+	 * <p>Constructor used to open already existing RRD backed
+	 * with a storage (backend) different from default. Constructor
+	 * obtains read or read/write access to this RRD.</p>
+	 *
+	 * @param path Path to existing RRD.
+	 * @param readOnly Should be set to <code>false</code> if you want to update
+	 * the underlying RRD. If you want just to fetch data from the RRD file
+	 * (read-only access), specify <code>true</code>. If you try to update RRD file
+	 * open in read-only mode (<code>readOnly</code> set to <code>true</code>),
+	 * <code>IOException</code> will be thrown.
+	 * @param factory Backend factory which will be used for this RRD.
+	 * @throws IOException Thrown in case of I/O error.
+	 * @throws RrdException Thrown in case of JRobin specific error.
+	 * @see RrdBackendFactory
+	 */
+	public RrdDb(String path, boolean readOnly, RrdBackendFactory factory)
+			throws IOException, RrdException {
+		// opens existing RRD file - throw exception if the file does not exist...
+		if(!factory.exists(path)) {
+			throw new IOException("Could not open " + path + " [non existent]");
+		}
+		backend = factory.open(path, readOnly, lockMode);
+		// restore header
+		header = new Header(this, (RrdDef) null);
+		header.validateHeader();
+		// restore datasources
+		int dsCount = header.getDsCount();
+		datasources = new Datasource[dsCount];
+		for(int i = 0; i < dsCount; i++) {
+			datasources[i] = new Datasource(this, null);
+		}
+		// restore archives
+		int arcCount = header.getArcCount();
+		archives = new Archive[arcCount];
+		for(int i = 0; i < arcCount; i++) {
+			archives[i] = new Archive(this, null);
+		}
+	}
+
+	/**
+	 * <p>Constructor used to open already existing RRD in R/W mode, with a default storage
+	 * (backend) type (file on the disk).
+	 *
+	 * @param path Path to existing RRD.
 	 * @throws IOException Thrown in case of I/O error.
 	 * @throws RrdException Thrown in case of JRobin specific error.
 	 */
 	public RrdDb(String path) throws IOException, RrdException {
-		// opens existing RRD file - throw exception if the file does not exist...
-		File rrdFile = new File(path);
-		if(!rrdFile.exists()) {
-			throw new IOException("Could not open file " + path + " [non existent]");
-		}
-		try {
-			initializeSetup(path);
-			// restore header
-			header = new Header(this);
-			// restore datasources
-			int dsCount = header.getDsCount();
-			datasources = new Datasource[dsCount];
-			for(int i = 0; i < dsCount; i++) {
-				datasources[i] = new Datasource(this);
-			}
-			// restore archives
-			int arcCount = header.getArcCount();
-			archives = new Archive[arcCount];
-			for(int i = 0; i < arcCount; i++) {
-				archives[i] = new Archive(this);
-			}
-			finalizeSetup(false);
-		}
-		catch(RuntimeException e) {
-			throw new RrdException(e);
-		}
+		this(path, false);
 	}
 
 	/**
-	 * <p>Constructor used to create new RRD file from XML dump. JRobin and RRDTool
+	 * <p>Constructor used to open already existing RRD in R/W mode with a storage (backend) type
+	 * different from default.</p>
+	 *
+	 * @param path Path to existing RRD.
+	 * @param factory Backend factory used to create this RRD.
+	 * @throws IOException Thrown in case of I/O error.
+	 * @throws RrdException Thrown in case of JRobin specific error.
+ 	 * @see RrdBackendFactory
+	 */
+	public RrdDb(String path, RrdBackendFactory factory) throws IOException, RrdException {
+		this(path, false, factory);
+	}
+
+	/**
+	 * <p>Constructor used to create new RRD from XML dump. Newly created RRD will be backed
+	 * with a default storage (backend) type (file on the disk). JRobin and RRDTool
 	 * use the same format for XML dump and this constructor should be used to
-	 * (re)create JRobin RRD file from XML. In other words, it is possible to convert
+	 * (re)create JRobin RRD from XML. In other words, it is possible to convert
 	 * RRDTool RRD files to JRobin RRD files: first, dump the content of RRDTool
 	 * RRD file (use command line):</p>
 	 *
@@ -181,14 +282,42 @@ public class RrdDb implements RrdUpdater {
 	 * <p>See documentation for {@link #dumpXml(java.lang.String) dumpXml()} method
 	 * how to convert JRobin files to RRDTool format.</p>
 	 *
-	 * @param rrdPath Path to RRD file which will be created on the disk
+	 * @param rrdPath Path to RRD file which will be created
 	 * @param xmlPath Path to file containing XML dump of RRDTool's or JRobin's RRD file
 	 * @throws IOException Thrown in case of I/O error
 	 * @throws RrdException Thrown in case of JRobin specific error
 	 */
 	public RrdDb(String rrdPath, String xmlPath) throws IOException, RrdException {
-		initializeSetup(rrdPath);
-		XmlReader reader = new XmlReader(xmlPath);
+		this(rrdPath, xmlPath, RrdBackendFactory.getDefaultFactory());
+	}
+
+    /**
+	 * <p>Constructor used to create new RRD from XML dump but with a storage (backend) type
+	 * different from default.</p>
+	 *
+	 * @param rrdPath Path to RRD which will be created
+	 * @param xmlPath Path to file containing XML dump of RRDTool's or JRobin's RRD file
+	 * @param factory Backend factory which will be used to create storage (backend) for this RRD.
+	 * @throws IOException Thrown in case of I/O error
+	 * @throws RrdException Thrown in case of JRobin specific error
+	 * @see RrdBackendFactory
+	 */
+	public RrdDb(String rrdPath, String xmlPath, RrdBackendFactory factory)
+			throws IOException, RrdException {
+		backend = factory.open(rrdPath, false, lockMode);
+		DataImporter reader;
+		if(xmlPath.startsWith("rrdtool:/")) {
+			String rrdToolPath = xmlPath.substring("rrdtool:/".length());
+			reader = new RrdToolReader(rrdToolPath);
+		}
+		else if(xmlPath.startsWith("xml:/")) {
+			xmlPath = xmlPath.substring("xml:/".length());
+			reader = new XmlReader(xmlPath);
+		}
+		else {
+			reader = new XmlReader(xmlPath);
+		}
+		backend.setLength(reader.getEstimatedSize());
 		// create header
 		header = new Header(this, reader);
 		// create datasources
@@ -201,53 +330,34 @@ public class RrdDb implements RrdUpdater {
 		for(int i = 0; i < archives.length; i++) {
 			archives[i] = new Archive(this, reader, i);
 		}
+		reader.release();
 		// XMLReader is a rather huge DOM tree, release memory ASAP
 		reader = null;
-		// finalize
-		finalizeSetup(true);
-	}
-
-
-	private void initializeSetup(String path) throws IOException {
-		file = new RrdFile(path);
-		file.setSafeMode(true);
-	}
-
-	private void finalizeSetup(boolean newFile) throws IOException {
-		if(newFile) {
-			file.truncate();
-		}
-		else if(!file.isEndReached()) {
-			throw new IOException("Extra bytes found in RRD file. Not a RRD file at all?");
-		}
-		file.setSafeMode(false);
+		backend.afterCreate();
 	}
 
 	/**
-	 * Closes RRD file. No further operations are allowed on this RrdDb object.
+	 * Closes RRD. No further operations are allowed on this RrdDb object.
 	 *
 	 * @throws IOException Thrown in case of I/O related error.
 	 */
 	public synchronized void close() throws IOException {
-		if(file != null) {
-			file.close();
-			file = null;
+		if(!closed) {
+			backend.close();
+			closed = true;
 		}
 	}
 
 	/**
-	 * <p>Returns underlying <code>RrdFile</code> object. <code>RrdFile</code> is a light
-	 * wrapper around <code>RandomAccessFile</code> class.
-	 * It is used for all I/O operations on RRD files.</p>
-	 *
-	 * @return Underlying RrdFile object
+	 * Returns true if the RRD is closed.
+	 * @return true if closed, false otherwise
 	 */
-	public RrdFile getRrdFile() {
-		return file;
+	public boolean isClosed() {
+		return closed;
 	}
 
 	/**
-	 * Returns RRD file header.
+	 * Returns RRD header.
 	 * @return Header object
 	 */
 	public Header getHeader() {
@@ -273,10 +383,10 @@ public class RrdDb implements RrdUpdater {
 	}
 
 	/**
-	 * <p>Returns an array of data source names defined in RRD file.</p>
+	 * <p>Returns an array of datasource names defined in RRD.</p>
 	 *
-	 * @return Array of data source names.
-	 * @throws IOException In case of I/O related error.
+	 * @return Array of datasource names.
+	 * @throws IOException Thrown in case of I/O error.
 	 */
 	public String[] getDsNames() throws IOException {
 		int n = datasources.length;
@@ -288,14 +398,14 @@ public class RrdDb implements RrdUpdater {
 	}
 
 	/**
-	 * <p>Creates new sample with the given timestamp and all data source values set to
+	 * <p>Creates new sample with the given timestamp and all datasource values set to
 	 * 'unknown'. Use returned <code>Sample</code> object to specify
 	 * datasource values for the given timestamp. See documentation for
 	 * {@link org.jrobin.core.Sample Sample} for an explanation how to do this.</p>
 	 *
 	 * <p>Once populated with data source values, call Sample's
 	 * {@link org.jrobin.core.Sample#update() update()} method to actually
-	 * store sample in the RRD file associated with it.</p>
+	 * store sample in the RRD associated with it.</p>
 	 * @param time Sample timestamp rounded to the nearest second (without milliseconds).
 	 * @return Fresh sample with the given timestamp and all data source values set to 'unknown'.
 	 * @throws IOException Thrown in case of I/O error.
@@ -312,7 +422,7 @@ public class RrdDb implements RrdUpdater {
 	 *
 	 * <p>Once populated with data source values, call Sample's
 	 * {@link org.jrobin.core.Sample#update() update()} method to actually
-	 * store sample in the RRD file associated with it.</p>
+	 * store sample in the RRD associated with it.</p>
 	 * @return Fresh sample with the current timestamp and all
 	 * data source values set to 'unknown'.
 	 * @throws IOException Thrown in case of I/O error.
@@ -322,7 +432,7 @@ public class RrdDb implements RrdUpdater {
 	}
 
 	/**
-	 * <p>Prepares fetch request to be executed on the underlying RRD file. Use returned
+	 * <p>Prepares fetch request to be executed on this RRD. Use returned
 	 * <code>FetchRequest</code> object and its {@link org.jrobin.core.FetchRequest#fetch() fetch()}
 	 * method to actually fetch data from the RRD file.</p>
 	 * @param consolFun Consolidation function to be used in fetch request. Allowed values are
@@ -330,9 +440,9 @@ public class RrdDb implements RrdUpdater {
 	 * @param fetchStart Starting timestamp for fetch request.
 	 * @param fetchEnd Ending timestamp for fetch request.
 	 * @param resolution Fetch resolution (see RRDTool's
-	 * <a href="../../man/rrdfetch.html" target="man">rrdfetch man page</a> for an
+	 * <a href="../../../../man/rrdfetch.html" target="man">rrdfetch man page</a> for an
 	 * explanation of this parameter.
-	 * @return Request object that should be used to actually fetch data from RRD file.
+	 * @return Request object that should be used to actually fetch data from RRD.
 	 * @throws RrdException In case of JRobin related error (invalid consolidation function or
 	 * invalid time span).
 	 */
@@ -342,19 +452,18 @@ public class RrdDb implements RrdUpdater {
 	}
 
 	/**
-	 * <p>Prepares fetch request to be executed on the underlying RRD file. Use returned
+	 * <p>Prepares fetch request to be executed on this RRD. Use returned
 	 * <code>FetchRequest</code> object and its {@link org.jrobin.core.FetchRequest#fetch() fetch()}
-	 * method to actually fetch data from the RRD file. Data will be fetched with the smallest
+	 * method to actually fetch data from this RRD. Data will be fetched with the smallest
 	 * possible resolution (see RRDTool's
-	 * <a href="../../../man/rrdfetch.html" target="man">rrdfetch man page</a>
+	 * <a href="../../../../man/rrdfetch.html" target="man">rrdfetch man page</a>
 	 * for the explanation of the resolution parameter).</p>
 	 *
 	 * @param consolFun Consolidation function to be used in fetch request. Allowed values are
 	 * "AVERAGE", "MIN", "MAX" and "LAST".
 	 * @param fetchStart Starting timestamp for fetch request.
 	 * @param fetchEnd Ending timestamp for fetch request.
-	 * explanation of this parameter.
-	 * @return Request object that should be used to actually fetch data from RRD file.
+	 * @return Request object that should be used to actually fetch data from RRD.
 	 * @throws RrdException In case of JRobin related error (invalid consolidation function or
 	 * invalid time span).
 	 */
@@ -363,7 +472,11 @@ public class RrdDb implements RrdUpdater {
         return createFetchRequest(consolFun, fetchStart, fetchEnd, 1);
 	}
 
-	void store(Sample sample) throws IOException, RrdException {
+	synchronized void store(Sample sample) throws IOException, RrdException {
+		if(closed) {
+			throw new RrdException("RRD already closed, cannot store this  sample");
+		}
+		backend.beforeUpdate();
 		long newTime = sample.getTime();
 		long lastTime = header.getLastUpdateTime();
 		if(lastTime >= newTime) {
@@ -376,75 +489,136 @@ public class RrdDb implements RrdUpdater {
 			datasources[i].process(newTime, newValue);
 		}
 		header.setLastUpdateTime(newTime);
-		Util.debug(sample.getRrdToolCommand());
+		backend.afterUpdate();
 	}
 
-	FetchPoint[] fetch(FetchRequest request) throws IOException, RrdException {
+	synchronized FetchPoint[] fetch(FetchRequest request) throws IOException, RrdException {
+		if(closed) {
+			throw new RrdException("RRD already closed, cannot fetch data");
+		}
+		backend.beforeFetch();
 		Archive archive = findMatchingArchive(request);
 		FetchPoint[] points = archive.fetch(request);
-		Util.debug(request.getRrdToolCommand());
+		backend.afterFetch();
 		return points;
 	}
 
-	FetchData fetchData(FetchRequest request) throws IOException, RrdException {
+	synchronized FetchData fetchData(FetchRequest request) throws IOException, RrdException {
+		if(closed) {
+			throw new RrdException("RRD already closed, cannot fetch data");
+		}
+		backend.beforeFetch();
 		Archive archive = findMatchingArchive(request);
 		FetchData fetchData = archive.fetchData(request);
-		Util.debug(request.getRrdToolCommand());
+		backend.afterFetch();
 		return fetchData;
 	}
 
-	private Archive findMatchingArchive(FetchRequest request) throws IOException, RrdException {
-		String consolFun = request.getConsolFun();
-		long fetchStart = request.getFetchStart();
-		long fetchEnd = request.getFetchEnd();
-		long resolution = request.getResolution();
+	public Archive findMatchingArchive(FetchRequest request) throws RrdException, IOException
+	{
+		String consolFun	= request.getConsolFun();
+		long fetchStart 	= request.getFetchStart();
+		long fetchEnd 		= request.getFetchEnd();
+		long resolution 	= request.getResolution();
+
 		Archive bestFullMatch = null, bestPartialMatch = null;
+
 		long bestStepDiff = 0, bestMatch = 0;
-		for(int i = 0; i < archives.length; i++) {
-            if(archives[i].getConsolFun().equals(consolFun)) {
-				long arcStep = archives[i].getArcStep();
-				long arcStart = archives[i].getStartTime() - arcStep;
-                long arcEnd = archives[i].getEndTime();
-                long fullMatch = fetchEnd - fetchStart;
-                // best full match
-                if(arcEnd >= fetchEnd && arcStart <= fetchStart) {
-					long tmpStepDiff = Math.abs(archives[i].getArcStep() - resolution);
-                    if(bestFullMatch == null || tmpStepDiff < bestStepDiff) {
+
+		for ( int i = 0; i < archives.length; i++ )
+		{
+            if ( archives[i].getConsolFun().equals(consolFun) )
+			{
+				long arcStep 	= archives[i].getArcStep();
+				long arcStart 	= archives[i].getStartTime() - arcStep;
+                long arcEnd 	= archives[i].getEndTime();
+                long fullMatch 	= fetchEnd - fetchStart;
+
+                if ( arcEnd >= fetchEnd && arcStart <= fetchStart )					// best full match
+				{
+					long tmpStepDiff = Math.abs( archives[i].getArcStep() - resolution );
+
+                    if ( tmpStepDiff < bestStepDiff || bestFullMatch == null )
+					{
                         bestStepDiff = tmpStepDiff;
 						bestFullMatch = archives[i];
 					}
+
 				}
-				// best partial match
-				else {
+				else																// best partial match
+				{
                     long tmpMatch = fullMatch;
-                    if(arcStart > fetchStart) {
+					
+                    if ( arcStart > fetchStart )
                         tmpMatch -= (arcStart - fetchStart);
-					}
-					if(arcEnd < fetchEnd) {
+					if( arcEnd < fetchEnd )
 						tmpMatch -= (fetchEnd - arcEnd);
-					}
-                    if(bestPartialMatch == null || bestMatch < tmpMatch) {
-                        bestPartialMatch = archives[i];
-						bestMatch = tmpMatch;
+
+                    if ( bestPartialMatch == null || bestMatch < tmpMatch )
+					{
+                        bestPartialMatch 	= archives[i];
+						bestMatch 			= tmpMatch;
 					}
 				}
 			}
 		}
-		if(bestFullMatch != null) {
+
+		if ( bestFullMatch != null )
 			return bestFullMatch;
-		}
-		else if(bestPartialMatch != null) {
+		else if ( bestPartialMatch != null )
 			return bestPartialMatch;
-		}
-		else {
+		else
 			throw new RrdException("RRD file does not contain RRA:" + consolFun + " archive");
-		}
 	}
 
 	/**
-	 * <p>Returns string representing complete internal state of RRD file. The returned
+	 * Finds the archive that best matches to the start time (time period being start-time until now)
+	 * and requested resolution.
+	 * @param consolFun Consolidation function of the datasource.
+	 * @param startTime Start time of the time period in seconds.
+	 * @param resolution Requested fetch resolution.
+	 * @return Reference to the best matching archive.
+	 * @throws IOException Thrown in case of I/O related error.
+	 */
+	public Archive findStartMatchArchive( String consolFun, long startTime, long resolution ) throws IOException
+	{
+		long arcStep, diff;
+		int fallBackIndex	= 0;
+		int arcIndex		= -1;
+		long minDiff 		= Long.MAX_VALUE;
+		long fallBackDiff	= Long.MAX_VALUE;
+
+		for ( int i = 0; i < archives.length; i++ )
+		{
+			if ( archives[i].getConsolFun().equals(consolFun) )
+			{
+				arcStep = archives[i].getArcStep();
+				diff	= Math.abs( resolution - arcStep );
+
+				// Now compare start time, see if this archive encompasses the requested interval
+				if ( startTime >= archives[i].getStartTime() )
+				{
+					if ( diff == 0 )				// Best possible match either way
+						return archives[i];
+					else if ( diff < minDiff ) {
+						minDiff 	= diff;
+						arcIndex	= i;
+					}
+				}
+				else if ( diff < fallBackDiff ) {
+					fallBackDiff 	= diff;
+					fallBackIndex	= i;
+				}
+			}
+		}
+
+		return ( arcIndex >= 0 ? archives[arcIndex] : archives[fallBackIndex] );
+	}
+
+	/**
+	 * <p>Returns string representing complete internal RRD state. The returned
 	 * string can be printed to <code>stdout</code> and/or used for debugging purposes.</p>
-	 * @return String representing internal state of RRD file.
+	 * @return String representing internal RRD state.
 	 * @throws IOException Thrown in case of I/O related error.
 	 */
 	public synchronized String dump() throws IOException {
@@ -471,12 +645,12 @@ public class RrdDb implements RrdUpdater {
 	 * <p>Returns internal index number for the given datasource name. This index is heavily
 	 * used by jrobin.graph package and has no value outside of it.</p>
 	 * @param dsName Data source name.
-	 * @return Internal index of the given data source name in RRD file.
-	 * @throws IOException Thrown in case of I/O related error.
+	 * @return Internal index of the given data source name in this RRD.
 	 * @throws RrdException Thrown in case of JRobin related error (invalid data source name,
 	 * for example)
+	 * @throws IOException Thrown in case of I/O error.
 	 */
-	public int getDsIndex(String dsName) throws IOException, RrdException {
+	public int getDsIndex(String dsName) throws RrdException, IOException {
 		for(int i = 0; i < datasources.length; i++) {
 			if(datasources[i].getDsName().equals(dsName)) {
 				return i;
@@ -494,7 +668,7 @@ public class RrdDb implements RrdUpdater {
 	}
 
 	/**
-	 * <p>Writes the content of RRD file to OutputStream using XML format. This format
+	 * <p>Writes the RRD content to OutputStream using XML format. This format
 	 * is fully compatible with RRDTool's XML dump format and can be used for conversion
 	 * purposes or debugging.</p>
 	 * @param destination Output stream to receive XML data
@@ -514,14 +688,22 @@ public class RrdDb implements RrdUpdater {
 			archives[i].appendXml(writer);
 		}
 		writer.closeTag();
-		writer.finish();
+		writer.flush();
 	}
 
 	/**
-	 * <p>Returns string representing internal state of RRD file in XML format. This format
+	 * This method is just an alias for {@link #dumpXml(OutputStream) dumpXml} method.
+	 * @throws IOException Thrown in case of I/O related error
+	 */
+	public synchronized void exportXml(OutputStream destination) throws IOException {
+		dumpXml(destination);
+	}
+
+	/**
+	 * <p>Returns string representing internal RRD state in XML format. This format
 	 * is fully compatible with RRDTool's XML dump format and can be used for conversion
 	 * purposes or debugging.</p>
-	 * @return Internal state of RRD file in XML format.
+	 * @return Internal RRD state in XML format.
 	 * @throws IOException Thrown in case of I/O related error
 	 * @throws RrdException Thrown in case of JRobin specific error
 	 */
@@ -532,8 +714,18 @@ public class RrdDb implements RrdUpdater {
 	}
 
 	/**
-	 * <p>Dumps internal state of RRD file to XML file.
-	 * Use this XML file to convert your JRobin RRD file to RRDTool format.</p>
+	 * This method is just an alias for {@link #getXml() getXml} method.
+	 * @return Internal RRD state in XML format.
+	 * @throws IOException Thrown in case of I/O related error
+	 * @throws RrdException Thrown in case of JRobin specific error
+	 */
+	public synchronized String exportXml() throws IOException, RrdException {
+		return getXml();
+	}
+
+	/**
+	 * <p>Dumps internal RRD state to XML file.
+	 * Use this XML file to convert your JRobin RRD to RRDTool format.</p>
 	 *
 	 * <p>Suppose that you have a JRobin RRD file <code>original.rrd</code> and you want
 	 * to convert it to RRDTool format. First, execute the following java code:</p>
@@ -550,24 +742,38 @@ public class RrdDb implements RrdUpdater {
 	 * @throws IOException Thrown in case of I/O related error.
 	 * @throws RrdException Thrown in case of JRobin related error.
 	 */
-
 	public synchronized void dumpXml(String filename) throws IOException, RrdException {
-		OutputStream destination = new FileOutputStream(filename, false);
-		dumpXml(destination);
-		destination.close();
+		OutputStream outputStream = null;
+		try {
+			outputStream = new FileOutputStream(filename, false);
+			dumpXml(outputStream);
+		}
+		finally {
+			if(outputStream != null) {
+				outputStream.close();
+			}
+		}
+	}
+
+	/**
+	 * This method is just an alias for {@link #dumpXml(String) dumpXml(String)} method.
+	 * @throws IOException Thrown in case of I/O related error
+	 * @throws RrdException Thrown in case of JRobin specific error
+	 */
+	public synchronized void exportXml(String filename) throws IOException, RrdException {
+		dumpXml(filename);
 	}
 
 	/**
 	 * Returns time of last update operation as timestamp (in seconds).
 	 * @return Last update time (in seconds).
-	 * @throws IOException Thrown in case of I/O error.
 	 */
-	public long getLastUpdateTime() throws IOException {
+	public synchronized long getLastUpdateTime() throws IOException {
 		return header.getLastUpdateTime();
 	}
 
 	/**
-	 * <p>Returns RRD definition object which can be used to create new RRD file
+	 * <p>Returns RRD definition object which can be used to create new RRD
 	 * with the same creation parameters but with no data in it.</p>
 	 *
 	 * <p>Example:</p>
@@ -580,15 +786,14 @@ public class RrdDb implements RrdUpdater {
 	 * // create new RRD file
 	 * RrdDb rrd2 = new RrdDb(def);
 	 * </pre>
-	 * @return RRD file definition.
-	 * @throws IOException Thrown in case of I/O error.
+	 * @return RRD definition.
 	 * @throws RrdException Thrown in case of JRobin specific error.
 	 */
-	public RrdDef getRrdDef() throws IOException, RrdException {
+	public synchronized RrdDef getRrdDef() throws RrdException, IOException {
 		// set header
 		long startTime = header.getLastUpdateTime();
 		long step = header.getStep();
-		String path = getRrdFile().getFilePath();
+		String path = backend.getPath();
 		RrdDef rrdDef = new RrdDef(path, startTime, step);
 		// add datasources
 		for(int i = 0; i < datasources.length; i++) {
@@ -629,7 +834,7 @@ public class RrdDb implements RrdUpdater {
 	 * @return The current locking behaviour.
 	 */
 	public static int getLockMode() {
-		return RrdFile.getLockMode();
+		return RrdDb.lockMode;
 	}
 
 	/**
@@ -639,24 +844,174 @@ public class RrdDb implements RrdUpdater {
 	 * <code>WAIT_IF_LOCKED</code> and <code>EXCEPTION_IF_LOCKED</code>.
 	 */
 	public static void setLockMode(int lockMode) {
-		RrdFile.setLockMode(lockMode);
+		RrdDb.lockMode = lockMode;
 	}
 
 	protected void finalize() throws Throwable {
 		close();
 	}
 
-    public static void main(String[] args) throws RrdException, IOException {
-		RrdDb rrd = new RrdDb("demo.rrd");
-		long t1 = Util.getTimestamp(2003, 4, 1);
-		long t2 = Util.getTimestamp(2003, 4, 2);
-		FetchData data = rrd.createFetchRequest("AVERAGE", t1, t2).fetchData();
-		data.dump();
-		System.out.println("MAX : " + data.getAggregate("sun", "MAX"));
-		System.out.println("MAX2: " + data.getAggregate("sun", "MAX", "value,2,*"));
-		System.out.println("MIN : " + data.getAggregate("sun", "MIN"));
-		System.out.println("MIN2: " + data.getAggregate("sun", "MIN", "value,2,*"));
-		System.out.println("AVG : " + data.getAggregate("sun", "AVERAGE"));
-		System.out.println("AVG2: " + data.getAggregate("sun", "AVERAGE", "value,2,*"));
+	/**
+	 * Copies object's internal state to another RrdDb object.
+	 * @param other New RrdDb object to copy state to
+	 * @throws IOException Thrown in case of I/O error
+	 * @throws RrdException Thrown if supplied argument is not a compatible RrdDb object
+	 */
+	public synchronized void copyStateTo(RrdUpdater other) throws IOException, RrdException {
+		if(!(other instanceof RrdDb)) {
+			throw new RrdException(
+				"Cannot copy RrdDb object to " + other.getClass().getName());
+		}
+		RrdDb otherRrd = (RrdDb) other;
+		header.copyStateTo(otherRrd.header);
+		for(int i = 0; i < datasources.length; i++) {
+			int j = Util.getMatchingDatasourceIndex(this, i, otherRrd);
+			if(j >= 0) {
+				datasources[i].copyStateTo(otherRrd.datasources[j]);
+			}
+		}
+		for(int i = 0; i < archives.length; i++) {
+			int j = Util.getMatchingArchiveIndex(this, i, otherRrd);
+			if(j >= 0) {
+				archives[i].copyStateTo(otherRrd.archives[j]);
+			}
+		}
 	}
+
+	/**
+	 * Returns Datasource object corresponding to the given datasource name.
+	 * @param dsName Datasource name
+	 * @return Datasource object corresponding to the give datasource name or null
+	 * if not found.
+	 * @throws IOException Thrown in case of I/O error
+	 */
+	public Datasource getDatasource(String dsName) throws IOException {
+		try {
+			return getDatasource(getDsIndex(dsName));
+		}
+		catch (RrdException e) {
+			return null;
+		}
+	}
+
+	/**
+	 * Returns index of Archive object with the given consolidation function and the number
+	 * of steps. Exception is thrown if such archive could not be found.
+	 * @param consolFun Consolidation function
+	 * @param steps Number of archive steps
+	 * @return Requested Archive object
+	 * @throws IOException Thrown in case of I/O error
+	 * @throws RrdException Thrown if no such archive could be found
+	 */
+	public int getArcIndex(String consolFun, int steps) throws RrdException, IOException {
+		for(int i = 0; i < archives.length; i++) {
+			if(archives[i].getConsolFun().equals(consolFun) &&
+				archives[i].getSteps() == steps) {
+				return i;
+			}
+		}
+		throw new RrdException("Could not find archive " + consolFun + "/" + steps);
+	}
+
+	/**
+	 * Returns Archive object with the given consolidation function and the number
+	 * of steps.
+	 * @param consolFun Consolidation function
+	 * @param steps Number of archive steps
+	 * @return Requested Archive object or null if no such archive could be found
+	 * @throws IOException Thrown in case of I/O error
+	 */
+	public Archive getArchive(String consolFun, int steps) throws IOException {
+		try {
+			return getArchive(getArcIndex(consolFun, steps));
+		}
+		catch (RrdException e) {
+			return null;
+		}
+	}
+
+	/**
+	 * Returns canonical path to the underlying RRD file. Note that this method makes sense just for
+	 * ordinary RRD files created on the disk - an exception will be thrown for RRD objects created in
+	 * memory or with custom backends.
+	 * @return Canonical path to RRD file;
+	 * @throws IOException Thrown in case of I/O error or if the underlying backend is
+	 * not derived from RrdFileBackend.
+	 */
+	public String getCanonicalPath() throws IOException {
+		if(backend instanceof RrdFileBackend) {
+			return ((RrdFileBackend) backend).getCanonicalPath();
+		}
+		else {
+			throw new IOException("The underlying backend has no canonical path");
+		}
+	}
+
+	/**
+	 * Returns path to this RRD.
+	 * @return Path to this RRD.
+	 */
+	public String getPath() {
+		return backend.getPath();
+	}
+
+	/**
+	 * Returns backend object for this RRD which performs actual I/O operations.
+	 * @return RRD backend for this RRD.
+	 */
+	public RrdBackend getRrdBackend() {
+		return backend;
+	}
+
+	/**
+	 * Required to implement RrdUpdater interface. You should never call this method directly.
+	 * @return Allocator object
+	 */
+	public RrdAllocator getRrdAllocator() {
+		return allocator;
+	}
+
+	/**
+	 * Returns an array of bytes representing the whole RRD.
+	 * @return All RRD bytes
+	 * @throws IOException Thrown in case of I/O related error.
+	 */
+	public synchronized byte[] getBytes() throws IOException {
+		return backend.readAll();
+	}
+
+	/**
+	 * This method forces all RRD data cached in memory but not yet stored in the persistant
+	 * storage, to be stored in it. This method should be used only if you RrdDb object uses
+	 * RrdBackend which implements any kind of data caching (like {@link RrdNioBackend}). This method
+	 * need not be called before the {@link #close()} method call since the close() method always
+	 * synchronizes all data in memory with the data in the persisant storage.<p>
+	 *
+	 * When this method returns it is guaranteed that RRD data in the persistent storage is
+	 * synchronized with the RrdDb data in memory.<p>  
+	 *
+	 * @throws IOException Thrown in case of I/O error
+	 */
+	public synchronized void sync() throws IOException {
+		backend.sync();
+	}
+
+	/**
+	 * Sets default backend factory to be used. This method is just an alias for
+	 * {@link RrdBackendFactory#setDefaultFactory(java.lang.String)}.<p>
+	 * @param factoryName Name of the backend factory to be set as default.
+	 * @throws RrdException Thrown if invalid factory name is supplied, or not called
+	 * before the first backend object (before the first RrdDb object) is created.
+	 */
+	public static void setDefaultFactory(String factoryName) throws RrdException {
+		RrdBackendFactory.setDefaultFactory(factoryName);
+	}
+
+	public static void main(String[] args) {
+		System.out.println("JRobin base directory: " + Util.getJRobinHomeDirectory());
+		System.out.println("JRobin Java Library :: RRDTool choice for the Java world");
+		System.out.println("http://www.jrobin.org");
+		System.out.println("(C) 2004 Sasa Markovic & Arne Vandamme");
+	}
+
 }

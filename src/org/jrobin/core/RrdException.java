@@ -2,8 +2,8 @@
  * JRobin : Pure java implementation of RRDTool's functionality
  * ============================================================
  *
- * Project Info:  http://www.sourceforge.net/projects/jrobin
- * Project Lead:  Sasa Markovic (saxon@eunet.yu);
+ * Project Info:  http://www.jrobin.org
+ * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
  * (C) Copyright 2003, by Sasa Markovic.
  *
@@ -29,12 +29,11 @@ package org.jrobin.core;
  * Class to represent various JRobin checked exceptions.
  * JRobin code can throw only <code>RrdException</code>
  * (for various JRobin related errors) or <code>IOException</code>
- * (for disk I/O errors).
+ * (for various I/O errors).
  *
- * @author <a href="mailto:saxon@eunet.yu">Sasa Markovic</a>
+ * @author <a href="mailto:saxon@jrobin.org">Sasa Markovic</a>
  */
 public class RrdException extends Exception {
-
 	/**
 	 * Creates new RrdException with the supplied message in it.
 	 * @param message Error message.
@@ -43,6 +42,10 @@ public class RrdException extends Exception {
 		super(message);
 	}
 
+	/**
+	 * Creates new RrdException object from any java.lang.Exception object
+	 * @param e Exception object
+	 */
 	public RrdException(Exception e) {
 		super(e);
 	}

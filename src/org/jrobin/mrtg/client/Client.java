@@ -2,8 +2,8 @@
  * JRobin : Pure java implementation of RRDTool's functionality
  * ============================================================
  *
- * Project Info:  http://www.sourceforge.net/projects/jrobin
- * Project Lead:  Sasa Markovic (saxon@eunet.yu);
+ * Project Info:  http://www.jrobin.org
+ * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
  * (C) Copyright 2003, by Sasa Markovic.
  *
@@ -25,8 +25,8 @@
 
 package org.jrobin.mrtg.client;
 
-import org.jrobin.mrtg.MrtgException;
 import org.apache.xmlrpc.XmlRpcException;
+import org.jrobin.mrtg.MrtgException;
 
 import javax.swing.*;
 import javax.swing.event.TreeSelectionEvent;
@@ -37,10 +37,11 @@ import java.awt.event.*;
 import java.io.IOException;
 
 class Client extends JFrame {
-	static final String TITLE = "JRobin-MRTG client 1.1.0";
-	static final String SUBTITLE = "http://jrobin.sourceforge.net";
-	static final String COPYRIGHT = "Copyright \u00A9 2003 Sasa Markovic";
-	static final String ICON = "res/icon.png";
+	static final String RESOURCE_PATH = "res/mrtg/";
+	static final String TITLE = "JRobin-MRTG client";
+	static final String SUBTITLE = "http://www.jrobin.org";
+	static final String COPYRIGHT = "Copyright \u00A9 2004 Sasa Markovic";
+	static final String ICON = RESOURCE_PATH + "icon.png";
 
 	static Dimension MAIN_TREE_SIZE = new Dimension(320, 400);
 	static Dimension INFO_PANE_SIZE = new Dimension(320, 400);

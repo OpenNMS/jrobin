@@ -2,8 +2,8 @@
  * JRobin : Pure java implementation of RRDTool's functionality
  * ============================================================
  *
- * Project Info:  http://www.sourceforge.net/projects/jrobin
- * Project Lead:  Sasa Markovic (saxon@eunet.yu);
+ * Project Info:  http://www.jrobin.org
+ * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
  * (C) Copyright 2003, by Sasa Markovic.
  *
@@ -29,6 +29,7 @@ import java.util.Date;
 class ServerInfo implements TreeElementInfo {
 	private String serverHost;
 	private int sampleCount, savesCount, goodSavesCount, badSavesCount;
+	private double poolEfficency;
 	private Date startDate;
 
 	public String getServerHost() {
@@ -91,11 +92,20 @@ class ServerInfo implements TreeElementInfo {
 		buffer.append("Total samples processed: " + getSavesCount() + "\n");
 		buffer.append("Samples stored OK: " + getGoodSavesCount() + "\n");
 		buffer.append("Samples not stored: " + getBadSavesCount() + "\n");
+		buffer.append("Pool efficency: " + getPoolEfficency() + "\n");
 		return buffer.toString();
 	}
 
 	public boolean equals(Object obj) {
 		return obj instanceof ServerInfo;
+	}
+
+	double getPoolEfficency() {
+		return poolEfficency;
+	}
+
+	void setPoolEfficency(double poolEfficency) {
+		this.poolEfficency = poolEfficency;
 	}
 
 }

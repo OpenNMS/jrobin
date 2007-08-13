@@ -2,8 +2,8 @@
  * JRobin : Pure java implementation of RRDTool's functionality
  * ============================================================
  *
- * Project Info:  http://www.sourceforge.net/projects/jrobin
- * Project Lead:  Sasa Markovic (saxon@eunet.yu);
+ * Project Info:  http://www.jrobin.org
+ * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
  * (C) Copyright 2003, by Sasa Markovic.
  *
@@ -27,58 +27,21 @@ package org.jrobin.core;
 
 import java.io.IOException;
 
-/**
- *
- */
-class RrdLong {
-	private RrdFile file;
-	private long pointer;
-	private int count;
-
-	boolean cached = false;
-	long cachedValue;
-
-	RrdLong(RrdUpdater updater, int count) throws IOException {
-		this.count = count;
-		file = updater.getRrdFile();
-		pointer = file.allocate(RrdFile.LONG_SIZE, count);
-	}
-
+class RrdLong extends RrdPrimitive {
 	RrdLong(RrdUpdater updater) throws IOException {
-		this(updater, 1);
-	}
-
-	RrdLong(long initValue, RrdUpdater updater) throws IOException {
-		this.count = 1;
-		file = updater.getRrdFile();
-		pointer = file.allocate(initValue);
-		cached = true;
-		cachedValue = initValue;
-	}
-
-	void set(int index, long value) throws IOException {
-		assert index < count;
-		long readPointer = pointer + index * RrdFile.LONG_SIZE;
-		file.writeLong(readPointer, value);
+		super(updater, RrdPrimitive.RRD_LONG);
 	}
 
 	void set(long value) throws IOException {
-		cached = true;
-		cachedValue = value;
-		set(0, value);
-	}
-
-	long get(int index) throws IOException {
-		assert index < count;
-		long readPointer = pointer + index * RrdFile.LONG_SIZE;
-		return file.readLong(readPointer);
+		if(cache.setLong(value)) {
+			writeLong(value);
+		}
 	}
 
 	long get() throws IOException {
-		if(!cached) {
-			cachedValue = get(0);
-			cached = true;
+		if(cache.isEmpty()) {
+			cache.setLong(readLong());
 		}
-		return cachedValue;
+		return cache.getLong();
 	}
 }

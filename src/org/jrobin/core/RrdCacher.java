@@ -25,82 +25,75 @@
 
 package org.jrobin.core;
 
-class RrdCacher {
-	private Object cache = null;
+final class RrdCacher {
+	private boolean cached = false;
+	private int i;
+	private long l;
+	private double d;
+	private String s;
 
-	boolean setInt(int value) {
-		if(isCached(value)) {
+	final boolean setInt(int value) {
+		if (cached && value == i) {
 			return false;
 		}
 		else {
-			cache = new Integer(value);
-			return true;
+			i = value;
+			return cached = true;
 		}
 	}
 
-	boolean setLong(long value) {
-		if(isCached(value)) {
+	final boolean setLong(long value) {
+		if(cached && value == l) {
 			return false;
 		}
 		else {
-			cache = new Long(value);
-			return true;
+			l = value;
+			return cached = true;
 		}
 	}
 
-	boolean setDouble(double value) {
-		if(isCached(value)) {
+	final boolean setDouble(double value) {
+		if(cached && value == d) {
 			return false;
 		}
 		else {
-			cache = new Double(value);
-			return true;
+			d = value;
+			return cached = true;
 		}
 	}
 
-	boolean setString(String value) {
-		if(isCached(value)) {
+	final boolean setString(String value) {
+		if(cached && value.equals(s)) {
 			return false;
 		}
 		else {
-			cache = value;
-			return true;
+			s = value;
+			return cached = true;
 		}
 	}
 
-	boolean isEmpty() {
-		return cache == null;
+	final boolean isEmpty() {
+		return !cached;
 	}
 
-	int getInt() {
-		return ((Integer) cache).intValue();
+	final int getInt() {
+		return i;
 	}
 
-	long getLong() {
-		return ((Long) cache).longValue();
+	final long getLong() {
+		return l;
 	}
 
-	double getDouble() {
-		return ((Double) cache).doubleValue();
+	final double getDouble() {
+		return d;
 	}
 
-	String getString() {
-		return (String) cache;
+	final String getString() {
+		return s;
 	}
 
-	private boolean isCached(int value) {
-		return cache != null && getInt() == value;
+	final void clearCache() {
+		cached = false;
 	}
 
-	private boolean isCached(long value) {
-		return cache != null && getLong() == value;
-	}
-
-	private boolean isCached(double value) {
-		return cache != null && getDouble() == value;
-	}
-
-	private boolean isCached(String value) {
-		return cache != null && getString().equals(value);
-	}
 }

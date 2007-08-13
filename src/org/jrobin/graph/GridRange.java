@@ -24,6 +24,8 @@
  */
 package org.jrobin.graph;
 
+import org.jrobin.core.XmlWriter;
+
 /**
  * <p>Represents Y grid specifications for the chart area.</p>
  * 
@@ -85,5 +87,13 @@ class GridRange
 	
 	boolean isRigid() {
 		return rigid;
+	}
+
+	void exportXmlTemplate(XmlWriter xml) {
+		xml.startTag("grid_range");
+		xml.writeTag("lower", getLowerValue());
+		xml.writeTag("upper", getUpperValue());
+		xml.writeTag("rigid", isRigid());
+		xml.closeTag(); // grid_range
 	}
 }

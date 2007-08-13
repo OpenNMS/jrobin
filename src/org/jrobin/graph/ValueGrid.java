@@ -24,6 +24,8 @@
  */
 package org.jrobin.graph;
 
+import org.jrobin.core.RrdException;
+
 /**
  * <p>Holds specific information about the Value axis grid of the chart.</p>
  * 
@@ -38,6 +40,11 @@ class ValueGrid
 	private double lower;
 	private double upper;
 	
+	private double baseValue		= ValueFormatter.DEFAULT_BASE;
+	private double[] scaleValues	= new double[] {
+											1e18, 1e15, 1e12, 1e9, 1e6, 1e3, 1e0, 1e-3, 1e-6, 1e-9, 1e-12, 1e-15
+										};
+	
 	private ValueAxisUnit vAxis;
 	
 	
@@ -48,17 +55,17 @@ class ValueGrid
 	 * Creates a value grid based on a value range and possibly a value axis
 	 * unit specification.  The grid can also be specified to be rigid, to prevent
 	 * auto scaling of the displayed value range.
-	 * @param rigid True if the grid is rigid, false if not.
-	 * @param lower Lower value of the value range.
-	 * @param upper Upper value of the value range.
+	 * @param gr Grid range object.
+	 * @param low Lower value of the value range.
+	 * @param up Upper value of the value range.
 	 * @param vAxis ValueAxisUnit specified to determine the grid lines, if the given
 	 * ValueAxisUnit is null, one will be automatically determined.
 	 */
-	ValueGrid( GridRange gr, double low, double up, ValueAxisUnit vAxis )
+	ValueGrid( GridRange gr, double low, double up, ValueAxisUnit vAxis, double base ) throws RrdException
 	{
 		double grLower = Double.MAX_VALUE;
 		double grUpper = Double.MIN_VALUE;
-		
+
 		if ( gr != null )
 		{
 			this.rigid		= gr.isRigid();
@@ -69,14 +76,31 @@ class ValueGrid
 		this.lower	= low;
 		this.upper	= up;
 		this.vAxis	= vAxis;
-		
+
+		// Fill in the scale values
+		if ( base != baseValue )
+		{
+			baseValue			= base;
+
+			double tmp 			= 1;
+			for (int i = 1; i < 7; i++) {
+				tmp 				*= baseValue;
+				scaleValues[6 - i] 	= tmp;
+			}
+			tmp = 1;
+			for (int i = 7; i < scaleValues.length; i++) {
+				tmp					*= baseValue;
+				scaleValues[i]	 	= ( 1 / tmp );
+			}
+		}
+
 		// Set an appropriate value axis it not given yet
 		setValueAxis();
-		
+
 		if ( !rigid ) {
 			this.lower		= ( lower == grLower ? grLower : this.vAxis.getNiceLower( lower ) );
 			this.upper		= ( upper == grUpper ? grUpper : this.vAxis.getNiceHigher( upper ) );
-		}	
+		}
 	}
 	
 	
@@ -103,41 +127,57 @@ class ValueGrid
 	 * Determines a good ValueAxisUnit to use for grid calculation.
 	 * A decent grid is selected based on the value range being used in the chart.
 	 */
-	private void setValueAxis()
+	private void setValueAxis() throws RrdException
 	{
 		if ( vAxis != null )
 			return;
-		
-		if ( upper == Double.NaN  || upper == Double.MIN_VALUE || upper == Double.MAX_VALUE )
+
+		if ( Double.isNaN(upper) || upper == Double.MIN_VALUE || upper == Double.MAX_VALUE )
 			upper = 0.9;
-		if ( lower == Double.NaN || lower == Double.MAX_VALUE || lower == Double.MIN_VALUE )
+		if ( Double.isNaN(lower) || lower == Double.MAX_VALUE || lower == Double.MIN_VALUE )
 			lower = 0;
-		
+
 		if ( !rigid && upper == 0 && upper == lower )
 			upper = 0.9;
-		
+
 		// Determine nice axis grid
 		double shifted = Math.abs(upper - lower);
+		if ( shifted == 0 )			// Special case, no 'range' available
+			shifted = upper;
+
+		// Find the scaled unit for this range
 		double mod		= 1.0;
-		while ( shifted > 10 ) {
+		int scaleIndex 	=  scaleValues.length - 1;
+		while ( scaleIndex >= 0 && scaleValues[scaleIndex] < shifted )
+			scaleIndex--;
+
+		// Keep the rest of division
+		if ( scaleValues[++scaleIndex] != 0 )				// Don't divide by zero, it is silly
+			shifted = shifted / scaleValues[scaleIndex];
+
+		// Safety check to avoid infinite loop
+		if ( Double.isInfinite(shifted) )
+			throw new RrdException( "ValueGrid failure: u=" + upper + " l=" + lower + " sv=" + scaleValues[scaleIndex] );
+
+		// While rest > 10, divide by 10
+		while ( shifted > 10.0 ) {
 			shifted /= 10;
-			mod		*= 10;
+			mod	*= 10;
 		}
-		while ( shifted < 1 ) {
+
+		while ( shifted < 1.0 ) {
 			shifted *= 10;
-			mod		/= 10;
+			mod /= 10;
 		}
-	
+
 		// Create nice grid based on 'fixed' ranges
-		if ( shifted <= 1.5 )
-			vAxis = new ValueAxisUnit( 0.1*mod, 0.5*mod );
-		else if ( shifted <= 3 )
-			vAxis = new ValueAxisUnit( 0.2*mod, 1.0*mod );
-		else if ( shifted <= 5 )
-			vAxis = new ValueAxisUnit( 0.5*mod, 1.0*mod );
-		else if ( shifted <= 9 )
-			vAxis = new ValueAxisUnit( 0.5*mod, 2.0*mod );
+		if ( shifted <= 2 )
+			vAxis = new ValueAxisUnit( 0.1 * mod * scaleValues[scaleIndex], 0.5 * mod * scaleValues[scaleIndex] );
+		else if ( shifted <= 4 )
+			vAxis = new ValueAxisUnit( 0.2 * mod * scaleValues[scaleIndex], 1.0 * mod * scaleValues[scaleIndex] );
+		else if ( shifted <= 6 )
+			vAxis = new ValueAxisUnit( 0.5 * mod * scaleValues[scaleIndex], 1.0 * mod * scaleValues[scaleIndex] );
 		else
-			vAxis = new ValueAxisUnit( 1.0*mod, 5.0*mod );
+			vAxis = new ValueAxisUnit( 1.0 * mod * scaleValues[scaleIndex], 2.0 * mod * scaleValues[scaleIndex] );
 	}
 }

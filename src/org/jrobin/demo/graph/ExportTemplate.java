@@ -90,9 +90,9 @@ public class ExportTemplate
 
 	public static void main( String[] args )
 	{
-		if ( args.length < 2 )
+		if ( args.length < 1 )
 		{
-			System.out.println( "Usage: ExportTemplate [-m width] [-f <dump_file>] <template_file>" );
+			System.out.println( "Usage: ExportTemplate [-m maxRows] [-f <dump_file>] <template_file>" );
 			System.exit(0);
 		}
 

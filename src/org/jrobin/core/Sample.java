@@ -2,8 +2,8 @@
  * JRobin : Pure java implementation of RRDTool's functionality
  * ============================================================
  *
- * Project Info:  http://www.sourceforge.net/projects/jrobin
- * Project Lead:  Sasa Markovic (saxon@eunet.yu);
+ * Project Info:  http://www.jrobin.org
+ * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
  * (C) Copyright 2003, by Sasa Markovic.
  *
@@ -31,10 +31,10 @@ import java.util.StringTokenizer;
 /**
  * <p>Class to represent data source values for the given timestamp. Objects of this
  * class are never created directly (no public constructor is provided). To learn more how
- * to update a RRD file, see RRDTool's
- * <a href="../../../man/rrdupdate.html" target="man">rrdupdate man page</a>.
+ * to update RRDs, see RRDTool's
+ * <a href="../../../../man/rrdupdate.html" target="man">rrdupdate man page</a>.
  *
- * <p>To update a RRD file with JRobin use the following procedure:</p>
+ * <p>To update a RRD with JRobin use the following procedure:</p>
  *
  * <ol>
  * <li>Obtain empty Sample object by calling method {@link org.jrobin.core.RrdDb#createSample(long)
@@ -48,8 +48,8 @@ import java.util.StringTokenizer;
  * You should specifify only 'known' data source values. However, if you want to specify
  * 'unknown' values too, use <code>Double.NaN</code>.</p>
  *
- * @author <a href="mailto:saxon@eunet.yu">Sasa Markovic</a>
- */
+ * @author <a href="mailto:saxon@jrobin.org">Sasa Markovic</a>
+ */ 
 public class Sample {
 	private RrdDb parentDb;
 	private long time;
@@ -87,8 +87,8 @@ public class Sample {
 	}
 
 	/**
-	 * Sets single datasource value using data source index. Data sources are indexed using
-	 * the order of RRD file creation (zero-based).
+	 * Sets single datasource value using data source index. Data sources are indexed by
+	 * the order specified during RRD creation (zero-based).
 	 * @param i Data source index
 	 * @param value Data source values
 	 * @throws RrdException Thrown if data source index is invalid.
@@ -98,16 +98,16 @@ public class Sample {
 			values[i] = value;
 			return;
 		}
-		throw new RrdException("Sample index " + i + " out of bounds");
+		throw new RrdException("Sample datasource index " + i + " out of bounds");
 	}
 
 	/**
 	 * Sets some (possibly all) data source values in bulk. Data source values are
-	 * assigned in the order of their definition inside the RRD file.
+	 * assigned in the order of their definition inside the RRD.
 	 *
 	 * @param values Data source values.
 	 * @throws RrdException Thrown if the number of supplied values is zero or greater
-	 * than the number of data sources defined in the RRD file.
+	 * than the number of data sources defined in the RRD.
 	 */
 	public void setValues(double[] values) throws RrdException {
 		if(values.length <= this.values.length) {
@@ -163,56 +163,69 @@ public class Sample {
 	 * as unknowns. To specify unknown value in the argument string, use letter 'U'
 	 *
 	 * @param timeAndValues String made by concatenating sample timestamp with corresponding
-	 * data source values delmited with colons. For example:
-	 * <code>1005234132:12.2:35.6:U:24.5</code>
+	 * data source values delmited with colons. For example:<p>
+	 * <pre>
+	 * 1005234132:12.2:35.6:U:24.5
+	 * NOW:12.2:35.6:U:24.5
+	 * </pre>
+	 * 'N' stands for the current timestamp (can be replaced with 'NOW')<p>
+	 * Method will throw an exception if timestamp is invalid (cannot be parsed as Long, and is not 'N'
+	 * or 'NOW'). Datasource value which cannot be parsed as 'double' will be silently set to NaN.<p>
 	 * @throws RrdException Thrown if too many datasource values are supplied
 	 */
 	public void set(String timeAndValues) throws RrdException {
-		StringTokenizer st = new StringTokenizer(timeAndValues, ":", false);
-		int numTokens = st.countTokens();
-		String[] tokens = new String[numTokens];
-		for(int i = 0; i < numTokens; i++) {
-			tokens[i] = st.nextToken();
+		StringTokenizer tokenizer = new StringTokenizer(timeAndValues, ":", false);
+		int n = tokenizer.countTokens();
+		if(n > values.length + 1) {
+			throw new RrdException("Invalid number of values specified (found " +
+				values.length +	", " + dsNames.length + " allowed)");
 		}
-		long time = Long.parseLong(tokens[0]);
-		double[] values = new double[numTokens - 1];
-		for(int i = 0; i < numTokens - 1; i++) {
+		String timeToken = tokenizer.nextToken();
+		try {
+			time = Long.parseLong(timeToken);
+		}
+		catch(NumberFormatException nfe) {
+			if(timeToken.equalsIgnoreCase("N") || timeToken.equalsIgnoreCase("NOW")) {
+				time = Util.getTime();
+			}
+			else {
+				throw new RrdException("Invalid sample timestamp: " + timeToken);
+			}
+		}
+		for(int i = 0; tokenizer.hasMoreTokens(); i++) {
 			try {
-				values[i] = Double.parseDouble(tokens[i + 1]);
+				values[i] = Double.parseDouble(tokenizer.nextToken());
 			}
-			catch(NumberFormatException nfe) {
-				values[i] = Double.NaN;
+			catch (NumberFormatException nfe) {
+				// NOP, value is already set to NaN
 			}
 		}
-		setTime(time);
-		setValues(values);
 	}
 
 	/**
-	 * Stores sample in the corresponding RRD file. If the update operation succeedes,
+	 * Stores sample in the corresponding RRD. If the update operation succeedes,
 	 * all datasource values in the sample will be set to Double.NaN (unknown) values.
 	 *
 	 * @throws IOException Thrown in case of I/O error.
 	 * @throws RrdException Thrown in case of JRobin related error.
 	 */
 	public void update() throws IOException, RrdException {
-		synchronized(parentDb) {
-			parentDb.store(this);
-		}
+		parentDb.store(this);
 		clearCurrentValues();
 	}
 
 	/**
 	 * <p>Creates sample with the timestamp and data source values supplied
-	 * in the argument string and stores sample in the corresponding RRD file.
+	 * in the argument string and stores sample in the corresponding RRD.
 	 * This method is just a shortcut for:</p>
 	 * <pre>
 	 *     set(timeAndValues);
 	 *     update();
 	 * </pre>
 	 * @param timeAndValues String made by concatenating sample timestamp with corresponding
-	 * data source values delmited with colons. For example:
-	 * <code>1005234132:12.2:35.6:U:24.5</code>
+	 * data source values delmited with colons. For example:<br>
+	 * <code>1005234132:12.2:35.6:U:24.5</code><br>
+	 * <code>NOW:12.2:35.6:U:24.5</code>
 	 *
 	 * @throws IOException Thrown in case of I/O error.
 	 * @throws RrdException Thrown in case of JRobin related error.
@@ -227,11 +240,11 @@ public class Sample {
 	 * @return Sample dump.
 	 */
 	public String dump() {
-		StringBuffer buffer = new StringBuffer(RrdDb.RRDTOOL);
-		buffer.append(" update " + parentDb.getRrdFile().getFilePath() + " " + time);
+		StringBuffer buffer = new StringBuffer("update \"");
+		buffer.append(parentDb.getRrdBackend().getPath() + "\" " + time);
 		for(int i = 0; i < values.length; i++) {
 			buffer.append(":");
-			buffer.append(Util.formatDouble(values[i], "U"));
+			buffer.append(Util.formatDouble(values[i], "U", false));
 		}
 		return buffer.toString();
 	}

@@ -2,8 +2,8 @@
  * JRobin : Pure java implementation of RRDTool's functionality
  * ============================================================
  *
- * Project Info:  http://www.sourceforge.net/projects/jrobin
- * Project Lead:  Sasa Markovic (saxon@eunet.yu);
+ * Project Info:  http://www.jrobin.org
+ * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
  * (C) Copyright 2003, by Sasa Markovic.
  *
@@ -30,7 +30,11 @@ package org.jrobin.core;
  * are created during the fetching process. See {@link org.jrobin.core.FetchRequest#fetch() fetch()}
  * method of the {@link org.jrobin.core.FetchRequest FetchRequest} class.
  *
- * @author <a href="mailto:saxon@eunet.yu">Sasa Markovic</a>
+ * @author <a href="mailto:saxon@jrobin.org">Sasa Markovic</a>
+ * @deprecated This class is deprecated since 1.2.0 and might be removed from future releases
+ * of JRobin. You don't need this class if you fetch RRD data with the
+ * {@link org.jrobin.core.FetchRequest#fetchData() fetchData()} method from the
+ * {@link org.jrobin.core.FetchRequest FetchRequest} class
  */
 public class FetchPoint {
 
@@ -64,7 +68,7 @@ public class FetchPoint {
 	}
 
 	/**
-	 * Returns number of data source values (same as number od data sources defined in RRD file).
+	 * Returns number of data source values (same as number od data sources defined in RRD).
 	 * @return Number of data source values.
 	 */
 	public int getSize() {
@@ -92,9 +96,17 @@ public class FetchPoint {
 	public String dump() {
 		StringBuffer buffer = new StringBuffer(time + ": ");
 		for(int i = 0; i < values.length; i++) {
-			buffer.append(Util.formatDouble(values[i]));
+			buffer.append(Util.formatDouble(values[i], true));
 			buffer.append(" ");
 		}
 		return buffer.toString();
+	}
+
+	/**
+	 * Returns string representing timestamp and all data source values.
+	 * @return Fetch point dump.
+	 */
+	public String toString() {
+		return dump();
 	}
 }

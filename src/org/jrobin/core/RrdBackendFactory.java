@@ -39,13 +39,14 @@ import java.io.IOException;
  * JRobin supports three different backend types (backend factories) out of the box:<p>
  * <ul>
  * <li>{@link RrdFileBackend}: objects of this class are created from the
- * {@link RrdFileBackendFactory} class. This is the default backend used in all
- * JRobin releases. It uses java.io.* package and RandomAccessFile class to store
+ * {@link RrdFileBackendFactory} class. This was the default backend used in all
+ * JRobin releases before 1.4.0 release. It uses java.io.* package and RandomAccessFile class to store
  * RRD data in files on the disk.
  *
  * <li>{@link RrdNioBackend}: objects of this class are created from the
  * {@link RrdNioBackendFactory} class. The backend uses java.io.* and java.nio.*
- * classes (mapped ByteBuffer) to store RRD data in files on the disk.
+ * classes (mapped ByteBuffer) to store RRD data in files on the disk. This is the default backend
+ * since 1.4.0 release.
  *
  * <li>{@link RrdMemoryBackend}: objects of this class are created from the
  * {@link RrdMemoryBackendFactory} class. This backend stores all data in memory. Once
@@ -72,7 +73,7 @@ public abstract class RrdBackendFactory {
 			registerFactory(nioFactory);
 
 			// Here is the default backend factory
-			defaultFactory = fileFactory;
+			defaultFactory = nioFactory;
 
 		} catch (RrdException e) {
 			throw new RuntimeException("FATAL: Cannot register RRD backend factories: " + e);
@@ -123,6 +124,19 @@ public abstract class RrdBackendFactory {
 	}
 
 	/**
+	 * Registers new (custom) backend factory within the JRobin framework and sets this
+	 * factory as the default.
+	 * @param factory Factory to be registered and set as default
+	 * @throws RrdException Thrown if the name of the specified factory is already
+	 * used.
+	 */
+	public static synchronized void registerAndSetAsDefaultFactory(RrdBackendFactory factory)
+			throws RrdException {
+		registerFactory(factory);
+		setDefaultFactory(factory.getFactoryName());
+	}
+
+	/**
 	 * Returns the defaul backend factory. This factory is used to construct
 	 * {@link RrdDb} objects if no factory is specified in the RrdDb constructor.
 	 * @return Default backend factory.
@@ -132,36 +146,48 @@ public abstract class RrdBackendFactory {
 	}
 
 	/**
+	 * Replaces the default backend factory with a new one. This method must be called before
+	 * the first RRD gets created. <p>
+	 * @param factoryName Name of the default factory. Out of the box, JRobin supports three
+	 * different RRD backends: "FILE" (java.io.* based), "NIO" (java.nio.* based) and "MEMORY"
+	 * (byte[] based).
+	 * @throws RrdException Thrown if invalid factory name is supplied or not called before
+	 * the first RRD is created.
+	 */
+	public static void setDefaultFactory(String factoryName) throws RrdException {
+		// We will allow this only if no RRDs are created
+		if(RrdBackend.getCount() == 0) {
+			defaultFactory = getFactory(factoryName);
+		}
+		else {
+			throw new RrdException("Could not change the default backend factory. " +
+					"This method must be called before the first RRD gets created");
+		}
+	}
+
+	/**
 	 * Creates RrdBackend object for the given storage path.
 	 * @param path Storage path
 	 * @param readOnly True, if the storage should be accessed in read/only mode.
 	 * False otherwise.
-	 * @param lockMode One of the following constants: {@link RrdDb.NO_LOCKS},
-	 * {@link RrdDb.EXCEPTION_IF_LOCKED} or {@link RrdDb.WAIT_IF_LOCKED}.
+	 * @param lockMode One of the following constants: {@link RrdDb#NO_LOCKS},
+	 * {@link RrdDb#EXCEPTION_IF_LOCKED} or {@link RrdDb#WAIT_IF_LOCKED}.
 	 * @return Backend object which handles all I/O operations for the given storage path
 	 * @throws IOException Thrown in case of I/O error.
 	 */
-	protected abstract RrdBackend open(String path, boolean readOnly, int lockMode) throws IOException;
+	protected abstract RrdBackend open(String path, boolean readOnly, int lockMode)
+			throws IOException;
 
 	/**
 	 * Method to determine if a storage with the given path already exists.
 	 * @param path Storage path
 	 * @return True, if such storage exists, false otherwise.
 	 */
-	protected abstract boolean exists(String path);
-
-	/**
-	 * Releases all system resources associated with the storage with the given path.
-	 * If the storage represents a file on the disk, the file will be removed.
-	 * If the storage represents a section in memory, the memory will be released.
-	 * @param path Storage path
-	 * @return true, if all resources are released without a problem, false otherwise.
-	 */
-	protected abstract boolean delete(String path);
+	protected abstract boolean exists(String path) throws IOException;
 
 	/**
 	 * Returns the name (primary ID) for the factory.
 	 * @return Name of the factory.
 	 */
-	protected abstract String getFactoryName();
+	public abstract String getFactoryName();
 }

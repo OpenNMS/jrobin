@@ -34,13 +34,15 @@ import java.io.IOException;
  * three different bakcends out of the box:</p>
  * <ul>
  * <li>{@link RrdFileBackend}: objects of this class are created from the
- * {@link RrdFileBackendFactory} class. This is the default backend used in all
- * JRobin releases. It uses java.io.* package and RandomAccessFile class to store
- * RRD data in files on the disk.
+ * {@link RrdFileBackendFactory} class. This was the default backend used in all
+ * JRobin releases prior to 1.4.0. It uses java.io.* package and
+ * RandomAccessFile class to store RRD data in files on the disk.
  *
  * <li>{@link RrdNioBackend}: objects of this class are created from the
  * {@link RrdNioBackendFactory} class. The backend uses java.io.* and java.nio.*
- * classes (mapped ByteBuffer) to store RRD data in files on the disk.
+ * classes (mapped ByteBuffer) to store RRD data in files on the disk. This backend is fast, very fast,
+ * but consumes a lot of memory (borrowed not from the JVM but from the underlying operating system
+ * directly). <b>This is the default backend used in JRobin since 1.4.0 release.</b>
  *
  * <li>{@link RrdMemoryBackend}: objects of this class are created from the
  * {@link RrdMemoryBackendFactory} class. This backend stores all data in memory. Once
@@ -68,6 +70,7 @@ import java.io.IOException;
  */
 public abstract class RrdBackend {
 	private String path;
+	private static long count = 0;
 
 	/**
 	 * Creates backend for a RRD storage with the given path.
@@ -77,6 +80,7 @@ public abstract class RrdBackend {
 	 */
 	protected RrdBackend(String path) {
 		this.path = path;
+		count++;
 	}
 
 	/**
@@ -132,10 +136,59 @@ public abstract class RrdBackend {
 	protected abstract void setLength(long length) throws IOException;
 
 	/**
-	 * Closes the storage.
+	 * Closes the underlying storage. Calls sync() implicitly.
+	 * In other words, you don't have to call sync() before close() in order to preserve
+	 * data cached in memory.
 	 * @throws IOException Thrown in case of I/O error
 	 */
-	public abstract void close() throws IOException;
+	public void close() throws IOException {
+		sync();
+	}
+
+	/**
+	 * Method called by the framework immediatelly before RRD update operation starts. This method
+	 * does nothing, but can be overriden in subclasses.
+	 */
+	protected void beforeUpdate() throws IOException {
+	}
+
+	/**
+	 * Method called by the framework immediatelly after RRD update operation is completed. This method
+	 * does nothing, but can be overriden in subclasses.
+	 */
+	protected void afterUpdate() throws IOException {
+	}
+
+	/**
+	 * Method called by the framework immediatelly before RRD fetch operation starts. This method
+	 * does nothing, but can be overriden in subclasses.
+	 */
+	protected void beforeFetch() throws IOException {
+	}
+
+	/**
+	 * Method called by the framework immediatelly after RRD fetch operation is completed. This method
+	 * does nothing, but can be overriden in subclasses.
+	 */
+	protected void afterFetch() throws IOException {
+	}
+
+	/**
+	 * Method called by the framework immediatelly after RrdDb obejct is created. This method
+	 * does nothing, but can be overriden in subclasses.
+	 */
+	protected void afterCreate() throws IOException {
+	}
+
+	/**
+	 * This method forces all data cached in memory but not yet stored in the persistant
+	 * storage, to be stored in it. In the base class this method does nothing but
+	 * subclasses might provide real functionality.<p>
+	 *
+	 * @throws IOException Thrown in case of I/O error
+	 */
+	public void sync() throws IOException {
+	}
 
 	final void writeInt(long offset, int value) throws IOException {
 		write(offset, getIntBytes(value));
@@ -300,5 +353,9 @@ public abstract class RrdBackend {
 	private final static double getDouble(byte[] b) {
 		assert b.length == 8: "Invalid number of bytes for double conversion";
 		return Double.longBitsToDouble(getLong(b));
+	}
+
+	static long getCount() {
+		return count;
 	}
 }
