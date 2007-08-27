@@ -84,17 +84,17 @@ class LegendComposer implements RrdGraphConstants {
 		}
 
 		boolean canAccomodate(CommentText comment) {
-			// always accomodate if empty
+			// always accommodate if empty
 			if (comments.size() == 0) {
 				return true;
 			}
-			// cannot accomodate if the last marker was \j, \l, \r, \c, \s
+			// cannot accommodate if the last marker was \j, \l, \r, \c, \s
 			if (lastMarker.equals(ALIGN_LEFT_MARKER) || lastMarker.equals(ALIGN_CENTER_MARKER) ||
 					lastMarker.equals(ALIGN_RIGHT_MARKER) || lastMarker.equals(ALIGN_JUSTIFIED_MARKER) ||
 					lastMarker.equals(VERTICAL_SPACING_MARKER)) {
 				return false;
 			}
-			// cannot accomodate if line would be too long
+			// cannot accommodate if line would be too long
 			double commentWidth = getCommentWidth(comment);
 			if (!lastMarker.equals(GLUE_MARKER)) {
 				commentWidth += interlegendSpace;
