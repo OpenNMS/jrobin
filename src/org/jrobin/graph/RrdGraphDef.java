@@ -602,31 +602,34 @@ public class RrdGraphDef implements RrdGraphConstants {
 	}
 
 	/**
-	 * Overrides the colors for the standard elements of the graph. The
-	 * colorTag must be one of the following constants defined in the {@link RrdGraphConstants}:
-	 * {@link RrdGraphConstants#COLOR_BACK COLOR_BACK}ground,
-	 * {@link RrdGraphConstants#COLOR_CANVAS COLOR_CANVAS},
-	 * {@link RrdGraphConstants#COLOR_SHADEA COLOR_SHADEA} left/top border,
-	 * {@link RrdGraphConstants#COLOR_SHADEB COLOR_SHADEB} right/bottom border,
-	 * {@link RrdGraphConstants#COLOR_GRID COLOR_GRID},
-	 * {@link RrdGraphConstants#COLOR_MGRID COLOR_MGRID} major grid,
-	 * {@link RrdGraphConstants#COLOR_FONT COLOR_FONT},
-	 * {@link RrdGraphConstants#COLOR_FRAME COLOR_FRAME} and axis of the graph or
-	 * {@link RrdGraphConstants#COLOR_ARROW COLOR_ARROW}. This
-	 * method can be called multiple times to set several colors.
-	 *
-	 * @param colorTag Color tag, as explained above.
-	 * @param color	Any color (paint) you like
-	 * @throws RrdException Thrown if invalid colorTag is supplied.
-	 */
-	public void setColor(int colorTag, Paint color) throws RrdException {
-		if (colorTag >= 0 && colorTag < colors.length) {
-			colors[colorTag] = color;
-		}
-		else {
-			throw new RrdException("Invalid color index specified: " + colorTag);
-		}
-	}
+     * Overrides the colors for the standard elements of the graph. The colorTag
+     * must be one of the following constants defined in the
+     * {@link RrdGraphConstants}:
+     * {@link RrdGraphConstants#COLOR_BACK COLOR_BACK} background,
+     * {@link RrdGraphConstants#COLOR_CANVAS COLOR_CANVAS} canvas,
+     * {@link RrdGraphConstants#COLOR_SHADEA COLOR_SHADEA} left/top border,
+     * {@link RrdGraphConstants#COLOR_SHADEB COLOR_SHADEB} right/bottom border,
+     * {@link RrdGraphConstants#COLOR_GRID COLOR_GRID} major grid,
+     * {@link RrdGraphConstants#COLOR_MGRID COLOR_MGRID} minor grid,
+     * {@link RrdGraphConstants#COLOR_FONT COLOR_FONT} font,
+     * {@link RrdGraphConstants#COLOR_FRAME COLOR_FRAME} axis of the graph,
+     * {@link RrdGraphConstants#COLOR_ARROW COLOR_ARROW} arrow. This method can
+     * be called multiple times to set several colors.
+     * 
+     * @param colorTag
+     *            Color tag, as explained above.
+     * @param color
+     *            Any color (paint) you like
+     * @throws RrdException
+     *             Thrown if invalid colorTag is supplied.
+     */
+    public void setColor(int colorTag, Paint color) throws RrdException {
+        if (colorTag >= 0 && colorTag < colors.length) {
+            colors[colorTag] = color;
+        } else {
+            throw new RrdException("Invalid color index specified: " + colorTag);
+        }
+    }
 
 	/**
 	 * Overrides the colors for the standard elements of the graph by element name.
@@ -774,7 +777,7 @@ public class RrdGraphDef implements RrdGraphConstants {
 	}
 
 	/**
-	 * Creates a new (static) virtual datasouce. The value of the datasource is constant. This value is
+	 * Creates a new (static) virtual datasource. The value of the datasource is constant. This value is
 	 * evaluated by applying the given consolidation function to another virtual datasource.
 	 *
 	 * @param name	  Source name
@@ -804,14 +807,14 @@ public class RrdGraphDef implements RrdGraphConstants {
 	 * <p/>
 	 * If an additional '%s' is found AFTER the marker, the value will be
 	 * scaled and an appropriate SI magnitude unit will be printed in
-	 * place of the '%s' marker. The scaling will take the '--base' argu-
-	 * ment into consideration!
+	 * place of the '%s' marker. The scaling will take the '--base' argument
+	 * into consideration!
 	 * <p/>
 	 * If a '%S' is used instead of a '%s', then instead of calculating
 	 * the appropriate SI magnitude unit for this value, the previously
 	 * calculated SI magnitude unit will be used.  This is useful if you
-	 * want all the values in a print statement to have the same SI magni-
-	 * tude unit.  If there was no previous SI magnitude calculation made,
+	 * want all the values in a print statement to have the same SI magnitude
+	 * unit.  If there was no previous SI magnitude calculation made,
 	 * then '%S' behaves like a '%s', unless the value is 0, in which case
 	 * it does not remember a SI magnitude unit and a SI magnitude unit
 	 * will only be calculated when the next '%s' is seen or the next '%S'
@@ -926,19 +929,37 @@ public class RrdGraphDef implements RrdGraphConstants {
 	}
 
 	/**
-	 * Plots requested data in the form of the filled area starting from zero, using
-	 * the color specified.
-	 *
-	 * @param srcName Virtual source name.
-	 * @param color   Color of the filled area.
-	 * @param legend  Legend text.
-	 */
-	public void area(String srcName, Paint color, String legend) {
-		LegendText legendText = new LegendText(color, legend);
-		comments.add(legendText);
-		plotElements.add(new Area(srcName, color));
-	}
+     * Plots requested data in the form of the filled area starting from zero,
+     * using the color specified.
+     * 
+     * @param srcName
+     *            Virtual source name.
+     * @param color
+     *            Color of the filled area.
+     * @param legend
+     *            Legend text.
+     */
+    public void area(String srcName, Paint color, String legend) {
+        area(srcName, color);
+        if (legend.length() > 0) {
+            LegendText legendText = new LegendText(color, legend);
+            comments.add(legendText);
+        }
+    }
 
+    /**
+     * Plots requested data in the form of the filled area starting from zero,
+     * using the color specified.
+     * 
+     * @param srcName
+     *            Virtual source name.
+     * @param color
+     *            Color of the filled area.
+     */
+    public void area(String srcName, Paint color) {
+        plotElements.add(new Area(srcName, color));
+    }
+	
 	/**
 	 * Does the same as {@link #line(String, java.awt.Paint, String)},
 	 * but the graph gets stacked on top of the
