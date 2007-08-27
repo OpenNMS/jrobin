@@ -44,7 +44,32 @@ class RrdGraphCmd extends RrdToolCmd implements RrdGraphConstants {
 	}
 
 	Object execute() throws RrdException, IOException {
-		gdef = new RrdGraphDef();
+		gdef = getGraphDef();
+		
+		// create diagram finally
+		RrdGraphInfo info = new RrdGraph(gdef).getRrdGraphInfo();
+		if (info.getFilename().equals(RrdGraphConstants.IN_MEMORY_IMAGE)) {
+			println(new String(info.getBytes()));
+		}
+		else {
+			println(info.getWidth() + "x" + info.getHeight());
+			String[] plines = info.getPrintLines();
+			for (String pline : plines) {
+				println(pline);
+			}
+			if (info.getImgInfo() != null && info.getImgInfo().length() > 0) {
+				println(info.getImgInfo());
+			}
+		}
+		return info;
+	}
+
+    /**
+     * @throws RrdException
+     * @returns an RRD graph definition
+     */
+    public RrdGraphDef getGraphDef() throws RrdException {
+        RrdGraphDef gdef = new RrdGraphDef();
 
 		// OPTIONS
 
@@ -201,23 +226,9 @@ class RrdGraphCmd extends RrdToolCmd implements RrdGraphConstants {
 				throw new RrdException("Unexpected GRAPH token encountered: " + words[i]);
 			}
 		}
-		// create diagram finally
-		RrdGraphInfo info = new RrdGraph(gdef).getRrdGraphInfo();
-		if (info.getFilename().equals(RrdGraphConstants.IN_MEMORY_IMAGE)) {
-			println(new String(info.getBytes()));
-		}
-		else {
-			println(info.getWidth() + "x" + info.getHeight());
-			String[] plines = info.getPrintLines();
-			for (String pline : plines) {
-				println(pline);
-			}
-			if (info.getImgInfo() != null && info.getImgInfo().length() > 0) {
-				println(info.getImgInfo());
-			}
-		}
-		return info;
-	}
+		
+		return gdef;
+    }
 
 	private void parseLine(String word) throws RrdException {
 		String[] tokens1 = new ColonSplitter(word).split();
