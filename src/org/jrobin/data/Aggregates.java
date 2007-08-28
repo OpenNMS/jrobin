@@ -102,7 +102,7 @@ public class Aggregates implements ConsolFuns {
 	/**
 	 * Returns single aggregated value for the give consolidation function
 	 *
-	 * @param consolFun Consolidation function: MIN, MAX, FIRST, LAST, AVERAGE, TOTAL. These constanst
+	 * @param consolFun Consolidation function: MIN, MAX, FIRST, LAST, AVERAGE, TOTAL. These constants
 	 *                  are conveniently defined in the {@link org.jrobin.core.ConsolFuns ConsolFuns} interface.
 	 * @return Aggregated value
 	 * @throws RrdException Thrown if unsupported consolidation function is supplied
