@@ -69,117 +69,117 @@ class RrdGraphCmd extends RrdToolCmd implements RrdGraphConstants {
      * @returns an RRD graph definition
      */
     public RrdGraphDef getGraphDef() throws RrdException {
-        RrdGraphDef graphDef = new RrdGraphDef();
+        RrdGraphDef gdef = new RrdGraphDef();
 
 		// OPTIONS
 
 		// START, END
 		String t1 = getOptionValue("s", "start", DEFAULT_START), t2 = getOptionValue("e", "end", DEFAULT_END);
-		graphDef.setTimeSpan(Util.getTimestamps(t1, t2));
+		gdef.setTimeSpan(Util.getTimestamps(t1, t2));
 		// X-GRID
 		parseXGrid(getOptionValue("x", "x-grid"));
 		// Y-GRID
 		parseYGrid(getOptionValue("y", "y-grid"));
 		// ALT-Y-GRID
-		graphDef.setAltYGrid(getBooleanOption("Y", "alt-y-grid"));
+		gdef.setAltYGrid(getBooleanOption("Y", "alt-y-grid"));
 		// NO_MINOR
-		graphDef.setNoMinorGrid(getBooleanOption(null, "no-minor"));
+		gdef.setNoMinorGrid(getBooleanOption(null, "no-minor"));
 		// ALT-Y-MRTG
-		graphDef.setAltYMrtg(getBooleanOption("R", "alt-y-mrtg"));
+		gdef.setAltYMrtg(getBooleanOption("R", "alt-y-mrtg"));
 		// ALT-AUTOSCALE
-		graphDef.setAltAutoscale(getBooleanOption("A", "alt-autoscale"));
+		gdef.setAltAutoscale(getBooleanOption("A", "alt-autoscale"));
 		// ALT-AUTOSCALE-MAX
-		graphDef.setAltAutoscaleMax(getBooleanOption("M", "alt-autoscale-max"));
+		gdef.setAltAutoscaleMax(getBooleanOption("M", "alt-autoscale-max"));
 		// UNITS-EXPONENT
 		String opt = getOptionValue("X", "units-exponent");
 		if (opt != null) {
-			graphDef.setUnitsExponent(parseInt(opt));
+			gdef.setUnitsExponent(parseInt(opt));
 		}
 		// UNITS-LENGTH
 		opt = getOptionValue("L", "units-length");
 		if (opt != null) {
-			graphDef.setUnitsLength(parseInt(opt));
+			gdef.setUnitsLength(parseInt(opt));
 		}
 		// VERTICAL LABEL
 		opt = getOptionValue("v", "vertical-label");
 		if (opt != null) {
-			graphDef.setVerticalLabel(opt);
+			gdef.setVerticalLabel(opt);
 		}
 		// WIDTH
 		opt = getOptionValue("w", "width");
 		if (opt != null) {
-			graphDef.setWidth(parseInt(opt));
+			gdef.setWidth(parseInt(opt));
 		}
 		// HEIGHT
 		opt = getOptionValue("h", "height");
 		if (opt != null) {
-			graphDef.setHeight(parseInt(opt));
+			gdef.setHeight(parseInt(opt));
 		}
 		// INTERLACED
-		graphDef.setInterlaced(getBooleanOption("i", "interlaced"));
+		gdef.setInterlaced(getBooleanOption("i", "interlaced"));
 		// IMGINFO
 		opt = getOptionValue("f", "imginfo");
 		if (opt != null) {
-			graphDef.setImageInfo(opt);
+			gdef.setImageInfo(opt);
 		}
 		// IMGFORMAT
 		opt = getOptionValue("a", "imgformat");
 		if (opt != null) {
-			graphDef.setImageFormat(opt);
+			gdef.setImageFormat(opt);
 		}
 		// BACKGROUND
 		opt = getOptionValue("B", "background");
 		if (opt != null) {
-			graphDef.setBackgroundImage(opt);
+			gdef.setBackgroundImage(opt);
 		}
 		// OVERLAY
 		opt = getOptionValue("O", "overlay");
 		if (opt != null) {
-			graphDef.setOverlayImage(opt);
+			gdef.setOverlayImage(opt);
 		}
 		// UNIT
 		opt = getOptionValue("U", "unit");
 		if (opt != null) {
-			graphDef.setUnit(opt);
+			gdef.setUnit(opt);
 		}
 		// LAZY
-		graphDef.setLazy(getBooleanOption("z", "lazy"));
+		gdef.setLazy(getBooleanOption("z", "lazy"));
 		// UPPER-LIMIT
 		opt = getOptionValue("u", "upper-limit");
 		if (opt != null) {
-			graphDef.setMaxValue(parseDouble(opt));
+			gdef.setMaxValue(parseDouble(opt));
 		}
 		// LOWER-LIMIT
 		opt = getOptionValue("l", "lower-limit");
 		if (opt != null) {
-			graphDef.setMinValue(parseDouble(opt));
+			gdef.setMinValue(parseDouble(opt));
 		}
 		// RIGID
-		graphDef.setRigid(getBooleanOption("r", "rigid"));
+		gdef.setRigid(getBooleanOption("r", "rigid"));
 		// BASE
 		opt = getOptionValue("b", "base");
 		if (opt != null) {
-			graphDef.setBase(parseDouble(opt));
+			gdef.setBase(parseDouble(opt));
 		}
 		// LOGARITHMIC
-		graphDef.setLogarithmic(getBooleanOption("o", "logarithmic"));
+		gdef.setLogarithmic(getBooleanOption("o", "logarithmic"));
 		// COLORS
 		parseColors(getMultipleOptionValues("c", "color"));
 		// NO-LEGEND
-		graphDef.setNoLegend(getBooleanOption("g", "no-legend"));
+		gdef.setNoLegend(getBooleanOption("g", "no-legend"));
 		// ONLY_GRAPH
-		graphDef.setOnlyGraph(getBooleanOption("j", "only-graph"));
+		gdef.setOnlyGraph(getBooleanOption("j", "only-graph"));
 		// FORCE-RULES-LEGEND
-		graphDef.setForceRulesLegend(getBooleanOption("F", "force-rules-legend"));
+		gdef.setForceRulesLegend(getBooleanOption("F", "force-rules-legend"));
 		// TITLE
 		opt = getOptionValue("t", "title");
 		if (opt != null) {
-			graphDef.setTitle(opt);
+			gdef.setTitle(opt);
 		}
 		// STEP
 		opt = getOptionValue("S", "step");
 		if (opt != null) {
-			graphDef.setStep(parseLong(opt));
+			gdef.setStep(parseLong(opt));
 		}
 
 		// NON-OPTIONS
@@ -189,7 +189,7 @@ class RrdGraphCmd extends RrdToolCmd implements RrdGraphConstants {
 		if (words.length < 2) {
 			throw new RrdException("Image filename must be specified");
 		}
-		graphDef.setFilename(words[1]);
+		gdef.setFilename(words[1]);
 		// parse remaining words, in no particular order
 		for (int i = 2; i < words.length; i++) {
 			if (words[i].startsWith("DEF:")) {
@@ -227,7 +227,7 @@ class RrdGraphCmd extends RrdToolCmd implements RrdGraphConstants {
 			}
 		}
 		
-		return graphDef;
+		return gdef;
     }
 
 	private void parseLine(String word) throws RrdException {
