@@ -42,9 +42,9 @@
     </developer>
   </developers>
   <scm>
-    <connection>scm:cvs:pserver:anonymous@jrobin.cvs.sourceforge.net:/cvsroot/jrobin:src</connection>
-    <developerConnection>scm:cvs:ext:${maven.username}@jrobin.cvs.sourceforge.net:/cvsroot/jrobin:src</developerConnection>
-    <url>http://jrobin.cvs.sourceforge.net/jrobin/src</url>
+    <connection>scm:cvs:pserver:anonymous@jrobin.cvs.sourceforge.net:/cvsroot/jrobin:project</connection>
+    <developerConnection>scm:cvs:ext:${maven.username}@jrobin.cvs.sourceforge.net:/cvsroot/jrobin:project</developerConnection>
+    <url>http://jrobin.cvs.sourceforge.net/jrobin/</url>
   </scm>
   <licenses>
     <license>
