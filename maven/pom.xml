@@ -212,6 +212,11 @@
     </dependency>
   </dependencies>
   <distributionManagement>
+    <site>
+      <id>opennms-site</id>
+      <name>OpenNMS Site</name>
+      <url>scpexe://repo.opennms.org/var/www/sites/opennms.org/site/repo/sites/jrobin/${project.version}/</url>
+    </site>
     <!-- use the following if you're not using a snapshot version. -->
     <repository>
       <id>opennms-repo</id>
