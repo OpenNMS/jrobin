@@ -30,19 +30,26 @@ import java.awt.*;
 
 class ValueAxis implements RrdGraphConstants {
 	private static final YLab[] ylab = {
-			new YLab(0.1, 1, 2, 5, 10),
-			new YLab(0.2, 1, 5, 10, 20),
-			new YLab(0.5, 1, 2, 4, 10),
-			new YLab(1.0, 1, 2, 5, 10),
-			new YLab(2.0, 1, 5, 10, 20),
-			new YLab(5.0, 1, 2, 4, 10),
-			new YLab(10.0, 1, 2, 5, 10),
-			new YLab(20.0, 1, 5, 10, 20),
-			new YLab(50.0, 1, 2, 4, 10),
-			new YLab(100.0, 1, 2, 5, 10),
-			new YLab(200.0, 1, 5, 10, 20),
-			new YLab(500.0, 1, 2, 4, 10),
-			new YLab(0.0, 0, 0, 0, 0)
+		new YLab(0.1, 1, 2, 5, 10),
+		new YLab(0.2, 1, 5, 10, 20),
+		new YLab(0.5, 1, 2, 4, 10),
+		new YLab(1.0, 1, 2, 5, 10),
+		new YLab(2.0, 1, 5, 10, 20),
+		new YLab(5.0, 1, 2, 4, 10),
+		new YLab(10.0, 1, 2, 5, 10),
+		new YLab(20.0, 1, 5, 10, 20),
+		new YLab(50.0, 1, 2, 4, 10),
+		new YLab(100.0, 1, 2, 5, 10),
+		new YLab(200.0, 1, 5, 10, 20),
+		new YLab(500.0, 1, 2, 4, 10),
+		new YLab(1000.0, 1, 2, 5, 10),
+		new YLab(2000.0, 1, 5, 10, 20),
+		new YLab(5000.0, 1, 2, 4, 10),
+		new YLab(10000.0, 1, 2, 5, 10),
+		new YLab(20000.0, 1, 5, 10, 20),
+		new YLab(50000.0, 1, 2, 4, 10),
+		new YLab(100000.0, 1, 2, 5, 10),
+		new YLab(0.0, 0, 0, 0, 0)
 	};
 
 	private RrdGraph rrdGraph;
