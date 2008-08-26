@@ -10,8 +10,13 @@ package org.jrobin.core.jrrd;
 
 import java.io.IOException;
 import java.io.PrintStream;
-import java.text.*;
-import java.util.*;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Iterator;
 
 /**
  * Instances of this class model an archive section of an RRD file.
@@ -29,7 +34,7 @@ public class Archive {
 	int rowCount;
 	int pdpCount;
 	double xff;
-	ArrayList cdpStatusBlocks;
+	ArrayList<CDPStatusBlock> cdpStatusBlocks;
 	int currentRow;
 
 	private double[][] values;
@@ -68,7 +73,7 @@ public class Archive {
 
 	void loadCDPStatusBlocks(RRDFile file, int numBlocks) throws IOException {
 
-		cdpStatusBlocks = new ArrayList();
+		cdpStatusBlocks = new ArrayList<CDPStatusBlock>();
 
 		for (int i = 0; i < numBlocks; i++) {
 			cdpStatusBlocks.add(new CDPStatusBlock(file));
@@ -82,7 +87,7 @@ public class Archive {
 	 * @return the <code>CDPStatusBlock</code> at the specified position in this archive.
 	 */
 	public CDPStatusBlock getCDPStatusBlock(int index) {
-		return (CDPStatusBlock) cdpStatusBlocks.get(index);
+		return cdpStatusBlocks.get(index);
 	}
 
 	/**
@@ -91,7 +96,7 @@ public class Archive {
 	 * @return an iterator over the CDP status blocks in this archive in proper sequence.
 	 * @see CDPStatusBlock
 	 */
-	public Iterator getCDPStatusBlocks() {
+	public Iterator<CDPStatusBlock> getCDPStatusBlocks() {
 		return cdpStatusBlocks.iterator();
 	}
 
@@ -126,7 +131,8 @@ public class Archive {
 
 		if (chunk.start < 0) {
 			pointer = currentRow + 1;
-		} else {
+		}
+		else {
 			pointer = currentRow + chunk.start + 1;
 		}
 
@@ -142,15 +148,17 @@ public class Archive {
 		 */
 		int row = 0;
 		for (int i = chunk.start; i < rowCount - chunk.end; i++, row++) {
-			if (i < 0) {                   // no valid data yet
+			if (i < 0) {				   // no valid data yet
 				for (int ii = 0; ii < chunk.dsCount; ii++) {
 					data[row][ii] = Double.NaN;
 				}
-			} else if (i >= rowCount) {    // past valid data area
+			}
+			else if (i >= rowCount) {	// past valid data area
 				for (int ii = 0; ii < chunk.dsCount; ii++) {
 					data[row][ii] = Double.NaN;
 				}
-			} else {                       // inside the valid are but the pointer has to be wrapped
+			}
+			else {					   // inside the valid are but the pointer has to be wrapped
 				if (pointer >= rowCount) {
 					pointer -= rowCount;
 
@@ -188,8 +196,8 @@ public class Archive {
 
 		int cdpIndex = 0;
 
-		for (Iterator i = cdpStatusBlocks.iterator(); i.hasNext();) {
-			CDPStatusBlock cdp = (CDPStatusBlock) i.next();
+		for (Iterator<CDPStatusBlock> i = cdpStatusBlocks.iterator(); i.hasNext();) {
+			CDPStatusBlock cdp = i.next();
 
 			s.print(sb);
 			s.print(cdpIndex);
@@ -226,7 +234,7 @@ public class Archive {
 			s.println("\t\t<cdp_prep>");
 
 			for (int i = 0; i < cdpStatusBlocks.size(); i++) {
-				((CDPStatusBlock) cdpStatusBlocks.get(i)).toXml(s);
+				cdpStatusBlocks.get(i).toXml(s);
 			}
 
 			s.println("\t\t</cdp_prep>");
@@ -272,7 +280,8 @@ public class Archive {
 					// NumberFormat doesn't know how to handle NaN
 					if (Double.isNaN(value)) {
 						s.print("NaN");
-					} else {
+					}
+					else {
 						s.print(numberFormat.format(value));
 					}
 
@@ -284,18 +293,48 @@ public class Archive {
 
 			s.println("\t\t</database>");
 			s.println("\t</rra>");
-		} catch (IOException e) {    // Is the best thing to do here?
+		}
+		catch (IOException e) {	// Is the best thing to do here?
 			throw new RuntimeException(e.getMessage());
 		}
 	}
 
-	public double[][] getValues() throws IOException {
+	/*
+	// THIS IS THE ORIGINAL CODE: BUGGY! Replaced by Sasa Markovic with a new method
+	// Funny: the bug will appear only if dsCount != 2 :)
+	public double[][] getValuesOriginal() throws IOException {
 		if (values != null) {
 			return values;
 		}
 		values = new double[db.header.dsCount][rowCount];
 		int row = currentRow;
-		db.rrdFile.ras.seek(dataOffset + (row + 1) * 16);
+		db.rrdFile.ras.seek(dataOffset + (row + 1) * 16); // <----- BUG (resolved below)
+		for (int counter = 0; counter < rowCount; counter++) {
+			row++;
+			if (row == rowCount) {
+				row = 0;
+				db.rrdFile.ras.seek(dataOffset);
+			}
+			for (int col = 0; col < db.header.dsCount; col++) {
+				double value = db.rrdFile.readDouble();
+				values[col][counter] = value;
+			}
+		}
+		return values;
+	}
+    */
+
+	// Resolved bug from the original method (see above)
+	public double[][] getValues() throws IOException {
+		// OK PART
+		if (values != null) {
+			return values;
+		}
+		values = new double[db.header.dsCount][rowCount];
+		int row = currentRow;
+		// HERE ARE THE DRAGONS!
+		db.rrdFile.ras.seek(dataOffset + (row + 1) * db.header.dsCount * 8);
+		// OK, TOO!
 		for (int counter = 0; counter < rowCount; counter++) {
 			row++;
 			if (row == rowCount) {
@@ -363,8 +402,8 @@ public class Archive {
 		sb.append(currentRow);
 		sb.append("]");
 
-		for (Iterator i = cdpStatusBlocks.iterator(); i.hasNext();) {
-			CDPStatusBlock cdp = (CDPStatusBlock) i.next();
+		for (Iterator<CDPStatusBlock> i = cdpStatusBlocks.iterator(); i.hasNext();) {
+			CDPStatusBlock cdp = i.next();
 
 			sb.append("\n\t\t");
 			sb.append(cdp.toString());

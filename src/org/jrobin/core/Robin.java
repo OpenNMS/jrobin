@@ -5,14 +5,14 @@
  * Project Info:  http://www.jrobin.org
  * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
- * (C) Copyright 2003, by Sasa Markovic.
+ * (C) Copyright 2003-2005, by Sasa Markovic.
  *
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation;
  * either version 2.1 of the License, or (at your option) any later version.
  *
  * Developers:    Sasa Markovic (saxon@jrobin.org)
- *                Arne Vandamme (cobralord@jrobin.org)
+ *
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
@@ -33,7 +33,7 @@ import java.io.IOException;
  * fixed length array of double values. Each double value reperesents consolidated, archived
  * value for the specific timestamp. When the underlying array of double values gets completely
  * filled, new values will replace the oldest ones.<p>
- *
+ * <p/>
  * Robin object does not hold values in memory - such object could be quite large.
  * Instead of it, Robin reads them from the backend I/O only when necessary.
  *
@@ -50,7 +50,7 @@ public class Robin implements RrdUpdater {
 		this.pointer = new RrdInt(this);
 		this.values = new RrdDoubleArray(this, rows);
 		this.rows = rows;
-		if(shouldInitialize) {
+		if (shouldInitialize) {
 			pointer.set(0);
 			values.set(0, Double.NaN, rows);
 		}
@@ -76,7 +76,7 @@ public class Robin implements RrdUpdater {
 	// stores the same value several times
 	void bulkStore(double newValue, int bulkCount) throws IOException {
 		assert bulkCount <= rows: "Invalid number of bulk updates: " + bulkCount +
-			" rows=" + rows;
+				" rows=" + rows;
 		int position = pointer.get();
 		// update tail
 		int tailUpdateCount = Math.min(rows - position, bulkCount);
@@ -84,25 +84,54 @@ public class Robin implements RrdUpdater {
 		pointer.set((position + tailUpdateCount) % rows);
 		// do we need to update from the start?
 		int headUpdateCount = bulkCount - tailUpdateCount;
-		if(headUpdateCount > 0) {
+		if (headUpdateCount > 0) {
 			values.set(0, newValue, headUpdateCount);
 			pointer.set(headUpdateCount);
 		}
 	}
 
-	// updates Robin values in bulk
 	void update(double[] newValues) throws IOException {
-		assert rows == newValues.length: "Invalid number of values supplied: " + newValues.length +
-			" rows=" + rows;
+		assert rows == newValues.length: "Invalid number of robin values supplied (" + newValues.length +
+				"), exactly " + rows + " needed";
 		pointer.set(0);
 		values.writeDouble(0, newValues);
+	}
+
+	/**
+	 * Updates archived values in bulk.
+	 *
+	 * @param newValues Array of double values to be stored in the archive
+	 * @throws IOException  Thrown in case of I/O error
+	 * @throws RrdException Thrown if the length of the input array is different from the length of
+	 *                      this archive
+	 */
+	public void setValues(double[] newValues) throws IOException, RrdException {
+		if (rows != newValues.length) {
+			throw new RrdException("Invalid number of robin values supplied (" + newValues.length +
+					"), exactly " + rows + " needed");
+		}
+		update(newValues);
+	}
+
+	/**
+	 * (Re)sets all values in this archive to the same value.
+	 *
+	 * @param newValue New value
+	 * @throws IOException Thrown in case of I/O error
+	 */
+	public void setValues(double newValue) throws IOException {
+		double[] values = new double[rows];
+		for (int i = 0; i < values.length; i++) {
+			values[i] = newValue;
+		}
+		update(values);
 	}
 
 	String dump() throws IOException {
 		StringBuffer buffer = new StringBuffer("Robin " + pointer.get() + "/" + rows + ": ");
 		double[] values = getValues();
-		for(int i = 0; i < values.length; i++) {
-			buffer.append(Util.formatDouble(values[i], true) + " ");
+		for (double value : values) {
+			buffer.append(Util.formatDouble(value, true)).append(" ");
 		}
 		buffer.append("\n");
 		return buffer.toString();
@@ -110,6 +139,7 @@ public class Robin implements RrdUpdater {
 
 	/**
 	 * Returns the i-th value from the Robin archive.
+	 *
 	 * @param index Value index
 	 * @return Value stored in the i-th position (the oldest value has zero index)
 	 * @throws IOException Thrown in case of I/O specific error.
@@ -119,21 +149,33 @@ public class Robin implements RrdUpdater {
 		return values.get(arrayIndex);
 	}
 
+	/**
+	 * Sets the i-th value in the Robin archive.
+	 *
+	 * @param index index in the archive (the oldest value has zero index)
+	 * @param value value to be stored
+	 * @throws IOException Thrown in case of I/O specific error.
+	 */
+	public void setValue(int index, double value) throws IOException {
+		int arrayIndex = (pointer.get() + index) % rows;
+		values.set(arrayIndex, value);
+	}
+
 	double[] getValues(int index, int count) throws IOException {
 		assert count <= rows: "Too many values requested: " + count + " rows=" + rows;
 		int startIndex = (pointer.get() + index) % rows;
 		int tailReadCount = Math.min(rows - startIndex, count);
 		double[] tailValues = values.get(startIndex, tailReadCount);
-		if(tailReadCount < count) {
-            int headReadCount = count - tailReadCount;
+		if (tailReadCount < count) {
+			int headReadCount = count - tailReadCount;
 			double[] headValues = values.get(0, headReadCount);
 			double[] values = new double[count];
 			int k = 0;
-			for(int i = 0; i < tailValues.length; i++) {
-				values[k++] = tailValues[i];
+			for (double tailValue : tailValues) {
+				values[k++] = tailValue;
 			}
-			for(int i = 0; i < headValues.length; i++) {
-				values[k++] = headValues[i];
+			for (double headValue : headValues) {
+				values[k++] = headValue;
 			}
 			return values;
 		}
@@ -162,38 +204,48 @@ public class Robin implements RrdUpdater {
 
 	/**
 	 * Copies object's internal state to another Robin object.
+	 *
 	 * @param other New Robin object to copy state to
-	 * @throws IOException Thrown in case of I/O error
+	 * @throws IOException  Thrown in case of I/O error
 	 * @throws RrdException Thrown if supplied argument is not a Robin object
 	 */
 	public void copyStateTo(RrdUpdater other) throws IOException, RrdException {
-		if(!(other instanceof Robin)) {
+		if (!(other instanceof Robin)) {
 			throw new RrdException(
-				"Cannot copy Robin object to " + other.getClass().getName());
+					"Cannot copy Robin object to " + other.getClass().getName());
 		}
 		Robin robin = (Robin) other;
 		int rowsDiff = rows - robin.rows;
-		if(rowsDiff == 0) {
+		if (rowsDiff == 0) {
 			// Identical dimensions. Do copy in BULK to speed things up
 			robin.pointer.set(pointer.get());
 			robin.values.writeBytes(values.readBytes());
 		}
 		else {
 			// different sizes
-			for(int i = 0; i < robin.rows; i++) {
+			for (int i = 0; i < robin.rows; i++) {
 				int j = i + rowsDiff;
-				robin.store(j >= 0? getValue(j): Double.NaN);
+				robin.store(j >= 0 ? getValue(j) : Double.NaN);
 			}
 		}
 	}
 
-	void filterValues(double minValue, double maxValue) throws IOException {
-		for(int i = 0; i < rows; i++) {
+	/**
+	 * Filters values stored in this archive based on the given boundary.
+	 * Archived values found to be outside of <code>[minValue, maxValue]</code> interval (inclusive)
+	 * will be silently replaced with <code>NaN</code>.
+	 *
+	 * @param minValue lower boundary
+	 * @param maxValue upper boundary
+	 * @throws IOException Thrown in case of I/O error
+	 */
+	public void filterValues(double minValue, double maxValue) throws IOException {
+		for (int i = 0; i < rows; i++) {
 			double value = values.get(i);
-			if(!Double.isNaN(minValue) && !Double.isNaN(value) && minValue > value) {
+			if (!Double.isNaN(minValue) && !Double.isNaN(value) && minValue > value) {
 				values.set(i, Double.NaN);
 			}
-			if(!Double.isNaN(maxValue) && !Double.isNaN(value) && maxValue < value) {
+			if (!Double.isNaN(maxValue) && !Double.isNaN(value) && maxValue < value) {
 				values.set(i, Double.NaN);
 			}
 		}
@@ -202,6 +254,7 @@ public class Robin implements RrdUpdater {
 	/**
 	 * Returns the underlying storage (backend) object which actually performs all
 	 * I/O operations.
+	 *
 	 * @return I/O backend object
 	 */
 	public RrdBackend getRrdBackend() {
@@ -210,6 +263,7 @@ public class Robin implements RrdUpdater {
 
 	/**
 	 * Required to implement RrdUpdater interface. You should never call this method directly.
+	 *
 	 * @return Allocator object
 	 */
 	public RrdAllocator getRrdAllocator() {

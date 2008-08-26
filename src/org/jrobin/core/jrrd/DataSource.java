@@ -8,7 +8,8 @@
  */
 package org.jrobin.core.jrrd;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.PrintStream;
 import java.text.NumberFormat;
 
 /**

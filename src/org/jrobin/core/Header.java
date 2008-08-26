@@ -5,14 +5,14 @@
  * Project Info:  http://www.jrobin.org
  * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
- * (C) Copyright 2003, by Sasa Markovic.
+ * (C) Copyright 2003-2005, by Sasa Markovic.
  *
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation;
  * either version 2.1 of the License, or (at your option) any later version.
  *
  * Developers:    Sasa Markovic (saxon@jrobin.org)
- *                Arne Vandamme (cobralord@jrobin.org)
+ *
  *
  * This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
@@ -31,14 +31,17 @@ import java.io.IOException;
  * Class to represent RRD header. Header information is mainly static (once set, it
  * cannot be changed), with the exception of last update time (this value is changed whenever
  * RRD gets updated).<p>
- *
+ * <p/>
  * Normally, you don't need to manipulate the Header object directly - JRobin framework
  * does it for you.<p>
  *
  * @author <a href="mailto:saxon@jrobin.org">Sasa Markovic</a>*
  */
 public class Header implements RrdUpdater {
-	static final String SIGNATURE = "JRobin, version 0.1";
+	static final int SIGNATURE_LENGTH = 2;
+	static final String SIGNATURE = "JR";
+
+	static final String DEFAULT_SIGNATURE = "JRobin, version 0.1";
 	static final String RRDTOOL_VERSION = "0001";
 
 	private RrdDb parentDb;
@@ -51,13 +54,13 @@ public class Header implements RrdUpdater {
 	Header(RrdDb parentDb, RrdDef rrdDef) throws IOException {
 		boolean shouldInitialize = rrdDef != null;
 		this.parentDb = parentDb;
-		signature = new RrdString(this);
-		step = new RrdLong(this);
-		dsCount = new RrdInt(this);
-		arcCount = new RrdInt(this);
+		signature = new RrdString(this);			 // NOT constant, may be cached
+		step = new RrdLong(this, true);			 // constant, may be cached
+		dsCount = new RrdInt(this, true);			 // constant, may be cached
+		arcCount = new RrdInt(this, true);			 // constant, may be cached
 		lastUpdateTime = new RrdLong(this);
-		if(shouldInitialize) {
-			signature.set(SIGNATURE);
+		if (shouldInitialize) {
+			signature.set(DEFAULT_SIGNATURE);
 			step.set(rrdDef.getStep());
 			dsCount.set(rrdDef.getDsCount());
 			arcCount.set(rrdDef.getArcCount());
@@ -68,10 +71,10 @@ public class Header implements RrdUpdater {
 	Header(RrdDb parentDb, DataImporter reader) throws IOException, RrdException {
 		this(parentDb, (RrdDef) null);
 		String version = reader.getVersion();
-		if(!version.equals(RRDTOOL_VERSION)) {
+		if (!version.equals(RRDTOOL_VERSION)) {
 			throw new RrdException("Could not unserilalize xml version " + version);
 		}
-		signature.set(SIGNATURE);
+		signature.set(DEFAULT_SIGNATURE);
 		step.set(reader.getStep());
 		dsCount.set(reader.getDsCount());
 		arcCount.set(reader.getArcCount());
@@ -79,7 +82,7 @@ public class Header implements RrdUpdater {
 	}
 
 	/**
-	 * Returns RRD signature. The returned string will be always
+	 * Returns RRD signature. Initially, the returned string will be
 	 * of the form <b><i>JRobin, version x.x</i></b>. Note: RRD format did not
 	 * change since Jrobin 1.0.0 release (and probably never will).
 	 *
@@ -88,6 +91,19 @@ public class Header implements RrdUpdater {
 	 */
 	public String getSignature() throws IOException {
 		return signature.get();
+	}
+
+	public String getInfo() throws IOException {
+		return getSignature().substring(SIGNATURE_LENGTH);
+	}
+
+	public void setInfo(String info) throws IOException {
+		if (info != null && info.length() > 0) {
+			signature.set(SIGNATURE + info);
+		}
+		else {
+			signature.set(SIGNATURE);
+		}
 	}
 
 	/**
@@ -131,19 +147,20 @@ public class Header implements RrdUpdater {
 	}
 
 	void setLastUpdateTime(long lastUpdateTime) throws IOException {
-        this.lastUpdateTime.set(lastUpdateTime);
+		this.lastUpdateTime.set(lastUpdateTime);
 	}
 
 	String dump() throws IOException {
 		return "== HEADER ==\n" +
-			"signature:" + getSignature() +
-			" lastUpdateTime:" + getLastUpdateTime() +
-			" step:" + getStep() +
-			" dsCount:" + getDsCount() +
-			" arcCount:" + getArcCount() + "\n";
+				"signature:" + getSignature() +
+				" lastUpdateTime:" + getLastUpdateTime() +
+				" step:" + getStep() +
+				" dsCount:" + getDsCount() +
+				" arcCount:" + getArcCount() + "\n";
 	}
 
-    void appendXml(XmlWriter writer) throws IOException {
+	void appendXml(XmlWriter writer) throws IOException {
+		writer.writeComment(signature.get());
 		writer.writeTag("version", RRDTOOL_VERSION);
 		writer.writeComment("Seconds");
 		writer.writeTag("step", step.get());
@@ -153,22 +170,25 @@ public class Header implements RrdUpdater {
 
 	/**
 	 * Copies object's internal state to another Header object.
+	 *
 	 * @param other New Header object to copy state to
-	 * @throws IOException Thrown in case of I/O error
+	 * @throws IOException  Thrown in case of I/O error
 	 * @throws RrdException Thrown if supplied argument is not a Header object
 	 */
 	public void copyStateTo(RrdUpdater other) throws IOException, RrdException {
-		if(!(other instanceof Header)) {
+		if (!(other instanceof Header)) {
 			throw new RrdException(
-				"Cannot copy Header object to " + other.getClass().getName());
+					"Cannot copy Header object to " + other.getClass().getName());
 		}
-		Header header = (Header) other; 
+		Header header = (Header) other;
+		header.signature.set(signature.get());
 		header.lastUpdateTime.set(lastUpdateTime.get());
 	}
 
 	/**
 	 * Returns the underlying storage (backend) object which actually performs all
 	 * I/O operations.
+	 *
 	 * @return I/O backend object
 	 */
 	public RrdBackend getRrdBackend() {
@@ -176,17 +196,19 @@ public class Header implements RrdUpdater {
 	}
 
 	boolean isJRobinHeader() throws IOException {
-		return signature.get().equals(SIGNATURE);
+		return signature.get().startsWith(SIGNATURE);
 	}
 
 	void validateHeader() throws IOException, RrdException {
-		if(!isJRobinHeader()) {
-			throw new RrdException("Not a JRobin RRD!");
+		if (!isJRobinHeader()) {
+			String msg = "Invalid file header. File [" + parentDb.getCanonicalPath() + "] is not a JRobin RRD file";
+			throw new RrdException(msg);
 		}
 	}
 
 	/**
 	 * Required to implement RrdUpdater interface. You should never call this method directly.
+	 *
 	 * @return Allocator object
 	 */
 	public RrdAllocator getRrdAllocator() {

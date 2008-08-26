@@ -5,10 +5,10 @@
  * Project Info:  http://www.jrobin.org
  * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
- * (C) Copyright 2003, by Sasa Markovic.
+ * (C) Copyright 2003-2005, by Sasa Markovic.
  *
  * Developers:    Sasa Markovic (saxon@jrobin.org)
- *                Arne Vandamme (cobralord@jrobin.org)
+ *
  *
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation;
@@ -27,115 +27,59 @@ package org.jrobin.core;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.io.File;
-import java.nio.channels.FileChannel;
-import java.nio.channels.FileLock;
-import java.util.HashSet;
 
 /**
  * JRobin backend which is used to store RRD data to ordinary files on the disk. This was the
  * default factory before 1.4.0 version<p>
- *
+ * <p/>
  * This backend is based on the RandomAccessFile class (java.io.* package).
  */
 public class RrdFileBackend extends RrdBackend {
-	static final long LOCK_DELAY = 100; // 0.1sec
-
-	private static HashSet openFiles = new HashSet();
-
+	/**
+	 * read/write file status
+	 */
+	protected boolean readOnly;
+	/**
+	 * radnom access file handle
+	 */
 	protected RandomAccessFile file;
-	protected FileChannel channel;
-	protected FileLock fileLock;
 
-	protected RrdFileBackend(String path, boolean readOnly, int lockMode) throws IOException {
+	/**
+	 * Creates RrdFileBackend object for the given file path, backed by RandomAccessFile object.
+	 *
+	 * @param path	 Path to a file
+	 * @param readOnly True, if file should be open in a read-only mode. False otherwise
+	 * @throws IOException Thrown in case of I/O error
+	 */
+	protected RrdFileBackend(String path, boolean readOnly) throws IOException {
 		super(path);
-		file = new RandomAccessFile(path, readOnly? "r": "rw");
-		channel = file.getChannel();
-		if(!readOnly) {
-			lockFile(lockMode);
-			// We'll try to lock the file only in "rw" mode
-			registerWriter(path);
-		}
-	}
-
-	private static synchronized void registerWriter(String path) throws IOException {
-		String canonicalPath = getCanonicalPath(path);
-		if(openFiles.contains(canonicalPath)) {
-			throw new IOException("File \"" + path + "\" already open for R/W access. " +
-					"You cannot open the same file for R/W access twice");
-		}
-		else {
-			openFiles.add(canonicalPath);
-		}
-	}
-
-	private void lockFile(int lockMode) throws IOException {
-		if(lockMode == RrdDb.WAIT_IF_LOCKED || lockMode == RrdDb.EXCEPTION_IF_LOCKED) {
-			do {
-				fileLock = channel.tryLock();
-				if(fileLock == null) {
-					// could not obtain lock
-					if(lockMode == RrdDb.WAIT_IF_LOCKED) {
-						// wait a little, than try again
-						try {
-							Thread.sleep(LOCK_DELAY);
-						} catch (InterruptedException e) {
-							// NOP
-						}
-					}
-					else {
-						throw new IOException("Access denied. " +
-							"File [" + getPath() + "] already locked");
-					}
-				}
-			} while(fileLock == null);
-		}
+		this.readOnly = readOnly;
+		this.file = new RandomAccessFile(path, readOnly ? "r" : "rw");
 	}
 
 	/**
 	 * Closes the underlying RRD file.
+	 *
 	 * @throws IOException Thrown in case of I/O error
 	 */
 	public void close() throws IOException {
-		super.close(); // calls sync()
-		unregisterWriter(getPath());
-		unlockFile();
-		channel.close();
 		file.close();
-	}
-
-	private static synchronized void unregisterWriter(String path) throws IOException {
-		String canonicalPath = getCanonicalPath(path);
-		openFiles.remove(canonicalPath);
-	}
-
-	private void unlockFile() throws IOException {
-		if(fileLock != null) {
-			fileLock.release();
-			fileLock = null;
-		}
-	}
-
-	/**
-	 * Closes the underlying RRD file if not already closed
-	 * @throws IOException Thrown in case of I/O error
-	 */
-	protected void finalize() throws IOException {
-		close();
 	}
 
 	/**
 	 * Returns canonical path to the file on the disk.
+	 *
 	 * @param path File path
 	 * @return Canonical file path
 	 * @throws IOException Thrown in case of I/O error
 	 */
 	public static String getCanonicalPath(String path) throws IOException {
-		return new File(path).getCanonicalPath();
+		return Util.getCanonicalPath(path);
 	}
 
 	/**
 	 * Returns canonical path to the file on the disk.
+	 *
 	 * @return Canonical file path
 	 * @throws IOException Thrown in case of I/O error
 	 */
@@ -145,8 +89,9 @@ public class RrdFileBackend extends RrdBackend {
 
 	/**
 	 * Writes bytes to the underlying RRD file on the disk
+	 *
 	 * @param offset Starting file offset
-	 * @param b Bytes to be written.
+	 * @param b	  Bytes to be written.
 	 * @throws IOException Thrown in case of I/O error
 	 */
 	protected void write(long offset, byte[] b) throws IOException {
@@ -156,19 +101,21 @@ public class RrdFileBackend extends RrdBackend {
 
 	/**
 	 * Reads a number of bytes from the RRD file on the disk
+	 *
 	 * @param offset Starting file offset
-	 * @param b Buffer which receives bytes read from the file.
+	 * @param b	  Buffer which receives bytes read from the file.
 	 * @throws IOException Thrown in case of I/O error.
 	 */
 	protected void read(long offset, byte[] b) throws IOException {
 		file.seek(offset);
-		if(file.read(b) != b.length) {
+		if (file.read(b) != b.length) {
 			throw new IOException("Not enough bytes available in file " + getPath());
 		}
 	}
 
 	/**
 	 * Returns RRD file length.
+	 *
 	 * @return File length.
 	 * @throws IOException Thrown in case of I/O error.
 	 */
@@ -179,6 +126,7 @@ public class RrdFileBackend extends RrdBackend {
 	/**
 	 * Sets length of the underlying RRD file. This method is called only once, immediately
 	 * after a new RRD file gets created.
+	 *
 	 * @param length Length of the RRD file
 	 * @throws IOException Thrown in case of I/O error.
 	 */

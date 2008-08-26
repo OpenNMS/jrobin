@@ -5,10 +5,10 @@
  * Project Info:  http://www.jrobin.org
  * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
- * (C) Copyright 2003, by Sasa Markovic.
+ * (C) Copyright 2003-2005, by Sasa Markovic.
  *
  * Developers:    Sasa Markovic (saxon@jrobin.org)
- *                Arne Vandamme (cobralord@jrobin.org)
+ *
  *
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation;
@@ -25,11 +25,11 @@
 
 package org.jrobin.core;
 
+import java.awt.*;
+import java.io.File;
 import java.io.OutputStream;
 import java.io.PrintWriter;
-import java.io.File;
 import java.util.Stack;
-import java.awt.*;
 
 /**
  * Extremely simple utility class used to create XML documents.
@@ -39,18 +39,20 @@ public class XmlWriter {
 
 	private PrintWriter writer;
 	private StringBuffer indent = new StringBuffer("");
-	private Stack openTags = new Stack();
+	private Stack<String> openTags = new Stack<String>();
 
 	/**
 	 * Creates XmlWriter with the specified output stream to send XML code to.
+	 *
 	 * @param stream Output stream which receives XML code
 	 */
 	public XmlWriter(OutputStream stream) {
-		writer = new PrintWriter(stream);
+		writer = new PrintWriter(stream, true);
 	}
 
 	/**
 	 * Opens XML tag
+	 *
 	 * @param tag XML tag name
 	 */
 	public void startTag(String tag) {
@@ -63,20 +65,21 @@ public class XmlWriter {
 	 * Closes the corresponding XML tag
 	 */
 	public void closeTag() {
-		String tag = (String) openTags.pop();
+		String tag = openTags.pop();
 		indent.setLength(indent.length() - INDENT_STR.length());
 		writer.println(indent + "</" + tag + ">");
 	}
 
 	/**
 	 * Writes &lt;tag&gt;value&lt;/tag&gt; to output stream
-	 * @param tag XML tag name
+	 *
+	 * @param tag   XML tag name
 	 * @param value value to be placed between <code>&lt;tag&gt</code> and <code>&lt;/tag&gt;</code>
 	 */
 	public void writeTag(String tag, Object value) {
-		if(value != null) {
+		if (value != null) {
 			writer.println(indent + "<" + tag + ">" +
-				escape(value.toString()) + "</" + tag + ">");
+					escape(value.toString()) + "</" + tag + ">");
 		}
 		else {
 			writer.println(indent + "<" + tag + "></" + tag + ">");
@@ -85,7 +88,8 @@ public class XmlWriter {
 
 	/**
 	 * Writes &lt;tag&gt;value&lt;/tag&gt; to output stream
-	 * @param tag XML tag name
+	 *
+	 * @param tag   XML tag name
 	 * @param value value to be placed between <code>&lt;tag&gt</code> and <code>&lt;/tag&gt;</code>
 	 */
 	public void writeTag(String tag, int value) {
@@ -94,7 +98,8 @@ public class XmlWriter {
 
 	/**
 	 * Writes &lt;tag&gt;value&lt;/tag&gt; to output stream
-	 * @param tag XML tag name
+	 *
+	 * @param tag   XML tag name
 	 * @param value value to be placed between <code>&lt;tag&gt</code> and <code>&lt;/tag&gt;</code>
 	 */
 	public void writeTag(String tag, long value) {
@@ -103,7 +108,8 @@ public class XmlWriter {
 
 	/**
 	 * Writes &lt;tag&gt;value&lt;/tag&gt; to output stream
-	 * @param tag XML tag name
+	 *
+	 * @param tag   XML tag name
 	 * @param value value to be placed between <code>&lt;tag&gt</code> and <code>&lt;/tag&gt;</code>
 	 */
 	public void writeTag(String tag, double value, String nanString) {
@@ -112,7 +118,8 @@ public class XmlWriter {
 
 	/**
 	 * Writes &lt;tag&gt;value&lt;/tag&gt; to output stream
-	 * @param tag XML tag name
+	 *
+	 * @param tag   XML tag name
 	 * @param value value to be placed between <code>&lt;tag&gt</code> and <code>&lt;/tag&gt;</code>
 	 */
 	public void writeTag(String tag, double value) {
@@ -121,7 +128,8 @@ public class XmlWriter {
 
 	/**
 	 * Writes &lt;tag&gt;value&lt;/tag&gt; to output stream
-	 * @param tag XML tag name
+	 *
+	 * @param tag   XML tag name
 	 * @param value value to be placed between <code>&lt;tag&gt</code> and <code>&lt;/tag&gt;</code>
 	 */
 	public void writeTag(String tag, boolean value) {
@@ -130,7 +138,8 @@ public class XmlWriter {
 
 	/**
 	 * Writes &lt;tag&gt;value&lt;/tag&gt; to output stream
-	 * @param tag XML tag name
+	 *
+	 * @param tag   XML tag name
 	 * @param value value to be placed between <code>&lt;tag&gt</code> and <code>&lt;/tag&gt;</code>
 	 */
 	public void writeTag(String tag, Color value) {
@@ -140,20 +149,21 @@ public class XmlWriter {
 
 	/**
 	 * Writes &lt;tag&gt;value&lt;/tag&gt; to output stream
-	 * @param tag XML tag name
+	 *
+	 * @param tag   XML tag name
 	 * @param value value to be placed between <code>&lt;tag&gt</code> and <code>&lt;/tag&gt;</code>
 	 */
 	public void writeTag(String tag, Font value) {
 		startTag(tag);
 		writeTag("name", value.getName());
 		int style = value.getStyle();
-		if((style & Font.BOLD) != 0 && (style & Font.ITALIC) != 0) {
+		if ((style & Font.BOLD) != 0 && (style & Font.ITALIC) != 0) {
 			writeTag("style", "BOLDITALIC");
 		}
-		else if((style & Font.BOLD) != 0) {
+		else if ((style & Font.BOLD) != 0) {
 			writeTag("style", "BOLD");
 		}
-		else if((style & Font.ITALIC) != 0) {
+		else if ((style & Font.ITALIC) != 0) {
 			writeTag("style", "ITALIC");
 		}
 		else {
@@ -165,7 +175,8 @@ public class XmlWriter {
 
 	/**
 	 * Writes &lt;tag&gt;value&lt;/tag&gt; to output stream
-	 * @param tag XML tag name
+	 *
+	 * @param tag   XML tag name
 	 * @param value value to be placed between <code>&lt;tag&gt</code> and <code>&lt;/tag&gt;</code>
 	 */
 	public void writeTag(String tag, File value) {
@@ -179,12 +190,14 @@ public class XmlWriter {
 		writer.flush();
 	}
 
-	protected void finalize() {
+	protected void finalize() throws Throwable {
+		super.finalize();
 		writer.close();
 	}
 
 	/**
 	 * Writes XML comment to output stream
+	 *
 	 * @param comment comment string
 	 */
 	public void writeComment(Object comment) {

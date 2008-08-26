@@ -4,11 +4,11 @@
  *
  * Project Info:  http://www.jrobin.org
  * Project Lead:  Sasa Markovic (saxon@jrobin.org)
- * 
- * Developers:    Sasa Markovic (saxon@jrobin.org)
- *                Arne Vandamme (cobralord@jrobin.org)
  *
- * (C) Copyright 2003, by Sasa Markovic.
+ * Developers:    Sasa Markovic (saxon@jrobin.org)
+ *
+ *
+ * (C) Copyright 2003-2005, by Sasa Markovic.
  *
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation;
@@ -24,449 +24,650 @@
  */
 package org.jrobin.graph;
 
-import java.util.Iterator;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.Serializable;
-import java.io.ByteArrayOutputStream;
-import javax.imageio.ImageIO;
-import javax.imageio.IIOImage;
-import javax.imageio.ImageWriter;
-import javax.imageio.ImageWriteParam;
-import javax.imageio.stream.ImageOutputStream;
-import java.awt.image.RenderedImage;
-import java.awt.image.BufferedImage;
-import java.awt.*;
-
-import org.jrobin.core.RrdOpener;
 import org.jrobin.core.RrdException;
+import org.jrobin.core.Util;
+import org.jrobin.data.DataProcessor;
+
+import javax.swing.*;
+import java.awt.*;
+import java.io.IOException;
 
 /**
- * <p>Class to represent JRobin graphs.  This class needs an appropriate RrdGraphDef to generate graphs.</p>
- * 
- * @author Arne Vandamme (cobralord@jrobin.org)
- * @author Sasa Markovic (saxon@jrobin.org)
+ * Class which actually creates JRobin graphs (does the hard work).
  */
-public class RrdGraph extends RrdOpener implements Serializable
-{
-	// ================================================================
-	// -- Members
-	// ================================================================
-	private Grapher grapher;
-	private BufferedImage img;
-
-	private boolean useImageSize		= false;
-	
-	
-	// ================================================================
-	// -- Constructors
-	// ================================================================
-	/**
-	 * Constructs a new JRobin graph object, without a shared database pool.
-	 */
-	public RrdGraph() 
-	{
-		super( false, true );
-	}
+public class RrdGraph implements RrdGraphConstants {
+	RrdGraphDef gdef;
+	ImageParameters im = new ImageParameters();
+	DataProcessor dproc;
+	ImageWorker worker;
+	Mapper mapper;
+	RrdGraphInfo info = new RrdGraphInfo();
+	private String signature;
 
 	/**
-	 * Constructs a new JRobin graph object.
-	 * @param usePool True if this object should use RrdDbPool
+	 * Creates graph from the corresponding {@link RrdGraphDef} object.
+	 *
+	 * @param gdef Graph definition
+	 * @throws IOException  Thrown in case of I/O error
+	 * @throws RrdException Thrown in case of JRobin related error
 	 */
-	public RrdGraph( boolean usePool )
-	{
-		super( usePool, true );
-	}
-
-	/**
-	 * Constructs a new JRobin graph object from the supplied definition.
-	 * @param graphDef Graph definition.
-	 */
-	public RrdGraph( RrdGraphDef graphDef )
-	{
-		this( graphDef, false );
-	}
-
-	/**
-	 * Constructs a new JRobin graph from the supplied definition.
-	 * @param graphDef Graph definition.
-	 * @param usePool True if this should object should use RrdDbPool
-	 */
-	public RrdGraph( RrdGraphDef graphDef, boolean usePool )
-	{
-		super( usePool, true );
-		grapher		= new Grapher( graphDef, this );
-	}
-	
-	
-	// ================================================================
-	// -- Public mehods
-	// ================================================================
-	/**
-	 * Determines if graph creation should specify dimensions for the chart graphing
-	 * are, of for the entire image size.  Default is the only the chart graphing
-	 * area, this has an impact on the entire image size.
-	 * @param specImgSize True if the dimensions for the entire image will be specified, false if only for the chart area. 
-	 */
-	public void specifyImageSize( boolean specImgSize )
-	{
-		this.useImageSize = specImgSize;
-	}
-	
-	/**
-	 * Sets the graph definition to use for the graph construction.
-	 * @param graphDef Graph definition.
-	 */
-	public void setGraphDef( RrdGraphDef graphDef ) 
-	{
-		img		= null;
-		grapher = new Grapher( graphDef, this );
-	}
-	
-	/**
-	 * Creates and saves a graph image with default dimensions as a PNG file.
-	 * By default the chart area is 400 by 100 pixels, the size of the entire image is dependant
-	 * on number of title/legend/comment lines and some other settings.
-	 * @param path Path to the PNG file to be created.
-	 * @throws IOException Thrown in case of I/O error.
-	 * @throws RrdException Thrown in case of JRobin specific error.
-	 */
-	public void saveAsPNG( String path ) throws RrdException, IOException
-	{
-		saveAsPNG( path, 0, 0 );
-	}
-	
-	/**
-	 * Creates and saves a graph image with custom chart dimensions as a PNG file.
-	 * The resulting size of the entire image is also influenced by many other settings like number of comment lines.
-	 * @param path Path to the PNG file to be created.
-	 * @param width Width of the chart area in pixels.
-	 * @param height Height of the chart area in pixels.
-	 * @throws IOException Thrown in case of I/O error.
-	 * @throws RrdException Thrown in case of JRobin specific error.
-	 */
-	public void saveAsPNG( String path, int width, int height ) throws RrdException, IOException
-	{
-		File imgFile = new File( path );
-
-		if ( shouldGenerate(imgFile) )
-			ImageIO.write( getBufferedImage(width, height, BufferedImage.TYPE_INT_RGB), "png", imgFile );
-	}
-
-	/**
-	 * Creates and saves a graph image with default dimensions as a GIF file.
-	 * By default the chart area is 400 by 100 pixels, the size of the entire image is dependant
-	 * on number of title/legend/comment lines and some other settings.
-	 * @param path Path to the GIF file to be created.
-	 * @throws IOException Thrown in case of I/O error.
-	 * @throws RrdException Thrown in case of JRobin specific error.
-	 */
-	public void saveAsGIF( String path ) throws RrdException, IOException
-	{
-		saveAsGIF( path, 0, 0 );
-	}
-	
-	/**
-	 * Creates and saves a graph image with custom chart dimensions as a GIF file.
-	 * The resulting size of the entire image is also influenced by many other settings like number of comment lines.
-	 * @param path Path to the GIF file to be created.
-	 * @param width Width of the chart area in pixels.
-	 * @param height Height of the chart area in pixels.
-	 * @throws IOException Thrown in case of I/O error.
-	 * @throws RrdException Thrown in case of JRobin specific error.
-	 */
-	public void saveAsGIF(String path, int width, int height) throws RrdException, IOException
-	{
-		File imgFile = new File( path );
-
-		if ( shouldGenerate(imgFile) )
-		{
-			GifEncoder gifEncoder 		= new GifEncoder( getBufferedImage(width, height, BufferedImage.TYPE_BYTE_INDEXED) );
-			FileOutputStream stream 	= new FileOutputStream( path, false );
-
-			gifEncoder.encode(stream);
-
-			stream.close();
+	public RrdGraph(RrdGraphDef gdef) throws IOException, RrdException {
+		this.gdef = gdef;
+		signature = gdef.getSignature();
+		worker = new ImageWorker(100, 100); // Dummy worker, just to start with something
+		try {
+			createGraph();
+		}
+		finally {
+			worker.dispose();
+			worker = null;
+			dproc = null;
 		}
 	}
 
 	/**
-	 * Creates and saves a graph image with default dimensions as a JPEG file.
-	 * By default the chart area is 400 by 100 pixels, the size of the entire image is dependant
-	 * on number of title/legend/comment lines and some other settings.
-	 * @param path Path to the JPEG file to be created.
-	 * @param quality JPEG quality, between 0 (= low) and 1.0f (= high).
-	 * @throws IOException Thrown in case of I/O error.
+	 * Returns complete graph information in a single object.
+	 *
+	 * @return Graph information (width, height, filename, image bytes, etc...)
 	 */
-	public void saveAsJPEG( String path, float quality ) throws RrdException, IOException
-	{
-		saveAsJPEG( path, 0, 0, quality );
+	public RrdGraphInfo getRrdGraphInfo() {
+		return info;
 	}
-	
-	/**
-	 * Creates and saves a graph image with custom chart dimensions as a JPEG file.
-	 * The resulting size of the entire image is also influenced by many other settings like number of comment lines.
-	 * @param path Path to the JPEG file to be created.
-	 * @param width Width of the chart area in pixels.
-	 * @param height Height of the chart area in pixels.
-	 * @param quality JPEG quality, between 0 (= low) and 1.0f (= high).
-	 * @throws IOException Thrown in case of I/O error.
-	 */
-	public void saveAsJPEG( String path, int width, int height, float quality ) throws RrdException, IOException
-	{
-		File imgFile = new File( path );
 
-		if ( !shouldGenerate(imgFile) )
-			return;
-
-		// Based on http://javaalmanac.com/egs/javax.imageio/JpegWrite.html?l=rel
-		// Retrieve jpg image to be compressed
-		RenderedImage rndImage	= getBufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-	
-		// Find a jpeg writer
-		ImageWriter writer = null;
-		Iterator iter = ImageIO.getImageWritersByFormatName("jpg");
-		if (iter.hasNext()) {
-			writer = (ImageWriter)iter.next();
+	private void createGraph() throws RrdException, IOException {
+		boolean lazy = lazyCheck();
+		if (!lazy || gdef.printStatementCount() != 0) {
+			fetchData();
+			resolveTextElements();
+			if (gdef.shouldPlot() && !lazy) {
+				calculatePlotValues();
+				findMinMaxValues();
+				identifySiUnit();
+				expandValueRange();
+				removeOutOfRangeRules();
+				initializeLimits();
+				placeLegends();
+				createImageWorker();
+				drawBackground();
+				drawData();
+				drawGrid();
+				drawAxis();
+				drawText();
+				drawLegend();
+				drawRules();
+				gator();
+				drawOverlay();
+				saveImage();
+			}
 		}
-
-		// Prepare output file
-		ImageOutputStream ios = ImageIO.createImageOutputStream(new File(path));
-		writer.setOutput(ios);
-
-		// Set the compression quality
-		ImageWriteParam iwparam = new JpegImageWriteParam();
-		iwparam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT) ;
-		iwparam.setCompressionQuality(quality);
-
-		// Write the image
-		writer.write(null, new IIOImage(rndImage, null, null), iwparam);
-
-		// Cleanup
-		ios.flush();
-		writer.dispose();
-		ios.close();
-	}
-	
-	/**
-	 * Returns graph with default chart dimensions (400 by 100) as an array of PNG bytes.
-	 * @return Array of PNG bytes.
-	 * @throws IOException Thrown in case of I/O error.
-	 */
-	public byte[] getPNGBytes() throws IOException, RrdException
-	{
-		return getPNGBytes( 0, 0 );
-	}
-	
-	/**
-	 * Returns graph with custom chart dimensions as an array of PNG bytes.
-	 * @param width Width of the chart area in pixels.
-	 * @param height Height of the chart area in pixels.
-	 * @return Array of PNG bytes.
-	 * @throws IOException Thrown in case of I/O error.
-	 */
-	public byte[] getPNGBytes( int width, int height ) throws IOException, RrdException
-	{
-		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-		
-		ImageIO.write(getBufferedImage(width, height, BufferedImage.TYPE_INT_RGB), "png", outputStream );
-				
-		return outputStream.toByteArray();
+		collectInfo();
 	}
 
-	/**
-	 * Returns graph with default chart dimensions (400 by 100) as an array of JPEG bytes.
-	 * @param quality JPEG quality, between 0 (= low) and 1.0f (= high).
-	 * @return Array of PNG bytes.
-	 * @throws IOException Thrown in case of I/O error.
-	 */
-	public byte[] getJPEGBytes( float quality ) throws IOException, RrdException
-	{
-		return getJPEGBytes( 0, 0, quality );
-	}
-	
-	/**
-	 * Returns graph with custom chart dimensions as an array of JPEG bytes.
-	 * @param width Width of the chart area in pixels.
-	 * @param height Height of the chart area in pixels.
-	 * @param quality JPEG quality, between 0 (= low) and 1.0f (= high).
-	 * @return Array of JPEG bytes.
-	 * @throws IOException Thrown in case of I/O error.
-	 */
-	public byte[] getJPEGBytes( int width, int height, float quality ) throws IOException, RrdException
-	{
-		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-		
-		// Retrieve jpg image to be compressed
-		RenderedImage rndImage	= getBufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-	
-		// Find a jpeg writer
-		ImageWriter writer = null;
-		Iterator iter = ImageIO.getImageWritersByFormatName("jpg");
-		if (iter.hasNext()) {
-			writer = (ImageWriter)iter.next();
+	private void collectInfo() {
+		info.filename = gdef.filename;
+		info.width = im.xgif;
+		info.height = im.ygif;
+		for (CommentText comment : gdef.comments) {
+			if (comment instanceof PrintText) {
+				PrintText pt = (PrintText) comment;
+				if (pt.isPrint()) {
+					info.addPrintLine(pt.resolvedText);
+				}
+			}
 		}
+		if (gdef.imageInfo != null) {
+			info.imgInfo = Util.sprintf(gdef.imageInfo, gdef.filename, im.xgif, im.ygif);
+		}
+	}
 
-		// Prepare output file
-		ImageOutputStream ios = ImageIO.createImageOutputStream(outputStream);
-		writer.setOutput(ios);
+	private void saveImage() throws IOException {
+		if (!gdef.filename.equals("-")) {
+			info.bytes = worker.saveImage(gdef.filename, gdef.imageFormat, gdef.imageQuality);
+		}
+		else {
+			info.bytes = worker.getImageBytes(gdef.imageFormat, gdef.imageQuality);
+		}
+	}
 
-		// Set the compression quality
-		ImageWriteParam iwparam = new JpegImageWriteParam();
-		iwparam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT) ;
-		iwparam.setCompressionQuality(quality);
+	private void drawOverlay() throws IOException {
+		if (gdef.overlayImage != null) {
+			worker.loadImage(gdef.overlayImage);
+		}
+	}
 
-		// Write the image
-		writer.write(null, new IIOImage(rndImage, null, null), iwparam);
+	private void gator() {
+		if (!gdef.onlyGraph && gdef.showSignature) {
+			Font font = gdef.getSmallFont().deriveFont(Font.PLAIN, 9);
+			int x = (int) (im.xgif - 2 - worker.getFontAscent(font));
+			int y = 4;
+			worker.transform(x, y, Math.PI / 2);
+			worker.drawString(signature, 0, 0, font, Color.LIGHT_GRAY);
+			worker.reset();
+		}
+	}
 
-		// Cleanup
-		ios.flush();
-		writer.dispose();
-		ios.close();
-		
-		return outputStream.toByteArray();
+	private void drawRules() {
+		worker.clip(im.xorigin + 1, im.yorigin - gdef.height - 1, gdef.width - 1, gdef.height + 2);
+		for (PlotElement pe : gdef.plotElements) {
+			if (pe instanceof HRule) {
+				HRule hr = (HRule) pe;
+				if (hr.value >= im.minval && hr.value <= im.maxval) {
+					int y = mapper.ytr(hr.value);
+					worker.drawLine(im.xorigin, y, im.xorigin + im.xsize, y, hr.color, new BasicStroke(hr.width));
+				}
+			}
+			else if (pe instanceof VRule) {
+				VRule vr = (VRule) pe;
+				if (vr.timestamp >= im.start && vr.timestamp <= im.end) {
+					int x = mapper.xtr(vr.timestamp);
+					worker.drawLine(x, im.yorigin, x, im.yorigin - im.ysize, vr.color, new BasicStroke(vr.width));
+				}
+			}
+		}
+		worker.reset();
+	}
+
+	private void drawText() {
+		if (!gdef.onlyGraph) {
+			if (gdef.title != null) {
+				int x = im.xgif / 2 - (int) (worker.getStringWidth(gdef.title, gdef.largeFont) / 2);
+				int y = PADDING_TOP + (int) worker.getFontAscent(gdef.largeFont);
+				worker.drawString(gdef.title, x, y, gdef.largeFont, gdef.colors[COLOR_FONT]);
+			}
+			if (gdef.verticalLabel != null) {
+				int x = PADDING_LEFT;
+				int y = im.yorigin - im.ysize / 2 + (int) worker.getStringWidth(gdef.verticalLabel, gdef.getSmallFont()) / 2;
+				int ascent = (int) worker.getFontAscent(gdef.smallFont);
+				worker.transform(x, y, -Math.PI / 2);
+				worker.drawString(gdef.verticalLabel, 0, ascent, gdef.smallFont, gdef.colors[COLOR_FONT]);
+				worker.reset();
+			}
+		}
+	}
+
+	private void drawGrid() {
+		if (!gdef.onlyGraph) {
+			Paint shade1 = gdef.colors[COLOR_SHADEA], shade2 = gdef.colors[COLOR_SHADEB];
+			Stroke borderStroke = new BasicStroke(1);
+			worker.drawLine(0, 0, im.xgif - 1, 0, shade1, borderStroke);
+			worker.drawLine(1, 1, im.xgif - 2, 1, shade1, borderStroke);
+			worker.drawLine(0, 0, 0, im.ygif - 1, shade1, borderStroke);
+			worker.drawLine(1, 1, 1, im.ygif - 2, shade1, borderStroke);
+			worker.drawLine(im.xgif - 1, 0, im.xgif - 1, im.ygif - 1, shade2, borderStroke);
+			worker.drawLine(0, im.ygif - 1, im.xgif - 1, im.ygif - 1, shade2, borderStroke);
+			worker.drawLine(im.xgif - 2, 1, im.xgif - 2, im.ygif - 2, shade2, borderStroke);
+			worker.drawLine(1, im.ygif - 2, im.xgif - 2, im.ygif - 2, shade2, borderStroke);
+			if (gdef.drawXGrid) {
+				new TimeAxis(this).draw();
+			}
+			if (gdef.drawYGrid) {
+				boolean ok;
+				if (gdef.altYMrtg) {
+					ok = new ValueAxisMrtg(this).draw();
+				}
+				else if (gdef.logarithmic) {
+					ok = new ValueAxisLogarithmic(this).draw();
+				}
+				else {
+					ok = new ValueAxis(this).draw();
+				}
+				if (!ok) {
+					String msg = "No Data Found";
+					worker.drawString(msg,
+							im.xgif / 2 - (int) worker.getStringWidth(msg, gdef.largeFont) / 2,
+							(2 * im.yorigin - im.ysize) / 2,
+							gdef.largeFont, gdef.colors[COLOR_FONT]);
+				}
+			}
+		}
+	}
+
+	private void drawData() throws RrdException {
+		worker.setAntiAliasing(gdef.antiAliasing);
+		worker.clip(im.xorigin + 1, im.yorigin - gdef.height - 1, gdef.width - 1, gdef.height + 2);
+		double areazero = mapper.ytr((im.minval > 0.0) ? im.minval : (im.maxval < 0.0) ? im.maxval : 0.0);
+		double[] x = xtr(dproc.getTimestamps()), lastY = null;
+		// draw line, area and stack
+		for (PlotElement plotElement : gdef.plotElements) {
+			if (plotElement instanceof SourcedPlotElement) {
+				SourcedPlotElement source = (SourcedPlotElement) plotElement;
+				double[] y = ytr(source.getValues());
+				if (source instanceof Line) {
+					worker.drawPolyline(x, y, source.color, new BasicStroke(((Line) source).width));
+				}
+				else if (source instanceof Area) {
+					worker.fillPolygon(x, areazero, y, source.color);
+				}
+				else if (source instanceof Stack) {
+					Stack stack = (Stack) source;
+					float width = stack.getParentLineWidth();
+					if (width >= 0F) {
+						// line
+						worker.drawPolyline(x, y, stack.color, new BasicStroke(width));
+					}
+					else {
+						// area
+						worker.fillPolygon(x, lastY, y, stack.color);
+						worker.drawPolyline(x, lastY, stack.getParentColor(), new BasicStroke(0));
+					}
+				}
+				else {
+					// should not be here
+					throw new RrdException("Unknown plot source: " + source.getClass().getName());
+				}
+				lastY = y;
+			}
+		}
+		worker.reset();
+		worker.setAntiAliasing(false);
+	}
+
+	private void drawAxis() {
+		if (!gdef.onlyGraph) {
+			Paint gridColor = gdef.colors[COLOR_GRID];
+			Paint fontColor = gdef.colors[COLOR_FONT];
+			Paint arrowColor = gdef.colors[COLOR_ARROW];
+			Stroke stroke = new BasicStroke(1);
+			worker.drawLine(im.xorigin + im.xsize, im.yorigin, im.xorigin + im.xsize, im.yorigin - im.ysize,
+					gridColor, stroke);
+			worker.drawLine(im.xorigin, im.yorigin - im.ysize, im.xorigin + im.xsize, im.yorigin - im.ysize,
+					gridColor, stroke);
+			worker.drawLine(im.xorigin - 4, im.yorigin, im.xorigin + im.xsize + 4, im.yorigin,
+					fontColor, stroke);
+			worker.drawLine(im.xorigin, im.yorigin, im.xorigin, im.yorigin - im.ysize,
+					gridColor, stroke);
+			worker.drawLine(im.xorigin + im.xsize + 4, im.yorigin - 3, im.xorigin + im.xsize + 4, im.yorigin + 3,
+					arrowColor, stroke);
+			worker.drawLine(im.xorigin + im.xsize + 4, im.yorigin - 3, im.xorigin + im.xsize + 9, im.yorigin,
+					arrowColor, stroke);
+			worker.drawLine(im.xorigin + im.xsize + 4, im.yorigin + 3, im.xorigin + im.xsize + 9, im.yorigin,
+					arrowColor, stroke);
+		}
+	}
+
+	private void drawBackground() throws IOException {
+		worker.fillRect(0, 0, im.xgif, im.ygif, gdef.colors[COLOR_BACK]);
+		if (gdef.backgroundImage != null) {
+			worker.loadImage(gdef.backgroundImage);
+		}
+		worker.fillRect(im.xorigin, im.yorigin - im.ysize, im.xsize, im.ysize, gdef.colors[COLOR_CANVAS]);
+	}
+
+	private void createImageWorker() {
+		worker.resize(im.xgif, im.ygif);
+	}
+
+	private void placeLegends() {
+		if (!gdef.noLegend && !gdef.onlyGraph) {
+			int border = (int) (getSmallFontCharWidth() * PADDING_LEGEND);
+			LegendComposer lc = new LegendComposer(this, border, im.ygif, im.xgif - 2 * border);
+			im.ygif = lc.placeComments() + PADDING_BOTTOM;
+		}
+	}
+
+	private void initializeLimits() throws RrdException {
+		im.xsize = gdef.width;
+		im.ysize = gdef.height;
+		im.unitslength = gdef.unitsLength;
+		if (gdef.onlyGraph) {
+			if (im.ysize > 64) {
+				throw new RrdException("Cannot create graph only, height too big");
+			}
+			im.xorigin = 0;
+		}
+		else {
+			im.xorigin = (int) (PADDING_LEFT + im.unitslength * getSmallFontCharWidth());
+		}
+		if (gdef.verticalLabel != null) {
+			im.xorigin += getSmallFontHeight();
+		}
+		if (gdef.onlyGraph) {
+			im.yorigin = im.ysize;
+		}
+		else {
+			im.yorigin = PADDING_TOP + im.ysize;
+		}
+		mapper = new Mapper(this);
+		if (gdef.title != null) {
+			im.yorigin += getLargeFontHeight() + PADDING_TITLE;
+		}
+		if (gdef.onlyGraph) {
+			im.xgif = im.xsize;
+			im.ygif = im.yorigin;
+		}
+		else {
+			im.xgif = PADDING_RIGHT + im.xsize + im.xorigin;
+			im.ygif = im.yorigin + (int) (PADDING_PLOT * getSmallFontHeight());
+		}
+	}
+
+	private void removeOutOfRangeRules() {
+		for (PlotElement plotElement : gdef.plotElements) {
+			if (plotElement instanceof HRule) {
+				((HRule) plotElement).setLegendVisibility(im.minval, im.maxval, gdef.forceRulesLegend);
+			}
+			else if (plotElement instanceof VRule) {
+				((VRule) plotElement).setLegendVisibility(im.start, im.end, gdef.forceRulesLegend);
+			}
+		}
+	}
+
+	private void expandValueRange() {
+		im.ygridstep = (gdef.valueAxisSetting != null) ? gdef.valueAxisSetting.gridStep : Double.NaN;
+		im.ylabfact = (gdef.valueAxisSetting != null) ? gdef.valueAxisSetting.labelFactor : 0;
+		if (!gdef.rigid && !gdef.logarithmic) {
+			double sensiblevalues[] = {
+					1000.0, 900.0, 800.0, 750.0, 700.0, 600.0, 500.0, 400.0, 300.0, 250.0, 200.0, 125.0, 100.0,
+					90.0, 80.0, 75.0, 70.0, 60.0, 50.0, 40.0, 30.0, 25.0, 20.0, 10.0,
+					9.0, 8.0, 7.0, 6.0, 5.0, 4.0, 3.5, 3.0, 2.5, 2.0, 1.8, 1.5, 1.2, 1.0,
+					0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1, 0.0, -1
+			};
+			double scaled_min, scaled_max, adj;
+			if (Double.isNaN(im.ygridstep)) {
+				if (gdef.altYMrtg) { /* mrtg */
+					im.decimals = Math.ceil(Math.log10(Math.max(Math.abs(im.maxval), Math.abs(im.minval))));
+					im.quadrant = 0;
+					if (im.minval < 0) {
+						im.quadrant = 2;
+						if (im.maxval <= 0) {
+							im.quadrant = 4;
+						}
+					}
+					switch (im.quadrant) {
+						case 2:
+							im.scaledstep = Math.ceil(50 * Math.pow(10, -(im.decimals)) * Math.max(Math.abs(im.maxval),
+									Math.abs(im.minval))) * Math.pow(10, im.decimals - 2);
+							scaled_min = -2 * im.scaledstep;
+							scaled_max = 2 * im.scaledstep;
+							break;
+						case 4:
+							im.scaledstep = Math.ceil(25 * Math.pow(10,
+									-(im.decimals)) * Math.abs(im.minval)) * Math.pow(10, im.decimals - 2);
+							scaled_min = -4 * im.scaledstep;
+							scaled_max = 0;
+							break;
+						default: /* quadrant 0 */
+							im.scaledstep = Math.ceil(25 * Math.pow(10, -(im.decimals)) * im.maxval) *
+									Math.pow(10, im.decimals - 2);
+							scaled_min = 0;
+							scaled_max = 4 * im.scaledstep;
+							break;
+					}
+					im.minval = scaled_min;
+					im.maxval = scaled_max;
+				}
+				else if (gdef.altAutoscale) {
+					/* measure the amplitude of the function. Make sure that
+					   graph boundaries are slightly higher then max/min vals
+					   so we can see amplitude on the graph */
+					double delt, fact;
+
+					delt = im.maxval - im.minval;
+					adj = delt * 0.1;
+					fact = 2.0 * Math.pow(10.0,
+							Math.floor(Math.log10(Math.max(Math.abs(im.minval), Math.abs(im.maxval)))) - 2);
+					if (delt < fact) {
+						adj = (fact - delt) * 0.55;
+					}
+					im.minval -= adj;
+					im.maxval += adj;
+				}
+				else if (gdef.altAutoscaleMax) {
+					/* measure the amplitude of the function. Make sure that
+					   graph boundaries are slightly higher than max vals
+					   so we can see amplitude on the graph */
+					adj = (im.maxval - im.minval) * 0.1;
+					im.maxval += adj;
+				}
+				else {
+					scaled_min = im.minval / im.magfact;
+					scaled_max = im.maxval / im.magfact;
+					for (int i = 1; sensiblevalues[i] > 0; i++) {
+						if (sensiblevalues[i - 1] >= scaled_min && sensiblevalues[i] <= scaled_min) {
+							im.minval = sensiblevalues[i] * im.magfact;
+						}
+						if (-sensiblevalues[i - 1] <= scaled_min && -sensiblevalues[i] >= scaled_min) {
+							im.minval = -sensiblevalues[i - 1] * im.magfact;
+						}
+						if (sensiblevalues[i - 1] >= scaled_max && sensiblevalues[i] <= scaled_max) {
+							im.maxval = sensiblevalues[i - 1] * im.magfact;
+						}
+						if (-sensiblevalues[i - 1] <= scaled_max && -sensiblevalues[i] >= scaled_max) {
+							im.maxval = -sensiblevalues[i] * im.magfact;
+						}
+					}
+				}
+			}
+			else {
+				im.minval = (double) im.ylabfact * im.ygridstep *
+						Math.floor(im.minval / ((double) im.ylabfact * im.ygridstep));
+				im.maxval = (double) im.ylabfact * im.ygridstep *
+						Math.ceil(im.maxval / ((double) im.ylabfact * im.ygridstep));
+			}
+
+		}
+	}
+
+	private void identifySiUnit() {
+		im.unitsexponent = gdef.unitsExponent;
+		im.base = gdef.base;
+		if (!gdef.logarithmic) {
+			final char symbol[] = {'a', 'f', 'p', 'n', 'u', 'm', ' ', 'k', 'M', 'G', 'T', 'P', 'E'};
+			int symbcenter = 6;
+			double digits;
+			if (im.unitsexponent != Integer.MAX_VALUE) {
+				digits = Math.floor(im.unitsexponent / 3);
+			}
+			else {
+				digits = Math.floor(Math.log(Math.max(Math.abs(im.minval), Math.abs(im.maxval))) / Math.log(im.base));
+			}
+			im.magfact = Math.pow(im.base, digits);
+			if (((digits + symbcenter) < symbol.length) && ((digits + symbcenter) >= 0)) {
+				im.symbol = symbol[(int) digits + symbcenter];
+			}
+			else {
+				im.symbol = '?';
+			}
+		}
+	}
+
+	private void findMinMaxValues() {
+		double minval = Double.NaN, maxval = Double.NaN;
+		for (PlotElement pe : gdef.plotElements) {
+			if (pe instanceof SourcedPlotElement) {
+				minval = Util.min(((SourcedPlotElement) pe).getMinValue(), minval);
+				maxval = Util.max(((SourcedPlotElement) pe).getMaxValue(), maxval);
+			}
+		}
+		if (Double.isNaN(minval)) {
+			minval = 0D;
+		}
+		if (Double.isNaN(maxval)) {
+			maxval = 1D;
+		}
+		im.minval = gdef.minValue;
+		im.maxval = gdef.maxValue;
+		/* adjust min and max values */
+		if (Double.isNaN(im.minval) || ((!gdef.logarithmic && !gdef.rigid) && im.minval > minval)) {
+			im.minval = minval;
+		}
+		if (Double.isNaN(im.maxval) || (!gdef.rigid && im.maxval < maxval)) {
+			if (gdef.logarithmic) {
+				im.maxval = maxval * 1.1;
+			}
+			else {
+				im.maxval = maxval;
+			}
+		}
+		/* make sure min is smaller than max */
+		if (im.minval > im.maxval) {
+			im.minval = 0.99 * im.maxval;
+		}
+		/* make sure min and max are not equal */
+		if (im.minval == im.maxval) {
+			im.maxval *= 1.01;
+			if (!gdef.logarithmic) {
+				im.minval *= 0.99;
+			}
+			/* make sure min and max are not both zero */
+			if (im.maxval == 0.0) {
+				im.maxval = 1.0;
+			}
+		}
+	}
+
+	private void calculatePlotValues() throws RrdException {
+		for (PlotElement pe : gdef.plotElements) {
+			if (pe instanceof SourcedPlotElement) {
+				((SourcedPlotElement) pe).assignValues(dproc);
+			}
+		}
+	}
+
+	private void resolveTextElements() throws RrdException {
+		ValueScaler valueScaler = new ValueScaler(gdef.base);
+		for (CommentText comment : gdef.comments) {
+			comment.resolveText(dproc, valueScaler);
+		}
+	}
+
+	private void fetchData() throws RrdException, IOException {
+		dproc = new DataProcessor(gdef.startTime, gdef.endTime);
+		dproc.setPoolUsed(gdef.poolUsed);
+		if (gdef.step > 0) {
+			dproc.setStep(gdef.step);
+		}
+		for (Source src : gdef.sources) {
+			src.requestData(dproc);
+		}
+		dproc.processData();
+		//long[] t = dproc.getTimestamps();
+		//im.start = t[0];
+		//im.end = t[t.length - 1];
+		im.start = gdef.startTime;
+		im.end = gdef.endTime;
+	}
+
+	private boolean lazyCheck() {
+		// redraw if lazy option is not set or file does not exist
+		if (!gdef.lazy || !Util.fileExists(gdef.filename)) {
+			return false; // 'false' means 'redraw'
+		}
+		// redraw if not enough time has passed
+		long secPerPixel = (gdef.endTime - gdef.startTime) / gdef.width;
+		long elapsed = Util.getTimestamp() - Util.getLastModified(gdef.filename);
+		return elapsed <= secPerPixel;
+	}
+
+	private void drawLegend() {
+		if (!gdef.onlyGraph && !gdef.noLegend) {
+			int ascent = (int) worker.getFontAscent(gdef.smallFont);
+			int box = (int) getBox(), boxSpace = (int) (getBoxSpace());
+			for (CommentText c : gdef.comments) {
+				if (c.isValidGraphElement()) {
+					int x = c.x, y = c.y + ascent;
+					if (c instanceof LegendText) {
+						// draw with BOX
+						worker.fillRect(x, y - box, box, box, gdef.colors[COLOR_FRAME]);
+						worker.fillRect(x + 1, y - box + 1, box - 2, box - 2, ((LegendText) c).legendColor);
+						worker.drawString(c.resolvedText, x + boxSpace, y, gdef.smallFont, gdef.colors[COLOR_FONT]);
+					}
+					else {
+						worker.drawString(c.resolvedText, x, y, gdef.smallFont, gdef.colors[COLOR_FONT]);
+					}
+				}
+			}
+		}
+	}
+
+	// helper methods
+
+	double getSmallFontHeight() {
+		return worker.getFontHeight(gdef.smallFont);
+	}
+
+	private double getLargeFontHeight() {
+		return worker.getFontHeight(gdef.largeFont);
+	}
+
+	private double getSmallFontCharWidth() {
+		return worker.getStringWidth("a", gdef.smallFont);
+	}
+
+	double getInterlegendSpace() {
+		return getSmallFontCharWidth() * LEGEND_INTERSPACING;
+	}
+
+	double getLeading() {
+		return getSmallFontHeight() * LEGEND_LEADING;
+	}
+
+	double getSmallLeading() {
+		return getSmallFontHeight() * LEGEND_LEADING_SMALL;
+	}
+
+	double getBoxSpace() {
+		return Math.ceil(getSmallFontHeight() * LEGEND_BOX_SPACE);
+	}
+
+	private double getBox() {
+		return getSmallFontHeight() * LEGEND_BOX;
+	}
+
+	double[] xtr(long[] timestamps) {
+		/*
+		double[] timestampsDev = new double[timestamps.length];
+		for (int i = 0; i < timestamps.length; i++) {
+			timestampsDev[i] = mapper.xtr(timestamps[i]);
+		}
+		return timestampsDev;
+		*/
+		double[] timestampsDev = new double[2 * timestamps.length - 1];
+		for (int i = 0, j = 0; i < timestamps.length; i += 1, j += 2) {
+			timestampsDev[j] = mapper.xtr(timestamps[i]);
+			if (i < timestamps.length - 1) {
+				timestampsDev[j + 1] = timestampsDev[j];
+			}
+		}
+		return timestampsDev;
+	}
+
+	double[] ytr(double[] values) {
+		/*
+		double[] valuesDev = new double[values.length];
+		for (int i = 0; i < values.length; i++) {
+			if (Double.isNaN(values[i])) {
+				valuesDev[i] = Double.NaN;
+			}
+			else {
+				valuesDev[i] = mapper.ytr(values[i]);
+			}
+		}
+		return valuesDev;
+		*/
+		double[] valuesDev = new double[2 * values.length - 1];
+		for (int i = 0, j = 0; i < values.length; i += 1, j += 2) {
+			if (Double.isNaN(values[i])) {
+				valuesDev[j] = Double.NaN;
+			}
+			else {
+				valuesDev[j] = mapper.ytr(values[i]);
+			}
+			if (j > 0) {
+				valuesDev[j - 1] = valuesDev[j];
+			}
+		}
+		return valuesDev;
 	}
 
 	/**
-	 * Returns graph with default chart dimensions (400 by 100) as an array of GIF bytes.
-	 * @return Array of GIF bytes.
-	 * @throws IOException Thrown in case of I/O error.
-	 */
-	public byte[] getGIFBytes() throws RrdException, IOException
-	{
-		return getGIFBytes( 0, 0 );	
-	}
-	
-	/**
-	 * Returns graph with custom chart dimensions as an array of GIF bytes.
-	 * @param width Width of the chart area in pixels.
-	 * @param height Height of the chart area in pixels.
-	 * @return Array of GIF bytes.
-	 * @throws IOException Thrown in case of I/O error.
-	 */
-	public byte[] getGIFBytes(int width, int height) throws RrdException, IOException
-	{
-		BufferedImage image 			= getBufferedImage(width, height, BufferedImage.TYPE_BYTE_INDEXED);
-		ByteArrayOutputStream bStream 	= new ByteArrayOutputStream();
-	
-		GifEncoder gifEncoder 			= new GifEncoder( image );
-		gifEncoder.encode( bStream );
-		
-		return bStream.toByteArray();
-	}
-
-	/**
-	 * Returns the underlying BufferedImage of a graph with custom dimensions.
-	 * Specifying 0 for both width and height will result in a auto-sized graph.
-	 * @param width Width of the chart area in pixels.
-	 * @param height Height of the chart area in pixels.
-	 * @return BufferedImage containing the graph.
-	 * @throws IOException Thrown in case of I/O error.
-	 * @throws RrdException Thrown in case of JRobin specific error.
-	 */
-	public BufferedImage getBufferedImage( int width, int height ) throws IOException, RrdException
-	{
-		return getBufferedImage( width, height, BufferedImage.TYPE_INT_RGB );
-	}
-
-	/**
-	 * Returns panel object so that graph can be easily embedded in swing applications.
-	 * @return Swing JPanel object with graph embedded in panel.
-	 */
-	public ChartPanel getChartPanel() throws RrdException, IOException
-	{
-		ChartPanel p = new ChartPanel();
-		p.setChart( getBufferedImage(0, 0, BufferedImage.TYPE_INT_RGB) );
-		
-		return p;
-	}
-
-	/**
-	 * Renders the graph onto a specified Graphics2D object.
-	 * Specifying 0 for both width and height will result in a auto-sized graph.
-	 * @param graphics Handle to a Graphics2D object to render the graph on.
-	 * @param width Width of the chart area in pixels.
-	 * @param height Height of the chart area in pixels.
-	 * @throws RrdException Thrown in case of JRobin specific error.
-	 * @throws IOException Thrown in case of I/O error
-	 */
-	public void renderImage( Graphics2D graphics, int width, int height ) throws RrdException, IOException
-	{
-		if ( useImageSize )
-			grapher.renderImage( width, height, graphics, true );
-		else
-			grapher.renderImage( width, height, graphics, false );
-	}
-
-	/**
-	 * This retrieves the ExportData object associated with the reduced dataset of this Graph.
-	 * This method assumes the graph or at least the dataset has already been calculated.
+	 * Renders this graph onto graphing device
 	 *
-	 * @return ExportData object containing the reduced dataset.
-	 * @throws RrdException Thrown in case of JRobin specific error.
+	 * @param g Graphics handle
 	 */
-	public ExportData getExportData() throws RrdException {
-		return grapher.createExportData();
-	}
-
-	/**
-	 * This retrieves the ExportData object associated with the reduced dataset of this Graph,
-	 * by calculating the dataset on the spot.  Use this if you want to retrieve the associated
-	 * ExportData without generating the actual graph.
-	 *
-	 * @return ExportData object containing the reduced dataset.
-	 * @throws RrdException Thrown in case of JRobin specific error.
-	 * @throws IOException Thrown in case of I/O error
-	 */
-	public ExportData fetchExportData() throws RrdException, IOException {
-		return grapher.fetch( Grapher.DEFAULT_WIDTH );
-	}
-
-	/**
-	 * This retrieves the ExportData object associated with the reduced dataset of this Graph,
-	 * by calculating the dataset on the spot.  Use this if you want to retrieve the associated
-	 * ExportData without generating the actual graph, or if you wish to re-calculate the
-	 * associated dataset for a different number of rows.
-	 *
-	 * @param maxRows Ballpark figure 'maximum number of rows' that the dataset can contain.
-	 * 				  Note that this is not an absolute maximum and can be overruled in some cases.
-	 * @return ExportData object containing the reduced dataset.
-	 * @throws RrdException Thrown in case of JRobin specific error.
-	 * @throws IOException Thrown in case of I/O error
-	 */
-	public ExportData fetchExportData( int maxRows ) throws RrdException, IOException {
-		return grapher.fetch( maxRows );
-	}
-
-	// ================================================================
-	// -- Private methods
-	// ================================================================
-	/**
-	 * This method checks if the graph should be generated.  This would be the case if the requested
-	 * image file does not yet exist, or (in case the generation is set to be lazy) the last modified
-	 * timestamp of the image file is before the last updated timestamp of the used datasources.
-	 * @param imgFile Image file to check against.
-	 * @return True if graph generation should be done, false if not.
-	 * @throws IOException Thrown in case of I/O error.
-	 * @throws RrdException Thrown in case of JRobin specific error.
-	 */
-	private boolean shouldGenerate( File imgFile ) throws RrdException, IOException
-	{
-		if ( !imgFile.exists() )
-			return true;
-
-		return grapher.shouldGenerate( imgFile.lastModified() );
-	}
-
-	private BufferedImage getBufferedImage(int width, int height, int colorType) throws RrdException, IOException
-	{
-		// Always regenerate graph
-		if ( useImageSize )
-			img = grapher.createImageGlobal( width, height, colorType );
-		else
-			img = grapher.createImage( width, height, colorType );
-		
-		return img;
+	public void render(Graphics g) {
+		byte[] imageData = getRrdGraphInfo().getBytes();
+		ImageIcon image = new ImageIcon(imageData);
+		image.paintIcon(null, g, 0, 0);
 	}
 }
