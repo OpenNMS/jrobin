@@ -5,10 +5,10 @@
  * Project Info:  http://www.jrobin.org
  * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
- * (C) Copyright 2003, by Sasa Markovic.
+ * (C) Copyright 2003-2005, by Sasa Markovic.
  *
  * Developers:    Sasa Markovic (saxon@jrobin.org)
- *                Arne Vandamme (cobralord@jrobin.org)
+ *
  *
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation;
@@ -24,18 +24,18 @@
  */
 package org.jrobin.core;
 
-import org.xml.sax.InputSource;
 import org.w3c.dom.Node;
+import org.xml.sax.InputSource;
 
-import java.io.IOException;
 import java.io.File;
-import java.util.GregorianCalendar;
+import java.io.IOException;
+import java.util.Calendar;
 
 /**
  * Class used to create an arbitrary number of {@link RrdDef} (RRD definition) objects
  * from a single XML template. XML template can be supplied as an XML InputSource,
  * XML file or XML formatted string.<p>
- *
+ * <p/>
  * Here is an example of a properly formatted XML template with all available
  * options in it (unwanted options can be removed):<p>
  * <pre>
@@ -93,7 +93,7 @@ import java.util.GregorianCalendar;
  * {@link XmlTemplate#setVariable(String, String) setVariable()}
  * methods from the base class to replace template variables with real values
  * at runtime.<p>
- *
+ * <p/>
  * Typical usage scenario:<p>
  * <ul>
  * <li>Create your XML template and save it to a file (template.xml, for example)
@@ -132,8 +132,9 @@ public class RrdDefTemplate extends XmlTemplate {
 	/**
 	 * Creates RrdDefTemplate object from any parsable XML input source. Read general information
 	 * for this class to find an example of a properly formatted RrdDef XML source.
+	 *
 	 * @param xmlInputSource Xml input source
-	 * @throws IOException Thrown in case of I/O error
+	 * @throws IOException  Thrown in case of I/O error
 	 * @throws RrdException Thrown in case of XML related error (parsing error, for example)
 	 */
 	public RrdDefTemplate(InputSource xmlInputSource) throws IOException, RrdException {
@@ -143,26 +144,28 @@ public class RrdDefTemplate extends XmlTemplate {
 	/**
 	 * Creates RrdDefTemplate object from the string containing XML template.
 	 * Read general information for this class to see an example of a properly formatted XML source.
+	 *
 	 * @param xmlString String containing XML template
-	 * @throws IOException Thrown in case of I/O error
+	 * @throws IOException  Thrown in case of I/O error
 	 * @throws RrdException Thrown in case of XML related error (parsing error, for example)
 	 */
 	public RrdDefTemplate(String xmlString) throws IOException, RrdException {
 		super(xmlString);
 	}
 
-    /**
+	/**
 	 * Creates RrdDefTemplate object from the file containing XML template.
 	 * Read general information for this class to see an example of a properly formatted XML source.
+	 *
 	 * @param xmlFile File object representing file with XML template
-	 * @throws IOException Thrown in case of I/O error
+	 * @throws IOException  Thrown in case of I/O error
 	 * @throws RrdException Thrown in case of XML related error (parsing error, for example)
 	 */
 	public RrdDefTemplate(File xmlFile) throws IOException, RrdException {
 		super(xmlFile);
 	}
 
-    /**
+	/**
 	 * Returns RrdDef object constructed from the underlying XML template. Before this method
 	 * is called, values for all non-optional placeholders must be supplied. To specify
 	 * placeholder values at runtime, use some of the overloaded
@@ -171,58 +174,60 @@ public class RrdDefTemplate extends XmlTemplate {
 	 * {@link XmlTemplate#clearValues() clearValues()} method explicitly.<p>
 	 *
 	 * @return RrdDef object constructed from the underlying XML template,
-	 * with all placeholders replaced with real values. This object can be passed to the constructor
-	 * of the new RrdDb object.
+	 *         with all placeholders replaced with real values. This object can be passed to the constructor
+	 *         of the new RrdDb object.
 	 * @throws RrdException Thrown (in most cases) if the value for some placeholder
-	 * was not supplied through {@link XmlTemplate#setVariable(String, String) setVariable()}
-	 * method call
+	 *                      was not supplied through {@link XmlTemplate#setVariable(String, String) setVariable()}
+	 *                      method call
 	 */
 	public RrdDef getRrdDef() throws RrdException {
 		if (!root.getTagName().equals("rrd_def")) {
 			throw new RrdException("XML definition must start with <rrd_def>");
 		}
 		validateTagsOnlyOnce(root, new String[] {
-			"path", "start", "step", "datasource*", "archive*"
+				"path", "start", "step", "datasource*", "archive*"
 		});
 		// PATH must be supplied or exception is thrown
 		String path = getChildValue(root, "path");
 		RrdDef rrdDef = new RrdDef(path);
 		try {
 			String startStr = getChildValue(root, "start");
-			GregorianCalendar startGc = Util.getGregorianCalendar(startStr);
+			Calendar startGc = Util.getCalendar(startStr);
 			rrdDef.setStartTime(startGc);
-		} catch (RrdException e) {
+		}
+		catch (RrdException e) {
 			// START is not mandatory
 		}
 		try {
 			long step = getChildValueAsLong(root, "step");
 			rrdDef.setStep(step);
-		} catch (RrdException e) {
+		}
+		catch (RrdException e) {
 			// STEP is not mandatory
 		}
 		// datsources
 		Node[] dsNodes = getChildNodes(root, "datasource");
-		for (int i = 0; i < dsNodes.length; i++) {
-			validateTagsOnlyOnce(dsNodes[i], new String[] {
-				"name", "type", "heartbeat", "min", "max"
+		for (Node dsNode : dsNodes) {
+			validateTagsOnlyOnce(dsNode, new String[] {
+					"name", "type", "heartbeat", "min", "max"
 			});
-			String name = getChildValue(dsNodes[i], "name");
-			String type = getChildValue(dsNodes[i], "type");
-			long heartbeat = getChildValueAsLong(dsNodes[i], "heartbeat");
-			double min = getChildValueAsDouble(dsNodes[i], "min");
-			double max = getChildValueAsDouble(dsNodes[i], "max");
+			String name = getChildValue(dsNode, "name");
+			String type = getChildValue(dsNode, "type");
+			long heartbeat = getChildValueAsLong(dsNode, "heartbeat");
+			double min = getChildValueAsDouble(dsNode, "min");
+			double max = getChildValueAsDouble(dsNode, "max");
 			rrdDef.addDatasource(name, type, heartbeat, min, max);
 		}
 		// archives
 		Node[] arcNodes = getChildNodes(root, "archive");
-		for (int i = 0; i < arcNodes.length; i++) {
-			validateTagsOnlyOnce(arcNodes[i], new String[] {
-				"cf", "xff", "steps", "rows"
+		for (Node arcNode : arcNodes) {
+			validateTagsOnlyOnce(arcNode, new String[] {
+					"cf", "xff", "steps", "rows"
 			});
-			String consolFun = getChildValue(arcNodes[i], "cf");
-			double xff = getChildValueAsDouble(arcNodes[i], "xff");
-			int steps = getChildValueAsInt(arcNodes[i], "steps");
-			int rows = getChildValueAsInt(arcNodes[i], "rows");
+			String consolFun = getChildValue(arcNode, "cf");
+			double xff = getChildValueAsDouble(arcNode, "xff");
+			int steps = getChildValueAsInt(arcNode, "steps");
+			int rows = getChildValueAsInt(arcNode, "rows");
 			rrdDef.addArchive(consolFun, xff, steps, rows);
 		}
 		return rrdDef;

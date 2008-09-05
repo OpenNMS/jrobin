@@ -16,6 +16,7 @@ package org.jrobin.core.jrrd;
  * @version $Revision$
  */
 public class RRDException extends Exception {
+	private static final long serialVersionUID = 1L;
 
 	/**
 	 * Constructs an RRDException with no detail message.

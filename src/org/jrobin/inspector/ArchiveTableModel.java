@@ -8,7 +8,7 @@
  * (C) Copyright 2003, by Sasa Markovic.
  *
  * Developers:    Sasa Markovic (saxon@jrobin.org)
- *                Arne Vandamme (cobralord@jrobin.org)
+ *
  *
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation;
@@ -33,8 +33,9 @@ import java.io.IOException;
 import java.util.Date;
 
 class ArchiveTableModel extends AbstractTableModel {
+	private static final long serialVersionUID = 1L;
 	private static final Object[] DESCRIPTIONS = {
-		"consolidation", "xff", "steps", "rows", "accum. value", "NaN steps", "start", "end"
+			"consolidation", "xff", "steps", "rows", "accum. value", "NaN steps", "start", "end"
 	};
 	private static final String[] COLUMN_NAMES = {"description", "value"};
 
@@ -79,28 +80,32 @@ class ArchiveTableModel extends AbstractTableModel {
 			dsIndex = newDsIndex;
 			arcIndex = newArcIndex;
 			values = null;
-			if(dsIndex >= 0 && arcIndex >= 0) {
+			if (dsIndex >= 0 && arcIndex >= 0) {
 				try {
-					RrdDb rrd = new RrdDb(file.getAbsolutePath());
-					Archive arc = rrd.getArchive(arcIndex);
-					ArcState state = arc.getArcState(dsIndex);
-					values = new Object[]{
-						arc.getConsolFun(),
-						"" + arc.getXff(),
-						"" + arc.getSteps(),
-						"" + arc.getRows(),
-						InspectorModel.formatDouble(state.getAccumValue()),
-						"" + state.getNanSteps(),
-						"" + arc.getStartTime() + " [" + new Date(arc.getStartTime() * 1000L) + "]",
-						"" + arc.getEndTime() + " [" + new Date(arc.getEndTime() * 1000L) + "]"
-					};
-					rrd.close();
+					RrdDb rrd = new RrdDb(file.getAbsolutePath(), true);
+					try {
+						Archive arc = rrd.getArchive(arcIndex);
+						ArcState state = arc.getArcState(dsIndex);
+						values = new Object[] {
+								arc.getConsolFun(),
+								"" + arc.getXff(),
+								"" + arc.getSteps(),
+								"" + arc.getRows(),
+								InspectorModel.formatDouble(state.getAccumValue()),
+								"" + state.getNanSteps(),
+								"" + arc.getStartTime() + " [" + new Date(arc.getStartTime() * 1000L) + "]",
+								"" + arc.getEndTime() + " [" + new Date(arc.getEndTime() * 1000L) + "]"
+						};
+					}
+					finally {
+						rrd.close();
+					}
 				}
 				catch (IOException e) {
-					e.printStackTrace();
+					Util.error(null, e);
 				}
 				catch (RrdException e) {
-					e.printStackTrace();
+					Util.error(null, e);
 				}
 			}
 			fireTableDataChanged();

@@ -5,10 +5,10 @@
  * Project Info:  http://www.jrobin.org
  * Project Lead:  Sasa Markovic (saxon@jrobin.org);
  *
- * (C) Copyright 2003, by Sasa Markovic.
+ * (C) Copyright 2003-2005, by Sasa Markovic.
  *
  * Developers:    Sasa Markovic (saxon@jrobin.org)
- *                Arne Vandamme (cobralord@jrobin.org)
+ *
  *
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation;
@@ -28,20 +28,30 @@ package org.jrobin.core;
 import java.io.IOException;
 
 class RrdDouble extends RrdPrimitive {
+	private double cache;
+	private boolean cached = false;
+
+	RrdDouble(RrdUpdater updater, boolean isConstant) throws IOException {
+		super(updater, RrdDouble.RRD_DOUBLE, isConstant);
+	}
+
 	RrdDouble(RrdUpdater updater) throws IOException {
-		super(updater, RrdDouble.RRD_DOUBLE);
+		super(updater, RrdDouble.RRD_DOUBLE, false);
 	}
 
 	void set(double value) throws IOException {
-		if(cache.setDouble(value)) {
+		if (!isCachingAllowed()) {
 			writeDouble(value);
+		}
+		// caching allowed
+		else if (!cached || !Util.equal(cache, value)) {
+			// update cache
+			writeDouble(cache = value);
+			cached = true;
 		}
 	}
 
 	double get() throws IOException {
-		if(cache.isEmpty()) {
-			cache.setDouble(readDouble());
-		}
-		return cache.getDouble();
+		return cached ? cache : readDouble();
 	}
 }

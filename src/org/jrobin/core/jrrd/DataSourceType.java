@@ -62,13 +62,17 @@ public class DataSourceType {
 
 		if (s.equalsIgnoreCase(STR_COUNTER)) {
 			return COUNTER;
-		} else if (s.equalsIgnoreCase(STR_ABSOLUTE)) {
+		}
+		else if (s.equalsIgnoreCase(STR_ABSOLUTE)) {
 			return ABSOLUTE;
-		} else if (s.equalsIgnoreCase(STR_GAUGE)) {
+		}
+		else if (s.equalsIgnoreCase(STR_GAUGE)) {
 			return GAUGE;
-		} else if (s.equalsIgnoreCase(STR_DERIVE)) {
+		}
+		else if (s.equalsIgnoreCase(STR_DERIVE)) {
 			return DERIVE;
-		} else {
+		}
+		else {
 			throw new IllegalArgumentException("Invalid DataSourceType");
 		}
 	}

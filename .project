@@ -1,0 +1,15 @@
+<projectDescription>
+  <name>jrobin</name>
+  <comment>JRobin is a 100% pure Java alternative to RRDTool, with about exactly the same specifications. If you provide the
+    same data to RRDTool and JRobin, you will get exactly the same results and graphs. All standard RRDTool operations
+    are supported.</comment>
+  <projects/>
+  <buildSpec>
+    <buildCommand>
+      <name>org.eclipse.jdt.core.javabuilder</name>
+    </buildCommand>
+  </buildSpec>
+  <natures>
+    <nature>org.eclipse.jdt.core.javanature</nature>
+  </natures>
+</projectDescription>
