@@ -110,7 +110,6 @@
 			packagenames="org.jrobin.cmd.*,org.jrobin.convertor.*,org.jrobin.core.*,org.jrobin.data.*,org.jrobin.demo.*,org.jrobin.graph.*,org.jrobin.inspector.*"
 			excludepackagenames="org.jrobin.core.jrrd.*"
 			source="1.5"
-			target="1.5"
 			sourcepath="${home}/${src}"
 			access="protected"
 			/>
