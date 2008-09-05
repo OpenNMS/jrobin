@@ -26,7 +26,7 @@
 	<description>JRobinLite Build File</description>
 
 	<!-- VARIABLES -->
-	<property name="version" value="1.5.9"/>
+	<property name="version" value="1.5.9.1"/>
 	<property name="who" value="Sasa Markovic &lt;saxon@eunet.yu&gt;"/>
 	<property name="home" location=".."/>
 
@@ -69,7 +69,7 @@
 	<target name="compile" depends="init">
 		<javac
 			srcdir="${home}/${src}" destdir="${home}/${classes}"
-			compiler="modern" source="1.5"
+			compiler="modern" source="1.5" target="1.5"
 			/>
 	</target>
 
@@ -110,6 +110,7 @@
 			packagenames="org.jrobin.cmd.*,org.jrobin.convertor.*,org.jrobin.core.*,org.jrobin.data.*,org.jrobin.demo.*,org.jrobin.graph.*,org.jrobin.inspector.*"
 			excludepackagenames="org.jrobin.core.jrrd.*"
 			source="1.5"
+			target="1.5"
 			sourcepath="${home}/${src}"
 			access="protected"
 			/>
