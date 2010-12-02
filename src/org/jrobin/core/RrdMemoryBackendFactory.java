@@ -25,7 +25,6 @@
 
 package org.jrobin.core;
 
-import java.io.IOException;
 import java.util.HashMap;
 
 /**
@@ -52,10 +51,8 @@ public class RrdMemoryBackendFactory extends RrdBackendFactory {
 	 *                 as an ID for this memory-based storage.
 	 * @param readOnly This parameter is ignored
 	 * @return RrdMemoryBackend object which handles all I/O operations
-	 * @throws IOException Thrown in case of I/O error.
 	 */
-	protected synchronized RrdBackend open(String id, boolean readOnly)
-			throws IOException {
+	protected synchronized RrdBackend open(String id, boolean readOnly) {
 		RrdMemoryBackend backend;
 		if (backends.containsKey(id)) {
 			backend = backends.get(id);
@@ -88,9 +85,7 @@ public class RrdMemoryBackendFactory extends RrdBackendFactory {
 			backends.remove(id);
 			return true;
 		}
-		else {
-			return false;
-		}
+		return false;
 	}
 
 	/**

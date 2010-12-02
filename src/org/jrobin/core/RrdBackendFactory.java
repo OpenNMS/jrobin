@@ -81,6 +81,8 @@ public abstract class RrdBackendFactory {
 			registerFactory(nioFactory);
 			RrdSafeFileBackendFactory safeFactory = new RrdSafeFileBackendFactory();
 			registerFactory(safeFactory);
+			RrdNioByteBufferBackendFactory nioByteBufferFactory = new RrdNioByteBufferBackendFactory();
+			registerFactory(nioByteBufferFactory);
 			selectDefaultFactory();
 		}
 		catch (RrdException e) {
@@ -89,14 +91,7 @@ public abstract class RrdBackendFactory {
 	}
 
 	private static void selectDefaultFactory() throws RrdException {
-		String version = System.getProperty("java.version");
-		if (version == null || version.startsWith("1.3.") ||
-				version.startsWith("1.4.0") || version.startsWith("1.4.1")) {
-			setDefaultFactory("FILE");
-		}
-		else {
-			setDefaultFactory("NIO");
-		}
+		setDefaultFactory("FILE");
 	}
 
 	/**
@@ -124,9 +119,7 @@ public abstract class RrdBackendFactory {
 		if (factory != null) {
 			return factory;
 		}
-		else {
-			throw new RrdException("No backend factory found with the name specified [" + name + "]");
-		}
+		throw new RrdException("No backend factory found with the name specified [" + name + "]");
 	}
 
 	/**

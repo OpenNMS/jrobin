@@ -37,7 +37,7 @@ public class RrdMemoryBackend extends RrdBackend {
 		super(path);
 	}
 
-	protected synchronized void write(long offset, byte[] b) throws IOException {
+	protected synchronized void write(long offset, byte[] b) {
 		int pos = (int) offset;
 		for (byte singleByte : b) {
 			buffer[pos++] = singleByte;

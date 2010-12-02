@@ -131,8 +131,7 @@ public abstract class RrdBackend {
 
 	/**
 	 * Closes the underlying backend.
-	 *
-	 * @throws IOException Thrown in case of I/O error
+	 * @throws IOException 
 	 */
 	public void close() throws IOException {
 	}
@@ -188,6 +187,7 @@ public abstract class RrdBackend {
 			image[k++] = b[7];
 		}
 		write(offset, image);
+		image = null;
 	}
 
 	final void writeDouble(long offset, double[] values) throws IOException {
@@ -205,6 +205,7 @@ public abstract class RrdBackend {
 			image[k++] = b[7];
 		}
 		write(offset, image);
+		image = null;
 	}
 
 	final void writeString(long offset, String value) throws IOException {
@@ -249,6 +250,7 @@ public abstract class RrdBackend {
 			};
 			values[i] = getDouble(b);
 		}
+		image = null;
 		return values;
 	}
 
