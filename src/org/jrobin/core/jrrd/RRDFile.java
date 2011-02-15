@@ -1,11 +1,21 @@
-/*
- * Copyright (C) 2001 Ciaran Treanor <ciaran@codeloop.com>
+/*******************************************************************************
+ * Copyright (c) 2001-2005 Sasa Markovic and Ciaran Treanor.
+ * Copyright (c) 2011 The OpenNMS Group, Inc.
  *
- * Distributable under GPL license.
- * See terms of license at gnu.org.
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * $Id$
- */
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *******************************************************************************/
 package org.jrobin.core.jrrd;
 
 import java.io.*;
@@ -42,17 +52,19 @@ public class RRDFile implements Constants {
 
 	private void initDataLayout(File file) throws IOException {
 
-		if (file.exists()) {    // Load the data formats from the file
+		if (file.exists()) {	// Load the data formats from the file
 			ras.read(buffer, 0, 24);
 
 			int index;
 
 			if ((index = indexOf(FLOAT_COOKIE_BIG_ENDIAN, buffer)) != -1) {
 				bigEndian = true;
-			} else if ((index = indexOf(FLOAT_COOKIE_LITTLE_ENDIAN, buffer))
+			}
+			else if ((index = indexOf(FLOAT_COOKIE_LITTLE_ENDIAN, buffer))
 					!= -1) {
 				bigEndian = false;
-			} else {
+			}
+			else {
 				throw new IOException("Invalid RRD file");
 			}
 
@@ -69,10 +81,11 @@ public class RRDFile implements Constants {
 				default :
 					throw new RuntimeException("Unsupported architecture");
 			}
-		} else {                // Default to data formats for this hardware architecture
+		}
+		else {				// Default to data formats for this hardware architecture
 		}
 
-		ras.seek(0);    // Reset file pointer to start of file
+		ras.seek(0);	// Reset file pointer to start of file
 	}
 
 	private int indexOf(byte[] pattern, byte[] array) {
@@ -96,7 +109,8 @@ public class RRDFile implements Constants {
 
 		if (bigEndian) {
 			tx = buffer;
-		} else {
+		}
+		else {
 			for (int i = 0; i < 8; i++) {
 				tx[7 - i] = buffer[i];
 			}
@@ -121,7 +135,8 @@ public class RRDFile implements Constants {
 		if (bigEndian) {
 			value = (0xFF & buffer[3]) | ((0xFF & buffer[2]) << 8)
 					| ((0xFF & buffer[1]) << 16) | ((0xFF & buffer[0]) << 24);
-		} else {
+		}
+		else {
 			value = (0xFF & buffer[0]) | ((0xFF & buffer[1]) << 8)
 					| ((0xFF & buffer[2]) << 16) | ((0xFF & buffer[3]) << 24);
 		}

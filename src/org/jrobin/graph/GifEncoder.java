@@ -1,47 +1,42 @@
-/* ============================================================
- * JRobin : Pure java implementation of RRDTool's functionality
- * ============================================================
+/*******************************************************************************
+ * Copyright (c) 2001-2005 Sasa Markovic and Ciaran Treanor.
+ * Copyright (c) 2011 The OpenNMS Group, Inc.
  *
- * Project Info:  http://www.jrobin.org
- * Project Lead:  Sasa Markovic (saxon@jrobin.org)
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * Developers:    Sasa Markovic (saxon@jrobin.org)
- *                Arne Vandamme (cobralord@jrobin.org)
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  *
- * (C) Copyright 2003, by Sasa Markovic.
- *
- * This library is free software; you can redistribute it and/or modify it under the terms
- * of the GNU Lesser General Public License as published by the Free Software Foundation;
- * either version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License along with this
- * library; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
- * Boston, MA 02111-1307, USA.
- */
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *******************************************************************************/
 
-/*
- * GifEncoder from J.M.G. Elliott
- * http://jmge.net/java/gifenc/
- */
+///////////////////////////////////////////////////////////////////
+// GifEncoder from J.M.G. Elliott
+// http://jmge.net/java/gifenc/
+///////////////////////////////////////////////////////////////////
+
 package org.jrobin.graph;
 
 import java.awt.*;
 import java.awt.image.PixelGrabber;
-import java.io.*;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Vector;
 
-class GifEncoder
-{
+class GifEncoder {
 	private Dimension dispDim = new Dimension(0, 0);
 	private GifColorTable colorTable;
 	private int bgIndex = 0;
 	private int loopCount = 1;
 	private String theComments;
-	private Vector vFrames = new Vector();
+	private Vector<Gif89Frame> vFrames = new Vector<Gif89Frame>();
 
 	GifEncoder() {
 		colorTable = new GifColorTable();
@@ -57,7 +52,7 @@ class GifEncoder
 	}
 
 	GifEncoder(Color[] colors, int width, int height, byte ci_pixels[])
-		throws IOException {
+			throws IOException {
 		this(colors);
 		addFrame(width, height, ci_pixels);
 	}
@@ -67,7 +62,7 @@ class GifEncoder
 	}
 
 	Gif89Frame getFrameAt(int index) {
-		return isOk(index) ? (Gif89Frame) vFrames.elementAt(index) : null;
+		return isOk(index) ? vFrames.elementAt(index) : null;
 	}
 
 	void addFrame(Gif89Frame gf) throws IOException {
@@ -80,7 +75,7 @@ class GifEncoder
 	}
 
 	void addFrame(int width, int height, byte ci_pixels[])
-		throws IOException {
+			throws IOException {
 		addFrame(new IndexGif89Frame(width, height, ci_pixels));
 	}
 
@@ -107,8 +102,9 @@ class GifEncoder
 	}
 
 	void setUniformDelay(int interval) {
-		for (int i = 0; i < vFrames.size(); ++i)
-			((Gif89Frame) vFrames.elementAt(i)).setDelay(interval);
+		for (int i = 0; i < vFrames.size(); ++i) {
+			vFrames.elementAt(i).setDelay(interval);
+		}
 	}
 
 	void encode(OutputStream out) throws IOException {
@@ -118,14 +114,17 @@ class GifEncoder
 		Put.ascii("GIF89a", out);
 		writeLogicalScreenDescriptor(out);
 		colorTable.encode(out);
-		if (is_sequence && loopCount != 1)
+		if (is_sequence && loopCount != 1) {
 			writeNetscapeExtension(out);
-		if (theComments != null && theComments.length() > 0)
+		}
+		if (theComments != null && theComments.length() > 0) {
 			writeCommentExtension(out);
-		for (int i = 0; i < nframes; ++i)
-			((Gif89Frame) vFrames.elementAt(i)).encode(
-				out, is_sequence, colorTable.getDepth(), colorTable.getTransparent()
+		}
+		for (int i = 0; i < nframes; ++i) {
+			vFrames.elementAt(i).encode(
+					out, is_sequence, colorTable.getDepth(), colorTable.getTransparent()
 			);
+		}
 		out.write((int) ';');
 		out.flush();
 	}
@@ -186,13 +185,16 @@ class DirectGif89Frame extends Gif89Frame {
 		PixelGrabber pg = new PixelGrabber(img, 0, 0, -1, -1, true);
 		String errmsg = null;
 		try {
-			if (!pg.grabPixels())
+			if (!pg.grabPixels()) {
 				errmsg = "can't grab pixels from image";
-		} catch (InterruptedException e) {
+			}
+		}
+		catch (InterruptedException e) {
 			errmsg = "interrupted grabbing pixels from image";
 		}
-		if (errmsg != null)
+		if (errmsg != null) {
 			throw new IOException(errmsg + " (" + getClass().getName() + ")");
+		}
 		theWidth = pg.getWidth();
 		theHeight = pg.getHeight();
 		argbPixels = (int[]) pg.getPixels();
@@ -226,8 +228,9 @@ class GifColorTable {
 
 	GifColorTable(Color[] colors) {
 		int n2copy = Math.min(theColors.length, colors.length);
-		for (int i = 0; i < n2copy; ++i)
+		for (int i = 0; i < n2copy; ++i) {
 			theColors[i] = colors[i].getRGB();
+		}
 	}
 
 	int getDepth() {
@@ -243,10 +246,12 @@ class GifColorTable {
 	}
 
 	void processPixels(Gif89Frame gf) throws IOException {
-		if (gf instanceof DirectGif89Frame)
+		if (gf instanceof DirectGif89Frame) {
 			filterPixels((DirectGif89Frame) gf);
-		else
+		}
+		else {
 			trackPixelUsage((IndexGif89Frame) gf);
+		}
 	}
 
 	void closePixelProcessing() {
@@ -263,48 +268,59 @@ class GifColorTable {
 	}
 
 	private void filterPixels(DirectGif89Frame dgf) throws IOException {
-		if (ciLookup == null)
+		if (ciLookup == null) {
 			throw new IOException("RGB frames require palette autodetection");
+		}
 		int[] argb_pixels = (int[]) dgf.getPixelSource();
 		byte[] ci_pixels = dgf.getPixelSink();
 		int npixels = argb_pixels.length;
 		for (int i = 0; i < npixels; ++i) {
 			int argb = argb_pixels[i];
-			if ((argb >>> 24) < 0x80)
-				if (transparentIndex == -1)
+			if ((argb >>> 24) < 0x80) {
+				if (transparentIndex == -1) {
 					transparentIndex = ciCount;
+				}
 				else if (argb != theColors[transparentIndex]) {
 					ci_pixels[i] = (byte) transparentIndex;
 					continue;
 				}
+			}
 			int color_index = ciLookup.getPaletteIndex(argb & 0xffffff);
 			if (color_index == -1) {
-				if (ciCount == 256)
+				if (ciCount == 256) {
 					throw new IOException("can't encode as GIF (> 256 colors)");
+				}
 				theColors[ciCount] = argb;
 				ciLookup.put(argb & 0xffffff, ciCount);
 				ci_pixels[i] = (byte) ciCount;
 				++ciCount;
-			} else
+			}
+			else {
 				ci_pixels[i] = (byte) color_index;
+			}
 		}
 	}
 
 	private void trackPixelUsage(IndexGif89Frame igf) {
 		byte[] ci_pixels = (byte[]) igf.getPixelSource();
 		int npixels = ci_pixels.length;
-		for (int i = 0; i < npixels; ++i)
-			if (ci_pixels[i] >= ciCount)
+		for (int i = 0; i < npixels; ++i) {
+			if (ci_pixels[i] >= ciCount) {
 				ciCount = ci_pixels[i] + 1;
+			}
+		}
 	}
 
 	private int computeColorDepth(int colorcount) {
-		if (colorcount <= 2)
+		if (colorcount <= 2) {
 			return 1;
-		if (colorcount <= 4)
+		}
+		if (colorcount <= 4) {
 			return 2;
-		if (colorcount <= 16)
+		}
+		if (colorcount <= 16) {
 			return 4;
+		}
 		return 8;
 	}
 }
@@ -328,10 +344,12 @@ class ReverseColorMap {
 		for (int itable = rgb % hTable.length;
 			 (rec = hTable[itable]) != null && rec.rgb != rgb;
 			 itable = ++itable % hTable.length
-			)
+				) {
 			;
-		if (rec != null)
+		}
+		if (rec != null) {
 			return rec.ipalette;
+		}
 		return -1;
 	}
 
@@ -341,8 +359,9 @@ class ReverseColorMap {
 		for (itable = rgb % hTable.length;
 			 hTable[itable] != null;
 			 itable = ++itable % hTable.length
-			)
+				) {
 			;
+		}
 		hTable[itable] = new ColorRecord(rgb, ipalette);
 	}
 }
@@ -399,7 +418,7 @@ abstract class Gif89Frame {
 		writeGraphicControlExtension(os, epluribus, transparent_index);
 		writeImageDescriptor(os);
 		new GifPixelsEncoder(
-			theWidth, theHeight, ciPixels, isInterlaced, color_depth
+				theWidth, theHeight, ciPixels, isInterlaced, color_depth
 		).encode(os);
 	}
 
@@ -461,9 +480,10 @@ class GifPixelsEncoder {
 		++xCur;
 		if (xCur == imgW) {
 			xCur = 0;
-			if (!wantInterlaced)
+			if (!wantInterlaced) {
 				++yCur;
-			else
+			}
+			else {
 				switch (curPass) {
 					case 0:
 						yCur += 8;
@@ -490,12 +510,14 @@ class GifPixelsEncoder {
 						yCur += 2;
 						break;
 				}
+			}
 		}
 	}
 
 	private int nextPixel() {
-		if (countDown == 0)
+		if (countDown == 0) {
 			return EOF;
+		}
 		--countDown;
 		byte pix = pixAry[yCur * imgW + xCur];
 		bumpPosition();
@@ -541,8 +563,9 @@ class GifPixelsEncoder {
 		char_init();
 		ent = nextPixel();
 		hshift = 0;
-		for (fcode = hsize; fcode < 65536; fcode *= 2)
+		for (fcode = hsize; fcode < 65536; fcode *= 2) {
 			++hshift;
+		}
 		hshift = 8 - hshift;
 		hsize_reg = hsize;
 		cl_hash(hsize_reg);
@@ -554,13 +577,16 @@ class GifPixelsEncoder {
 			if (htab[i] == fcode) {
 				ent = codetab[i];
 				continue;
-			} else if (htab[i] >= 0) {
+			}
+			else if (htab[i] >= 0) {
 				disp = hsize_reg - i;
-				if (i == 0)
+				if (i == 0) {
 					disp = 1;
+				}
 				do {
-					if ((i -= disp) < 0)
+					if ((i -= disp) < 0) {
 						i += hsize_reg;
+					}
 
 					if (htab[i] == fcode) {
 						ent = codetab[i];
@@ -573,8 +599,10 @@ class GifPixelsEncoder {
 			if (free_ent < maxmaxcode) {
 				codetab[i] = free_ent++;
 				htab[i] = fcode;
-			} else
+			}
+			else {
 				cl_block(outs);
+			}
 		}
 		output(ent, outs);
 		output(EOFCode, outs);
@@ -583,16 +611,18 @@ class GifPixelsEncoder {
 	int cur_accum = 0;
 	int cur_bits = 0;
 	int masks[] = {0x0000, 0x0001, 0x0003, 0x0007, 0x000F,
-				   0x001F, 0x003F, 0x007F, 0x00FF,
-				   0x01FF, 0x03FF, 0x07FF, 0x0FFF,
-				   0x1FFF, 0x3FFF, 0x7FFF, 0xFFFF};
+			0x001F, 0x003F, 0x007F, 0x00FF,
+			0x01FF, 0x03FF, 0x07FF, 0x0FFF,
+			0x1FFF, 0x3FFF, 0x7FFF, 0xFFFF};
 
 	void output(int code, OutputStream outs) throws IOException {
 		cur_accum &= masks[cur_bits];
-		if (cur_bits > 0)
+		if (cur_bits > 0) {
 			cur_accum |= (code << cur_bits);
-		else
+		}
+		else {
 			cur_accum = code;
+		}
 
 		cur_bits += n_bits;
 
@@ -605,12 +635,15 @@ class GifPixelsEncoder {
 			if (clear_flg) {
 				maxcode = MAXCODE(n_bits = g_init_bits);
 				clear_flg = false;
-			} else {
+			}
+			else {
 				++n_bits;
-				if (n_bits == maxbits)
+				if (n_bits == maxbits) {
 					maxcode = maxmaxcode;
-				else
+				}
+				else {
 					maxcode = MAXCODE(n_bits);
+				}
 			}
 		}
 		if (code == EOFCode) {
@@ -635,8 +668,9 @@ class GifPixelsEncoder {
 
 
 	void cl_hash(int hsize) {
-		for (int i = 0; i < hsize; ++i)
+		for (int i = 0; i < hsize; ++i) {
 			htab[i] = -1;
+		}
 	}
 
 	int a_count;
@@ -649,8 +683,9 @@ class GifPixelsEncoder {
 
 	void char_out(byte c, OutputStream outs) throws IOException {
 		accum[a_count++] = c;
-		if (a_count >= 254)
+		if (a_count >= 254) {
 			flush_char(outs);
+		}
 	}
 
 	void flush_char(OutputStream outs) throws IOException {
@@ -680,8 +715,9 @@ class IndexGif89Frame extends Gif89Frame {
 final class Put {
 	static void ascii(String s, OutputStream os) throws IOException {
 		byte[] bytes = new byte[s.length()];
-		for (int i = 0; i < bytes.length; ++i)
+		for (int i = 0; i < bytes.length; ++i) {
 			bytes[i] = (byte) s.charAt(i);
+		}
 		os.write(bytes);
 	}
 

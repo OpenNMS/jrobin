@@ -1,27 +1,21 @@
-/* ============================================================
- * JRobin : Pure java implementation of RRDTool's functionality
- * ============================================================
+/*******************************************************************************
+ * Copyright (c) 2001-2005 Sasa Markovic and Ciaran Treanor.
+ * Copyright (c) 2011 The OpenNMS Group, Inc.
  *
- * Project Info:  http://www.jrobin.org
- * Project Lead:  Sasa Markovic (saxon@jrobin.org);
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * (C) Copyright 2003, by Sasa Markovic.
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  *
- * Developers:    Sasa Markovic (saxon@jrobin.org)
- *                Arne Vandamme (cobralord@jrobin.org)
- *
- * This library is free software; you can redistribute it and/or modify it under the terms
- * of the GNU Lesser General Public License as published by the Free Software Foundation;
- * either version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License along with this
- * library; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
- * Boston, MA 02111-1307, USA.
- */
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *******************************************************************************/
 package org.jrobin.inspector;
 
 import org.jrobin.core.RrdDb;
@@ -33,9 +27,14 @@ import java.io.IOException;
 import java.io.File;
 
 class DatasourceTableModel extends AbstractTableModel {
-	private static final Object[] DESCRIPTIONS = {"name", "type", "heartbeat", "min value",
-										   "max value", "last value", "accum. value", "NaN seconds"};
-	private static final String[] COLUMN_NAMES = {"description", "value"};
+	private static final long serialVersionUID = 1L;
+	private static final Object[] DESCRIPTIONS = {
+			"name", "type", "heartbeat", "min value",
+			"max value", "last value", "accum. value", "NaN seconds"
+	};
+	private static final String[] COLUMN_NAMES = {
+			"description", "value"
+	};
 
 	private File file;
 	private Object[] values;
@@ -68,6 +67,10 @@ class DatasourceTableModel extends AbstractTableModel {
 		return COLUMN_NAMES[column];
 	}
 
+	public boolean isCellEditable(int rowIndex, int columnIndex) {
+		return false;
+	}
+
 	void setFile(File newFile) {
 		file = newFile;
 		setIndex(-1);
@@ -77,27 +80,31 @@ class DatasourceTableModel extends AbstractTableModel {
 		if (dsIndex != newDsIndex) {
 			dsIndex = newDsIndex;
 			values = null;
-			if(dsIndex >= 0) {
+			if (dsIndex >= 0) {
 				try {
-					RrdDb rrd = new RrdDb(file.getAbsolutePath());
-					Datasource ds = rrd.getDatasource(dsIndex);
-					values = new Object[]{
-						ds.getDsName(),
-						ds.getDsType(),
-						"" + ds.getHeartbeat(),
-						InspectorModel.formatDouble(ds.getMinValue()),
-						InspectorModel.formatDouble(ds.getMaxValue()),
-						InspectorModel.formatDouble(ds.getLastValue()),
-						InspectorModel.formatDouble(ds.getAccumValue()),
-						"" + ds.getNanSeconds()
-					};
-					rrd.close();
+					RrdDb rrd = new RrdDb(file.getAbsolutePath(), true);
+					try {
+						Datasource ds = rrd.getDatasource(dsIndex);
+						values = new Object[] {
+								ds.getDsName(),
+								ds.getDsType(),
+								"" + ds.getHeartbeat(),
+								InspectorModel.formatDouble(ds.getMinValue()),
+								InspectorModel.formatDouble(ds.getMaxValue()),
+								InspectorModel.formatDouble(ds.getLastValue()),
+								InspectorModel.formatDouble(ds.getAccumValue()),
+								"" + ds.getNanSeconds()
+						};
+					}
+					finally {
+						rrd.close();
+					}
 				}
 				catch (IOException e) {
-					e.printStackTrace();
+					Util.error(null, e);
 				}
 				catch (RrdException e) {
-					e.printStackTrace();
+					Util.error(null, e);
 				}
 			}
 			fireTableDataChanged();

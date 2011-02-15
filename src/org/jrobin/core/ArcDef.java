@@ -1,34 +1,28 @@
-/* ============================================================
- * JRobin : Pure java implementation of RRDTool's functionality
- * ============================================================
+/*******************************************************************************
+ * Copyright (c) 2001-2005 Sasa Markovic and Ciaran Treanor.
+ * Copyright (c) 2011 The OpenNMS Group, Inc.
  *
- * Project Info:  http://www.jrobin.org
- * Project Lead:  Sasa Markovic (saxon@jrobin.org);
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * (C) Copyright 2003, by Sasa Markovic.
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  *
- * Developers:    Sasa Markovic (saxon@jrobin.org)
- *                Arne Vandamme (cobralord@jrobin.org)
- *
- * This library is free software; you can redistribute it and/or modify it under the terms
- * of the GNU Lesser General Public License as published by the Free Software Foundation;
- * either version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License along with this
- * library; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
- * Boston, MA 02111-1307, USA.
- */
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *******************************************************************************/
 
 package org.jrobin.core;
 
 /**
  * Class to represent single archive definition within the RRD.
  * Archive definition consists of the following four elements:
- *
+ * <p/>
  * <ul>
  * <li>consolidation function
  * <li>X-files factor
@@ -42,9 +36,11 @@ package org.jrobin.core;
  * @author <a href="mailto:saxon@jrobin.org">Sasa Markovic</a>
  */
 
-public class ArcDef {
-	/** array of valid consolidation function names */
-	public static final String CONSOL_FUNS[] = { "AVERAGE", "MAX", "MIN", "LAST" };
+public class ArcDef implements ConsolFuns {
+	/**
+	 * array of valid consolidation function names
+	 */
+	public static final String CONSOL_FUNS[] = {CF_AVERAGE, CF_MAX, CF_MIN, CF_LAST};
 
 	private String consolFun;
 	private double xff;
@@ -52,17 +48,18 @@ public class ArcDef {
 
 	/**
 	 * <p>Creates new archive definition object. This object should be passed as argument to
-	 * {@link org.jrobin.core.RrdDef#addArchive(org.jrobin.core.ArcDef) addArchive()} method of
-	 * {@link org.jrobin.core.RrdDb RrdDb} object.</p>
-	 *
-     * <p>For the complete explanation of all archive definition parameters, see RRDTool's
+	 * {@link RrdDef#addArchive(ArcDef) addArchive()} method of
+	 * {@link RrdDb RrdDb} object.</p>
+	 * <p/>
+	 * <p>For the complete explanation of all archive definition parameters, see RRDTool's
 	 * <a href="../../../../man/rrdcreate.html" target="man">rrdcreate man page</a></p>
 	 *
 	 * @param consolFun Consolidation function. Allowed values are "AVERAGE", "MIN",
-	 * "MAX" and "LAST".
-	 * @param xff X-files factor, between 0 and 1.
-	 * @param steps Number of archive steps.
-	 * @param rows Number of archive rows.
+	 *                  "MAX" and "LAST" (these string constants are conveniently defined in the
+	 *                  {@link ConsolFuns} class).
+	 * @param xff	   X-files factor, between 0 and 1.
+	 * @param steps	 Number of archive steps.
+	 * @param rows	  Number of archive rows.
 	 * @throws RrdException Thrown if any parameter has illegal value.
 	 */
 	public ArcDef(String consolFun, double xff, int steps, int rows) throws RrdException {
@@ -75,6 +72,7 @@ public class ArcDef {
 
 	/**
 	 * Returns consolidation function.
+	 *
 	 * @return Consolidation function.
 	 */
 	public String getConsolFun() {
@@ -83,6 +81,7 @@ public class ArcDef {
 
 	/**
 	 * Returns the X-files factor.
+	 *
 	 * @return X-files factor value.
 	 */
 	public double getXff() {
@@ -91,6 +90,7 @@ public class ArcDef {
 
 	/**
 	 * Returns the number of primary RRD steps which complete a single archive step.
+	 *
 	 * @return Number of steps.
 	 */
 	public int getSteps() {
@@ -99,6 +99,7 @@ public class ArcDef {
 
 	/**
 	 * Returns the number of rows (aggregated values) stored in the archive.
+	 *
 	 * @return Number of rows.
 	 */
 	public int getRows() {
@@ -106,23 +107,25 @@ public class ArcDef {
 	}
 
 	private void validate() throws RrdException {
-		if(!isValidConsolFun(consolFun)) {
+		if (!isValidConsolFun(consolFun)) {
 			throw new RrdException("Invalid consolidation function specified: " + consolFun);
 		}
-		if(Double.isNaN(xff) || xff < 0.0 || xff >= 1.0) {
+		if (Double.isNaN(xff) || xff < 0.0 || xff >= 1.0) {
 			throw new RrdException("Invalid xff, must be >= 0 and < 1: " + xff);
 		}
-		if(steps <= 0 || rows <= 0) {
-			throw new RrdException("Invalid steps/rows number: " + steps + "/" + rows);
+		if (steps < 1 || rows < 2) {
+			throw new RrdException("Invalid steps/rows settings: " + steps + "/" + rows +
+					". Minimal values allowed are steps=1, rows=2");
 		}
 	}
 
 	/**
 	 * Returns string representing archive definition (RRDTool format).
+	 *
 	 * @return String containing all archive definition parameters.
 	 */
 	public String dump() {
-		return "RRA:" + consolFun + ":" + xff + ":" +	steps + ":" + rows;
+		return "RRA:" + consolFun + ":" + xff + ":" + steps + ":" + rows;
 	}
 
 	/**
@@ -130,12 +133,13 @@ public class ArcDef {
 	 * Archive definitions are considered equal if they have the same number of steps
 	 * and the same consolidation function. It is not possible to create RRD with two
 	 * equal archive definitions.
+	 *
 	 * @param obj Archive definition to compare with.
 	 * @return <code>true</code> if archive definitions are equal,
-	 * <code>false</code> otherwise.
+	 *         <code>false</code> otherwise.
 	 */
 	public boolean equals(Object obj) {
-		if(obj instanceof ArcDef) {
+		if (obj instanceof ArcDef) {
 			ArcDef arcObj = (ArcDef) obj;
 			return consolFun.equals(arcObj.consolFun) && steps == arcObj.steps;
 		}
@@ -144,13 +148,14 @@ public class ArcDef {
 
 	/**
 	 * Checks if function argument represents valid consolidation function name.
+	 *
 	 * @param consolFun Consolidation function to be checked
 	 * @return <code>true</code> if <code>consolFun</code> is valid consolidation function,
-	 * <code>false</code> otherwise.
+	 *         <code>false</code> otherwise.
 	 */
 	public static boolean isValidConsolFun(String consolFun) {
-		for(int i = 0; i < CONSOL_FUNS.length; i++) {
-			if(CONSOL_FUNS[i].equals(consolFun)) {
+		for (String cFun : CONSOL_FUNS) {
+			if (cFun.equals(consolFun)) {
 				return true;
 			}
 		}

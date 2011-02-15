@@ -1,27 +1,21 @@
-/* ============================================================
- * JRobin : Pure java implementation of RRDTool's functionality
- * ============================================================
+/*******************************************************************************
+ * Copyright (c) 2001-2005 Sasa Markovic and Ciaran Treanor.
+ * Copyright (c) 2011 The OpenNMS Group, Inc.
  *
- * Project Info:  http://www.jrobin.org
- * Project Lead:  Sasa Markovic (saxon@jrobin.org);
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * (C) Copyright 2003, by Sasa Markovic.
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  *
- * Developers:    Sasa Markovic (saxon@jrobin.org)
- *                Arne Vandamme (cobralord@jrobin.org)
- *
- * This library is free software; you can redistribute it and/or modify it under the terms
- * of the GNU Lesser General Public License as published by the Free Software Foundation;
- * either version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License along with this
- * library; if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330,
- * Boston, MA 02111-1307, USA.
- */
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *******************************************************************************/
 
 package org.jrobin.inspector;
 
@@ -35,6 +29,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 
 class EditArchiveDialog extends JDialog {
+	private static final long serialVersionUID = 1L;
 	private static final int FIELD_SIZE = 20;
 	private static final String TITLE_NEW = "New archive";
 	private static final String TITLE_EDIT = "Edit archive";
@@ -55,7 +50,7 @@ class EditArchiveDialog extends JDialog {
 	private ArcDef arcDef;
 
 	EditArchiveDialog(Frame parent, ArcDef arcDef) {
-		super(parent, arcDef == null? TITLE_NEW: TITLE_EDIT, true);
+		super(parent, arcDef == null ? TITLE_NEW : TITLE_EDIT, true);
 		constructUI(arcDef);
 		pack();
 		Util.centerOnScreen(this);
@@ -65,11 +60,11 @@ class EditArchiveDialog extends JDialog {
 	private void constructUI(ArcDef arcDef) {
 		// fill controls
 		String[] funs = ArcDef.CONSOL_FUNS;
-		for (int i = 0; i < funs.length; i++) {
-			consolFunCombo.addItem(funs[i]);
+		for (String fun : funs) {
+			consolFunCombo.addItem(fun);
 		}
 		consolFunCombo.setSelectedIndex(0);
-		if(arcDef == null) {
+		if (arcDef == null) {
 			// NEW
 			xffField.setText("" + 0.5);
 		}
@@ -88,9 +83,11 @@ class EditArchiveDialog extends JDialog {
 		JPanel content = (JPanel) getContentPane();
 		GridBagLayout layout = new GridBagLayout();
 		content.setLayout(layout);
-        GridBagConstraints gbc = new GridBagConstraints();
+		GridBagConstraints gbc = new GridBagConstraints();
 		gbc.insets = new Insets(3, 3, 3, 3);
-		gbc.gridx = 0; gbc.gridy = 0; gbc.anchor = GridBagConstraints.EAST;
+		gbc.gridx = 0;
+		gbc.gridy = 0;
+		gbc.anchor = GridBagConstraints.EAST;
 		layout.setConstraints(consolFunLabel, gbc);
 		content.add(consolFunLabel);
 		gbc.gridy = 1;
@@ -106,7 +103,9 @@ class EditArchiveDialog extends JDialog {
 		layout.setConstraints(okButton, gbc);
 		okButton.setPreferredSize(cancelButton.getPreferredSize());
 		content.add(okButton);
-		gbc.gridx = 1; gbc.gridy = 0; gbc.anchor = GridBagConstraints.WEST;
+		gbc.gridx = 1;
+		gbc.gridy = 0;
+		gbc.anchor = GridBagConstraints.WEST;
 		layout.setConstraints(consolFunCombo, gbc);
 		content.add(consolFunCombo);
 		gbc.gridy = 1;
@@ -125,10 +124,14 @@ class EditArchiveDialog extends JDialog {
 
 		// actions
 		okButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) { ok(); }
+			public void actionPerformed(ActionEvent e) {
+				ok();
+			}
 		});
 		cancelButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) { cancel(); }
+			public void actionPerformed(ActionEvent e) {
+				cancel();
+			}
 		});
 
 		setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
@@ -136,7 +139,7 @@ class EditArchiveDialog extends JDialog {
 
 	private void ok() {
 		arcDef = createArcDef();
-		if(arcDef != null) {
+		if (arcDef != null) {
 			close();
 		}
 	}
@@ -154,18 +157,18 @@ class EditArchiveDialog extends JDialog {
 		double xff;
 		try {
 			xff = Double.parseDouble(xffField.getText());
-			if(xff < 0 || xff >= 1D) {
+			if (xff < 0 || xff >= 1D) {
 				throw new NumberFormatException();
 			}
 		}
-		catch(NumberFormatException nfe) {
-            Util.error(this, "X-files factor must be a number not less than 0.0 and less than 1.0");
+		catch (NumberFormatException nfe) {
+			Util.error(this, "X-files factor must be a number not less than 0.0 and less than 1.0");
 			return null;
 		}
 		int steps;
 		try {
 			steps = Integer.parseInt(stepsField.getText());
-			if(steps <= 0) {
+			if (steps <= 0) {
 				throw new NumberFormatException();
 			}
 		}
@@ -176,7 +179,7 @@ class EditArchiveDialog extends JDialog {
 		int rows;
 		try {
 			rows = Integer.parseInt(rowsField.getText());
-			if(rows <= 0) {
+			if (rows <= 0) {
 				throw new NumberFormatException();
 			}
 		}
@@ -187,9 +190,9 @@ class EditArchiveDialog extends JDialog {
 		try {
 			return new ArcDef(consolFun, xff, steps, rows);
 		}
-		catch(RrdException e) {
+		catch (RrdException e) {
 			// should not be hear ever!
-			e.printStackTrace();
+			Util.error(this, e);
 			return null;
 		}
 	}
