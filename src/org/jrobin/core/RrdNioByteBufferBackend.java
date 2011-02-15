@@ -57,7 +57,7 @@ public class RrdNioByteBufferBackend extends RrdFileBackend {
 	protected RrdNioByteBufferBackend(String path, boolean readOnly) throws IOException, IllegalStateException {
 		super(path, readOnly);
 		m_readOnly = readOnly;
-		m_printStatements = true;
+//		m_printStatements = true;
 		if (m_printStatements) System.out.println("Using class: "+ getClass());
 		
 		if (file != null) {
