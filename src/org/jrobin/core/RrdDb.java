@@ -426,7 +426,15 @@ public class RrdDb implements RrdUpdater {
 		}
 	}
 
-	/**
+	public RrdDb(final File file) throws IOException, RrdException {
+	    this(file.getPath());
+    }
+
+    public RrdDb(final File file, final boolean readOnly) throws IOException, RrdException {
+        this(file.getPath(), readOnly);
+    }
+
+    /**
 	 * Closes RRD. No further operations are allowed on this RrdDb object.
 	 *
 	 * @throws IOException Thrown in case of I/O related error.
@@ -1144,4 +1152,7 @@ public class RrdDb implements RrdUpdater {
 		System.out.println("(C) 2003-2005 Sasa Markovic. All rights reserved.");
 	}
 
+	public String toString() {
+	    return getClass().getSimpleName() + "@" + Integer.toHexString(hashCode()) + "[" + new File(getPath()).getName() + "]";
+	}
 }

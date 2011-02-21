@@ -133,4 +133,8 @@ public class ArcState implements RrdUpdater {
 	public RrdAllocator getRrdAllocator() {
 		return parentArc.getRrdAllocator();
 	}
+
+    public String toString() {
+        return "ArcState@" + Integer.toHexString(hashCode()) + "[parentArc=" + parentArc + ",accumValue=" + accumValue + ",nanSteps=" + nanSteps + "]";
+    }
 }

@@ -477,5 +477,11 @@ public class Datasource implements RrdUpdater, DsTypes {
 	public RrdAllocator getRrdAllocator() {
 		return parentDb.getRrdAllocator();
 	}
+
+	public String toString() {
+	    return getClass().getName() + "@" + Integer.toHexString(hashCode()) + "[parentDb=" + parentDb
+	        + ",dsName=" + dsName + ",dsType=" + dsType + ",heartbeat=" + heartbeat
+	        + ",minValue=" + minValue + ",maxValue=" + maxValue + "]";
+	}
 }
 

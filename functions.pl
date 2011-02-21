@@ -25,6 +25,9 @@ if (not -x $MVN) {
 	$MVN = $PREFIX . '/maven/bin/mvn';
 }
 
+if (not -x $MVN) {
+	chmod(0755, $MVN);
+}
 # maven options
 $MAVEN_OPTS = $ENV{'MAVEN_OPTS'};
 if (not defined $MAVEN_OPTS or $MAVEN_OPTS eq '') {

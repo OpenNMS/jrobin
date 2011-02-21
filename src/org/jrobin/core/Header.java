@@ -140,7 +140,7 @@ public class Header implements RrdUpdater {
 		return arcCount.get();
 	}
 
-	void setLastUpdateTime(long lastUpdateTime) throws IOException {
+	public void setLastUpdateTime(long lastUpdateTime) throws IOException {
 		this.lastUpdateTime.set(lastUpdateTime);
 	}
 

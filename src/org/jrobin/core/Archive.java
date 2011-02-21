@@ -403,4 +403,8 @@ public class Archive implements RrdUpdater, ConsolFuns {
 	public RrdAllocator getRrdAllocator() {
 		return parentDb.getRrdAllocator();
 	}
+
+    public String toString() {
+        return "Archive@" + Integer.toHexString(hashCode()) + "[parentDb=" + parentDb + ",consolFun=" + consolFun + ",xff=" + xff + ",steps=" + steps + ",rows=" + rows + ",robins=" + robins + ",states=" + states + "]";
+    }
 }

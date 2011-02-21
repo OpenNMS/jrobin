@@ -41,8 +41,7 @@ public class FetchRequest {
 	private long resolution;
 	private String[] filter;
 
-	FetchRequest(RrdDb parentDb, String consolFun, long fetchStart, long fetchEnd,
-				 long resolution) throws RrdException {
+	public FetchRequest(RrdDb parentDb, String consolFun, long fetchStart, long fetchEnd, long resolution) throws RrdException {
 		this.parentDb = parentDb;
 		this.consolFun = consolFun;
 		this.fetchStart = fetchStart;

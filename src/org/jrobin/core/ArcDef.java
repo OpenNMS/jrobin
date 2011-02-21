@@ -170,4 +170,8 @@ public class ArcDef implements ConsolFuns {
 		return consolFun.equals(def.consolFun) && xff == def.xff &&
 				steps == def.steps && rows == def.rows;
 	}
+	
+	public String toString() {
+	    return "ArcDef@" + Integer.toHexString(hashCode()) + "[consolFun=" + consolFun + ",xff=" + xff + ",steps=" + steps + ",rows=" + rows + "]";
+	}
 }

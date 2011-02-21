@@ -20,6 +20,7 @@
 package org.jrobin.core;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.StringTokenizer;
 
 /**
@@ -262,4 +263,35 @@ public class Sample {
 	String getRrdToolCommand() {
 		return dump();
 	}
+	
+	public String toString() {
+	    return getClass().getName() + "@" + "[parentDb=" + parentDb + ",time=" + new Date(time * 1000L) + ",dsNames=[" + printList(dsNames) + "],values=[" + printList(values) + "]]";
+	}
+
+    private String printList(Object[] dsNames) {
+        if (dsNames == null) return "null";
+        StringBuffer sb = new StringBuffer();
+        for (int i = 0; i < dsNames.length; i++) {
+            if (i == dsNames.length - 1) {
+                sb.append(dsNames[i]);
+            } else {
+                sb.append(dsNames[i]).append(", ");
+            }
+        }
+        return sb.toString();
+    }
+	
+    private String printList(double[] values) {
+        if (values == null) return "null";
+        StringBuffer sb = new StringBuffer();
+        for (int i = 0; i < values.length; i++) {
+            if (i == values.length - 1) {
+                sb.append(values[i]);
+            } else {
+                sb.append(values[i]).append(", ");
+            }
+        }
+        return sb.toString();
+    }
+    
 }
