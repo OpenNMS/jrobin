@@ -84,7 +84,7 @@
     <extensions>
       <extension>
         <groupId>org.apache.maven.wagon</groupId>
-         <artifactId>wagon-ssh</artifactId>
+         <artifactId>wagon-ssh-external</artifactId>
          <version>1.0-beta-7</version>
       </extension>
     </extensions>
@@ -223,7 +223,7 @@
     <site>
       <id>opennms-site</id>
       <name>OpenNMS Site</name>
-      <url>scp://repo.opennms.org/var/www/sites/opennms.org/site/repo/sites/jrobin/${project.version}/</url>
+      <url>scpexe://repo.opennms.org/var/www/sites/opennms.org/site/repo/sites/jrobin/${project.version}/</url>
     </site>
     <!-- use the following if you're not using a snapshot version. -->
     <repository>
@@ -235,7 +235,7 @@
     <snapshotRepository>
       <id>opennms-snapshot-repo</id>
       <name>OpenNMS Snapshot Repository</name>
-      <url>scp://repo.opennms.org/var/www/sites/opennms.org/site/repo/snapshots</url>
+      <url>scpexe://repo.opennms.org/var/www/sites/opennms.org/site/repo/snapshots</url>
     </snapshotRepository>
   </distributionManagement>
 </project>
