@@ -265,7 +265,7 @@ public class Sample {
 	}
 	
 	public String toString() {
-	    return getClass().getName() + "@" + "[parentDb=" + parentDb + ",time=" + new Date(time * 1000L) + ",dsNames=[" + printList(dsNames) + "],values=[" + printList(values) + "]]";
+	    return getClass().getSimpleName() + "@" + "[parentDb=" + parentDb + ",time=" + new Date(time * 1000L) + ",dsNames=[" + printList(dsNames) + "],values=[" + printList(values) + "]]";
 	}
 
     private String printList(Object[] dsNames) {
