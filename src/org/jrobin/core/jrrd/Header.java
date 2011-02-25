@@ -31,6 +31,7 @@ public class Header implements Constants {
 	static final long offset = 0;
 	long size;
 	String version;
+	int intVersion;
 	int dsCount;
 	int rraCount;
 	int pdpStep;
@@ -41,7 +42,9 @@ public class Header implements Constants {
 			throw new IOException("Invalid COOKIE");
 		}
 
-		if (!(version = file.readString(5)).equals(VERSION)) {
+		version = file.readString(5);
+		intVersion = Integer.parseInt(version);
+		if( intVersion > 3 ) {
 			throw new IOException("Unsupported RRD version (" + version + ")");
 		}
 
@@ -68,6 +71,10 @@ public class Header implements Constants {
 	 */
 	public String getVersion() {
 		return version;
+	}
+
+	public int getIntVersion() {
+		return intVersion;
 	}
 
 	/**

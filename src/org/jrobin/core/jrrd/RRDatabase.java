@@ -89,8 +89,13 @@ public class RRDatabase {
 
 		rrdFile.align();
 
-		lastUpdate = new Date((long) (rrdFile.readInt()) * 1000);
-
+		long timestamp = (long)(rrdFile.readInt()) * 1000;
+		if(header.getIntVersion() >= 3) {
+			//Version 3 has an additional microsecond field
+			int microSeconds = rrdFile.readInt();
+			timestamp += (microSeconds/1000); //Date only does up to milliseconds
+		}
+		lastUpdate = new Date( timestamp );
 		// Load PDPStatus(s)
 		for (int i = 0; i < header.dsCount; i++) {
 			DataSource ds = dataSources.get(i);

@@ -65,8 +65,9 @@ public class Header implements RrdUpdater {
 	Header(RrdDb parentDb, DataImporter reader) throws IOException, RrdException {
 		this(parentDb, (RrdDef) null);
 		String version = reader.getVersion();
-		if (!version.equals(RRDTOOL_VERSION)) {
-			throw new RrdException("Could not unserilalize xml version " + version);
+		int intVersion = Integer.parseInt(version);
+		if ( intVersion > 3) {
+			throw new RrdException("Could not unserialize xml version " + version);
 		}
 		signature.set(DEFAULT_SIGNATURE);
 		step.set(reader.getStep());
