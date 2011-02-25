@@ -261,7 +261,7 @@ class GraphFrame extends JFrame {
 				}
 			}
 			catch (IOException e) {
-				Util.error(this, "Could not save graph to m_file:\n" + e);
+				Util.error(this, "Could not save graph to file:\n" + e);
 			}
 		}
 	}

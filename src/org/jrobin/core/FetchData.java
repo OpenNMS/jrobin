@@ -423,7 +423,7 @@ public class FetchData implements ConsolFuns {
 		XmlWriter writer = new XmlWriter(outputStream);
 		writer.startTag("fetch_data");
 		writer.startTag("request");
-		writer.writeTag("m_file", request.getParentDb().getPath());
+		writer.writeTag("file", request.getParentDb().getPath());
 		writer.writeComment(Util.getDate(request.getFetchStart()));
 		writer.writeTag("start", request.getFetchStart());
 		writer.writeComment(Util.getDate(request.getFetchEnd()));
@@ -454,9 +454,9 @@ public class FetchData implements ConsolFuns {
 	}
 
 	/**
-	 * Dumps fetch data to m_file in XML format.
+	 * Dumps fetch data to file in XML format.
 	 *
-	 * @param filepath Path to destination m_file
+	 * @param filepath Path to destination file
 	 * @throws IOException Thrown in case of I/O error
 	 */
 	public void exportXml(String filepath) throws IOException {

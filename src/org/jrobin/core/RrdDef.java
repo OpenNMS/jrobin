@@ -548,10 +548,10 @@ public class RrdDef {
 	}
 
 	/**
-	 * Exports RrdDef object to a m_file in XML format. Generated XML code can be parsed
+	 * Exports RrdDef object to a file in XML format. Generated XML code can be parsed
 	 * with {@link RrdDefTemplate} class.
 	 *
-	 * @param filePath Path to the m_file
+	 * @param filePath Path to the file
 	 */
 	public void exportXmlTemplate(final String filePath) throws IOException {
 	    final FileOutputStream out = new FileOutputStream(filePath, false);
@@ -588,7 +588,7 @@ public class RrdDef {
 	 * <li>all datasources have exactly the same definition in both RrdDef objects (datasource names,
 	 * types, heartbeat, min and max values must match)
 	 * <li>all archives have exactly the same definition in both RrdDef objects (archive consolidation
-	 * functions, X-m_file factors, step and row counts must match)
+	 * functions, X-file factors, step and row counts must match)
 	 * </ul>
 	 *
 	 * @param obj The second RrdDef object

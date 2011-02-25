@@ -51,15 +51,15 @@ public class RrdJRobin14FileBackend extends RrdBackend {
 	/** locking mode */
 	protected LockMode m_lockMode;
 
-	/** random access m_file handle */
+	/** random access file handle */
 	protected RandomAccessFile m_file;
-	/** m_file lock */
+	/** file lock */
 	protected FileLock m_fileLock;
 
 	/**
-	 * Creates RrdFileBackend object for the given m_file path, backed by RandomAccessFile object.
-	 * @param path Path to a m_file
-	 * @param m_readOnly True, if m_file should be open in a read-only mode. False otherwise
+	 * Creates RrdFileBackend object for the given file path, backed by RandomAccessFile object.
+	 * @param path Path to a file
+	 * @param m_readOnly True, if file should be open in a read-only mode. False otherwise
 	 * @param m_lockMode Locking mode, as described in {@link RrdDb#getLockMode()}
 	 * @throws IOException Thrown in case of I/O error
 	 */
@@ -111,7 +111,7 @@ public class RrdJRobin14FileBackend extends RrdBackend {
 			synchronized (m_openFiles) {
 				if (m_openFiles.contains(canonicalPath)) {
 					throw new IOException("File \"" + getPath() + "\" already open for R/W access. " +
-							"You cannot open the same m_file for R/W access twice");
+							"You cannot open the same file for R/W access twice");
 				}
 				else {
 					m_openFiles.add(canonicalPath);
@@ -121,7 +121,7 @@ public class RrdJRobin14FileBackend extends RrdBackend {
 	}
 
 	/**
-	 * Closes the underlying RRD m_file.
+	 * Closes the underlying RRD file.
 	 *
 	 * @throws IOException Thrown in case of I/O error
 	 */
@@ -149,9 +149,9 @@ public class RrdJRobin14FileBackend extends RrdBackend {
 	}
 
 	/**
-	 * Returns canonical path to the m_file on the disk.
+	 * Returns canonical path to the file on the disk.
 	 *
-	 * @return Canonical m_file path
+	 * @return Canonical file path
 	 * @throws IOException Thrown in case of I/O error
 	 */
 	public String getCanonicalPath() throws IOException {
@@ -159,9 +159,9 @@ public class RrdJRobin14FileBackend extends RrdBackend {
 	}
 
 	/**
-	 * Writes bytes to the underlying RRD m_file on the disk
+	 * Writes bytes to the underlying RRD file on the disk
 	 *
-	 * @param offset Starting m_file offset
+	 * @param offset Starting file offset
 	 * @param b      Bytes to be written.
 	 * @throws IOException Thrown in case of I/O error
 	 */
@@ -171,21 +171,21 @@ public class RrdJRobin14FileBackend extends RrdBackend {
 	}
 
 	/**
-	 * Reads a number of bytes from the RRD m_file on the disk
+	 * Reads a number of bytes from the RRD file on the disk
 	 *
-	 * @param offset Starting m_file offset
-	 * @param b      Buffer which receives bytes read from the m_file.
+	 * @param offset Starting file offset
+	 * @param b      Buffer which receives bytes read from the file.
 	 * @throws IOException Thrown in case of I/O error.
 	 */
 	protected void read(final long offset, final byte[] b) throws IOException {
 		m_file.seek(offset);
 		if (m_file.read(b) != b.length) {
-			throw new IOException("Not enough bytes available in m_file " + getPath());
+			throw new IOException("Not enough bytes available in file " + getPath());
 		}
 	}
 
 	/**
-	 * Returns RRD m_file length.
+	 * Returns RRD file length.
 	 *
 	 * @return File length.
 	 * @throws IOException Thrown in case of I/O error.
@@ -195,10 +195,10 @@ public class RrdJRobin14FileBackend extends RrdBackend {
 	}
 
 	/**
-	 * Sets length of the underlying RRD m_file. This method is called only once, immediately
-	 * after a new RRD m_file gets created.
+	 * Sets length of the underlying RRD file. This method is called only once, immediately
+	 * after a new RRD file gets created.
 	 *
-	 * @param length Length of the RRD m_file
+	 * @param length Length of the RRD file
 	 * @throws IOException Thrown in case of I/O error.
 	 */
 	protected void setLength(final long length) throws IOException {

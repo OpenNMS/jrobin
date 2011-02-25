@@ -32,12 +32,12 @@ public class RrdFileBackendFactory extends RrdBackendFactory {
 	public static final String NAME = "FILE";
 
 	/**
-	 * Creates RrdFileBackend object for the given m_file path.
+	 * Creates RrdFileBackend object for the given file path.
 	 *
 	 * @param path	 File path
-	 * @param m_readOnly True, if the m_file should be accessed in read/only mode.
+	 * @param m_readOnly True, if the file should be accessed in read/only mode.
 	 *                 False otherwise.
-	 * @return RrdFileBackend object which handles all I/O operations for the given m_file path
+	 * @return RrdFileBackend object which handles all I/O operations for the given file path
 	 * @throws IOException Thrown in case of I/O error.
 	 */
 	protected RrdBackend open(String path, boolean readOnly) throws IOException {
@@ -45,10 +45,10 @@ public class RrdFileBackendFactory extends RrdBackendFactory {
 	}
 
 	/**
-	 * Method to determine if a m_file with the given path already exists.
+	 * Method to determine if a file with the given path already exists.
 	 *
 	 * @param path File path
-	 * @return True, if such m_file exists, false otherwise.
+	 * @return True, if such file exists, false otherwise.
 	 */
 	protected boolean exists(String path) {
 		return Util.fileExists(path);

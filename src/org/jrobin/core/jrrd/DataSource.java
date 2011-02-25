@@ -23,7 +23,7 @@ import java.io.PrintStream;
 import java.text.NumberFormat;
 
 /**
- * Instances of this class model a data source in an RRD m_file.
+ * Instances of this class model a data source in an RRD file.
  *
  * @author <a href="mailto:ciaran@codeloop.com">Ciaran Treanor</a>
  * @version $Revision$

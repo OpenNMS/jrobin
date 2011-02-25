@@ -61,18 +61,18 @@ public class RrdDbPool {
 	}
 
 	/**
-	 * Requests a RrdDb reference for the given RRD m_file path.<p>
+	 * Requests a RrdDb reference for the given RRD file path.<p>
 	 * <ul>
-	 * <li>If the m_file is already open, previously returned RrdDb reference will be returned. Its usage count
+	 * <li>If the file is already open, previously returned RrdDb reference will be returned. Its usage count
 	 * will be incremented by one.
-	 * <li>If the m_file is not already open and the number of already open RRD files is less than
-	 * {@link #INITIAL_CAPACITY}, the m_file will be open and a new RrdDb reference will be returned.
-	 * If the m_file is not already open and the number of already open RRD files is equal to
-	 * {@link #INITIAL_CAPACITY}, the method blocks until some RRD m_file is closed.
+	 * <li>If the file is not already open and the number of already open RRD files is less than
+	 * {@link #INITIAL_CAPACITY}, the file will be open and a new RrdDb reference will be returned.
+	 * If the file is not already open and the number of already open RRD files is equal to
+	 * {@link #INITIAL_CAPACITY}, the method blocks until some RRD file is closed.
 	 * </ul>
 	 *
-	 * @param path Path to existing RRD m_file
-	 * @return reference for the give RRD m_file
+	 * @param path Path to existing RRD file
+	 * @return reference for the give RRD file
 	 * @throws IOException  Thrown in case of I/O error
 	 * @throws RrdException Thrown in case of JRobin specific error
 	 */
@@ -101,18 +101,18 @@ public class RrdDbPool {
 	}
 
 	/**
-	 * Requests a RrdDb reference for the given RRD m_file definition object.<p>
+	 * Requests a RrdDb reference for the given RRD file definition object.<p>
 	 * <ul>
-	 * <li>If the m_file with the path specified in the RrdDef object is already open,
-	 * the method blocks until the m_file is closed.
-	 * <li>If the m_file is not already open and the number of already open RRD files is less than
-	 * {@link #INITIAL_CAPACITY}, a new RRD m_file will be created and a its RrdDb reference will be returned.
-	 * If the m_file is not already open and the number of already open RRD files is equal to
-	 * {@link #INITIAL_CAPACITY}, the method blocks until some RRD m_file is closed.
+	 * <li>If the file with the path specified in the RrdDef object is already open,
+	 * the method blocks until the file is closed.
+	 * <li>If the file is not already open and the number of already open RRD files is less than
+	 * {@link #INITIAL_CAPACITY}, a new RRD file will be created and a its RrdDb reference will be returned.
+	 * If the file is not already open and the number of already open RRD files is equal to
+	 * {@link #INITIAL_CAPACITY}, the method blocks until some RRD file is closed.
 	 * </ul>
 	 *
-	 * @param rrdDef Definition of the RRD m_file to be created
-	 * @return Reference to the newly created RRD m_file
+	 * @param rrdDef Definition of the RRD file to be created
+	 * @return Reference to the newly created RRD file
 	 * @throws IOException  Thrown in case of I/O error
 	 * @throws RrdException Thrown in case of JRobin specific error
 	 */
@@ -132,20 +132,20 @@ public class RrdDbPool {
 	}
 
 	/**
-	 * Requests a RrdDb reference for the given path. The m_file will be created from
-	 * external data (from XML dump, RRD m_file or RRDTool's binary RRD m_file).<p>
+	 * Requests a RrdDb reference for the given path. The file will be created from
+	 * external data (from XML dump, RRD file or RRDTool's binary RRD file).<p>
 	 * <ul>
-	 * <li>If the m_file with the path specified is already open,
-	 * the method blocks until the m_file is closed.
-	 * <li>If the m_file is not already open and the number of already open RRD files is less than
-	 * {@link #INITIAL_CAPACITY}, a new RRD m_file will be created and a its RrdDb reference will be returned.
-	 * If the m_file is not already open and the number of already open RRD files is equal to
-	 * {@link #INITIAL_CAPACITY}, the method blocks until some RRD m_file is closed.
+	 * <li>If the file with the path specified is already open,
+	 * the method blocks until the file is closed.
+	 * <li>If the file is not already open and the number of already open RRD files is less than
+	 * {@link #INITIAL_CAPACITY}, a new RRD file will be created and a its RrdDb reference will be returned.
+	 * If the file is not already open and the number of already open RRD files is equal to
+	 * {@link #INITIAL_CAPACITY}, the method blocks until some RRD file is closed.
 	 * </ul>
 	 *
-	 * @param path	   Path to RRD m_file which should be created
-	 * @param sourcePath Path to external data which is to be converted to JRobin's native RRD m_file format
-	 * @return Reference to the newly created RRD m_file
+	 * @param path	   Path to RRD file which should be created
+	 * @param sourcePath Path to external data which is to be converted to JRobin's native RRD file format
+	 * @return Reference to the newly created RRD file
 	 * @throws IOException  Thrown in case of I/O error
 	 * @throws RrdException Thrown in case of JRobin specific error
 	 */
@@ -167,7 +167,7 @@ public class RrdDbPool {
 
 	/**
 	 * Releases RrdDb reference previously obtained from the pool. When a reference is released, its usage
-	 * count is decremented by one. If usage count drops to zero, the underlying RRD m_file will be closed.
+	 * count is decremented by one. If usage count drops to zero, the underlying RRD file will be closed.
 	 *
 	 * @param rrdDb RrdDb reference to be returned to the pool
 	 * @throws IOException  Thrown in case of I/O error
@@ -180,7 +180,7 @@ public class RrdDbPool {
 		}
 		String canonicalPath = Util.getCanonicalPath(rrdDb.getPath());
 		if (!rrdMap.containsKey(canonicalPath)) {
-			throw new RrdException("Could not release [" + canonicalPath + "], the m_file was never requested");
+			throw new RrdException("Could not release [" + canonicalPath + "], the file was never requested");
 		}
 		RrdEntry entry = rrdMap.get(canonicalPath);
 		if (--entry.count <= 0) {
@@ -210,7 +210,7 @@ public class RrdDbPool {
 	}
 
 	/**
-	 * Returns an array of open m_file names.
+	 * Returns an array of open file names.
 	 *
 	 * @return Array with canonical paths to open RRD files held in the pool.
 	 */
@@ -275,14 +275,14 @@ public class RrdDbPool {
 ///**
 // * Class to represent the pool of open RRD files.<p>
 // *
-// * To open already existing RRD m_file with JRobin, you have to create a
-// * {@link org.jrobin.core.RrdDb RrdDb} object by specifying RRD m_file path
+// * To open already existing RRD file with JRobin, you have to create a
+// * {@link org.jrobin.core.RrdDb RrdDb} object by specifying RRD file path
 // * as constructor argument. This operation can be time consuming
 // * especially with large RRD files with many datasources and
 // * several long archives.<p>
 // *
 // * In a multithreaded environment you might probably need a reference to the
-// * same RRD m_file from two different threads (RRD m_file updates are performed in
+// * same RRD file from two different threads (RRD file updates are performed in
 // * one thread but data fetching and graphing is performed in another one). To make
 // * the RrdDb construction process more efficient it might be convenient to open all
 // * RRD files in a centralized place. That's the purpose of RrdDbPool class.<p>
@@ -306,15 +306,15 @@ public class RrdDbPool {
 // * pool.release(rrdDb);
 // * </pre>
 // *
-// * It's that simple. When the reference is requested for the first time, RrdDbPool will open the RRD m_file
-// * for you and make some internal note that the RRD m_file is used only once. When the reference
-// * to the same m_file (same RRD m_file path) is requested for the second time, the same RrdDb
+// * It's that simple. When the reference is requested for the first time, RrdDbPool will open the RRD file
+// * for you and make some internal note that the RRD file is used only once. When the reference
+// * to the same file (same RRD file path) is requested for the second time, the same RrdDb
 // * reference will be returned, and its usage count will be increased by one. When the
 // * reference is released its usage count will be decremented by one.<p>
 // *
 // * When the reference count drops to zero, RrdDbPool will not close the underlying
-// * RRD m_file immediatelly. Instead of it, it will be marked as 'eligible for closing'.
-// * If someone request the same RRD m_file again (before it gets closed), the same
+// * RRD file immediatelly. Instead of it, it will be marked as 'eligible for closing'.
+// * If someone request the same RRD file again (before it gets closed), the same
 // * reference will be returned again.<p>
 // *
 // * RrdDbPool has a 'garbage collector' which runs in a separate, low-priority
@@ -322,8 +322,8 @@ public class RrdDbPool {
 // * pool is too big (greater than number returned from {@link #getCapacity getCapacity()}).
 // * Only RRD files with a reference count equal to zero
 // * will be eligible for closing. Unreleased RrdDb references are never invalidated.
-// * RrdDbPool object keeps track of the time when each RRD m_file
-// * becomes eligible for closing so that the oldest RRD m_file gets closed first.<p>
+// * RrdDbPool object keeps track of the time when each RRD file
+// * becomes eligible for closing so that the oldest RRD file gets closed first.<p>
 // *
 // * Initial RrdDbPool capacity is set to {@link #INITIAL_CAPACITY}. Use {@link #setCapacity(int)}
 // * method to change it at any time.<p>
@@ -446,12 +446,12 @@ public class RrdDbPool {
 //	}
 //
 //	/**
-//	 * Returns a reference to an existing RRD m_file with the specified path.
-//	 * If the m_file is already open in the pool, existing reference to it will be returned.
-//	 * Otherwise, the m_file is open and a newly created reference to it is returned.
+//	 * Returns a reference to an existing RRD file with the specified path.
+//	 * If the file is already open in the pool, existing reference to it will be returned.
+//	 * Otherwise, the file is open and a newly created reference to it is returned.
 //	 *
-//	 * @param path Relative or absolute path to a RRD m_file.
-//	 * @return Reference to a RrdDb object (RRD m_file).
+//	 * @param path Relative or absolute path to a RRD file.
+//	 * @return Reference to a RrdDb object (RRD file).
 //	 * @throws IOException  Thrown in case of I/O error.
 //	 * @throws RrdException Thrown in case of JRobin specific error.
 //	 */
@@ -482,20 +482,20 @@ public class RrdDbPool {
 //					wait();
 //				}
 //				catch (InterruptedException e) {
-//					throw new RrdException("Request for m_file '" + path + "' was interrupted");
+//					throw new RrdException("Request for file '" + path + "' was interrupted");
 //				}
 //			}
 //		}
 //	}
 //
 //	/**
-//	 * Returns a reference to a new RRD m_file. The new m_file will have the specified
+//	 * Returns a reference to a new RRD file. The new file will have the specified
 //	 * relative or absolute path, and its contents will be provided from the specified
-//	 * XML m_file (RRDTool comaptible).
+//	 * XML file (RRDTool comaptible).
 //	 *
-//	 * @param path    Relative or absolute path to a new RRD m_file.
-//	 * @param xmlPath Relative or absolute path to an existing XML dump m_file (RRDTool comaptible)
-//	 * @return Reference to a RrdDb object (RRD m_file).
+//	 * @param path    Relative or absolute path to a new RRD file.
+//	 * @param xmlPath Relative or absolute path to an existing XML dump file (RRDTool comaptible)
+//	 * @return Reference to a RrdDb object (RRD file).
 //	 * @throws IOException  Thrown in case of I/O error.
 //	 * @throws RrdException Thrown in case of JRobin specific error.
 //	 */
@@ -505,11 +505,11 @@ public class RrdDbPool {
 //	}
 //
 //	/**
-//	 * Returns a reference to a new RRD m_file. The new m_file will be created based on the
+//	 * Returns a reference to a new RRD file. The new file will be created based on the
 //	 * definition contained in a RrdDef object.
 //	 *
 //	 * @param rrdDef RRD definition object
-//	 * @return Reference to a RrdDb object (RRD m_file).
+//	 * @return Reference to a RrdDb object (RRD file).
 //	 * @throws IOException  Thrown in case of I/O error.
 //	 * @throws RrdException Thrown in case of JRobin specific error.
 //	 */
@@ -540,7 +540,7 @@ public class RrdDbPool {
 //					wait();
 //				}
 //				catch (InterruptedException e) {
-//					throw new RrdException("Request for m_file '" + path + "' was interrupted");
+//					throw new RrdException("Request for file '" + path + "' was interrupted");
 //				}
 //			}
 //		}
@@ -591,7 +591,7 @@ public class RrdDbPool {
 //		// already open, check if active (not released)
 //		if (rrdEntry.isInUse()) {
 //			// not released, not allowed here
-//			throw new RrdException("Cannot create new RrdDb m_file: " +
+//			throw new RrdException("Cannot create new RrdDb file: " +
 //					"File '" + canonicalPath + "' already in use");
 //		} else {
 //			// open but released... safe to close it
@@ -608,12 +608,12 @@ public class RrdDbPool {
 //	}
 //
 //	/**
-//	 * Method used to report that the reference to a RRD m_file is no longer needed. File that
+//	 * Method used to report that the reference to a RRD file is no longer needed. File that
 //	 * is no longer needed (all references to it are released) is marked 'eligible for
 //	 * closing'. It will be eventually closed by the pool when the number of open RRD files
 //	 * becomes too big. Most recently released files will be closed last.
 //	 *
-//	 * @param rrdDb Reference to RRD m_file that is no longer needed.
+//	 * @param rrdDb Reference to RRD file that is no longer needed.
 //	 * @throws IOException  Thrown in case of I/O error.
 //	 * @throws RrdException Thrown in case of JRobin specific error.
 //	 */
@@ -632,7 +632,7 @@ public class RrdDbPool {
 //			reportRelease(canonicalPath, rrdEntry);
 ////			debug("RELEASED: " + rrdEntry.dump());
 //		} else {
-//			throw new RrdException("RRD m_file " + rrdDb.getPath() + " not in the pool");
+//			throw new RrdException("RRD file " + rrdDb.getPath() + " not in the pool");
 //		}
 //		// notify waiting threads
 //		notifyAll();
@@ -759,7 +759,7 @@ public class RrdDbPool {
 //
 //	/**
 //	 * Returns paths to all open files currently held in the pool.
-//	 * @return An array containing open m_file paths.
+//	 * @return An array containing open file paths.
 //	 */
 //	public synchronized String[] getCachedFilePaths() {
 //		Set<String> keySet = rrdMap.keySet();

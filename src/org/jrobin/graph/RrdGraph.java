@@ -543,7 +543,7 @@ public class RrdGraph implements RrdGraphConstants {
 	}
 
 	private boolean lazyCheck() {
-		// redraw if lazy option is not set or m_file does not exist
+		// redraw if lazy option is not set or file does not exist
 		if (!gdef.lazy || !Util.fileExists(gdef.filename)) {
 			return false; // 'false' means 'redraw'
 		}

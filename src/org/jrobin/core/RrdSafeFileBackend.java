@@ -25,8 +25,8 @@ import java.nio.channels.FileChannel;
 
 /**
  * JRobin backend which is used to store RRD data to ordinary files on the disk. This backend
- * is SAFE: it locks the underlying RRD m_file during update/fetch operations, and caches only static
- * parts of a RRD m_file in memory. Therefore, this backend is safe to be used when RRD files should
+ * is SAFE: it locks the underlying RRD file during update/fetch operations, and caches only static
+ * parts of a RRD file in memory. Therefore, this backend is safe to be used when RRD files should
  * be shared between several JVMs at the same time. However, this backend is a little bit slow
  * since it does not use fast java.nio.* package (it's still based on the RandomAccessFile class).
  */
@@ -36,9 +36,9 @@ public class RrdSafeFileBackend extends RrdFileBackend {
 	private FileLock m_lock;
 
 	/**
-	 * Creates RrdFileBackend object for the given m_file path, backed by RandomAccessFile object.
+	 * Creates RrdFileBackend object for the given file path, backed by RandomAccessFile object.
 	 *
-	 * @param path Path to a m_file
+	 * @param path Path to a file
 	 * @throws IOException Thrown in case of I/O error
 	 */
 	public RrdSafeFileBackend(final String path, final long lockWaitTime, final long lockRetryPeriod) throws IOException {
@@ -74,7 +74,7 @@ public class RrdSafeFileBackend extends RrdFileBackend {
 			}
 		} while (System.currentTimeMillis() - entryTime <= lockWaitTime);
 		counters.registerError();
-		throw new IOException("Could not obtain exclusive m_lock on m_file: " + getPath() + "] after " + lockWaitTime + " milliseconds");
+		throw new IOException("Could not obtain exclusive m_lock on file: " + getPath() + "] after " + lockWaitTime + " milliseconds");
 	}
 
 	public void close() throws IOException {

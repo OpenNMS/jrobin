@@ -40,8 +40,8 @@ import java.util.HashMap;
  * <li>{@link RrdSafeFileBackend}: objects of this class are created from the
  * {@link RrdSafeFileBackendFactory} class. It uses java.io.* package and RandomAccessFile class to store
  * RRD data in files on the disk. This backend is SAFE:
- * it locks the underlying RRD m_file during update/fetch operations, and caches only static
- * parts of a RRD m_file in memory. Therefore, this backend is safe to be used when RRD files should
+ * it locks the underlying RRD file during update/fetch operations, and caches only static
+ * parts of a RRD file in memory. Therefore, this backend is safe to be used when RRD files should
  * be shared <b>between several JVMs</b> at the same time. However, this backend is *slow* since it does
  * not use fast java.nio.* package (it's still based on the RandomAccessFile class).
  * <p/>

@@ -67,10 +67,10 @@ public abstract class RrdBackend {
 	private final boolean m_readOnly;
 
 	/**
-	 * Creates backend for a RRD storage with the given m_path.
+	 * Creates backend for a RRD storage with the given path.
 	 *
-	 * @param m_path String identifying RRD storage. For files on the disk, this
-	 *             argument should represent m_file m_path. Other storage types might interpret
+	 * @param path String identifying RRD storage. For files on the disk, this
+	 *             argument should represent file path. Other storage types might interpret
 	 *             this argument differently.
 	 */
 	protected RrdBackend(final String path) {
@@ -84,9 +84,9 @@ public abstract class RrdBackend {
 	}
 
 	/**
-	 * Returns m_path to the storage.
+	 * Returns path to the storage.
 	 *
-	 * @return Storage m_path
+	 * @return Storage path
 	 */
 	public String getPath() {
 		return m_path;
@@ -145,11 +145,11 @@ public abstract class RrdBackend {
 
 	/**
 	 * This method suggests the caching policy to the JRobin frontend (high-level) classes. If <code>true</code>
-	 * is returned, frontent classes will cache frequently used parts of a RRD m_file in memory to improve
-	 * performance. If </code>false</code> is returned, high level classes will never cache RRD m_file sections
+	 * is returned, frontent classes will cache frequently used parts of a RRD file in memory to improve
+	 * performance. If </code>false</code> is returned, high level classes will never cache RRD file sections
 	 * in memory.
 	 *
-	 * @return <code>true</code> if m_file caching is enabled, <code>false</code> otherwise. By default, the
+	 * @return <code>true</code> if file caching is enabled, <code>false</code> otherwise. By default, the
 	 *         method returns <code>true</code> but it can be overriden in subclasses.
 	 */
 	protected boolean isCachingAllowed() {

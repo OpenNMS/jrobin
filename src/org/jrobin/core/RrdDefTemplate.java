@@ -28,7 +28,7 @@ import java.util.Calendar;
 /**
  * Class used to create an arbitrary number of {@link RrdDef} (RRD definition) objects
  * from a single XML template. XML template can be supplied as an XML InputSource,
- * XML m_file or XML formatted string.<p>
+ * XML file or XML formatted string.<p>
  * <p/>
  * Here is an example of a properly formatted XML template with all available
  * options in it (unwanted options can be removed):<p>
@@ -90,7 +90,7 @@ import java.util.Calendar;
  * <p/>
  * Typical usage scenario:<p>
  * <ul>
- * <li>Create your XML template and save it to a m_file (template.xml, for example)
+ * <li>Create your XML template and save it to a file (template.xml, for example)
  * <li>Replace hardcoded template values with variables if you want to change them during runtime.
  * For example, RRD path should not be hardcoded in the template - you probably want to create
  * many different RRD files from the same XML template. For example, your XML
@@ -101,7 +101,7 @@ import java.util.Calendar;
  *     &lt;step&gt;300&lt;/step&gt;
  *     ...
  * </pre>
- * <li>In your Java code, create RrdDefTemplate object using your XML template m_file:
+ * <li>In your Java code, create RrdDefTemplate object using your XML template file:
  * <pre>
  * RrdDefTemplate t = new RrdDefTemplate(new File(template.xml));
  * </pre>
@@ -148,10 +148,10 @@ public class RrdDefTemplate extends XmlTemplate {
 	}
 
 	/**
-	 * Creates RrdDefTemplate object from the m_file containing XML template.
+	 * Creates RrdDefTemplate object from the file containing XML template.
 	 * Read general information for this class to see an example of a properly formatted XML source.
 	 *
-	 * @param xmlFile File object representing m_file with XML template
+	 * @param xmlFile File object representing file with XML template
 	 * @throws IOException  Thrown in case of I/O error
 	 * @throws RrdException Thrown in case of XML related error (parsing error, for example)
 	 */

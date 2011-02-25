@@ -25,13 +25,13 @@ import java.io.IOException;
  */
 public class RrdSafeFileBackendFactory extends RrdFileBackendFactory {
 	/**
-	 * Default time (in milliseconds) this backend will wait for a m_file lock.
+	 * Default time (in milliseconds) this backend will wait for a file lock.
 	 */
 	public static final long LOCK_WAIT_TIME = 3000L;
 	private static long lockWaitTime = LOCK_WAIT_TIME;
 
 	/**
-	 * Default time between two consecutive m_file locking attempts.
+	 * Default time between two consecutive file locking attempts.
 	 */
 	public static final long LOCK_RETRY_PERIOD = 50L;
 	private static long lockRetryPeriod = LOCK_RETRY_PERIOD;
@@ -42,11 +42,11 @@ public class RrdSafeFileBackendFactory extends RrdFileBackendFactory {
 	public static final String NAME = "SAFE";
 
 	/**
-	 * Creates RrdSafeFileBackend object for the given m_file path.
+	 * Creates RrdSafeFileBackend object for the given file path.
 	 *
 	 * @param path	 File path
 	 * @param m_readOnly This parameter is ignored
-	 * @return RrdSafeFileBackend object which handles all I/O operations for the given m_file path
+	 * @return RrdSafeFileBackend object which handles all I/O operations for the given file path
 	 * @throws IOException Thrown in case of I/O error.
 	 */
 	protected RrdBackend open(String path, boolean readOnly) throws IOException {
@@ -63,16 +63,16 @@ public class RrdSafeFileBackendFactory extends RrdFileBackendFactory {
 	}
 
 	/**
-	 * Returns time this backend will wait for a m_file lock.
+	 * Returns time this backend will wait for a file lock.
 	 *
-	 * @return Time (in milliseconds) this backend will wait for a m_file lock.
+	 * @return Time (in milliseconds) this backend will wait for a file lock.
 	 */
 	public static long getLockWaitTime() {
 		return lockWaitTime;
 	}
 
 	/**
-	 * Sets time this backend will wait for a m_file lock.
+	 * Sets time this backend will wait for a file lock.
 	 *
 	 * @param lockWaitTime Maximum lock wait time (in milliseconds)
 	 */
@@ -81,18 +81,18 @@ public class RrdSafeFileBackendFactory extends RrdFileBackendFactory {
 	}
 
 	/**
-	 * Returns time between two consecutive m_file locking attempts.
+	 * Returns time between two consecutive file locking attempts.
 	 *
-	 * @return Time (im milliseconds) between two consecutive m_file locking attempts.
+	 * @return Time (im milliseconds) between two consecutive file locking attempts.
 	 */
 	public static long getLockRetryPeriod() {
 		return lockRetryPeriod;
 	}
 
 	/**
-	 * Sets time between two consecutive m_file locking attempts.
+	 * Sets time between two consecutive file locking attempts.
 	 *
-	 * @param lockRetryPeriod time (in milliseconds) between two consecutive m_file locking attempts.
+	 * @param lockRetryPeriod time (in milliseconds) between two consecutive file locking attempts.
 	 */
 	public static void setLockRetryPeriod(long lockRetryPeriod) {
 		RrdSafeFileBackendFactory.lockRetryPeriod = lockRetryPeriod;

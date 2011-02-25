@@ -371,18 +371,18 @@ public class Util {
 	}
 
 	/**
-	 * Returns m_file system separator string.
+	 * Returns file system separator string.
 	 *
 	 * @return File system separator ("/" on Unix, "\" on Windows)
 	 */
 	public static String getFileSeparator() {
-		return System.getProperty("m_file.separator");
+		return System.getProperty("file.separator");
 	}
 
 	/**
 	 * Returns path to user's home directory.
 	 *
-	 * @return Path to users home directory, with m_file separator appended.
+	 * @return Path to users home directory, with file separator appended.
 	 */
 	public static String getUserHomeDirectory() {
 		return System.getProperty("user.home") + getFileSeparator();
@@ -402,11 +402,11 @@ public class Util {
 	}
 
 	/**
-	 * Returns full path to the m_file stored in the demo directory of JRobin
+	 * Returns full path to the file stored in the demo directory of JRobin
 	 *
-	 * @param filename Partial path to the m_file stored in the demo directory of JRobin
+	 * @param filename Partial path to the file stored in the demo directory of JRobin
 	 *                 (just name and extension, without parent directories)
-	 * @return Full path to the m_file
+	 * @return Full path to the file
 	 */
 	public static String getJRobinDemoPath(final String filename) {
 		final String demoDir = getJRobinDemoDirectory();
@@ -644,7 +644,7 @@ public class Util {
 	    final String className = Util.class.getName().replace('.', '/');
 		String uri = Util.class.getResource("/" + className + ".class").toString();
 		//System.out.println(uri);
-		if (uri.startsWith("m_file:/")) {
+		if (uri.startsWith("file:/")) {
 			uri = uri.substring(6);
 			File file = new File(uri);
 			// let's go 5 steps backwards
@@ -653,7 +653,7 @@ public class Util {
 			}
 			uri = file.getAbsolutePath();
 		}
-		else if (uri.startsWith("jar:m_file:/")) {
+		else if (uri.startsWith("jar:file:/")) {
 			uri = uri.substring(9, uri.lastIndexOf('!'));
 			File file = new File(uri);
 			// let's go 2 steps backwards
@@ -681,20 +681,20 @@ public class Util {
 	}
 
 	/**
-	 * Returns canonical m_file path for the given m_file path
+	 * Returns canonical file path for the given file path
 	 *
-	 * @param path Absolute or relative m_file path
-	 * @return Canonical m_file path
-	 * @throws IOException Thrown if canonical m_file path could not be resolved
+	 * @param path Absolute or relative file path
+	 * @return Canonical file path
+	 * @throws IOException Thrown if canonical file path could not be resolved
 	 */
 	public static String getCanonicalPath(final String path) throws IOException {
 		return new File(path).getCanonicalPath();
 	}
 
 	/**
-	 * Returns last modification time for the given m_file.
+	 * Returns last modification time for the given file.
 	 *
-	 * @param m_file File object representing m_file on the disk
+	 * @param file File object representing file on the disk
 	 * @return Last modification time in seconds (without milliseconds)
 	 */
 	public static long getLastModified(final String file) {
@@ -702,10 +702,10 @@ public class Util {
 	}
 
 	/**
-	 * Checks if the m_file with the given m_file name exists
+	 * Checks if the file with the given file name exists
 	 *
 	 * @param filename File name
-	 * @return <code>true</code> if m_file exists, <code>false</code> otherwise
+	 * @return <code>true</code> if file exists, <code>false</code> otherwise
 	 */
 	public static boolean fileExists(final String filename) {
 		return new File(filename).exists();

@@ -31,7 +31,7 @@ import java.io.IOException;
 /**
  * Class used to create an arbitrary number of RrdGraphDef (graph definition) objects
  * from a single XML template. XML template can be supplied as an XML InputSource,
- * XML m_file or XML formatted string.<p>
+ * XML file or XML formatted string.<p>
  * <p/>
  * Here is an example of a properly formatted XML template with all available options in it
  * (unwanted options can be removed/ignored):<p>
@@ -227,7 +227,7 @@ import java.io.IOException;
  * <p/>
  * Typical usage scenario:<p>
  * <ul>
- * <li>Create your XML template and save it to a m_file (template.xml, for example)
+ * <li>Create your XML template and save it to a file (template.xml, for example)
  * <li>Replace template values with variables if you want to change them during runtime.
  * For example, time span should not be hard-coded in the template - you probably want to create
  * many different graphs with different time spans from the same XML template.
@@ -241,7 +241,7 @@ import java.io.IOException;
  *     &lt;/span&gt;
  *     ...
  * </pre>
- * <li>In your Java code, create RrdGraphDefTemplate object using your XML template m_file:
+ * <li>In your Java code, create RrdGraphDefTemplate object using your XML template file:
  * <pre>
  * RrdGraphDefTemplate t = new RrdGraphDefTemplate(new File(template.xml));
  * </pre>
@@ -279,9 +279,9 @@ public class RrdGraphDefTemplate extends XmlTemplate implements RrdGraphConstant
 	}
 
 	/**
-	 * Creates template object from the m_file containing XML template code
+	 * Creates template object from the file containing XML template code
 	 *
-	 * @param xmlFile m_file containing XML template
+	 * @param xmlFile file containing XML template
 	 * @throws IOException  thrown in case of I/O error
 	 * @throws RrdException usually thrown in case of XML related error
 	 */

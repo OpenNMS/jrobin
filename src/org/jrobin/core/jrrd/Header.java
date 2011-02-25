@@ -21,7 +21,7 @@ package org.jrobin.core.jrrd;
 import java.io.IOException;
 
 /**
- * Instances of this class model the header section of an RRD m_file.
+ * Instances of this class model the header section of an RRD file.
  *
  * @author <a href="mailto:ciaran@codeloop.com">Ciaran Treanor</a>
  * @version $Revision$

@@ -62,12 +62,12 @@ public class RrdNioBackendFactory extends RrdFileBackendFactory {
 	}
 
 	/**
-	 * Creates RrdNioBackend object for the given m_file path.
+	 * Creates RrdNioBackend object for the given file path.
 	 *
 	 * @param path	 File path
-	 * @param m_readOnly True, if the m_file should be accessed in read/only mode.
+	 * @param m_readOnly True, if the file should be accessed in read/only mode.
 	 *                 False otherwise.
-	 * @return RrdNioBackend object which handles all I/O operations for the given m_file path
+	 * @return RrdNioBackend object which handles all I/O operations for the given file path
 	 * @throws IOException Thrown in case of I/O error.
 	 */
 	protected RrdBackend open(String path, boolean readOnly) throws IOException {
