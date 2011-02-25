@@ -217,7 +217,7 @@ public class Util {
 	 * @param date Date object
 	 * @return Corresponding timestamp (without milliseconds)
 	 */
-	public static long getTimestamp(Date date) {
+	public static long getTimestamp(final Date date) {
 		// round to whole seconds, ignore milliseconds
 		return (date.getTime() + 499L) / 1000L;
 	}
@@ -228,7 +228,7 @@ public class Util {
 	 * @param gc Calendar object
 	 * @return Corresponding timestamp (without milliseconds)
 	 */
-	public static long getTimestamp(Calendar gc) {
+	public static long getTimestamp(final Calendar gc) {
 		return getTimestamp(gc.getTime());
 	}
 
@@ -242,8 +242,8 @@ public class Util {
 	 * @param min   Minute
 	 * @return Corresponding timestamp
 	 */
-	public static long getTimestamp(int year, int month, int day, int hour, int min) {
-		Calendar calendar = Calendar.getInstance();
+	public static long getTimestamp(final int year, final int month, final int day, final int hour, final int min) {
+	    final Calendar calendar = Calendar.getInstance();
 		calendar.clear();
 		calendar.set(year, month, day, hour, min);
 		return Util.getTimestamp(calendar);
@@ -272,8 +272,8 @@ public class Util {
 	 * @return timestamp in seconds since epoch.
 	 * @throws RrdException Thrown if invalid time specification is supplied.
 	 */
-	public static long getTimestamp(String atStyleTimeSpec) throws RrdException {
-		TimeSpec timeSpec = new TimeParser(atStyleTimeSpec).parse();
+	public static long getTimestamp(final String atStyleTimeSpec) throws RrdException {
+	    final TimeSpec timeSpec = new TimeParser(atStyleTimeSpec).parse();
 		return timeSpec.getTimestamp();
 	}
 
@@ -290,9 +290,9 @@ public class Util {
 	 * @return An array of two longs representing starting and ending timestamp in seconds since epoch.
 	 * @throws RrdException Thrown if any input time specification is invalid.
 	 */
-	public static long[] getTimestamps(String atStyleTimeSpec1, String atStyleTimeSpec2) throws RrdException {
-		TimeSpec timeSpec1 = new TimeParser(atStyleTimeSpec1).parse();
-		TimeSpec timeSpec2 = new TimeParser(atStyleTimeSpec2).parse();
+	public static long[] getTimestamps(final String atStyleTimeSpec1, final String atStyleTimeSpec2) throws RrdException {
+	    final TimeSpec timeSpec1 = new TimeParser(atStyleTimeSpec1).parse();
+		final TimeSpec timeSpec2 = new TimeParser(atStyleTimeSpec2).parse();
 		return TimeSpec.getTimestamps(timeSpec1, timeSpec2);
 	}
 
@@ -303,12 +303,12 @@ public class Util {
 	 * @param valueStr String representing double value
 	 * @return a double corresponding to the input string
 	 */
-	public static double parseDouble(String valueStr) {
+	public static double parseDouble(final String valueStr) {
 		double value;
 		try {
 			value = Double.parseDouble(valueStr);
 		}
-		catch (NumberFormatException nfe) {
+		catch (final NumberFormatException nfe) {
 			value = Double.NaN;
 		}
 		return value;
@@ -320,12 +320,12 @@ public class Util {
 	 * @param s Input string
 	 * @return <code>true</code> if the string can be parsed as double, <code>false</code> otherwise
 	 */
-	public static boolean isDouble(String s) {
+	public static boolean isDouble(final String s) {
 		try {
 			Double.parseDouble(s);
 			return true;
 		}
-		catch (NumberFormatException nfe) {
+		catch (final NumberFormatException nfe) {
 			return false;
 		}
 	}
@@ -337,7 +337,7 @@ public class Util {
 	 * @return <code>true</code>, if valueStr equals to 'true', 'on', 'yes', 'y' or '1';
 	 *         <code>false</code> in all other cases.
 	 */
-	public static boolean parseBoolean(String valueStr) {
+	public static boolean parseBoolean(final String valueStr) {
 		return valueStr.equalsIgnoreCase("true") ||
 				valueStr.equalsIgnoreCase("on") ||
 				valueStr.equalsIgnoreCase("yes") ||
@@ -354,35 +354,35 @@ public class Util {
 	 * @return Paint object
 	 * @throws RrdException If the input string is not 6 or 8 characters long (without optional '#')
 	 */
-	public static Paint parseColor(String valueStr) throws RrdException {
-		String c = valueStr.startsWith("#") ? valueStr.substring(1) : valueStr;
+	public static Paint parseColor(final String valueStr) throws RrdException {
+	    final String c = valueStr.startsWith("#") ? valueStr.substring(1) : valueStr;
 		if (c.length() != 6 && c.length() != 8) {
 			throw new RrdException("Invalid color specification: " + valueStr);
 		}
-		String r = c.substring(0, 2), g = c.substring(2, 4), b = c.substring(4, 6);
+		final String r = c.substring(0, 2), g = c.substring(2, 4), b = c.substring(4, 6);
 		if (c.length() == 6) {
 			return new Color(Integer.parseInt(r, 16), Integer.parseInt(g, 16), Integer.parseInt(b, 16));
 		}
 		else {
-			String a = c.substring(6);
+		    final String a = c.substring(6);
 			return new Color(Integer.parseInt(r, 16), Integer.parseInt(g, 16),
 					Integer.parseInt(b, 16), Integer.parseInt(a, 16));
 		}
 	}
 
 	/**
-	 * Returns file system separator string.
+	 * Returns m_file system separator string.
 	 *
 	 * @return File system separator ("/" on Unix, "\" on Windows)
 	 */
 	public static String getFileSeparator() {
-		return System.getProperty("file.separator");
+		return System.getProperty("m_file.separator");
 	}
 
 	/**
 	 * Returns path to user's home directory.
 	 *
-	 * @return Path to users home directory, with file separator appended.
+	 * @return Path to users home directory, with m_file separator appended.
 	 */
 	public static String getUserHomeDirectory() {
 		return System.getProperty("user.home") + getFileSeparator();
@@ -396,20 +396,20 @@ public class Util {
 	 *         was successfully created. Null if such directory could not be created.
 	 */
 	public static String getJRobinDemoDirectory() {
-		String homeDirPath = getUserHomeDirectory() + JROBIN_DIR + getFileSeparator();
-		File homeDirFile = new File(homeDirPath);
+		final String homeDirPath = getUserHomeDirectory() + JROBIN_DIR + getFileSeparator();
+		final File homeDirFile = new File(homeDirPath);
 		return (homeDirFile.exists() || homeDirFile.mkdirs()) ? homeDirPath : null;
 	}
 
 	/**
-	 * Returns full path to the file stored in the demo directory of JRobin
+	 * Returns full path to the m_file stored in the demo directory of JRobin
 	 *
-	 * @param filename Partial path to the file stored in the demo directory of JRobin
+	 * @param filename Partial path to the m_file stored in the demo directory of JRobin
 	 *                 (just name and extension, without parent directories)
-	 * @return Full path to the file
+	 * @return Full path to the m_file
 	 */
-	public static String getJRobinDemoPath(String filename) {
-		String demoDir = getJRobinDemoDirectory();
+	public static String getJRobinDemoPath(final String filename) {
+		final String demoDir = getJRobinDemoDirectory();
 		if (demoDir != null) {
 			return demoDir + filename;
 		}
@@ -418,31 +418,30 @@ public class Util {
 		}
 	}
 
-	static boolean sameFilePath(String path1, String path2) throws IOException {
-		File file1 = new File(path1);
-		File file2 = new File(path2);
+	static boolean sameFilePath(final String path1, final String path2) throws IOException {
+	    final File file1 = new File(path1);
+		final File file2 = new File(path2);
 		return file1.getCanonicalPath().equals(file2.getCanonicalPath());
 	}
 
-	static int getMatchingDatasourceIndex(RrdDb rrd1, int dsIndex, RrdDb rrd2) throws IOException {
-		String dsName = rrd1.getDatasource(dsIndex).getDsName();
+	static int getMatchingDatasourceIndex(final RrdDb rrd1, final int dsIndex, final RrdDb rrd2) throws IOException {
+	    final String dsName = rrd1.getDatasource(dsIndex).getDsName();
 		try {
 			return rrd2.getDsIndex(dsName);
 		}
-		catch (RrdException e) {
+		catch (final RrdException e) {
 			return -1;
 		}
 	}
 
-	static int getMatchingArchiveIndex(RrdDb rrd1, int arcIndex, RrdDb rrd2)
-			throws IOException {
-		Archive archive = rrd1.getArchive(arcIndex);
-		String consolFun = archive.getConsolFun();
-		int steps = archive.getSteps();
+	static int getMatchingArchiveIndex(final RrdDb rrd1, final int arcIndex, final RrdDb rrd2) throws IOException {
+	    final Archive archive = rrd1.getArchive(arcIndex);
+		final String consolFun = archive.getConsolFun();
+		final int steps = archive.getSteps();
 		try {
 			return rrd2.getArcIndex(consolFun, steps);
 		}
-		catch (RrdException e) {
+		catch (final RrdException e) {
 			return -1;
 		}
 	}
@@ -462,23 +461,20 @@ public class Util {
 	 * @param timeStr Input string
 	 * @return Calendar object
 	 */
-	public static Calendar getCalendar(String timeStr) {
+	public static Calendar getCalendar(final String timeStr) {
 		// try to parse it as long
 		try {
-			long timestamp = Long.parseLong(timeStr);
-			return Util.getCalendar(timestamp);
+		    return Util.getCalendar(Long.parseLong(timeStr));
 		}
-		catch (NumberFormatException nfe) {
+		catch (final NumberFormatException nfe) {
 			// not a long timestamp, try to parse it as data
-			SimpleDateFormat df = new SimpleDateFormat(ISO_DATE_FORMAT);
+		    final SimpleDateFormat df = new SimpleDateFormat(ISO_DATE_FORMAT);
 			df.setLenient(false);
 			try {
-				Date date = df.parse(timeStr);
-				return Util.getCalendar(date);
+			    return Util.getCalendar(df.parse(timeStr));
 			}
-			catch (ParseException pe) {
-				throw new IllegalArgumentException("Time/date not in " + ISO_DATE_FORMAT +
-						" format: " + timeStr);
+			catch (final ParseException pe) {
+				throw new IllegalArgumentException("Time/date not in " + ISO_DATE_FORMAT + " format: " + timeStr);
 			}
 		}
 	}
@@ -487,15 +483,15 @@ public class Util {
 	 * Various DOM utility functions
 	 */
 	public static class Xml {
-		public static Node[] getChildNodes(Node parentNode) {
+		public static Node[] getChildNodes(final Node parentNode) {
 			return getChildNodes(parentNode, null);
 		}
 
-		public static Node[] getChildNodes(Node parentNode, String childName) {
-			ArrayList<Node> nodes = new ArrayList<Node>();
-			NodeList nodeList = parentNode.getChildNodes();
+		public static Node[] getChildNodes(final Node parentNode, final String childName) {
+		    final ArrayList<Node> nodes = new ArrayList<Node>();
+			final NodeList nodeList = parentNode.getChildNodes();
 			for (int i = 0; i < nodeList.getLength(); i++) {
-				Node node = nodeList.item(i);
+				final Node node = nodeList.item(i);
 				if (childName == null || node.getNodeName().equals(childName)) {
 					nodes.add(node);
 				}
@@ -503,28 +499,28 @@ public class Util {
 			return nodes.toArray(new Node[0]);
 		}
 
-		public static Node getFirstChildNode(Node parentNode, String childName) throws RrdException {
-			Node[] childs = getChildNodes(parentNode, childName);
+		public static Node getFirstChildNode(final Node parentNode, final String childName) throws RrdException {
+		    final Node[] childs = getChildNodes(parentNode, childName);
 			if (childs.length > 0) {
 				return childs[0];
 			}
 			throw new RrdException("XML Error, no such child: " + childName);
 		}
 
-		public static boolean hasChildNode(Node parentNode, String childName) {
-			Node[] childs = getChildNodes(parentNode, childName);
+		public static boolean hasChildNode(final Node parentNode, final String childName) {
+		    final Node[] childs = getChildNodes(parentNode, childName);
 			return childs.length > 0;
 		}
 
 		// -- Wrapper around getChildValue with trim
-		public static String getChildValue(Node parentNode, String childName) throws RrdException {
+		public static String getChildValue(final Node parentNode, final String childName) throws RrdException {
 			return getChildValue(parentNode, childName, true);
 		}
 
-		public static String getChildValue(Node parentNode, String childName, boolean trim) throws RrdException {
-			NodeList children = parentNode.getChildNodes();
+		public static String getChildValue(final Node parentNode, final String childName, final boolean trim) throws RrdException {
+		    final NodeList children = parentNode.getChildNodes();
 			for (int i = 0; i < children.getLength(); i++) {
-				Node child = children.item(i);
+				final Node child = children.item(i);
 				if (child.getNodeName().equals(childName)) {
 					return getValue(child, trim);
 				}
@@ -533,13 +529,13 @@ public class Util {
 		}
 
 		// -- Wrapper around getValue with trim
-		public static String getValue(Node node) {
+		public static String getValue(final Node node) {
 			return getValue(node, true);
 		}
 
-		public static String getValue(Node node, boolean trimValue) {
+		public static String getValue(final Node node, final boolean trimValue) {
 			String value = null;
-			Node child = node.getFirstChild();
+			final Node child = node.getFirstChild();
 			if (child != null) {
 				value = child.getNodeValue();
 				if (value != null && trimValue) {
@@ -549,68 +545,62 @@ public class Util {
 			return value;
 		}
 
-		public static int getChildValueAsInt(Node parentNode, String childName) throws RrdException {
-			String valueStr = getChildValue(parentNode, childName);
+		public static int getChildValueAsInt(final Node parentNode, final String childName) throws RrdException {
+		    final String valueStr = getChildValue(parentNode, childName);
 			return Integer.parseInt(valueStr);
 		}
 
-		public static int getValueAsInt(Node node) {
-			String valueStr = getValue(node);
-			return Integer.parseInt(valueStr);
+		public static int getValueAsInt(final Node node) {
+			return Integer.parseInt(getValue(node));
 		}
 
-		public static long getChildValueAsLong(Node parentNode, String childName) throws RrdException {
-			String valueStr = getChildValue(parentNode, childName);
+		public static long getChildValueAsLong(final Node parentNode, final String childName) throws RrdException {
+			final String valueStr = getChildValue(parentNode, childName);
 			return Long.parseLong(valueStr);
 		}
 
-		public static long getValueAsLong(Node node) {
-			String valueStr = getValue(node);
-			return Long.parseLong(valueStr);
+		public static long getValueAsLong(final Node node) {
+			return Long.parseLong(getValue(node));
 		}
 
-		public static double getChildValueAsDouble(Node parentNode, String childName) throws RrdException {
-			String valueStr = getChildValue(parentNode, childName);
-			return Util.parseDouble(valueStr);
+		public static double getChildValueAsDouble(final Node parentNode, final String childName) throws RrdException {
+			return Util.parseDouble(getChildValue(parentNode, childName));
 		}
 
-		public static double getValueAsDouble(Node node) {
-			String valueStr = getValue(node);
-			return Util.parseDouble(valueStr);
+		public static double getValueAsDouble(final Node node) {
+			return Util.parseDouble(getValue(node));
 		}
 
-		public static boolean getChildValueAsBoolean(Node parentNode, String childName) throws RrdException {
-			String valueStr = getChildValue(parentNode, childName);
-			return Util.parseBoolean(valueStr);
+		public static boolean getChildValueAsBoolean(final Node parentNode, final String childName) throws RrdException {
+			return Util.parseBoolean(getChildValue(parentNode, childName));
 		}
 
-		public static boolean getValueAsBoolean(Node node) {
-			String valueStr = getValue(node);
-			return Util.parseBoolean(valueStr);
+		public static boolean getValueAsBoolean(final Node node) {
+			return Util.parseBoolean(getValue(node));
 		}
 
-		public static Element getRootElement(InputSource inputSource) throws RrdException, IOException {
-			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+		public static Element getRootElement(final InputSource inputSource) throws RrdException, IOException {
+		    final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 			factory.setValidating(false);
 			factory.setNamespaceAware(false);
 			try {
-				DocumentBuilder builder = factory.newDocumentBuilder();
-				Document doc = builder.parse(inputSource);
+			    final DocumentBuilder builder = factory.newDocumentBuilder();
+			    final Document doc = builder.parse(inputSource);
 				return doc.getDocumentElement();
 			}
-			catch (ParserConfigurationException e) {
+			catch (final ParserConfigurationException e) {
 				throw new RrdException(e);
 			}
-			catch (SAXException e) {
+			catch (final SAXException e) {
 				throw new RrdException(e);
 			}
 		}
 
-		public static Element getRootElement(String xmlString) throws RrdException, IOException {
+		public static Element getRootElement(final String xmlString) throws RrdException, IOException {
 			return getRootElement(new InputSource(new StringReader(xmlString)));
 		}
 
-		public static Element getRootElement(File xmlFile) throws RrdException, IOException {
+		public static Element getRootElement(final File xmlFile) throws RrdException, IOException {
 			Reader reader = null;
 			try {
 				reader = new FileReader(xmlFile);
@@ -634,8 +624,8 @@ public class Util {
 	 *         <code>getLapTime()</code> method call.
 	 */
 	public static String getLapTime() {
-		long newLap = System.currentTimeMillis();
-		double seconds = (newLap - lastLap) / 1000.0;
+	    final long newLap = System.currentTimeMillis();
+		final double seconds = (newLap - lastLap) / 1000.0;
 		lastLap = newLap;
 		return "[" + seconds + " sec]";
 	}
@@ -651,10 +641,10 @@ public class Util {
 	 * @return absolute path to JRobin's home directory
 	 */
 	public static String getJRobinHomeDirectory() {
-		String className = Util.class.getName().replace('.', '/');
+	    final String className = Util.class.getName().replace('.', '/');
 		String uri = Util.class.getResource("/" + className + ".class").toString();
 		//System.out.println(uri);
-		if (uri.startsWith("file:/")) {
+		if (uri.startsWith("m_file:/")) {
 			uri = uri.substring(6);
 			File file = new File(uri);
 			// let's go 5 steps backwards
@@ -663,7 +653,7 @@ public class Util {
 			}
 			uri = file.getAbsolutePath();
 		}
-		else if (uri.startsWith("jar:file:/")) {
+		else if (uri.startsWith("jar:m_file:/")) {
 			uri = uri.substring(9, uri.lastIndexOf('!'));
 			File file = new File(uri);
 			// let's go 2 steps backwards
@@ -686,38 +676,38 @@ public class Util {
 	 * @param y the second value
 	 * @return <code>true</code> if x and y are both equal to Double.NaN, or if x == y. <code>false</code> otherwise
 	 */
-	public static boolean equal(double x, double y) {
+	public static boolean equal(final double x, final double y) {
 		return (Double.isNaN(x) && Double.isNaN(y)) || (x == y);
 	}
 
 	/**
-	 * Returns canonical file path for the given file path
+	 * Returns canonical m_file path for the given m_file path
 	 *
-	 * @param path Absolute or relative file path
-	 * @return Canonical file path
-	 * @throws IOException Thrown if canonical file path could not be resolved
+	 * @param path Absolute or relative m_file path
+	 * @return Canonical m_file path
+	 * @throws IOException Thrown if canonical m_file path could not be resolved
 	 */
-	public static String getCanonicalPath(String path) throws IOException {
+	public static String getCanonicalPath(final String path) throws IOException {
 		return new File(path).getCanonicalPath();
 	}
 
 	/**
-	 * Returns last modification time for the given file.
+	 * Returns last modification time for the given m_file.
 	 *
-	 * @param file File object representing file on the disk
+	 * @param m_file File object representing m_file on the disk
 	 * @return Last modification time in seconds (without milliseconds)
 	 */
-	public static long getLastModified(String file) {
+	public static long getLastModified(final String file) {
 		return (new File(file).lastModified() + 500L) / 1000L;
 	}
 
 	/**
-	 * Checks if the file with the given file name exists
+	 * Checks if the m_file with the given m_file name exists
 	 *
 	 * @param filename File name
-	 * @return <code>true</code> if file exists, <code>false</code> otherwise
+	 * @return <code>true</code> if m_file exists, <code>false</code> otherwise
 	 */
-	public static boolean fileExists(String filename) {
+	public static boolean fileExists(final String filename) {
 		return new File(filename).exists();
 	}
 
@@ -728,9 +718,9 @@ public class Util {
 	 * @param values Array of double values
 	 * @return max value in the array (NaNs are ignored)
 	 */
-	public static double max(double[] values) {
+	public static double max(final double[] values) {
 		double max = Double.NaN;
-		for (double value : values) {
+		for (final double value : values) {
 			max = Util.max(max, value);
 		}
 		return max;
@@ -743,9 +733,9 @@ public class Util {
 	 * @param values Array of double values
 	 * @return min value in the array (NaNs are ignored)
 	 */
-	public static double min(double[] values) {
+	public static double min(final double[] values) {
 		double min = Double.NaN;
-		for (double value : values) {
+		for (final double value : values) {
 			min = Util.min(min, value);
 		}
 		return min;
@@ -758,8 +748,8 @@ public class Util {
 	 * @param args   Arbitrary list of arguments
 	 * @return Formatted string
 	 */
-	public static String sprintf(String format, Object ... args) {
-		String fmt = format.replaceAll("([^%]|^)%([^a-zA-Z%]*)l(f|g|e)", "$1%$2$3");
+	public static String sprintf(final String format, final Object ... args) {
+	    final String fmt = format.replaceAll("([^%]|^)%([^a-zA-Z%]*)l(f|g|e)", "$1%$2$3");
 		return String.format(fmt, args);
 	}
 }

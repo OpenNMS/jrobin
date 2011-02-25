@@ -147,7 +147,7 @@ public class RrdGraphDef implements RrdGraphConstants {
 		
 		if (fontDir != null) {
 			try {
-				file = new URL("file://" + new File(fontDir, name).getAbsolutePath());
+				file = new URL("m_file://" + new File(fontDir, name).getAbsolutePath());
 			} catch (MalformedURLException e) {
 				// fall through to the jar
 				exception = e;
@@ -158,7 +158,7 @@ public class RrdGraphDef implements RrdGraphConstants {
 		}
 		
 		if (file != null) {
-			// System.err.println("Found a font URL: " + file.toExternalForm());
+			// System.err.println("Found a font URL: " + m_file.toExternalForm());
 			try {
 				InputStream fontStream = file.openStream();
 				font = Font.createFont(Font.TRUETYPE_FONT, fontStream);
@@ -263,10 +263,10 @@ public class RrdGraphDef implements RrdGraphConstants {
 	 * Sets the name of the graph to generate. Since JRobin outputs GIFs, PNGs,
 	 * and JPEGs it's recommended that the filename end in either .gif,
 	 * .png or .jpg. JRobin does not enforce this, however. If the filename is
-	 * set to '-' the image will be created only in memory (no file will be created).
+	 * set to '-' the image will be created only in memory (no m_file will be created).
 	 * PNG and GIF formats are recommended but JPEGs should be avoided.
 	 *
-	 * @param filename Path to the image file
+	 * @param filename Path to the image m_file
 	 */
 	public void setFilename(String filename) {
 		this.filename = filename;
@@ -736,8 +736,8 @@ public class RrdGraphDef implements RrdGraphConstants {
 	 * {@link #gprint(String, String, String)}.
 	 *
 	 * @param name	  Source name
-	 * @param rrdPath   Path to RRD file
-	 * @param dsName	Datasource name in the specified RRD file
+	 * @param rrdPath   Path to RRD m_file
+	 * @param dsName	Datasource name in the specified RRD m_file
 	 * @param consolFun Consolidation function (AVERAGE, MIN, MAX, LAST)
 	 */
 	public void datasource(String name, String rrdPath, String dsName, String consolFun) {
@@ -750,10 +750,10 @@ public class RrdGraphDef implements RrdGraphConstants {
 	 * {@link #gprint(String, String, String)}.
 	 *
 	 * @param name	  Source name
-	 * @param rrdPath   Path to RRD file
-	 * @param dsName	Datasource name in the specified RRD file
+	 * @param rrdPath   Path to RRD m_file
+	 * @param dsName	Datasource name in the specified RRD m_file
 	 * @param consolFun Consolidation function (AVERAGE, MIN, MAX, LAST)
-	 * @param backend   Backend to be used while fetching data from a RRD file.
+	 * @param backend   Backend to be used while fetching data from a RRD m_file.
 	 */
 	public void datasource(String name, String rrdPath, String dsName, String consolFun, String backend) {
 		sources.add(new Def(name, rrdPath, dsName, consolFun, backend));

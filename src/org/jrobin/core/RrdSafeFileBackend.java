@@ -25,39 +25,38 @@ import java.nio.channels.FileChannel;
 
 /**
  * JRobin backend which is used to store RRD data to ordinary files on the disk. This backend
- * is SAFE: it locks the underlying RRD file during update/fetch operations, and caches only static
- * parts of a RRD file in memory. Therefore, this backend is safe to be used when RRD files should
+ * is SAFE: it locks the underlying RRD m_file during update/fetch operations, and caches only static
+ * parts of a RRD m_file in memory. Therefore, this backend is safe to be used when RRD files should
  * be shared between several JVMs at the same time. However, this backend is a little bit slow
  * since it does not use fast java.nio.* package (it's still based on the RandomAccessFile class).
  */
 public class RrdSafeFileBackend extends RrdFileBackend {
 	private static final Counters counters = new Counters();
 
-	private FileLock lock;
+	private FileLock m_lock;
 
 	/**
-	 * Creates RrdFileBackend object for the given file path, backed by RandomAccessFile object.
+	 * Creates RrdFileBackend object for the given m_file path, backed by RandomAccessFile object.
 	 *
-	 * @param path Path to a file
+	 * @param path Path to a m_file
 	 * @throws IOException Thrown in case of I/O error
 	 */
-	public RrdSafeFileBackend(String path, long lockWaitTime, long lockRetryPeriod)
-			throws IOException {
+	public RrdSafeFileBackend(final String path, final long lockWaitTime, final long lockRetryPeriod) throws IOException {
 		super(path, false);
 		try {
-			lockFile(lockWaitTime, lockRetryPeriod);
+		    lockFile(lockWaitTime, lockRetryPeriod);
 		}
-		catch (IOException ioe) {
+		catch (final IOException ioe) {
 			super.close();
 			throw ioe;
 		}
 	}
 
-	private void lockFile(long lockWaitTime, long lockRetryPeriod) throws IOException {
-		long entryTime = System.currentTimeMillis();
-		FileChannel channel = file.getChannel();
-		lock = channel.tryLock(0, Long.MAX_VALUE, false);
-		if (lock != null) {
+	private void lockFile(final long lockWaitTime, final long lockRetryPeriod) throws IOException {
+	    final long entryTime = System.currentTimeMillis();
+	    final FileChannel channel = file.getChannel();
+		m_lock = channel.tryLock(0, Long.MAX_VALUE, false);
+		if (m_lock != null) {
 			counters.registerQuickLock();
 			return;
 		}
@@ -65,25 +64,24 @@ public class RrdSafeFileBackend extends RrdFileBackend {
 			try {
 				Thread.sleep(lockRetryPeriod);
 			}
-			catch (InterruptedException e) {
-				// NOP
+			catch (final InterruptedException e) {
+			    Thread.currentThread().interrupt();
 			}
-			lock = channel.tryLock(0, Long.MAX_VALUE, false);
-			if (lock != null) {
+			m_lock = channel.tryLock(0, Long.MAX_VALUE, false);
+			if (m_lock != null) {
 				counters.registerDelayedLock();
 				return;
 			}
 		} while (System.currentTimeMillis() - entryTime <= lockWaitTime);
 		counters.registerError();
-		throw new IOException("Could not obtain exclusive lock on file: " + getPath() +
-				"] after " + lockWaitTime + " milliseconds");
+		throw new IOException("Could not obtain exclusive m_lock on m_file: " + getPath() + "] after " + lockWaitTime + " milliseconds");
 	}
 
 	public void close() throws IOException {
 		try {
-			if (lock != null) {
-				lock.release();
-				lock = null;
+			if (m_lock != null) {
+				m_lock.release();
+				m_lock = null;
 				counters.registerUnlock();
 			}
 		}

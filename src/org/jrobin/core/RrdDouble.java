@@ -25,15 +25,15 @@ class RrdDouble extends RrdPrimitive {
 	private double cache;
 	private boolean cached = false;
 
-	RrdDouble(RrdUpdater updater, boolean isConstant) throws IOException {
+	RrdDouble(final RrdUpdater updater, final boolean isConstant) throws IOException {
 		super(updater, RrdDouble.RRD_DOUBLE, isConstant);
 	}
 
-	RrdDouble(RrdUpdater updater) throws IOException {
+	RrdDouble(final RrdUpdater updater) throws IOException {
 		super(updater, RrdDouble.RRD_DOUBLE, false);
 	}
 
-	void set(double value) throws IOException {
+	void set(final double value) throws IOException {
 		if (!isCachingAllowed()) {
 			writeDouble(value);
 		}

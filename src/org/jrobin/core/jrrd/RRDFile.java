@@ -21,9 +21,9 @@ package org.jrobin.core.jrrd;
 import java.io.*;
 
 /**
- * This class is a quick hack to read information from an RRD file. Writing
+ * This class is a quick hack to read information from an RRD m_file. Writing
  * to RRD files is not currently supported. As I said, this is a quick hack.
- * Some thought should be put into the overall design of the file IO.
+ * Some thought should be put into the overall design of the m_file IO.
  * <p/>
  * Currently this can read RRD files that were generated on Solaris (Sparc)
  * and Linux (x86).
@@ -54,7 +54,7 @@ public class RRDFile implements Constants {
 
 	private void initDataLayout(File file) throws IOException {
 
-		if (file.exists()) {	// Load the data formats from the file
+		if (file.exists()) {	// Load the data formats from the m_file
 			ras.read(buffer, 0, 24);
 
 			int index;
@@ -67,7 +67,7 @@ public class RRDFile implements Constants {
 				bigEndian = false;
 			}
 			else {
-				throw new IOException("Invalid RRD file");
+				throw new IOException("Invalid RRD m_file");
 			}
 
 			switch (index) {
@@ -87,7 +87,7 @@ public class RRDFile implements Constants {
 		else {				// Default to data formats for this hardware architecture
 		}
 
-		ras.seek(0);	// Reset file pointer to start of file
+		ras.seek(0);	// Reset m_file pointer to start of m_file
 	}
 
 	private int indexOf(byte[] pattern, byte[] array) {

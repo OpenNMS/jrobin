@@ -31,11 +31,11 @@ abstract class RrdPrimitive {
 	private final long pointer;
 	private final boolean cachingAllowed;
 
-	RrdPrimitive(RrdUpdater updater, int type, boolean isConstant) throws IOException {
+	RrdPrimitive(final RrdUpdater updater, final int type, final boolean isConstant) throws IOException {
 		this(updater, type, 1, isConstant);
 	}
 
-	RrdPrimitive(RrdUpdater updater, int type, int count, boolean isConstant) throws IOException {
+	RrdPrimitive(final RrdUpdater updater, final int type, final int count, final boolean isConstant) throws IOException {
 		this.backend = updater.getRrdBackend();
 		this.byteCount = RRD_PRIM_SIZES[type] * count;
 		this.pointer = updater.getRrdAllocator().allocate(byteCount);
@@ -43,12 +43,12 @@ abstract class RrdPrimitive {
 	}
 
 	final byte[] readBytes() throws IOException {
-		byte[] b = new byte[byteCount];
+	    final byte[] b = new byte[byteCount];
 		backend.read(pointer, b);
 		return b;
 	}
 
-	final void writeBytes(byte[] b) throws IOException {
+	final void writeBytes(final byte[] b) throws IOException {
 		assert b.length == byteCount: "Invalid number of bytes supplied to RrdPrimitive.write method";
 		backend.write(pointer, b);
 	}
@@ -57,7 +57,7 @@ abstract class RrdPrimitive {
 		return backend.readInt(pointer);
 	}
 
-	final void writeInt(int value) throws IOException {
+	final void writeInt(final int value) throws IOException {
 		backend.writeInt(pointer, value);
 	}
 
@@ -65,7 +65,7 @@ abstract class RrdPrimitive {
 		return backend.readLong(pointer);
 	}
 
-	final void writeLong(long value) throws IOException {
+	final void writeLong(final long value) throws IOException {
 		backend.writeLong(pointer, value);
 	}
 
@@ -73,27 +73,27 @@ abstract class RrdPrimitive {
 		return backend.readDouble(pointer);
 	}
 
-	final double readDouble(int index) throws IOException {
-		long offset = pointer + index * RRD_PRIM_SIZES[RRD_DOUBLE];
+	final double readDouble(final int index) throws IOException {
+	    final long offset = pointer + (index * RRD_PRIM_SIZES[RRD_DOUBLE]);
 		return backend.readDouble(offset);
 	}
 
-	final double[] readDouble(int index, int count) throws IOException {
-		long offset = pointer + index * RRD_PRIM_SIZES[RRD_DOUBLE];
+	final double[] readDouble(final int index, final int count) throws IOException {
+	    final long offset = pointer + (index * RRD_PRIM_SIZES[RRD_DOUBLE]);
 		return backend.readDouble(offset, count);
 	}
 
-	final void writeDouble(double value) throws IOException {
+	final void writeDouble(final double value) throws IOException {
 		backend.writeDouble(pointer, value);
 	}
 
-	final void writeDouble(int index, double value, int count) throws IOException {
-		long offset = pointer + index * RRD_PRIM_SIZES[RRD_DOUBLE];
+	final void writeDouble(final int index, final double value, final int count) throws IOException {
+	    final long offset = pointer + (index * RRD_PRIM_SIZES[RRD_DOUBLE]);
 		backend.writeDouble(offset, value, count);
 	}
 
-	final void writeDouble(int index, double[] values) throws IOException {
-		long offset = pointer + index * RRD_PRIM_SIZES[RRD_DOUBLE];
+	final void writeDouble(final int index, final double[] values) throws IOException {
+	    final long offset = pointer + index * RRD_PRIM_SIZES[RRD_DOUBLE];
 		backend.writeDouble(offset, values);
 	}
 
@@ -101,7 +101,7 @@ abstract class RrdPrimitive {
 		return backend.readString(pointer);
 	}
 
-	final void writeString(String value) throws IOException {
+	final void writeString(final String value) throws IOException {
 		backend.writeString(pointer, value);
 	}
 

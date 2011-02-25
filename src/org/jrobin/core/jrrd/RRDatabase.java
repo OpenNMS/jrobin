@@ -40,7 +40,7 @@ public class RRDatabase {
 
 	RRDFile rrdFile;
 
-	// RRD file name
+	// RRD m_file name
 	private String name;
 	Header header;
 	ArrayList<DataSource> dataSources;
@@ -50,7 +50,7 @@ public class RRDatabase {
 	/**
 	 * Creates a database to read from.
 	 *
-	 * @param name the filename of the file to read from.
+	 * @param name the filename of the m_file to read from.
 	 * @throws IOException if an I/O error occurs.
 	 */
 	public RRDatabase(String name) throws IOException {
@@ -60,7 +60,7 @@ public class RRDatabase {
 	/**
 	 * Creates a database to read from.
 	 *
-	 * @param file the file to read from.
+	 * @param m_file the m_file to read from.
 	 * @throws IOException if an I/O error occurs.
 	 */
 	public RRDatabase(File file) throws IOException {

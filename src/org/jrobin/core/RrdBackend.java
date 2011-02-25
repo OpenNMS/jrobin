@@ -62,28 +62,41 @@ import java.io.IOException;
  * </ul>
  */
 public abstract class RrdBackend {
-	private static boolean instanceCreated = false;
-	private String path;
+	private static boolean m_instanceCreated = false;
+	private final String m_path;
+	private final boolean m_readOnly;
 
 	/**
-	 * Creates backend for a RRD storage with the given path.
+	 * Creates backend for a RRD storage with the given m_path.
 	 *
-	 * @param path String identifying RRD storage. For files on the disk, this
-	 *             argument should represent file path. Other storage types might interpret
+	 * @param m_path String identifying RRD storage. For files on the disk, this
+	 *             argument should represent m_file m_path. Other storage types might interpret
 	 *             this argument differently.
 	 */
-	protected RrdBackend(String path) {
-		this.path = path;
-		instanceCreated = true;
+	protected RrdBackend(final String path) {
+	    this(path, false);
+	}
+
+	protected RrdBackend(final String path, final boolean readOnly) {
+        m_path = path;
+	    m_readOnly = readOnly;
+        m_instanceCreated = true;
 	}
 
 	/**
-	 * Returns path to the storage.
+	 * Returns m_path to the storage.
 	 *
-	 * @return Storage path
+	 * @return Storage m_path
 	 */
 	public String getPath() {
-		return path;
+		return m_path;
+	}
+
+	/**
+	 * Is the RRD ReadOnly?
+	 */
+	public boolean isReadOnly() {
+	    return m_readOnly;
 	}
 
 	/**
@@ -132,11 +145,11 @@ public abstract class RrdBackend {
 
 	/**
 	 * This method suggests the caching policy to the JRobin frontend (high-level) classes. If <code>true</code>
-	 * is returned, frontent classes will cache frequently used parts of a RRD file in memory to improve
-	 * performance. If </code>false</code> is returned, high level classes will never cache RRD file sections
+	 * is returned, frontent classes will cache frequently used parts of a RRD m_file in memory to improve
+	 * performance. If </code>false</code> is returned, high level classes will never cache RRD m_file sections
 	 * in memory.
 	 *
-	 * @return <code>true</code> if file caching is enabled, <code>false</code> otherwise. By default, the
+	 * @return <code>true</code> if m_file caching is enabled, <code>false</code> otherwise. By default, the
 	 *         method returns <code>true</code> but it can be overriden in subclasses.
 	 */
 	protected boolean isCachingAllowed() {
@@ -150,26 +163,26 @@ public abstract class RrdBackend {
 	 * @throws IOException Thrown in case of I/O error
 	 */
 	public final byte[] readAll() throws IOException {
-		byte[] b = new byte[(int) getLength()];
+	    final byte[] b = new byte[(int) getLength()];
 		read(0, b);
 		return b;
 	}
 
-	final void writeInt(long offset, int value) throws IOException {
+	final void writeInt(final long offset, final int value) throws IOException {
 		write(offset, getIntBytes(value));
 	}
 
-	final void writeLong(long offset, long value) throws IOException {
+	final void writeLong(final long offset, final long value) throws IOException {
 		write(offset, getLongBytes(value));
 	}
 
-	final void writeDouble(long offset, double value) throws IOException {
+	final void writeDouble(final long offset, final double value) throws IOException {
 		write(offset, getDoubleBytes(value));
 	}
 
-	final void writeDouble(long offset, double value, int count) throws IOException {
-		byte[] b = getDoubleBytes(value);
-		byte[] image = new byte[8 * count];
+	final void writeDouble(final long offset, final double value, final int count) throws IOException {
+	    final byte[] b = getDoubleBytes(value);
+		final byte[] image = new byte[8 * count];
 		for (int i = 0, k = 0; i < count; i++) {
 			image[k++] = b[0];
 			image[k++] = b[1];
@@ -181,14 +194,13 @@ public abstract class RrdBackend {
 			image[k++] = b[7];
 		}
 		write(offset, image);
-		image = null;
 	}
 
-	final void writeDouble(long offset, double[] values) throws IOException {
-		int count = values.length;
-		byte[] image = new byte[8 * count];
+	final void writeDouble(final long offset, final double[] values) throws IOException {
+		final int count = values.length;
+		final byte[] image = new byte[8 * count];
 		for (int i = 0, k = 0; i < count; i++) {
-			byte[] b = getDoubleBytes(values[i]);
+			final byte[] b = getDoubleBytes(values[i]);
 			image[k++] = b[0];
 			image[k++] = b[1];
 			image[k++] = b[2];
@@ -199,61 +211,59 @@ public abstract class RrdBackend {
 			image[k++] = b[7];
 		}
 		write(offset, image);
-		image = null;
 	}
 
-	final void writeString(long offset, String value) throws IOException {
-		value = value.trim();
-		byte[] b = new byte[RrdPrimitive.STRING_LENGTH * 2];
+	final void writeString(final long offset, final String rawValue) throws IOException {
+	    final String value = rawValue.trim();
+	    final byte[] b = new byte[RrdPrimitive.STRING_LENGTH * 2];
 		for (int i = 0, k = 0; i < RrdPrimitive.STRING_LENGTH; i++) {
-			char c = (i < value.length()) ? value.charAt(i) : ' ';
-			byte[] cb = getCharBytes(c);
+			final char c = (i < value.length()) ? value.charAt(i) : ' ';
+			final byte[] cb = getCharBytes(c);
 			b[k++] = cb[0];
 			b[k++] = cb[1];
 		}
 		write(offset, b);
 	}
 
-	final int readInt(long offset) throws IOException {
-		byte[] b = new byte[4];
+	final int readInt(final long offset) throws IOException {
+	    final byte[] b = new byte[4];
 		read(offset, b);
 		return getInt(b);
 	}
 
-	final long readLong(long offset) throws IOException {
-		byte[] b = new byte[8];
+	final long readLong(final long offset) throws IOException {
+	    final byte[] b = new byte[8];
 		read(offset, b);
 		return getLong(b);
 	}
 
-	final double readDouble(long offset) throws IOException {
-		byte[] b = new byte[8];
+	final double readDouble(final long offset) throws IOException {
+	    final byte[] b = new byte[8];
 		read(offset, b);
 		return getDouble(b);
 	}
 
-	final double[] readDouble(long offset, int count) throws IOException {
-		int byteCount = 8 * count;
-		byte[] image = new byte[byteCount];
+	final double[] readDouble(final long offset, final int count) throws IOException {
+	    final int byteCount = 8 * count;
+		final byte[] image = new byte[byteCount];
 		read(offset, image);
-		double[] values = new double[count];
+		final double[] values = new double[count];
 		for (int i = 0, k = -1; i < count; i++) {
-			byte[] b = new byte[] {
+			final byte[] b = new byte[] {
 					image[++k], image[++k], image[++k], image[++k],
 					image[++k], image[++k], image[++k], image[++k]
 			};
 			values[i] = getDouble(b);
 		}
-		image = null;
 		return values;
 	}
 
-	final String readString(long offset) throws IOException {
-		byte[] b = new byte[RrdPrimitive.STRING_LENGTH * 2];
-		char[] c = new char[RrdPrimitive.STRING_LENGTH];
+	final String readString(final long offset) throws IOException {
+	    final byte[] b = new byte[RrdPrimitive.STRING_LENGTH * 2];
+		final char[] c = new char[RrdPrimitive.STRING_LENGTH];
 		read(offset, b);
 		for (int i = 0, k = -1; i < RrdPrimitive.STRING_LENGTH; i++) {
-			byte[] cb = new byte[] {b[++k], b[++k]};
+			final byte[] cb = new byte[] {b[++k], b[++k]};
 			c[i] = getChar(cb);
 		}
 		return new String(c).trim();
@@ -261,8 +271,8 @@ public abstract class RrdBackend {
 
 	// static helper methods
 
-	private static byte[] getIntBytes(int value) {
-		byte[] b = new byte[4];
+	private static byte[] getIntBytes(final int value) {
+	    final byte[] b = new byte[4];
 		b[0] = (byte) ((value >>> 24) & 0xFF);
 		b[1] = (byte) ((value >>> 16) & 0xFF);
 		b[2] = (byte) ((value >>> 8) & 0xFF);
@@ -270,8 +280,8 @@ public abstract class RrdBackend {
 		return b;
 	}
 
-	private static byte[] getLongBytes(long value) {
-		byte[] b = new byte[8];
+	private static byte[] getLongBytes(final long value) {
+	    final byte[] b = new byte[8];
 		b[0] = (byte) ((int) (value >>> 56) & 0xFF);
 		b[1] = (byte) ((int) (value >>> 48) & 0xFF);
 		b[2] = (byte) ((int) (value >>> 40) & 0xFF);
@@ -283,42 +293,42 @@ public abstract class RrdBackend {
 		return b;
 	}
 
-	private static byte[] getCharBytes(char value) {
-		byte[] b = new byte[2];
+	private static byte[] getCharBytes(final char value) {
+	    final byte[] b = new byte[2];
 		b[0] = (byte) ((value >>> 8) & 0xFF);
 		b[1] = (byte) ((value) & 0xFF);
 		return b;
 	}
 
-	private static byte[] getDoubleBytes(double value) {
+	private static byte[] getDoubleBytes(final double value) {
 		return getLongBytes(Double.doubleToLongBits(value));
 	}
 
-	private static int getInt(byte[] b) {
+	private static int getInt(final byte[] b) {
 		assert b.length == 4: "Invalid number of bytes for integer conversion";
 		return ((b[0] << 24) & 0xFF000000) + ((b[1] << 16) & 0x00FF0000) +
 				((b[2] << 8) & 0x0000FF00) + (b[3] & 0x000000FF);
 	}
 
-	private static long getLong(byte[] b) {
+	private static long getLong(final byte[] b) {
 		assert b.length == 8: "Invalid number of bytes for long conversion";
 		int high = getInt(new byte[] {b[0], b[1], b[2], b[3]});
 		int low = getInt(new byte[] {b[4], b[5], b[6], b[7]});
 		return ((long) (high) << 32) + (low & 0xFFFFFFFFL);
 	}
 
-	private static char getChar(byte[] b) {
+	private static char getChar(final byte[] b) {
 		assert b.length == 2: "Invalid number of bytes for char conversion";
 		return (char) (((b[0] << 8) & 0x0000FF00)
 				+ (b[1] & 0x000000FF));
 	}
 
-	private static double getDouble(byte[] b) {
+	private static double getDouble(final byte[] b) {
 		assert b.length == 8: "Invalid number of bytes for double conversion";
 		return Double.longBitsToDouble(getLong(b));
 	}
 
 	static boolean isInstanceCreated() {
-		return instanceCreated;
+		return m_instanceCreated;
 	}
 }

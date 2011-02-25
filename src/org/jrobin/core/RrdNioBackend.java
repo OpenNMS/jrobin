@@ -19,13 +19,13 @@
 
 package org.jrobin.core;
 
-import sun.nio.ch.DirectBuffer;
-
 import java.io.IOException;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.Timer;
 import java.util.TimerTask;
+
+import sun.nio.ch.DirectBuffer;
 
 /**
  * JRobin backend which is used to store RRD data to ordinary disk files
@@ -34,109 +34,107 @@ import java.util.TimerTask;
 public class RrdNioBackend extends RrdFileBackend {
 	private static final Timer fileSyncTimer = new Timer(true);
 
-	private MappedByteBuffer byteBuffer;
-	private TimerTask syncTask = new TimerTask() {
+	private MappedByteBuffer m_byteBuffer;
+	private final TimerTask m_syncTask = new TimerTask() {
 		public void run() {
 			sync();
 		}
 	};
 
 	/**
-	 * Creates RrdFileBackend object for the given file path, backed by java.nio.* classes.
+	 * Creates RrdFileBackend object for the given m_file path, backed by java.nio.* classes.
 	 *
-	 * @param path	   Path to a file
-	 * @param readOnly   True, if file should be open in a read-only mode. False otherwise
+	 * @param path	   Path to a m_file
+	 * @param m_readOnly   True, if m_file should be open in a read-only mode. False otherwise
 	 * @param syncPeriod See {@link RrdNioBackendFactory#setSyncPeriod(int)} for explanation
 	 * @throws IOException Thrown in case of I/O error
 	 */
-	protected RrdNioBackend(String path, boolean readOnly, int syncPeriod)
-			throws IOException {
+	protected RrdNioBackend(final String path, final boolean readOnly, final int syncPeriod) throws IOException {
 		super(path, readOnly);
 		try {
 			mapFile();
 			if (!readOnly) {
-				fileSyncTimer.schedule(syncTask, syncPeriod * 1000L, syncPeriod * 1000L);
+				fileSyncTimer.schedule(m_syncTask, syncPeriod * 1000L, syncPeriod * 1000L);
 			}
 		}
-		catch (IOException ioe) {
-			super.close();
+		catch (final IOException ioe) {
+		    super.close();
 			throw ioe;
 		}
 	}
 
 	private void mapFile() throws IOException {
-		long length = getLength();
+		final long length = getLength();
 		if (length > 0) {
-			FileChannel.MapMode mapMode =
-					readOnly ? FileChannel.MapMode.READ_ONLY : FileChannel.MapMode.READ_WRITE;
-			byteBuffer = file.getChannel().map(mapMode, 0, length);
+			final FileChannel.MapMode mapMode = isReadOnly() ? FileChannel.MapMode.READ_ONLY : FileChannel.MapMode.READ_WRITE;
+			m_byteBuffer = file.getChannel().map(mapMode, 0, length);
 		}
 	}
 
 	private void unmapFile() {
-		if (byteBuffer != null) {
-			if (byteBuffer instanceof DirectBuffer) {
-				((DirectBuffer) byteBuffer).cleaner().clean();
+		if (m_byteBuffer != null) {
+			if (m_byteBuffer instanceof DirectBuffer) {
+				((DirectBuffer) m_byteBuffer).cleaner().clean();
 			}
-			byteBuffer = null;
+			m_byteBuffer = null;
 		}
 	}
 
 	/**
-	 * Sets length of the underlying RRD file. This method is called only once, immediately
-	 * after a new RRD file gets created.
+	 * Sets length of the underlying RRD m_file. This method is called only once, immediately
+	 * after a new RRD m_file gets created.
 	 *
-	 * @param newLength Length of the RRD file
+	 * @param newLength Length of the RRD m_file
 	 * @throws IOException Thrown in case of I/O error.
 	 */
-	protected synchronized void setLength(long newLength) throws IOException {
+	protected synchronized void setLength(final long newLength) throws IOException {
 		unmapFile();
 		super.setLength(newLength);
 		mapFile();
 	}
 
 	/**
-	 * Writes bytes to the underlying RRD file on the disk
+	 * Writes bytes to the underlying RRD m_file on the disk
 	 *
-	 * @param offset Starting file offset
+	 * @param offset Starting m_file offset
 	 * @param b	  Bytes to be written.
 	 */
-	protected synchronized void write(long offset, byte[] b) throws IOException {
-		if (byteBuffer != null) {
-			byteBuffer.position((int) offset);
-			byteBuffer.put(b);
+	protected synchronized void write(final long offset, final byte[] b) throws IOException {
+		if (m_byteBuffer != null) {
+			m_byteBuffer.position((int) offset);
+			m_byteBuffer.put(b);
 		}
 		else {
-			throw new IOException("Write failed, file " + getPath() + " not mapped for I/O");
+			throw new IOException("Write failed, m_file " + getPath() + " not mapped for I/O");
 		}
 	}
 
 	/**
-	 * Reads a number of bytes from the RRD file on the disk
+	 * Reads a number of bytes from the RRD m_file on the disk
 	 *
-	 * @param offset Starting file offset
-	 * @param b	  Buffer which receives bytes read from the file.
+	 * @param offset Starting m_file offset
+	 * @param b	  Buffer which receives bytes read from the m_file.
 	 */
-	protected synchronized void read(long offset, byte[] b) throws IOException {
-		if (byteBuffer != null) {
-			byteBuffer.position((int) offset);
-			byteBuffer.get(b);
+	protected synchronized void read(final long offset, final byte[] b) throws IOException {
+		if (m_byteBuffer != null) {
+			m_byteBuffer.position((int) offset);
+			m_byteBuffer.get(b);
 		}
 		else {
-			throw new IOException("Read failed, file " + getPath() + " not mapped for I/O");
+			throw new IOException("Read failed, m_file " + getPath() + " not mapped for I/O");
 		}
 	}
 
 	/**
-	 * Closes the underlying RRD file.
+	 * Closes the underlying RRD m_file.
 	 *
 	 * @throws IOException Thrown in case of I/O error
 	 */
 	public synchronized void close() throws IOException {
 		// cancel synchronization
 		try {
-			if (syncTask != null) {
-				syncTask.cancel();
+			if (m_syncTask != null) {
+				m_syncTask.cancel();
 			}
 			sync();
 			unmapFile();
@@ -147,12 +145,12 @@ public class RrdNioBackend extends RrdFileBackend {
 	}
 
 	/**
-	 * This method forces all data cached in memory but not yet stored in the file,
+	 * This method forces all data cached in memory but not yet stored in the m_file,
 	 * to be stored in it.
 	 */
 	protected synchronized void sync() {
-		if (byteBuffer != null) {
-			byteBuffer.force();
+		if (m_byteBuffer != null) {
+			m_byteBuffer.force();
 		}
 	}
 }

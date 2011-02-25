@@ -181,7 +181,7 @@ public class DataProcessor implements ConsolFuns {
 	 * I think this option is not that useful, but it's here just for compatibility.<p>
 	 *
 	 * @param step Time step at which data should be fetched from RRD files. If this method is not used,
-	 *             the step will be equal to the smallest RRD step of all processed RRD files. If no RRD file is processed,
+	 *             the step will be equal to the smallest RRD step of all processed RRD files. If no RRD m_file is processed,
 	 *             the step will be roughly equal to the with of one graph pixel (in seconds).
 	 */
 	public void setStep(long step) {
@@ -468,10 +468,10 @@ public class DataProcessor implements ConsolFuns {
 	 * </ul>
 	 *
 	 * @param name	   source name.
-	 * @param file	   Path to RRD file.
-	 * @param dsName	 Datasource name defined in the RRD file.
+	 * @param m_file	   Path to RRD m_file.
+	 * @param dsName	 Datasource name defined in the RRD m_file.
 	 * @param consolFunc Consolidation function that will be used to extract data from the RRD
-	 *                   file ("AVERAGE", "MIN", "MAX" or "LAST" - these string constants are conveniently defined
+	 *                   m_file ("AVERAGE", "MIN", "MAX" or "LAST" - these string constants are conveniently defined
 	 *                   in the {@link org.jrobin.core.ConsolFuns ConsolFuns} class).
 	 */
 	public void addDatasource(String name, String file, String dsName, String consolFunc) {
@@ -487,10 +487,10 @@ public class DataProcessor implements ConsolFuns {
 	 * </ul>
 	 *
 	 * @param name	   Source name.
-	 * @param file	   Path to RRD file.
-	 * @param dsName	 Data source name defined in the RRD file.
+	 * @param m_file	   Path to RRD m_file.
+	 * @param dsName	 Data source name defined in the RRD m_file.
 	 * @param consolFunc Consolidation function that will be used to extract data from the RRD
-	 *                   file ("AVERAGE", "MIN", "MAX" or "LAST" - these string constants are conveniently defined
+	 *                   m_file ("AVERAGE", "MIN", "MAX" or "LAST" - these string constants are conveniently defined
 	 *                   in the {@link org.jrobin.core.ConsolFuns ConsolFuns} class).
 	 * @param backend	Name of the RrdBackendFactory that should be used for this RrdDb.
 	 */
@@ -725,7 +725,7 @@ public class DataProcessor implements ConsolFuns {
 			newStep = Math.min(newStep, tryStep);
 		}
 		if (newStep != Long.MAX_VALUE) {
-			// step resolved from a RRD file
+			// step resolved from a RRD m_file
 			step = newStep;
 		}
 		else {
@@ -827,7 +827,7 @@ public class DataProcessor implements ConsolFuns {
 	}
 
 	/**
-	 * Cute little demo. Uses demo.rrd file previously created by basic JRobin demo.
+	 * Cute little demo. Uses demo.rrd m_file previously created by basic JRobin demo.
 	 *
 	 * @param args Not used
 	 * @throws IOException
@@ -840,7 +840,7 @@ public class DataProcessor implements ConsolFuns {
 		System.out.println("t1 = " + t1);
 		System.out.println("t2 = " + t2);
 
-		// RRD file to use
+		// RRD m_file to use
 		String rrdPath = Util.getJRobinDemoPath("demo.rrd");
 
 		// constructor

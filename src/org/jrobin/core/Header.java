@@ -44,11 +44,14 @@ public class Header implements RrdUpdater {
 	private RrdLong step;
 	private RrdInt dsCount, arcCount;
 	private RrdLong lastUpdateTime;
+	private Long m_primitiveStep = null;
+	private Integer m_primitiveDsCount = null;
+	private Integer m_primitiveArcCount = null;
 
-	Header(RrdDb parentDb, RrdDef rrdDef) throws IOException {
-		boolean shouldInitialize = rrdDef != null;
+	Header(final RrdDb parentDb, final RrdDef rrdDef) throws IOException {
+	    final boolean shouldInitialize = rrdDef != null;
 		this.parentDb = parentDb;
-		signature = new RrdString(this);			 // NOT constant, may be cached
+		signature = new RrdString(this);			 // NOT constant, may NOT be cached
 		step = new RrdLong(this, true);			 // constant, may be cached
 		dsCount = new RrdInt(this, true);			 // constant, may be cached
 		arcCount = new RrdInt(this, true);			 // constant, may be cached
@@ -62,11 +65,11 @@ public class Header implements RrdUpdater {
 		}
 	}
 
-	Header(RrdDb parentDb, DataImporter reader) throws IOException, RrdException {
+	Header(final RrdDb parentDb, final DataImporter reader) throws IOException, RrdException {
 		this(parentDb, (RrdDef) null);
-		String version = reader.getVersion();
-		int intVersion = Integer.parseInt(version);
-		if ( intVersion > 3) {
+		final String version = reader.getVersion();
+		final int intVersion = Integer.parseInt(version);
+		if (intVersion > 3) {
 			throw new RrdException("Could not unserialize xml version " + version);
 		}
 		signature.set(DEFAULT_SIGNATURE);
@@ -118,7 +121,10 @@ public class Header implements RrdUpdater {
 	 * @throws IOException Thrown in case of I/O error
 	 */
 	public long getStep() throws IOException {
-		return step.get();
+	    if (m_primitiveStep == null) {
+	        m_primitiveStep = step.get();
+	    }
+	    return m_primitiveStep;
 	}
 
 	/**
@@ -128,7 +134,10 @@ public class Header implements RrdUpdater {
 	 * @throws IOException Thrown in case of I/O error
 	 */
 	public int getDsCount() throws IOException {
-		return dsCount.get();
+	    if (m_primitiveDsCount == null) {
+	        m_primitiveDsCount = dsCount.get();
+	    }
+	    return m_primitiveDsCount;
 	}
 
 	/**
@@ -138,10 +147,13 @@ public class Header implements RrdUpdater {
 	 * @throws IOException Thrown in case of I/O error
 	 */
 	public int getArcCount() throws IOException {
-		return arcCount.get();
+	    if (m_primitiveArcCount == null) {
+	        m_primitiveArcCount = arcCount.get();
+	    }
+	    return m_primitiveArcCount;
 	}
 
-	public void setLastUpdateTime(long lastUpdateTime) throws IOException {
+	public void setLastUpdateTime(final long lastUpdateTime) throws IOException {
 		this.lastUpdateTime.set(lastUpdateTime);
 	}
 
@@ -170,12 +182,11 @@ public class Header implements RrdUpdater {
 	 * @throws IOException  Thrown in case of I/O error
 	 * @throws RrdException Thrown if supplied argument is not a Header object
 	 */
-	public void copyStateTo(RrdUpdater other) throws IOException, RrdException {
+	public void copyStateTo(final RrdUpdater other) throws IOException, RrdException {
 		if (!(other instanceof Header)) {
-			throw new RrdException(
-					"Cannot copy Header object to " + other.getClass().getName());
+			throw new RrdException( "Cannot copy Header object to " + other.getClass().getName());
 		}
-		Header header = (Header) other;
+		final Header header = (Header) other;
 		header.signature.set(signature.get());
 		header.lastUpdateTime.set(lastUpdateTime.get());
 	}
@@ -196,8 +207,7 @@ public class Header implements RrdUpdater {
 
 	void validateHeader() throws IOException, RrdException {
 		if (!isJRobinHeader()) {
-			String msg = "Invalid file header. File [" + parentDb.getCanonicalPath() + "] is not a JRobin RRD file";
-			throw new RrdException(msg);
+			throw new RrdException("Invalid m_file header. File [" + parentDb.getCanonicalPath() + "] is not a JRobin RRD m_file");
 		}
 	}
 

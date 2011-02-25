@@ -22,6 +22,9 @@ package org.jrobin.core;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * JRobin backend which is used to store RRD data to ordinary disk files
@@ -29,29 +32,24 @@ import java.nio.channels.FileChannel;
  */
 public class RrdNioByteBufferBackend extends RrdFileBackend {
 	
-	boolean m_readOnly;
-	
-	private boolean m_printStatements = false;
-
 	private ByteBuffer m_byteBuffer;
 
 	private FileChannel m_ch;
 
-	private Object m_lock = new Object();
+	private static final ReadWriteLock m_readWritelock = new ReentrantReadWriteLock();
+	private static final Lock m_readLock = m_readWritelock.readLock();
+	private static final Lock m_writeLock = m_readWritelock.writeLock();
 
 	/**
-	 * Creates RrdFileBackend object for the given file path, backed by java.nio.* classes.
+	 * Creates RrdFileBackend object for the given m_file path, backed by java.nio.* classes.
 	 *
-	 * @param path	   Path to a file
-	 * @param readOnly   True, if file should be open in a read-only mode. False otherwise
+	 * @param path	   Path to a m_file
+	 * @param m_readOnly   True, if m_file should be open in a read-only mode. False otherwise
 	 * @param syncPeriod See {@link RrdNioBackendFactory#setSyncPeriod(int)} for explanation
 	 * @throws IOException Thrown in case of I/O error
 	 */
-	protected RrdNioByteBufferBackend(String path, boolean readOnly) throws IOException, IllegalStateException {
+	protected RrdNioByteBufferBackend(final String path, final boolean readOnly) throws IOException, IllegalStateException {
 		super(path, readOnly);
-		m_readOnly = readOnly;
-//		m_printStatements = true;
-		if (m_printStatements) System.out.println("Using class: "+ getClass());
 		
 		if (file != null) {
 			m_ch = file.getChannel();
@@ -63,65 +61,77 @@ public class RrdNioByteBufferBackend extends RrdFileBackend {
 	}
 
 	/**
-	 * Sets length of the underlying RRD file. This method is called only once, immediately
-	 * after a new RRD file gets created.
+	 * Sets length of the underlying RRD m_file. This method is called only once, immediately
+	 * after a new RRD m_file gets created.
 	 *
-	 * @param newLength Length of the RRD file
+	 * @param newLength Length of the RRD m_file
 	 * @throws IOException 
 	 * @throws IOException Thrown in case of I/O error.
 	 */
 	@Override
-	protected void setLength(long newLength) throws IOException {
-		synchronized (m_lock) {
+	protected void setLength(final long newLength) throws IOException {
+	    m_writeLock.lock();
+	    try {
 			super.setLength(newLength);
 			m_ch = file.getChannel();
 			m_byteBuffer = ByteBuffer.allocate((int) newLength);
 			m_ch.read(m_byteBuffer, 0);
 			m_byteBuffer.position(0);
+		} finally {
+		    m_writeLock.unlock();
 		}
 	}
 
 	/**
-	 * Writes bytes to the underlying RRD file on the disk
+	 * Writes bytes to the underlying RRD m_file on the disk
 	 *
-	 * @param offset Starting file offset
+	 * @param offset Starting m_file offset
 	 * @param b	  Bytes to be written.
 	 */
 	@Override
-	protected void write(long offset, byte[] b) {
-		synchronized (m_lock) {
-			m_byteBuffer.position((int) offset);
-			m_byteBuffer.put(b);
-		}
+	protected void write(final long offset, final byte[] b) {
+	    m_writeLock.lock();
+	    try {
+            m_byteBuffer.position((int) offset);
+            m_byteBuffer.put(b);
+	    } finally {
+	        m_writeLock.unlock();
+	    }
 	}
 
 	/**
-	 * Reads a number of bytes from the RRD file on the disk
+	 * Reads a number of bytes from the RRD m_file on the disk
 	 *
-	 * @param offset Starting file offset
-	 * @param b	  Buffer which receives bytes read from the file.
+	 * @param offset Starting m_file offset
+	 * @param b	  Buffer which receives bytes read from the m_file.
 	 */
 	@Override
-	protected void read(long offset, byte[] b) {
-		synchronized (m_lock) {
-			m_byteBuffer.position((int) offset);
-			m_byteBuffer.get(b);
-		}
+	protected void read(final long offset, final byte[] b) {
+	    m_readLock.lock();
+	    try {
+            m_byteBuffer.position((int) offset);
+            m_byteBuffer.get(b);
+	    } finally {
+	        m_readLock.unlock();
+	    }
 	}
 	
 	/**
-	 * Closes the underlying RRD file.
+	 * Closes the underlying RRD m_file.
 	 *
 	 * @throws IOException Thrown in case of I/O error
 	 */
 	public void close() throws IOException {
-		synchronized (m_lock) {
+	    m_writeLock.lock();
+	    try {
 			m_byteBuffer.position(0);
-			
-			if (!readOnly) m_ch.write(m_byteBuffer, 0);
+
+			if (!isReadOnly()) m_ch.write(m_byteBuffer, 0);
 			//just calling close here because the super calls close 
 			//on the File object and Java calls close on the channel
 			super.close();
+		} finally {
+		    m_writeLock.unlock();
 		}
 	}
 		

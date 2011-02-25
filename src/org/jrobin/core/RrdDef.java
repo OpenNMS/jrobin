@@ -74,7 +74,7 @@ public class RrdDef {
 	 * @param path Path to new RRD.
 	 * @throws RrdException Thrown if name is invalid (null or empty).
 	 */
-	public RrdDef(String path) throws RrdException {
+	public RrdDef(final String path) throws RrdException {
 		if (path == null || path.length() == 0) {
 			throw new RrdException("No path specified");
 		}
@@ -88,7 +88,7 @@ public class RrdDef {
 	 * @param step RRD step.
 	 * @throws RrdException Thrown if supplied parameters are invalid.
 	 */
-	public RrdDef(String path, long step) throws RrdException {
+	public RrdDef(final String path, final long step) throws RrdException {
 		this(path);
 		if (step <= 0) {
 			throw new RrdException("Invalid RRD step specified: " + step);
@@ -105,7 +105,7 @@ public class RrdDef {
 	 * @param step	  RRD step.
 	 * @throws RrdException Thrown if supplied parameters are invalid.
 	 */
-	public RrdDef(String path, long startTime, long step) throws RrdException {
+	public RrdDef(final String path, final long startTime, final long step) throws RrdException {
 		this(path, step);
 		if (startTime < 0) {
 			throw new RrdException("Invalid RRD start time specified: " + startTime);
@@ -145,7 +145,7 @@ public class RrdDef {
 	 *
 	 * @param path to new RRD.
 	 */
-	public void setPath(String path) {
+	public void setPath(final String path) {
 		this.path = path;
 	}
 
@@ -154,7 +154,7 @@ public class RrdDef {
 	 *
 	 * @param startTime starting timestamp.
 	 */
-	public void setStartTime(long startTime) {
+	public void setStartTime(final long startTime) {
 		this.startTime = startTime;
 	}
 
@@ -163,7 +163,7 @@ public class RrdDef {
 	 *
 	 * @param date starting date
 	 */
-	public void setStartTime(Date date) {
+	public void setStartTime(final Date date) {
 		this.startTime = Util.getTimestamp(date);
 	}
 
@@ -172,7 +172,7 @@ public class RrdDef {
 	 *
 	 * @param gc starting date
 	 */
-	public void setStartTime(Calendar gc) {
+	public void setStartTime(final Calendar gc) {
 		this.startTime = Util.getTimestamp(gc);
 	}
 
@@ -181,7 +181,7 @@ public class RrdDef {
 	 *
 	 * @param step RRD time step.
 	 */
-	public void setStep(long step) {
+	public void setStep(final long step) {
 		this.step = step;
 	}
 
@@ -192,7 +192,7 @@ public class RrdDef {
 	 * @throws RrdException Thrown if new datasource definition uses already used data
 	 *                      source name.
 	 */
-	public void addDatasource(DsDef dsDef) throws RrdException {
+	public void addDatasource(final DsDef dsDef) throws RrdException {
 		if (dsDefs.contains(dsDef)) {
 			throw new RrdException("Datasource already defined: " + dsDef.dump());
 		}
@@ -219,8 +219,7 @@ public class RrdDef {
 	 * @throws RrdException Thrown if new datasource definition uses already used data
 	 *                      source name.
 	 */
-	public void addDatasource(String dsName, String dsType, long heartbeat,
-							  double minValue, double maxValue) throws RrdException {
+	public void addDatasource(final String dsName, final String dsType, final long heartbeat, final double minValue, final double maxValue) throws RrdException {
 		addDatasource(new DsDef(dsName, dsType, heartbeat, minValue, maxValue));
 	}
 
@@ -241,27 +240,26 @@ public class RrdDef {
 	 * @param rrdToolDsDef Datasource definition string with the syntax borrowed from RRDTool.
 	 * @throws RrdException Thrown if invalid string is supplied.
 	 */
-	public void addDatasource(String rrdToolDsDef) throws RrdException {
-		RrdException rrdException = new RrdException(
-				"Wrong rrdtool-like datasource definition: " + rrdToolDsDef);
-		StringTokenizer tokenizer = new StringTokenizer(rrdToolDsDef, ":");
+	public void addDatasource(final String rrdToolDsDef) throws RrdException {
+		final RrdException rrdException = new RrdException("Wrong rrdtool-like datasource definition: " + rrdToolDsDef);
+		final StringTokenizer tokenizer = new StringTokenizer(rrdToolDsDef, ":");
 		if (tokenizer.countTokens() != 6) {
 			throw rrdException;
 		}
-		String[] tokens = new String[6];
+		final String[] tokens = new String[6];
 		for (int curTok = 0; tokenizer.hasMoreTokens(); curTok++) {
 			tokens[curTok] = tokenizer.nextToken();
 		}
 		if (!tokens[0].equalsIgnoreCase("DS")) {
 			throw rrdException;
 		}
-		String dsName = tokens[1];
-		String dsType = tokens[2];
+		final String dsName = tokens[1];
+		final String dsType = tokens[2];
 		long dsHeartbeat;
 		try {
 			dsHeartbeat = Long.parseLong(tokens[3]);
 		}
-		catch (NumberFormatException nfe) {
+		catch (final NumberFormatException nfe) {
 			throw rrdException;
 		}
 		double minValue = Double.NaN;
@@ -269,7 +267,7 @@ public class RrdDef {
 			try {
 				minValue = Double.parseDouble(tokens[4]);
 			}
-			catch (NumberFormatException nfe) {
+			catch (final NumberFormatException nfe) {
 				throw rrdException;
 			}
 		}
@@ -278,7 +276,7 @@ public class RrdDef {
 			try {
 				maxValue = Double.parseDouble(tokens[5]);
 			}
-			catch (NumberFormatException nfe) {
+			catch (final NumberFormatException nfe) {
 				throw rrdException;
 			}
 		}
@@ -291,8 +289,8 @@ public class RrdDef {
 	 * @param dsDefs Array of data source definition objects.
 	 * @throws RrdException Thrown if duplicate data source name is used.
 	 */
-	public void addDatasource(DsDef[] dsDefs) throws RrdException {
-		for (DsDef dsDef : dsDefs) {
+	public void addDatasource(final DsDef[] dsDefs) throws RrdException {
+		for (final DsDef dsDef : dsDefs) {
 			addDatasource(dsDef);
 		}
 	}
@@ -304,7 +302,7 @@ public class RrdDef {
 	 * @throws RrdException Thrown if archive with the same consolidation function
 	 *                      and the same number of steps is already added.
 	 */
-	public void addArchive(ArcDef arcDef) throws RrdException {
+	public void addArchive(final ArcDef arcDef) throws RrdException {
 		if (arcDefs.contains(arcDef)) {
 			throw new RrdException("Archive already defined: " + arcDef.dump());
 		}
@@ -318,8 +316,8 @@ public class RrdDef {
 	 * @throws RrdException Thrown if RRD definition already contains archive with
 	 *                      the same consolidation function and the same number of steps.
 	 */
-	public void addArchive(ArcDef[] arcDefs) throws RrdException {
-		for (ArcDef arcDef : arcDefs) {
+	public void addArchive(final ArcDef[] arcDefs) throws RrdException {
+		for (final ArcDef arcDef : arcDefs) {
 			addArchive(arcDef);
 		}
 	}
@@ -339,8 +337,7 @@ public class RrdDef {
 	 * @throws RrdException Thrown if archive with the same consolidation function
 	 *                      and the same number of steps is already added.
 	 */
-	public void addArchive(String consolFun, double xff, int steps, int rows)
-			throws RrdException {
+	public void addArchive(final String consolFun, final double xff, final int steps, final int rows) throws RrdException {
 		addArchive(new ArcDef(consolFun, xff, steps, rows));
 	}
 
@@ -361,40 +358,39 @@ public class RrdDef {
 	 * @param rrdToolArcDef Archive definition string with the syntax borrowed from RRDTool.
 	 * @throws RrdException Thrown if invalid string is supplied.
 	 */
-	public void addArchive(String rrdToolArcDef) throws RrdException {
-		RrdException rrdException = new RrdException(
-				"Wrong rrdtool-like archive definition: " + rrdToolArcDef);
-		StringTokenizer tokenizer = new StringTokenizer(rrdToolArcDef, ":");
+	public void addArchive(final String rrdToolArcDef) throws RrdException {
+	    final RrdException rrdException = new RrdException("Wrong rrdtool-like archive definition: " + rrdToolArcDef);
+		final StringTokenizer tokenizer = new StringTokenizer(rrdToolArcDef, ":");
 		if (tokenizer.countTokens() != 5) {
 			throw rrdException;
 		}
-		String[] tokens = new String[5];
+		final String[] tokens = new String[5];
 		for (int curTok = 0; tokenizer.hasMoreTokens(); curTok++) {
 			tokens[curTok] = tokenizer.nextToken();
 		}
 		if (!tokens[0].equalsIgnoreCase("RRA")) {
 			throw rrdException;
 		}
-		String consolFun = tokens[1];
+		final String consolFun = tokens[1];
 		double xff;
 		try {
 			xff = Double.parseDouble(tokens[2]);
 		}
-		catch (NumberFormatException nfe) {
+		catch (final NumberFormatException nfe) {
 			throw rrdException;
 		}
 		int steps;
 		try {
 			steps = Integer.parseInt(tokens[3]);
 		}
-		catch (NumberFormatException nfe) {
+		catch (final NumberFormatException nfe) {
 			throw rrdException;
 		}
 		int rows;
 		try {
 			rows = Integer.parseInt(tokens[4]);
 		}
-		catch (NumberFormatException nfe) {
+		catch (final NumberFormatException nfe) {
 			throw rrdException;
 		}
 		addArchive(new ArcDef(consolFun, xff, steps, rows));
@@ -452,14 +448,14 @@ public class RrdDef {
 	 * @return Dumped content of <code>RrdDb</code> object.
 	 */
 	public String dump() {
-		StringBuffer buffer = new StringBuffer("create \"");
+	    final StringBuffer buffer = new StringBuffer("create \"");
 		buffer.append(path).append("\"");
 		buffer.append(" --start ").append(getStartTime());
 		buffer.append(" --step ").append(getStep()).append(" ");
-		for (DsDef dsDef : dsDefs) {
+		for (final DsDef dsDef : dsDefs) {
 			buffer.append(dsDef.dump()).append(" ");
 		}
-		for (ArcDef arcDef : arcDefs) {
+		for (final ArcDef arcDef : arcDefs) {
 			buffer.append(arcDef.dump()).append(" ");
 		}
 		return buffer.toString().trim();
@@ -469,9 +465,9 @@ public class RrdDef {
 		return dump();
 	}
 
-	void removeDatasource(String dsName) throws RrdException {
+	void removeDatasource(final String dsName) throws RrdException {
 		for (int i = 0; i < dsDefs.size(); i++) {
-			DsDef dsDef = dsDefs.get(i);
+		    final DsDef dsDef = dsDefs.get(i);
 			if (dsDef.getDsName().equals(dsName)) {
 				dsDefs.remove(i);
 				return;
@@ -480,25 +476,25 @@ public class RrdDef {
 		throw new RrdException("Could not find datasource named '" + dsName + "'");
 	}
 
-	void saveSingleDatasource(String dsName) {
-		Iterator<DsDef> it = dsDefs.iterator();
+	void saveSingleDatasource(final String dsName) {
+	    final Iterator<DsDef> it = dsDefs.iterator();
 		while (it.hasNext()) {
-			DsDef dsDef = it.next();
+			final DsDef dsDef = it.next();
 			if (!dsDef.getDsName().equals(dsName)) {
 				it.remove();
 			}
 		}
 	}
 
-	void removeArchive(String consolFun, int steps) throws RrdException {
-		ArcDef arcDef = findArchive(consolFun, steps);
+	void removeArchive(final String consolFun, final int steps) throws RrdException {
+	    final ArcDef arcDef = findArchive(consolFun, steps);
 		if (!arcDefs.remove(arcDef)) {
 			throw new RrdException("Could not remove archive " + consolFun + "/" + steps);
 		}
 	}
 
-	ArcDef findArchive(String consolFun, int steps) throws RrdException {
-		for (ArcDef arcDef : arcDefs) {
+	ArcDef findArchive(final String consolFun, final int steps) throws RrdException {
+	    for (final ArcDef arcDef : arcDefs) {
 			if (arcDef.getConsolFun().equals(consolFun) && arcDef.getSteps() == steps) {
 				return arcDef;
 			}
@@ -512,15 +508,13 @@ public class RrdDef {
 	 *
 	 * @param out Output stream
 	 */
-	public void exportXmlTemplate(OutputStream out) {
-		XmlWriter xml = new XmlWriter(out);
+	public void exportXmlTemplate(final OutputStream out) {
+	    final XmlWriter xml = new XmlWriter(out);
 		xml.startTag("rrd_def");
 		xml.writeTag("path", getPath());
 		xml.writeTag("step", getStep());
 		xml.writeTag("start", getStartTime());
-		// datasources
-		DsDef[] dsDefs = getDsDefs();
-		for (DsDef dsDef : dsDefs) {
+		for (final DsDef dsDef : getDsDefs()) {
 			xml.startTag("datasource");
 			xml.writeTag("name", dsDef.getDsName());
 			xml.writeTag("type", dsDef.getDsType());
@@ -529,8 +523,7 @@ public class RrdDef {
 			xml.writeTag("max", dsDef.getMaxValue(), "U");
 			xml.closeTag(); // datasource
 		}
-		ArcDef[] arcDefs = getArcDefs();
-		for (ArcDef arcDef : arcDefs) {
+		for (ArcDef arcDef : getArcDefs()) {
 			xml.startTag("archive");
 			xml.writeTag("cf", arcDef.getConsolFun());
 			xml.writeTag("xff", arcDef.getXff());
@@ -549,19 +542,19 @@ public class RrdDef {
 	 * @return XML formatted string representing this RrdDef object
 	 */
 	public String exportXmlTemplate() {
-		ByteArrayOutputStream out = new ByteArrayOutputStream();
+	    final ByteArrayOutputStream out = new ByteArrayOutputStream();
 		exportXmlTemplate(out);
 		return out.toString();
 	}
 
 	/**
-	 * Exports RrdDef object to a file in XML format. Generated XML code can be parsed
+	 * Exports RrdDef object to a m_file in XML format. Generated XML code can be parsed
 	 * with {@link RrdDefTemplate} class.
 	 *
-	 * @param filePath Path to the file
+	 * @param filePath Path to the m_file
 	 */
-	public void exportXmlTemplate(String filePath) throws IOException {
-		FileOutputStream out = new FileOutputStream(filePath, false);
+	public void exportXmlTemplate(final String filePath) throws IOException {
+	    final FileOutputStream out = new FileOutputStream(filePath, false);
 		exportXmlTemplate(out);
 		out.close();
 	}
@@ -573,18 +566,16 @@ public class RrdDef {
 	 * @return Estimated byte count of the underlying RRD storage.
 	 */
 	public long getEstimatedSize() {
-		int dsCount = dsDefs.size();
-		int arcCount = arcDefs.size();
+		final int dsCount = dsDefs.size();
+		final int arcCount = arcDefs.size();
 		int rowsCount = 0;
-		for (ArcDef arcDef : arcDefs) {
+		for (final ArcDef arcDef : arcDefs) {
 			rowsCount += arcDef.getRows();
 		}
 		return calculateSize(dsCount, arcCount, rowsCount);
 	}
 
-	static long calculateSize(int dsCount, int arcCount, int rowsCount) {
-		// return 64L + 128L * dsCount + 56L * arcCount +
-		//	20L * dsCount * arcCount + 8L * dsCount * rowsCount;
+	static long calculateSize(final int dsCount, final int arcCount, final int rowsCount) {
 		return (24L + 48L * dsCount + 16L * arcCount +
 				20L * dsCount * arcCount + 8L * dsCount * rowsCount) +
 				(1L + 2L * dsCount + arcCount) * 2L * RrdPrimitive.STRING_LENGTH;
@@ -597,29 +588,30 @@ public class RrdDef {
 	 * <li>all datasources have exactly the same definition in both RrdDef objects (datasource names,
 	 * types, heartbeat, min and max values must match)
 	 * <li>all archives have exactly the same definition in both RrdDef objects (archive consolidation
-	 * functions, X-file factors, step and row counts must match)
+	 * functions, X-m_file factors, step and row counts must match)
 	 * </ul>
 	 *
 	 * @param obj The second RrdDef object
 	 * @return true if RrdDefs match exactly, false otherwise
 	 */
-	public boolean equals(Object obj) {
+	public boolean equals(final Object obj) {
 		if (obj == null || !(obj instanceof RrdDef)) {
 			return false;
 		}
-		RrdDef rrdDef2 = (RrdDef) obj;
+		final RrdDef rrdDef2 = (RrdDef) obj;
 		// check primary RRD step
 		if (step != rrdDef2.step) {
 			return false;
 		}
 		// check datasources
-		DsDef[] dsDefs = getDsDefs(), dsDefs2 = rrdDef2.getDsDefs();
+		final DsDef[] dsDefs = getDsDefs();
+		final DsDef[] dsDefs2 = rrdDef2.getDsDefs();
 		if (dsDefs.length != dsDefs2.length) {
 			return false;
 		}
-		for (DsDef dsDef : dsDefs) {
+		for (final DsDef dsDef : dsDefs) {
 			boolean matched = false;
-			for (DsDef dsDef2 : dsDefs2) {
+			for (final DsDef dsDef2 : dsDefs2) {
 				if (dsDef.exactlyEqual(dsDef2)) {
 					matched = true;
 					break;
@@ -631,13 +623,14 @@ public class RrdDef {
 			}
 		}
 		// check archives
-		ArcDef[] arcDefs = getArcDefs(), arcDefs2 = rrdDef2.getArcDefs();
+		final ArcDef[] arcDefs = getArcDefs();
+		final ArcDef[] arcDefs2 = rrdDef2.getArcDefs();
 		if (arcDefs.length != arcDefs2.length) {
 			return false;
 		}
-		for (ArcDef arcDef : arcDefs) {
+		for (final ArcDef arcDef : arcDefs) {
 			boolean matched = false;
-			for (ArcDef arcDef2 : arcDefs2) {
+			for (final ArcDef arcDef2 : arcDefs2) {
 				if (arcDef.exactlyEqual(arcDef2)) {
 					matched = true;
 					break;

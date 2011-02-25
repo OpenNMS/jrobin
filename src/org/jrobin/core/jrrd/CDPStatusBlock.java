@@ -22,7 +22,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 
 /**
- * Instances of this class model the consolidation data point status from an RRD file.
+ * Instances of this class model the consolidation data point status from an RRD m_file.
  *
  * @author <a href="mailto:ciaran@codeloop.com">Ciaran Treanor</a>
  * @version $Revision$

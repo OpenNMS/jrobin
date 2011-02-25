@@ -40,8 +40,8 @@ import java.util.HashMap;
  * <li>{@link RrdSafeFileBackend}: objects of this class are created from the
  * {@link RrdSafeFileBackendFactory} class. It uses java.io.* package and RandomAccessFile class to store
  * RRD data in files on the disk. This backend is SAFE:
- * it locks the underlying RRD file during update/fetch operations, and caches only static
- * parts of a RRD file in memory. Therefore, this backend is safe to be used when RRD files should
+ * it locks the underlying RRD m_file during update/fetch operations, and caches only static
+ * parts of a RRD m_file in memory. Therefore, this backend is safe to be used when RRD files should
  * be shared <b>between several JVMs</b> at the same time. However, this backend is *slow* since it does
  * not use fast java.nio.* package (it's still based on the RandomAccessFile class).
  * <p/>
@@ -69,6 +69,8 @@ public abstract class RrdBackendFactory {
 		try {
 			RrdFileBackendFactory fileFactory = new RrdFileBackendFactory();
 			registerFactory(fileFactory);
+			RrdJRobin14FileBackendFactory jrobin14Factory = new RrdJRobin14FileBackendFactory();
+			registerFactory(jrobin14Factory);
 			RrdMemoryBackendFactory memoryFactory = new RrdMemoryBackendFactory();
 			registerFactory(memoryFactory);
 			RrdNioBackendFactory nioFactory = new RrdNioBackendFactory();
@@ -108,8 +110,8 @@ public abstract class RrdBackendFactory {
 	 * @throws RrdException Thrown if no factory with the given name
 	 *                      is available.
 	 */
-	public static synchronized RrdBackendFactory getFactory(String name) throws RrdException {
-		RrdBackendFactory factory = factories.get(name);
+	public static synchronized RrdBackendFactory getFactory(final String name) throws RrdException {
+	    final RrdBackendFactory factory = factories.get(name);
 		if (factory != null) {
 			return factory;
 		}
@@ -123,15 +125,13 @@ public abstract class RrdBackendFactory {
 	 * @throws RrdException Thrown if the name of the specified factory is already
 	 *                      used.
 	 */
-	public static synchronized void registerFactory(RrdBackendFactory factory)
-			throws RrdException {
-		String name = factory.getFactoryName();
+	public static synchronized void registerFactory(final RrdBackendFactory factory) throws RrdException {
+	    final String name = factory.getFactoryName();
 		if (!factories.containsKey(name)) {
 			factories.put(name, factory);
 		}
 		else {
-			throw new RrdException("Backend factory of this name2 (" + name +
-					") already exists and cannot be registered");
+			throw new RrdException("Backend factory of this name2 (" + name + ") already exists and cannot be registered");
 		}
 	}
 
@@ -143,8 +143,7 @@ public abstract class RrdBackendFactory {
 	 * @throws RrdException Thrown if the name of the specified factory is already
 	 *                      used.
 	 */
-	public static synchronized void registerAndSetAsDefaultFactory(RrdBackendFactory factory)
-			throws RrdException {
+	public static synchronized void registerAndSetAsDefaultFactory(final RrdBackendFactory factory) throws RrdException {
 		registerFactory(factory);
 		setDefaultFactory(factory.getFactoryName());
 	}
@@ -170,14 +169,13 @@ public abstract class RrdBackendFactory {
 	 * @throws RrdException Thrown if invalid factory name is supplied or not called before
 	 *                      the first RRD is created.
 	 */
-	public static void setDefaultFactory(String factoryName) throws RrdException {
+	public static void setDefaultFactory(final String factoryName) throws RrdException {
 		// We will allow this only if no RRDs are created
 		if (!RrdBackend.isInstanceCreated()) {
 			defaultFactory = getFactory(factoryName);
 		}
 		else {
-			throw new RrdException("Could not change the default backend factory. " +
-					"This method must be called before the first RRD gets created");
+			throw new RrdException("Could not change the default backend factory. This method must be called before the first RRD gets created");
 		}
 	}
 
@@ -185,7 +183,7 @@ public abstract class RrdBackendFactory {
 	 * Creates RrdBackend object for the given storage path.
 	 *
 	 * @param path	 Storage path
-	 * @param readOnly True, if the storage should be accessed in read/only mode.
+	 * @param m_readOnly True, if the storage should be accessed in read/only mode.
 	 *                 False otherwise.
 	 * @return Backend object which handles all I/O operations for the given storage path
 	 * @throws IOException Thrown in case of I/O error.
@@ -206,4 +204,8 @@ public abstract class RrdBackendFactory {
 	 * @return Name of the factory.
 	 */
 	public abstract String getFactoryName();
+
+	public String toString() {
+	    return getClass().getSimpleName() + "@" + Integer.toHexString(hashCode()) + "[name=" + getFactoryName() + "]";
+	}
 }

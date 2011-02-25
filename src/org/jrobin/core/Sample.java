@@ -51,7 +51,7 @@ public class Sample {
 	private String[] dsNames;
 	private double[] values;
 
-	Sample(RrdDb parentDb, long time) throws IOException {
+	Sample(final RrdDb parentDb, final long time) throws IOException {
 		this.parentDb = parentDb;
 		this.time = time;
 		this.dsNames = parentDb.getDsNames();
@@ -74,7 +74,7 @@ public class Sample {
 	 * @return This <code>Sample</code> object
 	 * @throws RrdException Thrown if invalid data source name is supplied.
 	 */
-	public Sample setValue(String dsName, double value) throws RrdException {
+	public Sample setValue(final String dsName, final double value) throws RrdException {
 		for (int i = 0; i < values.length; i++) {
 			if (dsNames[i].equals(dsName)) {
 				values[i] = value;
@@ -93,7 +93,7 @@ public class Sample {
 	 * @return This <code>Sample</code> object
 	 * @throws RrdException Thrown if data source index is invalid.
 	 */
-	public Sample setValue(int i, double value) throws RrdException {
+	public Sample setValue(final int i, final double value) throws RrdException {
 		if (i < values.length) {
 			values[i] = value;
 			return this;
@@ -112,14 +112,13 @@ public class Sample {
 	 * @throws RrdException Thrown if the number of supplied values is zero or greater
 	 *                      than the number of data sources defined in the RRD.
 	 */
-	public Sample setValues(double[] values) throws RrdException {
+	public Sample setValues(final double[] values) throws RrdException {
 		if (values.length <= this.values.length) {
 			System.arraycopy(values, 0, this.values, 0, values.length);
 			return this;
 		}
 		else {
-			throw new RrdException("Invalid number of values specified (found " +
-					values.length + ", only " + dsNames.length + " allowed)");
+			throw new RrdException("Invalid number of values specified (found " + values.length + ", only " + dsNames.length + " allowed)");
 		}
 	}
 
@@ -147,7 +146,7 @@ public class Sample {
 	 * @param time New sample timestamp.
 	 * @return This <code>Sample</code> object
 	 */
-	public Sample setTime(long time) {
+	public Sample setTime(final long time) {
 		this.time = time;
 		return this;
 	}
@@ -182,18 +181,17 @@ public class Sample {
 	 * @return This <code>Sample</code> object
 	 * @throws RrdException Thrown if too many datasource values are supplied
 	 */
-	public Sample set(String timeAndValues) throws RrdException {
-		StringTokenizer tokenizer = new StringTokenizer(timeAndValues, ":", false);
-		int n = tokenizer.countTokens();
-		if (n > values.length + 1) {
-			throw new RrdException("Invalid number of values specified (found " +
-					values.length + ", " + dsNames.length + " allowed)");
+	public Sample set(final String timeAndValues) throws RrdException {
+	    final StringTokenizer tokenizer = new StringTokenizer(timeAndValues, ":", false);
+		final int tokenCount = tokenizer.countTokens();
+		if (tokenCount > values.length + 1) {
+			throw new RrdException("Invalid number of values specified (found " + values.length + ", " + dsNames.length + " allowed)");
 		}
-		String timeToken = tokenizer.nextToken();
+		final String timeToken = tokenizer.nextToken();
 		try {
 			time = Long.parseLong(timeToken);
 		}
-		catch (NumberFormatException nfe) {
+		catch (final NumberFormatException nfe) {
 			if (timeToken.equalsIgnoreCase("N") || timeToken.equalsIgnoreCase("NOW")) {
 				time = Util.getTime();
 			}
@@ -205,7 +203,7 @@ public class Sample {
 			try {
 				values[i] = Double.parseDouble(tokenizer.nextToken());
 			}
-			catch (NumberFormatException nfe) {
+			catch (final NumberFormatException nfe) {
 				// NOP, value is already set to NaN
 			}
 		}
@@ -240,7 +238,7 @@ public class Sample {
 	 * @throws IOException  Thrown in case of I/O error.
 	 * @throws RrdException Thrown in case of JRobin related error.
 	 */
-	public void setAndUpdate(String timeAndValues) throws IOException, RrdException {
+	public void setAndUpdate(final String timeAndValues) throws IOException, RrdException {
 		set(timeAndValues);
 		update();
 	}
@@ -251,9 +249,9 @@ public class Sample {
 	 * @return Sample dump.
 	 */
 	public String dump() {
-		StringBuffer buffer = new StringBuffer("update \"");
+	    final StringBuffer buffer = new StringBuffer("update \"");
 		buffer.append(parentDb.getRrdBackend().getPath()).append("\" ").append(time);
-		for (double value : values) {
+		for (final double value : values) {
 			buffer.append(":");
 			buffer.append(Util.formatDouble(value, "U", false));
 		}
@@ -268,9 +266,9 @@ public class Sample {
 	    return getClass().getSimpleName() + "@" + "[parentDb=" + parentDb + ",time=" + new Date(time * 1000L) + ",dsNames=[" + printList(dsNames) + "],values=[" + printList(values) + "]]";
 	}
 
-    private String printList(Object[] dsNames) {
+    private String printList(final Object[] dsNames) {
         if (dsNames == null) return "null";
-        StringBuffer sb = new StringBuffer();
+        final StringBuffer sb = new StringBuffer();
         for (int i = 0; i < dsNames.length; i++) {
             if (i == dsNames.length - 1) {
                 sb.append(dsNames[i]);
@@ -281,9 +279,9 @@ public class Sample {
         return sb.toString();
     }
 	
-    private String printList(double[] values) {
+    private String printList(final double[] values) {
         if (values == null) return "null";
-        StringBuffer sb = new StringBuffer();
+        final StringBuffer sb = new StringBuffer();
         for (int i = 0; i < values.length; i++) {
             if (i == values.length - 1) {
                 sb.append(values[i]);

@@ -25,15 +25,15 @@ class RrdLong extends RrdPrimitive {
 	private long cache;
 	private boolean cached = false;
 
-	RrdLong(RrdUpdater updater, boolean isConstant) throws IOException {
+	RrdLong(final RrdUpdater updater, final boolean isConstant) throws IOException {
 		super(updater, RrdPrimitive.RRD_LONG, isConstant);
 	}
 
-	RrdLong(RrdUpdater updater) throws IOException {
+	RrdLong(final RrdUpdater updater) throws IOException {
 		this(updater, false);
 	}
 
-	void set(long value) throws IOException {
+	void set(final long value) throws IOException {
 		if (!isCachingAllowed()) {
 			writeLong(value);
 		}

@@ -30,7 +30,7 @@ import java.io.File;
 class MainTreeModel extends DefaultTreeModel {
 	private static final long serialVersionUID = 1L;
 	private static final DefaultMutableTreeNode INVALID_NODE =
-			new DefaultMutableTreeNode("No valid RRD file specified");
+			new DefaultMutableTreeNode("No valid RRD m_file specified");
 
 	MainTreeModel() {
 		super(INVALID_NODE);

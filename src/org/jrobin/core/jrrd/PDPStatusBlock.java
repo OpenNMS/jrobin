@@ -21,7 +21,7 @@ package org.jrobin.core.jrrd;
 import java.io.IOException;
 
 /**
- * Instances of this class model the primary data point status from an RRD file.
+ * Instances of this class model the primary data point status from an RRD m_file.
  *
  * @author <a href="mailto:ciaran@codeloop.com">Ciaran Treanor</a>
  * @version $Revision$

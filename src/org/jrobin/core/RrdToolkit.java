@@ -29,26 +29,26 @@ import java.util.Arrays;
  * <p>Class used to perform various complex operations on RRD files. Use an instance of the
  * RrdToolkit class to:</p>
  * <ul>
- * <li>add datasource to a RRD file.
- * <li>add archive to a RRD file.
- * <li>remove datasource from a RRD file.
- * <li>remove archive from a RRD file.
+ * <li>add datasource to a RRD m_file.
+ * <li>add archive to a RRD m_file.
+ * <li>remove datasource from a RRD m_file.
+ * <li>remove archive from a RRD m_file.
  * </ul>
- * <p>All these operations can be performed on the copy of the original RRD file, or on the
- * original file itself (with possible backup file creation)</p>
+ * <p>All these operations can be performed on the copy of the original RRD m_file, or on the
+ * original m_file itself (with possible backup m_file creation)</p>
  * <p/>
  * <p><b><u>IMPORTANT</u></b>: NEVER use methods found in this class on 'live' RRD files
  * (files which are currently in use).</p>
  */
 public class RrdToolkit {
 	/**
-	 * Creates a new RRD file with one more datasource in it. RRD file is created based on the
-	 * existing one (the original RRD file is not modified at all). All data from
-	 * the original RRD file is copied to the new one.
+	 * Creates a new RRD m_file with one more datasource in it. RRD m_file is created based on the
+	 * existing one (the original RRD m_file is not modified at all). All data from
+	 * the original RRD m_file is copied to the new one.
 	 *
-	 * @param sourcePath	path to a RRD file to import data from (will not be modified)
-	 * @param destPath	  path to a new RRD file (will be created)
-	 * @param newDatasource Datasource definition to be added to the new RRD file
+	 * @param sourcePath	path to a RRD m_file to import data from (will not be modified)
+	 * @param destPath	  path to a new RRD m_file (will be created)
+	 * @param newDatasource Datasource definition to be added to the new RRD m_file
 	 * @throws IOException  Thrown in case of I/O error
 	 * @throws RrdException Thrown in case of JRobin specific error
 	 */
@@ -76,18 +76,18 @@ public class RrdToolkit {
 	}
 
 	/**
-	 * <p>Adds one more datasource to a RRD file.</p>
-	 * <p>WARNING: This method is potentialy dangerous! It will modify your RRD file.
-	 * It is highly recommended to preserve the original RRD file (<i>saveBackup</i>
-	 * should be set to <code>true</code>). The backup file will be created in the same
+	 * <p>Adds one more datasource to a RRD m_file.</p>
+	 * <p>WARNING: This method is potentialy dangerous! It will modify your RRD m_file.
+	 * It is highly recommended to preserve the original RRD m_file (<i>saveBackup</i>
+	 * should be set to <code>true</code>). The backup m_file will be created in the same
 	 * directory as the original one with <code>.bak</code> extension added to the
 	 * original name.</p>
-	 * <p>Before applying this method, be sure that the specified RRD file is not in use
+	 * <p>Before applying this method, be sure that the specified RRD m_file is not in use
 	 * (not open)</p>
 	 *
-	 * @param sourcePath	path to a RRD file to add datasource to.
-	 * @param newDatasource Datasource definition to be added to the RRD file
-	 * @param saveBackup	true, if backup of the original file should be created;
+	 * @param sourcePath	path to a RRD m_file to add datasource to.
+	 * @param newDatasource Datasource definition to be added to the RRD m_file
+	 * @param saveBackup	true, if backup of the original m_file should be created;
 	 *                      false, otherwise
 	 * @throws IOException  Thrown in case of I/O error
 	 * @throws RrdException Thrown in case of JRobin specific error
@@ -100,13 +100,13 @@ public class RrdToolkit {
 	}
 
 	/**
-	 * Creates a new RRD file with one datasource removed. RRD file is created based on the
-	 * existing one (the original RRD file is not modified at all). All remaining data from
-	 * the original RRD file is copied to the new one.
+	 * Creates a new RRD m_file with one datasource removed. RRD m_file is created based on the
+	 * existing one (the original RRD m_file is not modified at all). All remaining data from
+	 * the original RRD m_file is copied to the new one.
 	 *
-	 * @param sourcePath path to a RRD file to import data from (will not be modified)
-	 * @param destPath   path to a new RRD file (will be created)
-	 * @param dsName	 Name of the Datasource to be removed from the new RRD file
+	 * @param sourcePath path to a RRD m_file to import data from (will not be modified)
+	 * @param destPath   path to a new RRD m_file (will be created)
+	 * @param dsName	 Name of the Datasource to be removed from the new RRD m_file
 	 * @throws IOException  Thrown in case of I/O error
 	 * @throws RrdException Thrown in case of JRobin specific error
 	 */
@@ -134,18 +134,18 @@ public class RrdToolkit {
 	}
 
 	/**
-	 * <p>Removes single datasource from a RRD file.</p>
-	 * <p>WARNING: This method is potentialy dangerous! It will modify your RRD file.
-	 * It is highly recommended to preserve the original RRD file (<i>saveBackup</i>
-	 * should be set to <code>true</code>). The backup file will be created in the same
+	 * <p>Removes single datasource from a RRD m_file.</p>
+	 * <p>WARNING: This method is potentialy dangerous! It will modify your RRD m_file.
+	 * It is highly recommended to preserve the original RRD m_file (<i>saveBackup</i>
+	 * should be set to <code>true</code>). The backup m_file will be created in the same
 	 * directory as the original one with <code>.bak</code> extension added to the
 	 * original name.</p>
-	 * <p>Before applying this method, be sure that the specified RRD file is not in use
+	 * <p>Before applying this method, be sure that the specified RRD m_file is not in use
 	 * (not open)</p>
 	 *
-	 * @param sourcePath path to a RRD file to remove datasource from.
-	 * @param dsName	 Name of the Datasource to be removed from the RRD file
-	 * @param saveBackup true, if backup of the original file should be created;
+	 * @param sourcePath path to a RRD m_file to remove datasource from.
+	 * @param dsName	 Name of the Datasource to be removed from the RRD m_file
+	 * @param saveBackup true, if backup of the original m_file should be created;
 	 *                   false, otherwise
 	 * @throws IOException  Thrown in case of I/O error
 	 * @throws RrdException Thrown in case of JRobin specific error
@@ -158,9 +158,9 @@ public class RrdToolkit {
 	}
 
 	/**
-	 * Renames single datasource in the given RRD file.
+	 * Renames single datasource in the given RRD m_file.
 	 *
-	 * @param sourcePath Path to a RRD file
+	 * @param sourcePath Path to a RRD m_file
 	 * @param oldDsName  Old datasource name
 	 * @param newDsName  New datasource name
 	 * @throws IOException  Thrown in case of I/O error
@@ -176,7 +176,7 @@ public class RrdToolkit {
 				datasource.setDsName(newDsName);
 			}
 			else {
-				throw new RrdException("Could not find datasource [" + oldDsName + "] in file " + sourcePath);
+				throw new RrdException("Could not find datasource [" + oldDsName + "] in m_file " + sourcePath);
 			}
 		}
 		finally {
@@ -185,12 +185,12 @@ public class RrdToolkit {
 	}
 
 	/**
-	 * Updates single or all datasource names in the specified RRD file
+	 * Updates single or all datasource names in the specified RRD m_file
 	 * by appending '!' (if not already present). Datasources with names ending with '!'
 	 * will never store NaNs in RRA archives (zero value will be used instead). Might be useful
 	 * from time to time
 	 *
-	 * @param sourcePath Path to a RRD file
+	 * @param sourcePath Path to a RRD m_file
 	 * @param dsName	 Datasource name or null if you want to rename all datasources
 	 * @return Number of datasources successfully renamed
 	 * @throws IOException  Thrown in case of I/O error
@@ -209,7 +209,7 @@ public class RrdToolkit {
 					datasources = new Datasource[] {rrd.getDatasource(dsName)};
 				}
 				else {
-					throw new RrdException("Could not find datasource [" + dsName + "] in file " + sourcePath);
+					throw new RrdException("Could not find datasource [" + dsName + "] in m_file " + sourcePath);
 				}
 			}
 			int count = 0;
@@ -228,13 +228,13 @@ public class RrdToolkit {
 	}
 
 	/**
-	 * Creates a new RRD file with one more archive in it. RRD file is created based on the
-	 * existing one (the original RRD file is not modified at all). All data from
-	 * the original RRD file is copied to the new one.
+	 * Creates a new RRD m_file with one more archive in it. RRD m_file is created based on the
+	 * existing one (the original RRD m_file is not modified at all). All data from
+	 * the original RRD m_file is copied to the new one.
 	 *
-	 * @param sourcePath path to a RRD file to import data from (will not be modified)
-	 * @param destPath   path to a new RRD file (will be created)
-	 * @param newArchive Archive definition to be added to the new RRD file
+	 * @param sourcePath path to a RRD m_file to import data from (will not be modified)
+	 * @param destPath   path to a new RRD m_file (will be created)
+	 * @param newArchive Archive definition to be added to the new RRD m_file
 	 * @throws IOException  Thrown in case of I/O error
 	 * @throws RrdException Thrown in case of JRobin specific error
 	 */
@@ -262,18 +262,18 @@ public class RrdToolkit {
 	}
 
 	/**
-	 * <p>Adds one more archive to a RRD file.</p>
-	 * <p>WARNING: This method is potentialy dangerous! It will modify your RRD file.
-	 * It is highly recommended to preserve the original RRD file (<i>saveBackup</i>
-	 * should be set to <code>true</code>). The backup file will be created in the same
+	 * <p>Adds one more archive to a RRD m_file.</p>
+	 * <p>WARNING: This method is potentialy dangerous! It will modify your RRD m_file.
+	 * It is highly recommended to preserve the original RRD m_file (<i>saveBackup</i>
+	 * should be set to <code>true</code>). The backup m_file will be created in the same
 	 * directory as the original one with <code>.bak</code> extension added to the
 	 * original name.</p>
-	 * <p>Before applying this method, be sure that the specified RRD file is not in use
+	 * <p>Before applying this method, be sure that the specified RRD m_file is not in use
 	 * (not open)</p>
 	 *
-	 * @param sourcePath path to a RRD file to add datasource to.
-	 * @param newArchive Archive definition to be added to the RRD file
-	 * @param saveBackup true, if backup of the original file should be created;
+	 * @param sourcePath path to a RRD m_file to add datasource to.
+	 * @param newArchive Archive definition to be added to the RRD m_file
+	 * @param saveBackup true, if backup of the original m_file should be created;
 	 *                   false, otherwise
 	 * @throws IOException  Thrown in case of I/O error
 	 * @throws RrdException Thrown in case of JRobin specific error
@@ -286,12 +286,12 @@ public class RrdToolkit {
 	}
 
 	/**
-	 * Creates a new RRD file with one archive removed. RRD file is created based on the
-	 * existing one (the original RRD file is not modified at all). All relevant data from
-	 * the original RRD file is copied to the new one.
+	 * Creates a new RRD m_file with one archive removed. RRD m_file is created based on the
+	 * existing one (the original RRD m_file is not modified at all). All relevant data from
+	 * the original RRD m_file is copied to the new one.
 	 *
-	 * @param sourcePath path to a RRD file to import data from (will not be modified)
-	 * @param destPath   path to a new RRD file (will be created)
+	 * @param sourcePath path to a RRD m_file to import data from (will not be modified)
+	 * @param destPath   path to a new RRD m_file (will be created)
 	 * @param consolFun  Consolidation function of Archive which should be removed
 	 * @param steps	  Number of steps for Archive which should be removed
 	 * @throws IOException  Thrown in case of I/O error
@@ -321,19 +321,19 @@ public class RrdToolkit {
 	}
 
 	/**
-	 * <p>Removes one archive from a RRD file.</p>
-	 * <p>WARNING: This method is potentialy dangerous! It will modify your RRD file.
-	 * It is highly recommended to preserve the original RRD file (<i>saveBackup</i>
-	 * should be set to <code>true</code>). The backup file will be created in the same
+	 * <p>Removes one archive from a RRD m_file.</p>
+	 * <p>WARNING: This method is potentialy dangerous! It will modify your RRD m_file.
+	 * It is highly recommended to preserve the original RRD m_file (<i>saveBackup</i>
+	 * should be set to <code>true</code>). The backup m_file will be created in the same
 	 * directory as the original one with <code>.bak</code> extension added to the
 	 * original name.</p>
-	 * <p>Before applying this method, be sure that the specified RRD file is not in use
+	 * <p>Before applying this method, be sure that the specified RRD m_file is not in use
 	 * (not open)</p>
 	 *
-	 * @param sourcePath path to a RRD file to add datasource to.
+	 * @param sourcePath path to a RRD m_file to add datasource to.
 	 * @param consolFun  Consolidation function of Archive which should be removed
 	 * @param steps	  Number of steps for Archive which should be removed
-	 * @param saveBackup true, if backup of the original file should be created;
+	 * @param saveBackup true, if backup of the original m_file should be created;
 	 *                   false, otherwise
 	 * @throws IOException  Thrown in case of I/O error
 	 * @throws RrdException Thrown in case of JRobin specific error
@@ -354,12 +354,12 @@ public class RrdToolkit {
 			File backup = new File(backupPath);
 			deleteFile(backup);
 			if (!dest.renameTo(backup)) {
-				throw new IOException("Could not create backup file " + backupPath);
+				throw new IOException("Could not create backup m_file " + backupPath);
 			}
 		}
 		deleteFile(dest);
 		if (!source.renameTo(dest)) {
-			throw new IOException("Could not create file " + destPath + " from " + sourcePath);
+			throw new IOException("Could not create m_file " + destPath + " from " + sourcePath);
 		}
 	}
 
@@ -374,8 +374,8 @@ public class RrdToolkit {
 	/**
 	 * Sets datasource heartbeat to a new value.
 	 *
-	 * @param sourcePath	 Path to exisiting RRD file (will be updated)
-	 * @param datasourceName Name of the datasource in the specified RRD file
+	 * @param sourcePath	 Path to exisiting RRD m_file (will be updated)
+	 * @param datasourceName Name of the datasource in the specified RRD m_file
 	 * @param newHeartbeat   New datasource heartbeat
 	 * @throws RrdException Thrown in case of JRobin specific error
 	 * @throws IOException  Thrown in case of I/O error
@@ -395,8 +395,8 @@ public class RrdToolkit {
 	/**
 	 * Sets datasource heartbeat to a new value.
 	 *
-	 * @param sourcePath   Path to exisiting RRD file (will be updated)
-	 * @param dsIndex	  Index of the datasource in the specified RRD file
+	 * @param sourcePath   Path to exisiting RRD m_file (will be updated)
+	 * @param dsIndex	  Index of the datasource in the specified RRD m_file
 	 * @param newHeartbeat New datasource heartbeat
 	 * @throws RrdException Thrown in case of JRobin specific error
 	 * @throws IOException  Thrown in case of I/O error
@@ -416,8 +416,8 @@ public class RrdToolkit {
 	/**
 	 * Sets datasource min value to a new value
 	 *
-	 * @param sourcePath		   Path to exisiting RRD file (will be updated)
-	 * @param datasourceName	   Name of the datasource in the specified RRD file
+	 * @param sourcePath		   Path to exisiting RRD m_file (will be updated)
+	 * @param datasourceName	   Name of the datasource in the specified RRD m_file
 	 * @param newMinValue		  New min value for the datasource
 	 * @param filterArchivedValues set to <code>true</code> if archived values less than
 	 *                             <code>newMinValue</code> should be set to NaN; set to false, otherwise.
@@ -439,8 +439,8 @@ public class RrdToolkit {
 	/**
 	 * Sets datasource max value to a new value.
 	 *
-	 * @param sourcePath		   Path to exisiting RRD file (will be updated)
-	 * @param datasourceName	   Name of the datasource in the specified RRD file
+	 * @param sourcePath		   Path to exisiting RRD m_file (will be updated)
+	 * @param datasourceName	   Name of the datasource in the specified RRD m_file
 	 * @param newMaxValue		  New max value for the datasource
 	 * @param filterArchivedValues set to <code>true</code> if archived values greater than
 	 *                             <code>newMaxValue</code> should be set to NaN; set to false, otherwise.
@@ -462,8 +462,8 @@ public class RrdToolkit {
 	/**
 	 * Updates valid value range for the given datasource.
 	 *
-	 * @param sourcePath		   Path to exisiting RRD file (will be updated)
-	 * @param datasourceName	   Name of the datasource in the specified RRD file
+	 * @param sourcePath		   Path to exisiting RRD m_file (will be updated)
+	 * @param datasourceName	   Name of the datasource in the specified RRD m_file
 	 * @param newMinValue		  New min value for the datasource
 	 * @param newMaxValue		  New max value for the datasource
 	 * @param filterArchivedValues set to <code>true</code> if archived values outside
@@ -487,7 +487,7 @@ public class RrdToolkit {
 	/**
 	 * Sets single archive's X-files factor to a new value.
 	 *
-	 * @param sourcePath Path to existing RRD file (will be updated)
+	 * @param sourcePath Path to existing RRD m_file (will be updated)
 	 * @param consolFun  Consolidation function of the target archive
 	 * @param steps	  Number of sptes of the target archive
 	 * @param newXff	 New X-files factor for the target archive
@@ -507,12 +507,12 @@ public class RrdToolkit {
 	}
 
 	/**
-	 * Creates new RRD file based on the existing one, but with a different
+	 * Creates new RRD m_file based on the existing one, but with a different
 	 * size (number of rows) for a single archive. The archive to be resized
 	 * is identified by its consolidation function and the number of steps.
 	 *
-	 * @param sourcePath Path to the source RRD file (will not be modified)
-	 * @param destPath   Path to the new RRD file (will be created)
+	 * @param sourcePath Path to the source RRD m_file (will not be modified)
+	 * @param destPath   Path to the new RRD m_file (will be created)
 	 * @param consolFun  Consolidation function of the archive to be resized
 	 * @param numSteps   Number of steps of the archive to be resized
 	 * @param newRows	New archive size (number of archive rows)
@@ -550,14 +550,14 @@ public class RrdToolkit {
 	}
 
 	/**
-	 * Modifies existing RRD file, by resizing its chosen archive. The archive to be resized
+	 * Modifies existing RRD m_file, by resizing its chosen archive. The archive to be resized
 	 * is identified by its consolidation function and the number of steps.
 	 *
-	 * @param sourcePath Path to the RRD file (will be modified)
+	 * @param sourcePath Path to the RRD m_file (will be modified)
 	 * @param consolFun  Consolidation function of the archive to be resized
 	 * @param numSteps   Number of steps of the archive to be resized
 	 * @param newRows	New archive size (number of archive rows)
-	 * @param saveBackup true, if backup of the original file should be created;
+	 * @param saveBackup true, if backup of the original m_file should be created;
 	 *                   false, otherwise
 	 * @throws IOException  Thrown in case of I/O error
 	 * @throws RrdException Thrown in case of JRobin specific error
@@ -572,18 +572,18 @@ public class RrdToolkit {
 
 	private static void deleteFile(File file) throws IOException {
 		if (file.exists() && !file.delete()) {
-			throw new IOException("Could not delete file: " + file.getCanonicalPath());
+			throw new IOException("Could not delete m_file: " + file.getCanonicalPath());
 		}
 	}
 
 	/**
-	 * Splits single RRD file with several datasources into a number of smaller RRD files
+	 * Splits single RRD m_file with several datasources into a number of smaller RRD files
 	 * with a single datasource in it. All archived values are preserved. If
-	 * you have a RRD file named 'traffic.rrd' with two datasources, 'in' and 'out', this
+	 * you have a RRD m_file named 'traffic.rrd' with two datasources, 'in' and 'out', this
 	 * method will create two files (with a single datasource, in the same directory)
 	 * named 'in-traffic.rrd' and 'out-traffic.rrd'.
 	 *
-	 * @param sourcePath Path to a RRD file with multiple datasources defined
+	 * @param sourcePath Path to a RRD m_file with multiple datasources defined
 	 * @throws IOException  Thrown in case of I/O error
 	 * @throws RrdException Thrown in case of JRobin specific error
 	 */
@@ -610,14 +610,14 @@ public class RrdToolkit {
 	}
 
 	/**
-	 * Returns list of canonical file names with the specified extension in the given directory. This
+	 * Returns list of canonical m_file names with the specified extension in the given directory. This
 	 * method is not RRD related, but might come handy to create a quick list of all RRD files
 	 * in the given directory.
 	 *
 	 * @param directory Source directory
 	 * @param extension File extension (like ".rrd", ".jrb", ".rrd.jrb")
 	 * @param resursive true if all subdirectories should be traversed for the same extension, false otherwise
-	 * @return Array of sorted canonical file names with the given extension
+	 * @return Array of sorted canonical m_file names with the given extension
 	 * @throws IOException Thrown in case of I/O error
 	 */
 	public static String[] getCanonicalPaths(String directory, final String extension, boolean resursive)

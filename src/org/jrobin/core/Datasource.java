@@ -42,12 +42,16 @@ public class Datasource implements RrdUpdater, DsTypes {
 	private RrdLong heartbeat;
 	private RrdDouble minValue, maxValue;
 
+	// cache
+	private String m_primitiveDsName = null;
+	private String m_primitiveDsType = null;
+
 	// state variables
 	private RrdDouble lastValue;
 	private RrdLong nanSeconds;
 	private RrdDouble accumValue;
 
-	Datasource(RrdDb parentDb, DsDef dsDef) throws IOException {
+	Datasource(final RrdDb parentDb, final DsDef dsDef) throws IOException {
 		boolean shouldInitialize = dsDef != null;
 		this.parentDb = parentDb;
 		dsName = new RrdString(this);
@@ -59,22 +63,26 @@ public class Datasource implements RrdUpdater, DsTypes {
 		accumValue = new RrdDouble(this);
 		nanSeconds = new RrdLong(this);
 		if (shouldInitialize) {
-			dsName.set(dsDef.getDsName());
+		    dsName.set(dsDef.getDsName());
+            m_primitiveDsName = null;
 			dsType.set(dsDef.getDsType());
+			m_primitiveDsType = null;
 			heartbeat.set(dsDef.getHeartbeat());
 			minValue.set(dsDef.getMinValue());
 			maxValue.set(dsDef.getMaxValue());
 			lastValue.set(Double.NaN);
 			accumValue.set(0.0);
-			Header header = parentDb.getHeader();
+			final Header header = parentDb.getHeader();
 			nanSeconds.set(header.getLastUpdateTime() % header.getStep());
 		}
 	}
 
-	Datasource(RrdDb parentDb, DataImporter reader, int dsIndex) throws IOException, RrdException {
+	Datasource(final RrdDb parentDb, final DataImporter reader, final int dsIndex) throws IOException, RrdException {
 		this(parentDb, null);
 		dsName.set(reader.getDsName(dsIndex));
+		m_primitiveDsName = null;
 		dsType.set(reader.getDsType(dsIndex));
+		m_primitiveDsType = null;
 		heartbeat.set(reader.getHeartbeat(dsIndex));
 		minValue.set(reader.getMinValue(dsIndex));
 		maxValue.set(reader.getMaxValue(dsIndex));
@@ -99,7 +107,10 @@ public class Datasource implements RrdUpdater, DsTypes {
 	 * @throws IOException Thrown in case of I/O error
 	 */
 	public String getDsName() throws IOException {
-		return dsName.get();
+	    if (m_primitiveDsName == null) {
+	        m_primitiveDsName = dsName.get();
+	    }
+	    return m_primitiveDsName;
 	}
 
 	/**
@@ -109,7 +120,10 @@ public class Datasource implements RrdUpdater, DsTypes {
 	 * @throws IOException Thrown in case of I/O error
 	 */
 	public String getDsType() throws IOException {
-		return dsType.get();
+	    if (m_primitiveDsType == null) {
+	        m_primitiveDsType = dsType.get();
+	    }
+	    return m_primitiveDsType;
 	}
 
 	/**
@@ -173,24 +187,24 @@ public class Datasource implements RrdUpdater, DsTypes {
 		return nanSeconds.get();
 	}
 
-	void process(long newTime, double newValue) throws IOException, RrdException {
-		Header header = parentDb.getHeader();
-		long step = header.getStep();
-		long oldTime = header.getLastUpdateTime();
-		long startTime = Util.normalize(oldTime, step);
-		long endTime = startTime + step;
-		double oldValue = lastValue.get();
-		double updateValue = calculateUpdateValue(oldTime, oldValue, newTime, newValue);
+	void process(final long newTime, final double newValue) throws IOException, RrdException {
+	    final Header header = parentDb.getHeader();
+	    final long step = header.getStep();
+		final long oldTime = header.getLastUpdateTime();
+		final long startTime = Util.normalize(oldTime, step);
+		final long endTime = startTime + step;
+		final double oldValue = lastValue.get();
+		final double updateValue = calculateUpdateValue(oldTime, oldValue, newTime, newValue);
 		if (newTime < endTime) {
 			accumulate(oldTime, newTime, updateValue);
 		}
 		else {
 			// should store something
-			long boundaryTime = Util.normalize(newTime, step);
+			final long boundaryTime = Util.normalize(newTime, step);
 			accumulate(oldTime, boundaryTime, updateValue);
-			double value = calculateTotal(startTime, boundaryTime);
+			final double value = calculateTotal(startTime, boundaryTime);
 			// how many updates?
-			long numSteps = (boundaryTime - endTime) / step + 1L;
+			final long numSteps = (boundaryTime - endTime) / step + 1L;
 			// ACTION!
 			parentDb.archive(this, value, numSteps);
 			// cleanup
@@ -200,11 +214,10 @@ public class Datasource implements RrdUpdater, DsTypes {
 		}
 	}
 
-	private double calculateUpdateValue(long oldTime, double oldValue,
-										long newTime, double newValue) throws IOException {
+	private double calculateUpdateValue(final long oldTime, final double oldValue, final long newTime, final double newValue) throws IOException {
 		double updateValue = Double.NaN;
 		if (newTime - oldTime <= heartbeat.get()) {
-			String type = dsType.get();
+		    final String type = dsType.get();
 			if (type.equals(DT_GAUGE)) {
 				updateValue = newValue;
 			}
@@ -220,7 +233,7 @@ public class Datasource implements RrdUpdater, DsTypes {
 			}
 			else if (type.equals(DT_COUNTER)) {
 				if (!Double.isNaN(newValue) && !Double.isNaN(oldValue)) {
-					double diff = newValue - oldValue;
+				    double diff = newValue - oldValue;
 					if (diff < 0) {
 						diff += MAX_32_BIT;
 					}
@@ -233,8 +246,8 @@ public class Datasource implements RrdUpdater, DsTypes {
 				}
 			}
 			if (!Double.isNaN(updateValue)) {
-				double minVal = minValue.get();
-				double maxVal = maxValue.get();
+			    final double minVal = minValue.get();
+				final double maxVal = maxValue.get();
 				if (!Double.isNaN(minVal) && updateValue < minVal) {
 					updateValue = Double.NaN;
 				}
@@ -247,7 +260,7 @@ public class Datasource implements RrdUpdater, DsTypes {
 		return updateValue;
 	}
 
-	private void accumulate(long oldTime, long newTime, double updateValue) throws IOException {
+	private void accumulate(final long oldTime, final long newTime, final double updateValue) throws IOException {
 		if (Double.isNaN(updateValue)) {
 			nanSeconds.set(nanSeconds.get() + (newTime - oldTime));
 		}
@@ -256,9 +269,9 @@ public class Datasource implements RrdUpdater, DsTypes {
 		}
 	}
 
-	private double calculateTotal(long startTime, long boundaryTime) throws IOException {
+	private double calculateTotal(final long startTime, final long boundaryTime) throws IOException {
 		double totalValue = Double.NaN;
-		long validSeconds = boundaryTime - startTime - nanSeconds.get();
+		final long validSeconds = boundaryTime - startTime - nanSeconds.get();
 		if (nanSeconds.get() <= heartbeat.get() && validSeconds > 0) {
 			totalValue = accumValue.get() / validSeconds;
 		}
@@ -271,7 +284,7 @@ public class Datasource implements RrdUpdater, DsTypes {
 		return totalValue;
 	}
 
-	void appendXml(XmlWriter writer) throws IOException {
+	void appendXml(final XmlWriter writer) throws IOException {
 		writer.startTag("ds");
 		writer.writeTag("name", dsName.get());
 		writer.writeTag("type", dsType.get());
@@ -292,12 +305,11 @@ public class Datasource implements RrdUpdater, DsTypes {
 	 * @throws IOException  Thrown in case of I/O error
 	 * @throws RrdException Thrown if supplied argument is not a Datasource object
 	 */
-	public void copyStateTo(RrdUpdater other) throws IOException, RrdException {
+	public void copyStateTo(final RrdUpdater other) throws IOException, RrdException {
 		if (!(other instanceof Datasource)) {
-			throw new RrdException(
-					"Cannot copy Datasource object to " + other.getClass().getName());
+			throw new RrdException("Cannot copy Datasource object to " + other.getClass().getName());
 		}
-		Datasource datasource = (Datasource) other;
+		final Datasource datasource = (Datasource) other;
 		if (!datasource.dsName.get().equals(dsName.get())) {
 			throw new RrdException("Incomaptible datasource names");
 		}
@@ -319,7 +331,7 @@ public class Datasource implements RrdUpdater, DsTypes {
 		try {
 			return parentDb.getDsIndex(dsName.get());
 		}
-		catch (RrdException e) {
+		catch (final RrdException e) {
 			return -1;
 		}
 	}
@@ -331,7 +343,7 @@ public class Datasource implements RrdUpdater, DsTypes {
 	 * @throws IOException  Thrown in case of I/O error
 	 * @throws RrdException Thrown if invalid (non-positive) heartbeat value is specified.
 	 */
-	public void setHeartbeat(long heartbeat) throws RrdException, IOException {
+	public void setHeartbeat(final long heartbeat) throws RrdException, IOException {
 		if (heartbeat < 1L) {
 			throw new RrdException("Invalid heartbeat specified: " + heartbeat);
 		}
@@ -346,29 +358,31 @@ public class Datasource implements RrdUpdater, DsTypes {
 	 *                      name already defined in the RRD
 	 * @throws IOException  Thrown in case of I/O error
 	 */
-	public void setDsName(String newDsName) throws RrdException, IOException {
+	public void setDsName(final String newDsName) throws RrdException, IOException {
 		if (newDsName.length() > RrdString.STRING_LENGTH) {
 			throw new RrdException("Invalid datasource name specified: " + newDsName);
 		}
 		if (parentDb.containsDs(newDsName)) {
 			throw new RrdException("Datasource already defined in this RRD: " + newDsName);
 		}
-		this.dsName.set(newDsName);
+		dsName.set(newDsName);
+		m_primitiveDsName = null;
 	}
 
-	public void setDsType(String newDsType) throws RrdException, IOException {
+	public void setDsType(final String newDsType) throws RrdException, IOException {
 		if (!DsDef.isValidDsType(newDsType)) {
 			throw new RrdException("Invalid datasource type: " + newDsType);
 		}
 		// set datasource type
 		this.dsType.set(newDsType);
+		m_primitiveDsType = null;
 		// reset datasource status
 		lastValue.set(Double.NaN);
 		accumValue.set(0.0);
 		// reset archive status
-		int dsIndex = parentDb.getDsIndex(dsName.get());
-		Archive[] archives = parentDb.getArchives();
-		for (Archive archive : archives) {
+		final int dsIndex = parentDb.getDsIndex(dsName.get());
+		final Archive[] archives = parentDb.getArchives();
+		for (final Archive archive : archives) {
 			archive.getArcState(dsIndex).setAccumValue(Double.NaN);
 		}
 	}
@@ -385,17 +399,16 @@ public class Datasource implements RrdUpdater, DsTypes {
 	 * @throws IOException  Thrown in case of I/O error
 	 * @throws RrdException Thrown if invalid minValue was supplied (not less then maxValue)
 	 */
-	public void setMinValue(double minValue, boolean filterArchivedValues)
-			throws IOException, RrdException {
-		double maxValue = this.maxValue.get();
+	public void setMinValue(final double minValue, final boolean filterArchivedValues) throws IOException, RrdException {
+	    final double maxValue = this.maxValue.get();
 		if (!Double.isNaN(minValue) && !Double.isNaN(maxValue) && minValue >= maxValue) {
 			throw new RrdException("Invalid min/max values: " + minValue + "/" + maxValue);
 		}
 		this.minValue.set(minValue);
 		if (!Double.isNaN(minValue) && filterArchivedValues) {
-			int dsIndex = getDsIndex();
-			Archive[] archives = parentDb.getArchives();
-			for (Archive archive : archives) {
+			final int dsIndex = getDsIndex();
+			final Archive[] archives = parentDb.getArchives();
+			for (final Archive archive : archives) {
 				archive.getRobin(dsIndex).filterValues(minValue, Double.NaN);
 			}
 		}
@@ -413,17 +426,16 @@ public class Datasource implements RrdUpdater, DsTypes {
 	 * @throws IOException  Thrown in case of I/O error
 	 * @throws RrdException Thrown if invalid maxValue was supplied (not greater then minValue)
 	 */
-	public void setMaxValue(double maxValue, boolean filterArchivedValues)
-			throws IOException, RrdException {
-		double minValue = this.minValue.get();
+	public void setMaxValue(final double maxValue, final boolean filterArchivedValues) throws IOException, RrdException {
+	    final double minValue = this.minValue.get();
 		if (!Double.isNaN(minValue) && !Double.isNaN(maxValue) && minValue >= maxValue) {
 			throw new RrdException("Invalid min/max values: " + minValue + "/" + maxValue);
 		}
 		this.maxValue.set(maxValue);
 		if (!Double.isNaN(maxValue) && filterArchivedValues) {
-			int dsIndex = getDsIndex();
-			Archive[] archives = parentDb.getArchives();
-			for (Archive archive : archives) {
+			final int dsIndex = getDsIndex();
+			final Archive[] archives = parentDb.getArchives();
+			for (final Archive archive : archives) {
 				archive.getRobin(dsIndex).filterValues(Double.NaN, maxValue);
 			}
 		}
@@ -443,17 +455,16 @@ public class Datasource implements RrdUpdater, DsTypes {
 	 * @throws IOException  Thrown in case of I/O error
 	 * @throws RrdException Thrown if invalid min/max values were supplied
 	 */
-	public void setMinMaxValue(double minValue, double maxValue, boolean filterArchivedValues)
-			throws IOException, RrdException {
+	public void setMinMaxValue(final double minValue, final double maxValue, final boolean filterArchivedValues) throws IOException, RrdException {
 		if (!Double.isNaN(minValue) && !Double.isNaN(maxValue) && minValue >= maxValue) {
 			throw new RrdException("Invalid min/max values: " + minValue + "/" + maxValue);
 		}
 		this.minValue.set(minValue);
 		this.maxValue.set(maxValue);
 		if (!(Double.isNaN(minValue) && Double.isNaN(maxValue)) && filterArchivedValues) {
-			int dsIndex = getDsIndex();
-			Archive[] archives = parentDb.getArchives();
-			for (Archive archive : archives) {
+		    final int dsIndex = getDsIndex();
+			final Archive[] archives = parentDb.getArchives();
+			for (final Archive archive : archives) {
 				archive.getRobin(dsIndex).filterValues(minValue, maxValue);
 			}
 		}

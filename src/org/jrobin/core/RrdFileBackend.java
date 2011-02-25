@@ -30,29 +30,24 @@ import java.io.RandomAccessFile;
  */
 public class RrdFileBackend extends RrdBackend {
 	/**
-	 * read/write file status
-	 */
-	protected boolean readOnly;
-	/**
-	 * radnom access file handle
+	 * radnom access m_file handle
 	 */
 	protected RandomAccessFile file;
 
 	/**
-	 * Creates RrdFileBackend object for the given file path, backed by RandomAccessFile object.
+	 * Creates RrdFileBackend object for the given m_file path, backed by RandomAccessFile object.
 	 *
-	 * @param path	 Path to a file
-	 * @param readOnly True, if file should be open in a read-only mode. False otherwise
+	 * @param path	 Path to a m_file
+	 * @param readOnly True, if m_file should be open in a read-only mode. False otherwise
 	 * @throws IOException Thrown in case of I/O error
 	 */
-	protected RrdFileBackend(String path, boolean readOnly) throws IOException {
-		super(path);
-		this.readOnly = readOnly;
+	protected RrdFileBackend(final String path, final boolean readOnly) throws IOException {
+		super(path, readOnly);
 		this.file = new RandomAccessFile(path, readOnly ? "r" : "rw");
 	}
 
 	/**
-	 * Closes the underlying RRD file.
+	 * Closes the underlying RRD m_file.
 	 *
 	 * @throws IOException Thrown in case of I/O error
 	 */
@@ -61,10 +56,10 @@ public class RrdFileBackend extends RrdBackend {
 	}
 
 	/**
-	 * Returns canonical path to the file on the disk.
+	 * Returns canonical path to the m_file on the disk.
 	 *
 	 * @param path File path
-	 * @return Canonical file path
+	 * @return Canonical m_file path
 	 * @throws IOException Thrown in case of I/O error
 	 */
 	public static String getCanonicalPath(String path) throws IOException {
@@ -72,9 +67,9 @@ public class RrdFileBackend extends RrdBackend {
 	}
 
 	/**
-	 * Returns canonical path to the file on the disk.
+	 * Returns canonical path to the m_file on the disk.
 	 *
-	 * @return Canonical file path
+	 * @return Canonical m_file path
 	 * @throws IOException Thrown in case of I/O error
 	 */
 	public String getCanonicalPath() throws IOException {
@@ -82,9 +77,9 @@ public class RrdFileBackend extends RrdBackend {
 	}
 
 	/**
-	 * Writes bytes to the underlying RRD file on the disk
+	 * Writes bytes to the underlying RRD m_file on the disk
 	 *
-	 * @param offset Starting file offset
+	 * @param offset Starting m_file offset
 	 * @param b	  Bytes to be written.
 	 * @throws IOException Thrown in case of I/O error
 	 */
@@ -94,21 +89,21 @@ public class RrdFileBackend extends RrdBackend {
 	}
 
 	/**
-	 * Reads a number of bytes from the RRD file on the disk
+	 * Reads a number of bytes from the RRD m_file on the disk
 	 *
-	 * @param offset Starting file offset
-	 * @param b	  Buffer which receives bytes read from the file.
+	 * @param offset Starting m_file offset
+	 * @param b	  Buffer which receives bytes read from the m_file.
 	 * @throws IOException Thrown in case of I/O error.
 	 */
 	protected void read(long offset, byte[] b) throws IOException {
 		file.seek(offset);
 		if (file.read(b) != b.length) {
-			throw new IOException("Not enough bytes available in file " + getPath());
+			throw new IOException("Not enough bytes available in m_file " + getPath());
 		}
 	}
 
 	/**
-	 * Returns RRD file length.
+	 * Returns RRD m_file length.
 	 *
 	 * @return File length.
 	 * @throws IOException Thrown in case of I/O error.
@@ -118,10 +113,10 @@ public class RrdFileBackend extends RrdBackend {
 	}
 
 	/**
-	 * Sets length of the underlying RRD file. This method is called only once, immediately
-	 * after a new RRD file gets created.
+	 * Sets length of the underlying RRD m_file. This method is called only once, immediately
+	 * after a new RRD m_file gets created.
 	 *
-	 * @param length Length of the RRD file
+	 * @param length Length of the RRD m_file
 	 * @throws IOException Thrown in case of I/O error.
 	 */
 	protected void setLength(long length) throws IOException {

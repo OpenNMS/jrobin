@@ -21,34 +21,61 @@ package org.jrobin.core;
 
 import java.io.IOException;
 
+import org.jrobin.core.RrdJRobin14FileBackend.LockMode;
+
 /**
- * Factory class which creates actual {@link RrdNioBackend} objects.
+ * Factory class which creates actual {@link RrdFileBackend} objects. This was the default
+ * backend factory in JRobin before 1.4.0 release.
  */
-public class RrdNioByteBufferBackendFactory extends RrdFileBackendFactory {
-	
-	public static final String NAME = "MNIO";
+public class RrdJRobin14FileBackendFactory extends RrdBackendFactory {
+	/**
+	 * factory name, "FILE"
+	 */
+	public static final String NAME = "14FILE";
+	private LockMode m_lockMode = LockMode.NO_LOCKS;
+
+	public RrdJRobin14FileBackendFactory() {
+	    super();
+	}
+
+    public RrdJRobin14FileBackendFactory(final LockMode lockMode) {
+        super();
+        m_lockMode = lockMode;
+    }
 
 	/**
-	 * Creates RrdNioByteBufferBackend object for the given m_file path.
+	 * Creates RrdFileBackend object for the given m_file path.
 	 *
 	 * @param path	 File path
 	 * @param m_readOnly True, if the m_file should be accessed in read/only mode.
 	 *                 False otherwise.
-	 * @return RrdNioBackend object which handles all I/O operations for the given m_file path
+	 * @return RrdFileBackend object which handles all I/O operations for the given m_file path
 	 * @throws IOException Thrown in case of I/O error.
 	 */
-	@Override
-	protected RrdBackend open(String path, boolean readOnly) throws IOException {
-		return new RrdNioByteBufferBackend(path, readOnly);
+	protected RrdBackend open(final String path, final boolean readOnly) throws IOException {
+	    return new RrdJRobin14FileBackend(path, readOnly, m_lockMode);
+	}
+
+	/**
+	 * Method to determine if a m_file with the given path already exists.
+	 *
+	 * @param path File path
+	 * @return True, if such m_file exists, false otherwise.
+	 */
+	protected boolean exists(final String path) {
+		return Util.fileExists(path);
 	}
 
 	/**
 	 * Returns the name of this factory.
 	 *
-	 * @return Factory name (equals to string "NIOBB")
+	 * @return Factory name (equals to string "FILE")
 	 */
-	@Override
 	public String getFactoryName() {
 		return NAME;
 	}
+	
+    public String toString() {
+        return getClass().getSimpleName() + "@" + Integer.toHexString(hashCode()) + "[name=" + getFactoryName() + ",lockMode=" + m_lockMode + "]";
+    }
 }

@@ -29,7 +29,7 @@ import java.util.Date;
 import java.util.Iterator;
 
 /**
- * Instances of this class model an archive section of an RRD file.
+ * Instances of this class model an archive section of an RRD m_file.
  *
  * @author <a href="mailto:ciaran@codeloop.com">Ciaran Treanor</a>
  * @version $Revision$

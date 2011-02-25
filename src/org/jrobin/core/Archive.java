@@ -42,8 +42,8 @@ public class Archive implements RrdUpdater, ConsolFuns {
 	private Robin[] robins;
 	private ArcState[] states;
 
-	Archive(RrdDb parentDb, ArcDef arcDef) throws IOException {
-		boolean shouldInitialize = arcDef != null;
+	Archive(final RrdDb parentDb, final ArcDef arcDef) throws IOException {
+	    final boolean shouldInitialize = arcDef != null;
 		this.parentDb = parentDb;
 		consolFun = new RrdString(this, true);  // constant, may be cached
 		xff = new RrdDouble(this);
@@ -55,23 +55,23 @@ public class Archive implements RrdUpdater, ConsolFuns {
 			steps.set(arcDef.getSteps());
 			rows.set(arcDef.getRows());
 		}
-		int n = parentDb.getHeader().getDsCount();
-		states = new ArcState[n];
-		robins = new Robin[n];
-		for (int i = 0; i < n; i++) {
+		final int dsCount = parentDb.getHeader().getDsCount();
+		states = new ArcState[dsCount];
+		robins = new Robin[dsCount];
+		final int numRows = rows.get();
+		for (int i = 0; i < dsCount; i++) {
 			states[i] = new ArcState(this, shouldInitialize);
-			int numRows = rows.get();
 			robins[i] = new Robin(this, numRows, shouldInitialize);
 		}
 	}
 
 	// read from XML
-	Archive(RrdDb parentDb, DataImporter reader, int arcIndex) throws IOException, RrdException {
+	Archive(final RrdDb parentDb, final DataImporter reader, final int arcIndex) throws IOException, RrdException {
 		this(parentDb, new ArcDef(
 				reader.getConsolFun(arcIndex), reader.getXff(arcIndex),
 				reader.getSteps(arcIndex), reader.getRows(arcIndex)));
-		int n = parentDb.getHeader().getDsCount();
-		for (int i = 0; i < n; i++) {
+		final int dsCount = parentDb.getHeader().getDsCount();
+		for (int i = 0; i < dsCount; i++) {
 			// restore state
 			states[i].setAccumValue(reader.getStateAccumValue(arcIndex, i));
 			states[i].setNanSteps(reader.getStateNanSteps(arcIndex, i));
@@ -89,12 +89,12 @@ public class Archive implements RrdUpdater, ConsolFuns {
 	 * @throws IOException Thrown in case of I/O error.
 	 */
 	public long getArcStep() throws IOException {
-		long step = parentDb.getHeader().getStep();
+	    final long step = parentDb.getHeader().getStep();
 		return step * steps.get();
 	}
 
 	String dump() throws IOException {
-		StringBuffer buffer = new StringBuffer("== ARCHIVE ==\n");
+	    final StringBuffer buffer = new StringBuffer("== ARCHIVE ==\n");
 		buffer.append("RRA:").append(consolFun.get()).append(":").append(xff.get()).append(":").append(steps.get()).
 				append(":").append(rows.get()).append("\n");
 		buffer.append("interval [").append(getStartTime()).append(", ").append(getEndTime()).append("]" + "\n");
@@ -109,19 +109,25 @@ public class Archive implements RrdUpdater, ConsolFuns {
 		return parentDb;
 	}
 
-	void archive(int dsIndex, double value, long numUpdates) throws IOException {
-		Robin robin = robins[dsIndex];
-		ArcState state = states[dsIndex];
-		long step = parentDb.getHeader().getStep();
-		long lastUpdateTime = parentDb.getHeader().getLastUpdateTime();
+	public void archive(final int dsIndex, final double value, final long numStepUpdates) throws IOException {
+	    final Robin robin = robins[dsIndex];
+		final ArcState state = states[dsIndex];
+		final long step = parentDb.getHeader().getStep();
+		final long lastUpdateTime = parentDb.getHeader().getLastUpdateTime();
 		long updateTime = Util.normalize(lastUpdateTime, step) + step;
-		long arcStep = getArcStep();
-		// finish current step
+		final long arcStep = getArcStep();
+        final String consolFunString = consolFun.get();
+        final int numSteps = steps.get();
+        final int numRows = rows.get();
+        final double xffValue = xff.get();
+
+        // finish current step
+		long numUpdates = numStepUpdates;
 		while (numUpdates > 0) {
-			accumulate(state, value);
+			accumulate(state, value, consolFunString);
 			numUpdates--;
 			if (updateTime % arcStep == 0) {
-				finalizeStep(state, robin);
+                finalizeStep(state, robin, consolFunString, numSteps, xffValue);
 				break;
 			}
 			else {
@@ -129,50 +135,53 @@ public class Archive implements RrdUpdater, ConsolFuns {
 			}
 		}
 		// update robin in bulk
-		int bulkUpdateCount = (int) Math.min(numUpdates / steps.get(), (long) rows.get());
+		final int bulkUpdateCount = (int) Math.min(numUpdates / numSteps, (long) numRows);
 		robin.bulkStore(value, bulkUpdateCount);
 		// update remaining steps
-		long remainingUpdates = numUpdates % steps.get();
+		final long remainingUpdates = numUpdates % numSteps;
 		for (long i = 0; i < remainingUpdates; i++) {
-			accumulate(state, value);
+			accumulate(state, value, consolFunString);
 		}
 	}
 
-	private void accumulate(ArcState state, double value) throws IOException {
+	private void accumulate(final ArcState state, final double value, String consolFunString) throws IOException {
 		if (Double.isNaN(value)) {
 			state.setNanSteps(state.getNanSteps() + 1);
 		}
 		else {
-			if (consolFun.get().equals(CF_MIN)) {
-				state.setAccumValue(Util.min(state.getAccumValue(), value));
+            final double accumValue = state.getAccumValue();
+            if (consolFunString.equals(CF_MIN)) {
+				final double minValue = Util.min(accumValue, value);
+				if (minValue != accumValue) {
+				    state.setAccumValue(minValue);
+				}
 			}
-			else if (consolFun.get().equals(CF_MAX)) {
-				state.setAccumValue(Util.max(state.getAccumValue(), value));
+			else if (consolFunString.equals(CF_MAX)) {
+				final double maxValue = Util.max(accumValue, value);
+				if (maxValue != accumValue) {
+				    state.setAccumValue(maxValue);
+				}
 			}
-			else if (consolFun.get().equals(CF_LAST)) {
+			else if (consolFunString.equals(CF_LAST)) {
 				state.setAccumValue(value);
 			}
-			else if (consolFun.get().equals(CF_AVERAGE)) {
-				state.setAccumValue(Util.sum(state.getAccumValue(), value));
+			else if (consolFunString.equals(CF_AVERAGE)) {
+				state.setAccumValue(Util.sum(accumValue, value));
 			}
 		}
 	}
 
-	private void finalizeStep(ArcState state, Robin robin) throws IOException {
-		// should store
-		long arcSteps = steps.get();
-		double arcXff = xff.get();
-		long nanSteps = state.getNanSteps();
+	private void finalizeStep(final ArcState state, final Robin robin, final String consolFunString, final long numSteps, final double xffValue) throws IOException {
+	    final long nanSteps = state.getNanSteps();
 		//double nanPct = (double) nanSteps / (double) arcSteps;
 		double accumValue = state.getAccumValue();
-		if (nanSteps <= arcXff * arcSteps && !Double.isNaN(accumValue)) {
-			if (consolFun.get().equals(CF_AVERAGE)) {
-				accumValue /= (arcSteps - nanSteps);
+		if (nanSteps <= xffValue * numSteps && !Double.isNaN(accumValue)) {
+			if (consolFunString.equals(CF_AVERAGE)) {
+				accumValue /= (numSteps - nanSteps);
 			}
 			robin.store(accumValue);
-		}
-		else {
-			robin.store(Double.NaN);
+		} else {
+		    robin.store(Double.NaN);
 		}
 		state.setAccumValue(Double.NaN);
 		state.setNanSteps(0);
@@ -225,9 +234,9 @@ public class Archive implements RrdUpdater, ConsolFuns {
 	 * @throws IOException Thrown in case of I/O error.
 	 */
 	public long getStartTime() throws IOException {
-		long endTime = getEndTime();
-		long arcStep = getArcStep();
-		long numRows = rows.get();
+	    final long endTime = getEndTime();
+		final long arcStep = getArcStep();
+		final long numRows = rows.get();
 		return endTime - (numRows - 1) * arcStep;
 	}
 
@@ -238,8 +247,8 @@ public class Archive implements RrdUpdater, ConsolFuns {
 	 * @throws IOException Thrown in case of I/O error.
 	 */
 	public long getEndTime() throws IOException {
-		long arcStep = getArcStep();
-		long lastUpdateTime = parentDb.getHeader().getLastUpdateTime();
+		final long arcStep = getArcStep();
+		final long lastUpdateTime = parentDb.getHeader().getLastUpdateTime();
 		return Util.normalize(lastUpdateTime, arcStep);
 	}
 
@@ -251,7 +260,7 @@ public class Archive implements RrdUpdater, ConsolFuns {
 	 * @param dsIndex Datasource index
 	 * @return Underlying archive state object
 	 */
-	public ArcState getArcState(int dsIndex) {
+	public ArcState getArcState(final int dsIndex) {
 		return states[dsIndex];
 	}
 
@@ -262,78 +271,78 @@ public class Archive implements RrdUpdater, ConsolFuns {
 	 * @param dsIndex Index of the datasource in the RRD.
 	 * @return Underlying round robin archive for the given datasource.
 	 */
-	public Robin getRobin(int dsIndex) {
+	public Robin getRobin(final int dsIndex) {
 		return robins[dsIndex];
 	}
 
-	FetchData fetchData(FetchRequest request) throws IOException, RrdException {
-		long arcStep = getArcStep();
-		long fetchStart = Util.normalize(request.getFetchStart(), arcStep);
+	FetchData fetchData(final FetchRequest request) throws IOException, RrdException {
+	    final long arcStep = getArcStep();
+		final long fetchStart = Util.normalize(request.getFetchStart(), arcStep);
 		long fetchEnd = Util.normalize(request.getFetchEnd(), arcStep);
 		if (fetchEnd < request.getFetchEnd()) {
 			fetchEnd += arcStep;
 		}
-		long startTime = getStartTime();
-		long endTime = getEndTime();
+		final long startTime = getStartTime();
+		final long endTime = getEndTime();
 		String[] dsToFetch = request.getFilter();
 		if (dsToFetch == null) {
 			dsToFetch = parentDb.getDsNames();
 		}
-		int dsCount = dsToFetch.length;
-		int ptsCount = (int) ((fetchEnd - fetchStart) / arcStep + 1);
-		long[] timestamps = new long[ptsCount];
-		double[][] values = new double[dsCount][ptsCount];
-		long matchStartTime = Math.max(fetchStart, startTime);
-		long matchEndTime = Math.min(fetchEnd, endTime);
+		final int dsCount = dsToFetch.length;
+		final int ptsCount = (int) ((fetchEnd - fetchStart) / arcStep + 1);
+		final long[] timestamps = new long[ptsCount];
+		final double[][] values = new double[dsCount][ptsCount];
+		final long matchStartTime = Math.max(fetchStart, startTime);
+		final long matchEndTime = Math.min(fetchEnd, endTime);
 		double[][] robinValues = null;
 		if (matchStartTime <= matchEndTime) {
 			// preload robin values
-			int matchCount = (int) ((matchEndTime - matchStartTime) / arcStep + 1);
-			int matchStartIndex = (int) ((matchStartTime - startTime) / arcStep);
+		    final int matchCount = (int) ((matchEndTime - matchStartTime) / arcStep + 1);
+			final int matchStartIndex = (int) ((matchStartTime - startTime) / arcStep);
 			robinValues = new double[dsCount][];
 			for (int i = 0; i < dsCount; i++) {
-				int dsIndex = parentDb.getDsIndex(dsToFetch[i]);
+			    final int dsIndex = parentDb.getDsIndex(dsToFetch[i]);
 				robinValues[i] = robins[dsIndex].getValues(matchStartIndex, matchCount);
 			}
 		}
 		for (int ptIndex = 0; ptIndex < ptsCount; ptIndex++) {
-			long time = fetchStart + ptIndex * arcStep;
-			timestamps[ptIndex] = time;
+		    final long time = fetchStart + ptIndex * arcStep;
+		    timestamps[ptIndex] = time;
 			for (int i = 0; i < dsCount; i++) {
 				double value = Double.NaN;
 				if (time >= matchStartTime && time <= matchEndTime) {
 					// inbound time
-					int robinValueIndex = (int) ((time - matchStartTime) / arcStep);
+					final int robinValueIndex = (int) ((time - matchStartTime) / arcStep);
 					assert robinValues != null;
 					value = robinValues[i][robinValueIndex];
 				}
 				values[i][ptIndex] = value;
 			}
 		}
-		FetchData fetchData = new FetchData(this, request);
+		final FetchData fetchData = new FetchData(this, request);
 		fetchData.setTimestamps(timestamps);
 		fetchData.setValues(values);
 		return fetchData;
 	}
 
-	void appendXml(XmlWriter writer) throws IOException {
+	void appendXml(final XmlWriter writer) throws IOException {
 		writer.startTag("rra");
 		writer.writeTag("cf", consolFun.get());
 		writer.writeComment(getArcStep() + " seconds");
 		writer.writeTag("pdp_per_row", steps.get());
 		writer.writeTag("xff", xff.get());
 		writer.startTag("cdp_prep");
-		for (ArcState state : states) {
+		for (final ArcState state : states) {
 			state.appendXml(writer);
 		}
 		writer.closeTag(); // cdp_prep
 		writer.startTag("database");
-		long startTime = getStartTime();
+		final long startTime = getStartTime();
 		for (int i = 0; i < rows.get(); i++) {
-			long time = startTime + i * getArcStep();
+			final long time = startTime + i * getArcStep();
 			writer.writeComment(Util.getDate(time) + " / " + time);
 			writer.startTag("row");
-			for (Robin robin : robins) {
+			for (final Robin robin : robins) {
 				writer.writeTag("v", robin.getValue(i));
 			}
 			writer.closeTag(); // row
@@ -349,21 +358,20 @@ public class Archive implements RrdUpdater, ConsolFuns {
 	 * @throws IOException  Thrown in case of I/O error
 	 * @throws RrdException Thrown if supplied argument is not an Archive object
 	 */
-	public void copyStateTo(RrdUpdater other) throws IOException, RrdException {
+	public void copyStateTo(final RrdUpdater other) throws IOException, RrdException {
 		if (!(other instanceof Archive)) {
-			throw new RrdException(
-					"Cannot copy Archive object to " + other.getClass().getName());
+			throw new RrdException("Cannot copy Archive object to " + other.getClass().getName());
 		}
-		Archive arc = (Archive) other;
+		final Archive arc = (Archive) other;
 		if (!arc.consolFun.get().equals(consolFun.get())) {
 			throw new RrdException("Incompatible consolidation functions");
 		}
 		if (arc.steps.get() != steps.get()) {
 			throw new RrdException("Incompatible number of steps");
 		}
-		int count = parentDb.getHeader().getDsCount();
+		final int count = parentDb.getHeader().getDsCount();
 		for (int i = 0; i < count; i++) {
-			int j = Util.getMatchingDatasourceIndex(parentDb, i, arc.parentDb);
+		    final int j = Util.getMatchingDatasourceIndex(parentDb, i, arc.parentDb);
 			if (j >= 0) {
 				states[i].copyStateTo(arc.states[j]);
 				robins[i].copyStateTo(arc.robins[j]);
@@ -378,7 +386,7 @@ public class Archive implements RrdUpdater, ConsolFuns {
 	 * @throws RrdException Thrown if invalid value is supplied
 	 * @throws IOException  Thrown in case of I/O error
 	 */
-	public void setXff(double xff) throws RrdException, IOException {
+	public void setXff(final double xff) throws RrdException, IOException {
 		if (xff < 0D || xff >= 1D) {
 			throw new RrdException("Invalid xff supplied (" + xff + "), must be >= 0 and < 1");
 		}

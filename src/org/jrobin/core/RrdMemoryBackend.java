@@ -31,14 +31,14 @@ public class RrdMemoryBackend extends RrdBackend {
 		super(path);
 	}
 
-	protected synchronized void write(long offset, byte[] b) {
-		int pos = (int) offset;
-		for (byte singleByte : b) {
+	protected synchronized void write(final long offset, final byte[] b) {
+	    int pos = (int) offset;
+		for (final byte singleByte : b) {
 			buffer[pos++] = singleByte;
 		}
 	}
 
-	protected synchronized void read(long offset, byte[] b) throws IOException {
+	protected synchronized void read(final long offset, final byte[] b) throws IOException {
 		int pos = (int) offset;
 		if (pos + b.length <= buffer.length) {
 			for (int i = 0; i < b.length; i++) {
@@ -65,7 +65,7 @@ public class RrdMemoryBackend extends RrdBackend {
 	 * @param newLength Number of bytes held in memory.
 	 * @throws IOException Thrown in case of I/O error.
 	 */
-	protected void setLength(long newLength) throws IOException {
+	protected void setLength(final long newLength) throws IOException {
 		if (newLength > Integer.MAX_VALUE) {
 			throw new IOException("Cannot create this big memory backed RRD");
 		}

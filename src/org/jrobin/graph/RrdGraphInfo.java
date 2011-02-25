@@ -43,7 +43,7 @@ public class RrdGraphInfo {
 	/**
 	 * Returns filename of the graph
 	 *
-	 * @return filename of the graph. '-' denotes in-memory graph (no file created)
+	 * @return filename of the graph. '-' denotes in-memory graph (no m_file created)
 	 */
 	public String getFilename() {
 		return filename;
@@ -95,9 +95,9 @@ public class RrdGraphInfo {
 	}
 
 	/**
-	 * Returns the number of bytes in the graph file
+	 * Returns the number of bytes in the graph m_file
 	 *
-	 * @return Length of the graph file
+	 * @return Length of the graph m_file
 	 */
 	public int getByteCount() {
 		return bytes != null ? bytes.length : 0;
