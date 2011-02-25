@@ -194,4 +194,8 @@ public class DsDef implements DsTypes {
 				heartbeat == def.heartbeat && Util.equal(minValue, def.minValue) &&
 				Util.equal(maxValue, def.maxValue);
 	}
+
+    public String toString() {
+        return getClass().getSimpleName() + "@" + Integer.toHexString(hashCode()) + "[" + dump() + "]";
+    }
 }

@@ -85,7 +85,7 @@ public class ConsolidationFunctionType {
 			return LAST;
 		}
 		else {
-			throw new IllegalArgumentException("Invalid ConsolidationFunctionType");
+			throw new IllegalArgumentException("Invalid ConsolidationFunctionType: " + s);
 		}
 	}
 

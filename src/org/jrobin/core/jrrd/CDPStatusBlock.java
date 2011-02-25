@@ -39,9 +39,9 @@ public class CDPStatusBlock {
 		offset = file.getFilePointer();
 		value = file.readDouble();
 		unknownDatapoints = file.readInt();
-
+		file.align(8);
 		// Skip rest of cdp_prep_t.scratch
-		file.skipBytes(68);
+		file.skipBytes(64);
 
 		size = file.getFilePointer() - offset;
 	}

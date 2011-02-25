@@ -34,6 +34,7 @@ import java.io.*;
 public class RRDFile implements Constants {
 
 	boolean bigEndian;
+	boolean debug;
 	int alignment;
 	RandomAccessFile ras;
 	byte[] buffer;
@@ -47,6 +48,7 @@ public class RRDFile implements Constants {
 		ras = new RandomAccessFile(file, "r");
 		buffer = new byte[128];
 
+		this.debug = false;
 		initDataLayout(file);
 	}
 
@@ -101,6 +103,9 @@ public class RRDFile implements Constants {
 	}
 
 	double readDouble() throws IOException {
+		if(debug) {
+			System.out.print("Read 8 bytes (Double) from offset "+ras.getFilePointer()+":");
+		}
 
 		//double value;
 		byte[] tx = new byte[8];
@@ -119,7 +124,11 @@ public class RRDFile implements Constants {
 		DataInputStream reverseDis =
 				new DataInputStream(new ByteArrayInputStream(tx));
 
-		return reverseDis.readDouble();
+		Double result = reverseDis.readDouble();
+		if(this.debug) {
+			System.out.println(result);
+		}
+		return result;
 	}
 
 	int readInt() throws IOException {
@@ -127,32 +136,62 @@ public class RRDFile implements Constants {
 	}
 
 	int readInt(boolean dump) throws IOException {
+		//An integer is "alignment" bytes long - 4 bytes on 32-bit, 8 on 64-bit.
+		if(this.debug) {
+			System.out.print("Read "+alignment+" bytes (int) from offset "+ras.getFilePointer()+":");
+		}
 
-		ras.read(buffer, 0, 4);
+		ras.read(buffer, 0, alignment);
 
-		int value;
+		long value;
 
 		if (bigEndian) {
-			value = (0xFF & buffer[3]) | ((0xFF & buffer[2]) << 8)
-					| ((0xFF & buffer[1]) << 16) | ((0xFF & buffer[0]) << 24);
+			if(alignment == 8) {
+				value = (0xFF & buffer[7]) | ((0xFF & buffer[6]) << 8)
+						| ((0xFF & buffer[5]) << 16) | ((0xFF & buffer[4]) << 24)
+						| ((0xFF & buffer[3]) << 32) | ((0xFF & buffer[2]) << 40)
+						| ((0xFF & buffer[1]) << 48) | ((0xFF & buffer[0]) << 56);
+			} else {
+				value = (0xFF & buffer[3]) | ((0xFF & buffer[2]) << 8)
+						| ((0xFF & buffer[1]) << 16) | ((0xFF & buffer[0]) << 24);
+			}
 		}
 		else {
-			value = (0xFF & buffer[0]) | ((0xFF & buffer[1]) << 8)
+			if(alignment == 8) {
+				value = (0xFF & buffer[0]) | ((0xFF & buffer[1]) << 8)
+					| ((0xFF & buffer[2]) << 16) | ((0xFF & buffer[3]) << 24)
+					| ((0xFF & buffer[4]) << 32) | ((0xFF & buffer[5]) << 40)
+					| ((0xFF & buffer[6]) << 48) | ((0xFF & buffer[7]) << 56);
+			} else {
+				value = (0xFF & buffer[0]) | ((0xFF & buffer[1]) << 8)
 					| ((0xFF & buffer[2]) << 16) | ((0xFF & buffer[3]) << 24);
+			}
 		}
 
-		return value;
+		if(this.debug) {
+			System.out.println(value);
+		}
+		return (int)value;
 	}
 
 	String readString(int maxLength) throws IOException {
-
+		if(this.debug) {
+			System.out.print("Read "+maxLength+" bytes (string) from offset "+ras.getFilePointer()+":");
+		}
 		ras.read(buffer, 0, maxLength);
 
-		return new String(buffer, 0, maxLength).trim();
+		String result = new String(buffer, 0, maxLength).trim();
+		if(this.debug) {
+			System.out.println( result +":");
+		}
+		return result;
 	}
 
 	void skipBytes(int n) throws IOException {
 		ras.skipBytes(n);
+		if(this.debug) {
+			System.out.println("Skipping "+n+" bytes");
+		}
 	}
 
 	int align(int boundary) throws IOException {
@@ -162,7 +201,9 @@ public class RRDFile implements Constants {
 		if (skip != 0) {
 			ras.skipBytes(skip);
 		}
-
+		if(this.debug) {
+			System.out.println("Aligning to boundary "+ boundary +".  Offset is now "+ras.getFilePointer());
+		}
 		return skip;
 	}
 

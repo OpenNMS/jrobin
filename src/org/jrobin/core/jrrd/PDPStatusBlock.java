@@ -43,7 +43,7 @@ public class PDPStatusBlock {
 
 		unknownSeconds = file.readInt();
 
-		file.skipBytes(4);
+		file.align(8); //8 bytes per scratch value in pdp_prep; align on that
 
 		value = file.readDouble();
 

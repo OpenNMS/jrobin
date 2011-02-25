@@ -665,4 +665,19 @@ public class RrdDef {
 	public void removeArchives() {
 		arcDefs.clear();
 	}
+
+    public String toString() {
+        return getClass().getSimpleName() + "@" + Integer.toHexString(hashCode()) + "[arcDefs=[" + join(getArcDefs()) + "],dsDefs=[" + join(getDsDefs()) + "]]";
+    }
+
+    private String join(final Object[] objs) {
+        final StringBuffer sb = new StringBuffer();
+        for (int i = 0; i < objs.length; i++) {
+            sb.append(objs[i]);
+            if (i != (objs.length - 1)) {
+                sb.append(",");
+            }
+        }
+        return sb.toString();
+    }
 }
