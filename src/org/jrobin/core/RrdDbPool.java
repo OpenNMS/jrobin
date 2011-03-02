@@ -227,11 +227,11 @@ public class RrdDbPool {
 		return rrdMap.size();
 	}
 
-	class RrdEntry {
+	private final static class RrdEntry {
 		RrdDb rrdDb;
 		int count;
 
-		RrdEntry(RrdDb rrdDb) {
+		RrdEntry(final RrdDb rrdDb) {
 			this.rrdDb = rrdDb;
 			this.count = 1;
 		}

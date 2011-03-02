@@ -55,7 +55,10 @@ public class RRDFile implements Constants {
 	private void initDataLayout(File file) throws IOException {
 
 		if (file.exists()) {	// Load the data formats from the file
-			ras.read(buffer, 0, 24);
+			int bytes = ras.read(buffer, 0, 24);
+			if (bytes < 24) {
+				throw new IOException("Invalid RRD file");
+			}
 
 			int index;
 
@@ -187,10 +190,10 @@ public class RRDFile implements Constants {
 		return result;
 	}
 
-	void skipBytes(int n) throws IOException {
-		ras.skipBytes(n);
+	void skipBytes(final int n) throws IOException {
+		int bytesSkipped = ras.skipBytes(n);
 		if(this.debug) {
-			System.out.println("Skipping "+n+" bytes");
+			System.out.println("Skipping "+bytesSkipped+" bytes");
 		}
 	}
 
@@ -199,7 +202,7 @@ public class RRDFile implements Constants {
 		int skip = (int) (boundary - (ras.getFilePointer() % boundary)) % boundary;
 
 		if (skip != 0) {
-			ras.skipBytes(skip);
+			skip = ras.skipBytes(skip);
 		}
 		if(this.debug) {
 			System.out.println("Aligning to boundary "+ boundary +".  Offset is now "+ras.getFilePointer());

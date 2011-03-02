@@ -101,7 +101,8 @@ public class TimeParser {
 				break;
 			case TimeToken.WEEKS:
 				delta *= 7;
-				/* FALLTHRU */
+				spec.dday += delta;
+				break;
 			case TimeToken.DAYS:
 				spec.dday += delta;
 				break;
@@ -204,7 +205,8 @@ public class TimeParser {
 		switch (token.id) {
 			case TimeToken.YESTERDAY:
 				spec.day--;
-				/* FALLTRHU */
+				token = scanner.nextToken();
+				break;
 			case TimeToken.TODAY:	/* force ourselves to stay in today - no further processing */
 				token = scanner.nextToken();
 				break;

@@ -167,7 +167,7 @@ public class CubicSplineInterpolator extends Plottable {
 		}
 		while (khi - klo > 1) {
 			// find bounding interval using bisection method
-			int k = (khi + klo) / 2;
+			int k = (khi + klo) >>> 1;
 			if (x[k] > xval) {
 				khi = k;
 			}

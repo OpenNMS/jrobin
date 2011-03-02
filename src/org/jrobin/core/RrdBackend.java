@@ -63,8 +63,8 @@ import java.io.IOException;
  */
 public abstract class RrdBackend {
 	private static boolean m_instanceCreated = false;
-	private final String m_path;
-	private final boolean m_readOnly;
+	private String m_path = null;
+	private boolean m_readOnly = false;
 
 	/**
 	 * Creates backend for a RRD storage with the given path.

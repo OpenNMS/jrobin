@@ -32,32 +32,28 @@ public class ConsolidationFunctionType {
 	/**
 	 * Field AVERAGE
 	 */
-	public static final ConsolidationFunctionType AVERAGE =
-			new ConsolidationFunctionType(_AVERAGE);
+	public static final ConsolidationFunctionType AVERAGE = new ConsolidationFunctionType(_AVERAGE);
 	private static final int _MIN = 1;
 	private static final String STR_MIN = "MIN";
 
 	/**
 	 * Field MIN
 	 */
-	public static final ConsolidationFunctionType MIN =
-			new ConsolidationFunctionType(_MIN);
+	public static final ConsolidationFunctionType MIN = new ConsolidationFunctionType(_MIN);
 	private static final int _MAX = 2;
 	private static final String STR_MAX = "MAX";
 
 	/**
 	 * Field MAX
 	 */
-	public static final ConsolidationFunctionType MAX =
-			new ConsolidationFunctionType(_MAX);
+	public static final ConsolidationFunctionType MAX = new ConsolidationFunctionType(_MAX);
 	private static final int _LAST = 3;
 	private static final String STR_LAST = "LAST";
 
 	/**
 	 * Field LAST
 	 */
-	public static final ConsolidationFunctionType LAST =
-			new ConsolidationFunctionType(_LAST);
+	public static final ConsolidationFunctionType LAST = new ConsolidationFunctionType(_LAST);
 	private int type;
 
 	private ConsolidationFunctionType(int type) {
@@ -70,18 +66,18 @@ public class ConsolidationFunctionType {
 	 * @param s name of the <code>ConsolidationFunctionType</code> required.
 	 * @return a <code>ConsolidationFunctionType</code> with the given name.
 	 */
-	public static ConsolidationFunctionType get(String s) {
+	public static ConsolidationFunctionType get(final String s) {
 
-		if (s.equalsIgnoreCase(STR_AVERAGE)) {
+		if (STR_AVERAGE.equalsIgnoreCase(s)) {
 			return AVERAGE;
 		}
-		else if (s.equalsIgnoreCase(STR_MIN)) {
+		else if (STR_MIN.equalsIgnoreCase(s)) {
 			return MIN;
 		}
-		else if (s.equalsIgnoreCase(STR_MAX)) {
+		else if (STR_MAX.equalsIgnoreCase(s)) {
 			return MAX;
 		}
-		else if (s.equalsIgnoreCase(STR_LAST)) {
+		else if (STR_LAST.equalsIgnoreCase(s)) {
 			return LAST;
 		}
 		else {
@@ -95,7 +91,7 @@ public class ConsolidationFunctionType {
 	 * @return <code>true</code> if the objects are the same,
 	 *         <code>false</code> otherwise.
 	 */
-	public boolean equals(Object o) {
+	public boolean equals(final Object o) {
 
 		if (!(o instanceof ConsolidationFunctionType)) {
 			throw new IllegalArgumentException("Not a ConsolidationFunctionType");
@@ -104,6 +100,10 @@ public class ConsolidationFunctionType {
 		return (((ConsolidationFunctionType) o).type == type)
 				? true
 				: false;
+	}
+
+	public int hashCode() {
+		return type * 93;
 	}
 
 	/**

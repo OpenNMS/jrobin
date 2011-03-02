@@ -51,7 +51,7 @@ class TimeAxis implements RrdGraphConstants {
 	TimeAxis(RrdGraph rrdGraph) {
 		this.rrdGraph = rrdGraph;
 		if (rrdGraph.im.xsize > 0) {
-			this.secPerPix = (rrdGraph.im.end - rrdGraph.im.start) / rrdGraph.im.xsize;
+			this.secPerPix = (rrdGraph.im.end - rrdGraph.im.start) / Double.valueOf(rrdGraph.im.xsize);
 		}
 		this.calendar = Calendar.getInstance(Locale.getDefault());
 		this.calendar.setFirstDayOfWeek(rrdGraph.gdef.firstDayOfWeek);

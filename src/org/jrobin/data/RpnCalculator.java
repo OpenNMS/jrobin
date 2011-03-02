@@ -509,12 +509,12 @@ class RpnCalculator {
 		return stack.isEmpty();
 	}
 
-	private class RpnStack {
+	private static final class RpnStack {
 		private static final int MAX_STACK_SIZE = 1000;
 		private double[] stack = new double[MAX_STACK_SIZE];
 		private int pos = 0;
 
-		void push(double x) throws RrdException {
+		void push(final double x) throws RrdException {
 			if (pos >= MAX_STACK_SIZE) {
 				throw new RrdException("PUSH failed, RPN stack full [" + MAX_STACK_SIZE + "]");
 			}
@@ -544,7 +544,7 @@ class RpnCalculator {
 		}
 	}
 
-	private class Token {
+	private static final class Token {
 		byte id = -1;
 		double number = Double.NaN;
 		String variable = null;

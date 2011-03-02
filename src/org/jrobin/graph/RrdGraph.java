@@ -450,7 +450,7 @@ public class RrdGraph implements RrdGraphConstants {
 			int symbcenter = 6;
 			double digits;
 			if (im.unitsexponent != Integer.MAX_VALUE) {
-				digits = Math.floor(im.unitsexponent / 3);
+				digits = Math.floor(im.unitsexponent / 3.0);
 			}
 			else {
 				digits = Math.floor(Math.log(Math.max(Math.abs(im.minval), Math.abs(im.maxval))) / Math.log(im.base));
@@ -498,7 +498,7 @@ public class RrdGraph implements RrdGraphConstants {
 			im.minval = 0.99 * im.maxval;
 		}
 		/* make sure min and max are not equal */
-		if (im.minval == im.maxval) {
+		if (Math.abs(im.minval - im.maxval) < .0000001) {
 			im.maxval *= 1.01;
 			if (!gdef.logarithmic) {
 				im.minval *= 0.99;

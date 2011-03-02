@@ -74,12 +74,12 @@ abstract class RrdPrimitive {
 	}
 
 	final double readDouble(final int index) throws IOException {
-	    final long offset = pointer + (index * RRD_PRIM_SIZES[RRD_DOUBLE]);
+	    final long offset = pointer + ((long)index * (long)RRD_PRIM_SIZES[RRD_DOUBLE]);
 		return backend.readDouble(offset);
 	}
 
 	final double[] readDouble(final int index, final int count) throws IOException {
-	    final long offset = pointer + (index * RRD_PRIM_SIZES[RRD_DOUBLE]);
+	    final long offset = pointer + ((long)index * (long)RRD_PRIM_SIZES[RRD_DOUBLE]);
 		return backend.readDouble(offset, count);
 	}
 
@@ -88,12 +88,12 @@ abstract class RrdPrimitive {
 	}
 
 	final void writeDouble(final int index, final double value, final int count) throws IOException {
-	    final long offset = pointer + (index * RRD_PRIM_SIZES[RRD_DOUBLE]);
+	    final long offset = pointer + ((long)index * (long)RRD_PRIM_SIZES[RRD_DOUBLE]);
 		backend.writeDouble(offset, value, count);
 	}
 
 	final void writeDouble(final int index, final double[] values) throws IOException {
-	    final long offset = pointer + index * RRD_PRIM_SIZES[RRD_DOUBLE];
+	    final long offset = pointer + ((long)index * (long)RRD_PRIM_SIZES[RRD_DOUBLE]);
 		backend.writeDouble(offset, values);
 	}
 

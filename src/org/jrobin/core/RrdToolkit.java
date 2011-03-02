@@ -364,11 +364,11 @@ public class RrdToolkit {
 	}
 
 	private static String getBackupPath(String destPath) {
-		String backupPath = destPath;
+		StringBuffer sb = new StringBuffer(destPath);
 		do {
-			backupPath += ".bak";
-		} while (Util.fileExists(backupPath));
-		return backupPath;
+			sb.append(".bak");
+		} while (Util.fileExists(sb.toString()));
+		return sb.toString();
 	}
 
 	/**

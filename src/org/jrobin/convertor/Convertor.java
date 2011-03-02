@@ -39,14 +39,8 @@ public class Convertor {
 	private String[] files;
 	private int totalCount, badCount, goodCount;
 
-	private Convertor(String[] files) {
-		try {
-			RrdDb.setDefaultFactory(FACTORY_NAME);
-		}
-		catch (RrdException e) {
-			e.printStackTrace();
-			System.exit(-1);
-		}
+	private Convertor(final String[] files) throws RrdException {
+		RrdDb.setDefaultFactory(FACTORY_NAME);
 		this.files = files;
 	}
 
@@ -121,7 +115,12 @@ public class Convertor {
 			println("Example: java -jar convertor.jar files/*.rrd");
 			System.exit(1);
 		}
-		Convertor c = new Convertor(args);
-		c.convertAll();
+		try {
+			Convertor c = new Convertor(args);
+			c.convertAll();
+		} catch (final RrdException e) {
+			e.printStackTrace();
+			System.exit(-1);
+		}
 	}
 }

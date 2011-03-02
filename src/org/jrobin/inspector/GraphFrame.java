@@ -273,7 +273,7 @@ class GraphFrame extends JFrame {
 		}
 	}
 
-	class GraphComboItem {
+	private static final class GraphComboItem {
 		private String description;
 		private int dsIndex, arcIndex;
 

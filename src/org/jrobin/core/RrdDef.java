@@ -645,6 +645,17 @@ public class RrdDef {
 		return true;
 	}
 
+	public int hashCode() {
+		int hashCode = (int)step;
+		for (final DsDef dsDef : dsDefs) {
+			hashCode *= dsDef.hashCode();
+		}
+		for (final ArcDef arcDef : arcDefs) {
+			hashCode *= arcDef.hashCode();
+		}
+		return hashCode;
+	}
+
 	/**
 	 * Removes all datasource definitions.
 	 */

@@ -150,7 +150,9 @@ public class RrdCommander {
 		while (true) {
 			try {
 				System.out.print("$ ");
-				String s = r.readLine().trim();
+				final String line = r.readLine();
+				if (line == null) break;
+				final String s = line.trim();
 				if (s.length() > 0) {
 					if (!s.startsWith(".")) {
 						execute(s);

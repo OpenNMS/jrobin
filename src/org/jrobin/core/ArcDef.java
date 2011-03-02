@@ -62,7 +62,7 @@ public class ArcDef implements ConsolFuns {
 	 * @param rows	  Number of archive rows.
 	 * @throws RrdException Thrown if any parameter has illegal value.
 	 */
-	public ArcDef(String consolFun, double xff, int steps, int rows) throws RrdException {
+	public ArcDef(final String consolFun, final double xff, final int steps, final int rows) throws RrdException {
 		this.consolFun = consolFun;
 		this.xff = xff;
 		this.steps = steps;
@@ -138,12 +138,16 @@ public class ArcDef implements ConsolFuns {
 	 * @return <code>true</code> if archive definitions are equal,
 	 *         <code>false</code> otherwise.
 	 */
-	public boolean equals(Object obj) {
+	public boolean equals(final Object obj) {
 		if (obj instanceof ArcDef) {
-			ArcDef arcObj = (ArcDef) obj;
+			final ArcDef arcObj = (ArcDef) obj;
 			return consolFun.equals(arcObj.consolFun) && steps == arcObj.steps;
 		}
 		return false;
+	}
+
+	public int hashCode() {
+		return (consolFun.hashCode() + steps) * 53;
 	}
 
 	/**
@@ -153,8 +157,8 @@ public class ArcDef implements ConsolFuns {
 	 * @return <code>true</code> if <code>consolFun</code> is valid consolidation function,
 	 *         <code>false</code> otherwise.
 	 */
-	public static boolean isValidConsolFun(String consolFun) {
-		for (String cFun : CONSOL_FUNS) {
+	public static boolean isValidConsolFun(final String consolFun) {
+		for (final String cFun : CONSOL_FUNS) {
 			if (cFun.equals(consolFun)) {
 				return true;
 			}
@@ -162,11 +166,11 @@ public class ArcDef implements ConsolFuns {
 		return false;
 	}
 
-	void setRows(int rows) {
+	void setRows(final int rows) {
 		this.rows = rows;
 	}
 
-	boolean exactlyEqual(ArcDef def) {
+	boolean exactlyEqual(final ArcDef def) {
 		return consolFun.equals(def.consolFun) && xff == def.xff &&
 				steps == def.steps && rows == def.rows;
 	}

@@ -67,8 +67,7 @@ public class DsDef implements DsTypes {
 	 * @param maxValue  Maximal value. Use <code>Double.NaN</code> if unknown.
 	 * @throws RrdException Thrown if any parameter has illegal value.
 	 */
-	public DsDef(String dsName, String dsType, long heartbeat,
-				 double minValue, double maxValue) throws RrdException {
+	public DsDef(final String dsName, final String dsType, final long heartbeat, final double minValue, final double maxValue) throws RrdException {
 		this.dsName = dsName;
 		this.dsType = dsType;
 		this.heartbeat = heartbeat;
@@ -152,8 +151,8 @@ public class DsDef implements DsTypes {
 	 * @return <code>true</code> if <code>dsType</code> is valid type,
 	 *         <code>false</code> otherwise.
 	 */
-	public static boolean isValidDsType(String dsType) {
-		for (String type : DS_TYPES) {
+	public static boolean isValidDsType(final String dsType) {
+		for (final String type : DS_TYPES) {
 			if (type.equals(dsType)) {
 				return true;
 			}
@@ -181,15 +180,19 @@ public class DsDef implements DsTypes {
 	 * @return <code>true</code> if archive definitions are equal,
 	 *         <code>false</code> otherwise.
 	 */
-	public boolean equals(Object obj) {
+	public boolean equals(final Object obj) {
 		if (obj instanceof DsDef) {
-			DsDef dsObj = (DsDef) obj;
+			final DsDef dsObj = (DsDef) obj;
 			return dsName.equals(dsObj.dsName);
 		}
 		return false;
 	}
 
-	boolean exactlyEqual(DsDef def) {
+	public int hashCode() {
+		return dsName.hashCode() * 47;
+	}
+
+	boolean exactlyEqual(final DsDef def) {
 		return dsName.equals(def.dsName) && dsType.equals(def.dsType) &&
 				heartbeat == def.heartbeat && Util.equal(minValue, def.minValue) &&
 				Util.equal(maxValue, def.maxValue);

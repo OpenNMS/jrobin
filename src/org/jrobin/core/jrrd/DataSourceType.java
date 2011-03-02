@@ -32,16 +32,14 @@ public class DataSourceType {
 	/**
 	 * Field COUNTER
 	 */
-	public static final DataSourceType COUNTER =
-			new DataSourceType(_COUNTER);
+	public static final DataSourceType COUNTER = new DataSourceType(_COUNTER);
 	private static final int _ABSOLUTE = 1;
 	private static final String STR_ABSOLUTE = "ABSOLUTE";
 
 	/**
 	 * Field ABSOLUTE
 	 */
-	public static final DataSourceType ABSOLUTE =
-			new DataSourceType(_ABSOLUTE);
+	public static final DataSourceType ABSOLUTE = new DataSourceType(_ABSOLUTE);
 	private static final int _GAUGE = 2;
 	private static final String STR_GAUGE = "GAUGE";
 
@@ -58,7 +56,7 @@ public class DataSourceType {
 	public static final DataSourceType DERIVE = new DataSourceType(_DERIVE);
 	private int type;
 
-	private DataSourceType(int type) {
+	private DataSourceType(final int type) {
 		this.type = type;
 	}
 
@@ -68,18 +66,18 @@ public class DataSourceType {
 	 * @param s name of the <code>DataSourceType</code> required.
 	 * @return a <code>DataSourceType</code> with the given name.
 	 */
-	public static DataSourceType get(String s) {
+	public static DataSourceType get(final String s) {
 
-		if (s.equalsIgnoreCase(STR_COUNTER)) {
+		if (STR_COUNTER.equalsIgnoreCase(s)) {
 			return COUNTER;
 		}
-		else if (s.equalsIgnoreCase(STR_ABSOLUTE)) {
+		else if (STR_ABSOLUTE.equalsIgnoreCase(s)) {
 			return ABSOLUTE;
 		}
-		else if (s.equalsIgnoreCase(STR_GAUGE)) {
+		else if (STR_GAUGE.equalsIgnoreCase(s)) {
 			return GAUGE;
 		}
-		else if (s.equalsIgnoreCase(STR_DERIVE)) {
+		else if (STR_DERIVE.equalsIgnoreCase(s)) {
 			return DERIVE;
 		}
 		else {
@@ -93,7 +91,7 @@ public class DataSourceType {
 	 * @return <code>true</code> if the objects are the same,
 	 *         <code>false</code> otherwise.
 	 */
-	public boolean equals(Object obj) {
+	public boolean equals(final Object obj) {
 
 		if (!(obj instanceof DataSourceType)) {
 			throw new IllegalArgumentException("Not a DataSourceType");
@@ -102,6 +100,10 @@ public class DataSourceType {
 		return (((DataSourceType) obj).type == type)
 				? true
 				: false;
+	}
+
+	public int hashCode() {
+		return type * 37;
 	}
 
 	/**

@@ -20,33 +20,50 @@
 package org.jrobin.core;
 
 import java.io.IOException;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * Backend to be used to store all RRD bytes in memory.<p>
  */
 public class RrdMemoryBackend extends RrdBackend {
+	private static final ReadWriteLock m_readWritelock = new ReentrantReadWriteLock();
+	private static final Lock m_readLock = m_readWritelock.readLock();
+	private static final Lock m_writeLock = m_readWritelock.writeLock();
+	
 	private byte[] buffer = new byte[0];
 
 	protected RrdMemoryBackend(String path) {
 		super(path);
 	}
 
-	protected synchronized void write(final long offset, final byte[] b) {
-	    int pos = (int) offset;
-		for (final byte singleByte : b) {
-			buffer[pos++] = singleByte;
+	protected void write(final long offset, final byte[] b) {
+		m_writeLock.lock();
+		try {
+		    int pos = (int) offset;
+			for (final byte singleByte : b) {
+				buffer[pos++] = singleByte;
+			}
+		} finally {
+			m_writeLock.unlock();
 		}
 	}
 
-	protected synchronized void read(final long offset, final byte[] b) throws IOException {
-		int pos = (int) offset;
-		if (pos + b.length <= buffer.length) {
-			for (int i = 0; i < b.length; i++) {
-				b[i] = buffer[pos++];
+	protected void read(final long offset, final byte[] b) throws IOException {
+		m_readLock.lock();
+		try {
+			int pos = (int) offset;
+			if (pos + b.length <= buffer.length) {
+				for (int i = 0; i < b.length; i++) {
+					b[i] = buffer[pos++];
+				}
 			}
-		}
-		else {
-			throw new IOException("Not enough bytes available in memory " + getPath());
+			else {
+				throw new IOException("Not enough bytes available in memory " + getPath());
+			}
+		} finally {
+			m_readLock.unlock();
 		}
 	}
 
@@ -56,7 +73,12 @@ public class RrdMemoryBackend extends RrdBackend {
 	 * @return Number of all RRD bytes.
 	 */
 	public long getLength() {
-		return buffer.length;
+		m_readLock.lock();
+		try {
+			return buffer.length;
+		} finally {
+			m_readLock.unlock();
+		}
 	}
 
 	/**
@@ -66,10 +88,15 @@ public class RrdMemoryBackend extends RrdBackend {
 	 * @throws IOException Thrown in case of I/O error.
 	 */
 	protected void setLength(final long newLength) throws IOException {
-		if (newLength > Integer.MAX_VALUE) {
-			throw new IOException("Cannot create this big memory backed RRD");
+		m_writeLock.lock();
+		try {
+			if (newLength > Integer.MAX_VALUE) {
+				throw new IOException("Cannot create this big memory backed RRD");
+			}
+			buffer = new byte[(int) newLength];
+		} finally {
+			m_writeLock.unlock();
 		}
-		buffer = new byte[(int) newLength];
 	}
 
 	/**
@@ -81,7 +108,7 @@ public class RrdMemoryBackend extends RrdBackend {
 	}
 
 	/**
-	 * This method is overriden to disable high-level caching in frontend JRobin classes.
+	 * This method is overridden to disable high-level caching in frontend JRobin classes.
 	 *
 	 * @return Always returns <code>false</code>. There is no need to cache anything in high-level classes
 	 *         since all RRD bytes are already in memory.

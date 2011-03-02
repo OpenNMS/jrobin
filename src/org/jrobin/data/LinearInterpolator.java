@@ -156,6 +156,8 @@ public class LinearInterpolator extends Plottable {
 		switch (interpolationMethod) {
 			case INTERPOLATE_REGRESSION:
 				calculateBestFitLine();
+				this.interpolationMethod = interpolationMethod;
+				break;
 			case INTERPOLATE_LEFT:
 			case INTERPOLATE_RIGHT:
 			case INTERPOLATE_LINEAR:
