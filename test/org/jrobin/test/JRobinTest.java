@@ -52,7 +52,8 @@ public class JRobinTest {
 		long startTime = System.currentTimeMillis() - 1000;
 //		for (int i = 0; i < 1000000; i++) {
 			sample = m_db.createSample();
-			sample.setAndUpdate(startTime++ + ":" + m_random.nextInt());
+			sample.setAndUpdate(startTime + ":" + m_random.nextInt());
+			//sample.setAndUpdate(startTime++ + ":" + m_random.nextInt());
 //		}
 	}
 }

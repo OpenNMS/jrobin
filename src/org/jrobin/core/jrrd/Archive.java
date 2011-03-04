@@ -49,7 +49,7 @@ public class Archive {
 
 	private double[][] values;
 
-	Archive(RRDatabase db) throws IOException {
+	Archive(RRDatabase db) throws IOException,RRDException {
 
 		this.db = db;
 
@@ -81,7 +81,7 @@ public class Archive {
 		return type;
 	}
 
-	void loadCDPStatusBlocks(RRDFile file, int numBlocks) throws IOException {
+	void loadCDPStatusBlocks(RRDFile file, int numBlocks) throws IOException,RRDException {
 
 		cdpStatusBlocks = new ArrayList<CDPStatusBlock>();
 
@@ -110,7 +110,7 @@ public class Archive {
 		return cdpStatusBlocks.iterator();
 	}
 
-	void loadCurrentRow(RRDFile file) throws IOException {
+	void loadCurrentRow(RRDFile file) throws IOException,RRDException {
 		currentRow = file.readInt();
 	}
 
@@ -122,7 +122,7 @@ public class Archive {
 		file.skipBytes(8 * rowCount * dsCount);
 	}
 
-	DataChunk loadData(DataChunk chunk) throws IOException {
+	DataChunk loadData(DataChunk chunk) throws IOException,RRDException {
 
 		Calendar end = Calendar.getInstance();
 		Calendar start = (Calendar) end.clone();
@@ -135,7 +135,7 @@ public class Archive {
 	}
 
 	void loadData(DataChunk chunk, long startTime, long endTime)
-			throws IOException {
+			throws IOException,RRDException {
 
 		long pointer;
 
@@ -225,7 +225,7 @@ public class Archive {
 		}
 	}
 
-	void toXml(PrintStream s) {
+	void toXml(PrintStream s) throws RRDException {
 
 		try {
 			s.println("\t<rra>");
@@ -335,7 +335,7 @@ public class Archive {
     */
 
 	// Resolved bug from the original method (see above)
-	public double[][] getValues() throws IOException {
+	public double[][] getValues() throws IOException,RRDException {
 		// OK PART
 		if (values != null) {
 			return values;

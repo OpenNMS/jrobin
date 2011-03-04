@@ -22,6 +22,8 @@ package org.jrobin.core;
 import java.io.*;
 import java.util.Date;
 
+import org.jrobin.core.jrrd.RRDException;
+
 /**
  * <p>Main class used to create and manipulate round robin databases (RRDs). Use this class to perform
  * update and fetch operations on exisiting RRDs, to create new RRD from
@@ -328,7 +330,7 @@ public class RrdDb implements RrdUpdater {
 	 * @throws IOException  Thrown in case of I/O error
 	 * @throws RrdException Thrown in case of JRobin specific error
 	 */
-	public RrdDb(String rrdPath, String externalPath) throws IOException, RrdException {
+	public RrdDb(String rrdPath, String externalPath) throws IOException, RrdException, RRDException {
 		this(rrdPath, externalPath, RrdBackendFactory.getDefaultFactory());
 	}
 
@@ -386,7 +388,7 @@ public class RrdDb implements RrdUpdater {
 	 * @see RrdBackendFactory
 	 */
 	public RrdDb(String rrdPath, String externalPath, RrdBackendFactory factory)
-			throws IOException, RrdException {
+			throws IOException, RRDException, RrdException {
 		DataImporter reader;
 		if (externalPath.startsWith(PREFIX_RRDTool)) {
 			String rrdToolPath = externalPath.substring(PREFIX_RRDTool.length());

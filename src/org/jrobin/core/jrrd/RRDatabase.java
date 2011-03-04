@@ -53,7 +53,7 @@ public class RRDatabase {
 	 * @param name the filename of the file to read from.
 	 * @throws IOException if an I/O error occurs.
 	 */
-	public RRDatabase(String name) throws IOException {
+	public RRDatabase(String name) throws IOException,RRDException {
 		this(new File(name));
 	}
 
@@ -63,7 +63,7 @@ public class RRDatabase {
 	 * @param file the file to read from.
 	 * @throws IOException if an I/O error occurs.
 	 */
-	public RRDatabase(File file) throws IOException {
+	public RRDatabase(File file) throws IOException,RRDException {
 
 		name = file.getName();
 		rrdFile = new RRDFile(file);
@@ -439,7 +439,7 @@ public class RRDatabase {
 	 *
 	 * @param s the PrintStream to send the XML to.
 	 */
-	public void toXml(PrintStream s) {
+	public void toXml(PrintStream s) throws RRDException {
 
 		s.println("<!--");
 		s.println("  -- Round Robin RRDatabase Dump ");

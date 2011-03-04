@@ -36,7 +36,7 @@ public class Header implements Constants {
 	int rraCount;
 	int pdpStep;
 
-	Header(RRDFile file) throws IOException {
+	Header(RRDFile file) throws IOException,RRDException {
 
 		if (!file.readString(4).equals(COOKIE)) {
 			throw new IOException("Invalid COOKIE");

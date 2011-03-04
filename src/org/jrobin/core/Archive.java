@@ -21,6 +21,8 @@ package org.jrobin.core;
 
 import java.io.IOException;
 
+import org.jrobin.core.jrrd.RRDException;
+
 /**
  * Class to represent single RRD archive in a RRD with its internal state.
  * Normally, you don't need methods to manipulate archive objects directly
@@ -66,7 +68,7 @@ public class Archive implements RrdUpdater, ConsolFuns {
 	}
 
 	// read from XML
-	Archive(final RrdDb parentDb, final DataImporter reader, final int arcIndex) throws IOException, RrdException {
+	Archive(final RrdDb parentDb, final DataImporter reader, final int arcIndex) throws IOException, RrdException,RRDException {
 		this(parentDb, new ArcDef(
 				reader.getConsolFun(arcIndex), reader.getXff(arcIndex),
 				reader.getSteps(arcIndex), reader.getRows(arcIndex)));

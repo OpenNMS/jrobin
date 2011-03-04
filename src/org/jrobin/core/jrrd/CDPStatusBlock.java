@@ -34,7 +34,7 @@ public class CDPStatusBlock {
 	int unknownDatapoints;
 	double value;
 
-	CDPStatusBlock(RRDFile file) throws IOException {
+	CDPStatusBlock(RRDFile file) throws IOException,RRDException {
 
 		offset = file.getFilePointer();
 		value = file.readDouble();

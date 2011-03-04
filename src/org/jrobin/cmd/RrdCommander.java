@@ -20,6 +20,7 @@
 package org.jrobin.cmd;
 
 import org.jrobin.core.RrdException;
+import org.jrobin.core.jrrd.RRDException;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -118,7 +119,7 @@ public class RrdCommander {
 	 * @throws RrdException thrown for all other errors (parsing errors,
 	 *                      unknown RRDTool syntax/command/option, internal RRD errors...)
 	 */
-	public static synchronized Object execute(String command) throws IOException, RrdException {
+	public static synchronized Object execute(String command) throws IOException, RrdException,RRDException {
 		String cmd = command.trim(), rrdtool = "rrdtool ";
 		if (cmd.startsWith(rrdtool)) {
 			cmd = cmd.substring(rrdtool.length());

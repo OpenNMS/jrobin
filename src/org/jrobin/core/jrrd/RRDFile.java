@@ -39,11 +39,11 @@ public class RRDFile implements Constants {
 	RandomAccessFile ras;
 	byte[] buffer;
 
-	RRDFile(String name) throws IOException {
+	RRDFile(String name) throws IOException, RRDException {
 		this(new File(name));
 	}
 
-	RRDFile(File file) throws IOException {
+	RRDFile(File file) throws IOException, RRDException {
 
 		ras = new RandomAccessFile(file, "r");
 		buffer = new byte[128];
@@ -52,12 +52,12 @@ public class RRDFile implements Constants {
 		initDataLayout(file);
 	}
 
-	private void initDataLayout(File file) throws IOException {
+	private void initDataLayout(File file) throws IOException, RRDException {
 
 		if (file.exists()) {	// Load the data formats from the file
 			int bytes = ras.read(buffer, 0, 24);
 			if (bytes < 24) {
-				throw new IOException("Invalid RRD file");
+				throw new RRDException("Invalid RRD file");
 			}
 
 			int index;
@@ -70,7 +70,7 @@ public class RRDFile implements Constants {
 				bigEndian = false;
 			}
 			else {
-				throw new IOException("Invalid RRD file");
+				throw new RRDException("Invalid RRD file");
 			}
 
 			switch (index) {
@@ -84,7 +84,7 @@ public class RRDFile implements Constants {
 					break;
 
 				default :
-					throw new RuntimeException("Unsupported architecture");
+					throw new RuntimeException("Unsupported architecture - neither 32-bit nor 64-bit, or maybe the file is corrupt");
 			}
 		}
 		else {				// Default to data formats for this hardware architecture
@@ -105,7 +105,7 @@ public class RRDFile implements Constants {
 		return alignment;
 	}
 
-	double readDouble() throws IOException {
+	double readDouble() throws IOException, RRDException {
 		if(debug) {
 			System.out.print("Read 8 bytes (Double) from offset "+ras.getFilePointer()+":");
 		}
@@ -113,8 +113,10 @@ public class RRDFile implements Constants {
 		//double value;
 		byte[] tx = new byte[8];
 
-		ras.read(buffer, 0, 8);
-
+		if(ras.read(buffer, 0, 8) != 8) {
+			throw new RRDException("Invalid RRD file");
+		}
+		
 		if (bigEndian) {
 			tx = buffer;
 		}
@@ -134,41 +136,47 @@ public class RRDFile implements Constants {
 		return result;
 	}
 
-	int readInt() throws IOException {
+	int readInt() throws IOException, RRDException {
 		return readInt(false);
 	}
 
-	int readInt(boolean dump) throws IOException {
+	/**
+	 * Reads the next integer (4 or 8 bytes depending on alignment), advancing the file pointer
+	 *  and returns it
+	 *  If the alignment is 8-bytes (64-bit), then 8 bytes are read, but only the lower 4-bytes (32-bits) are
+	 *  returned.  The upper 4 bytes are ignored.
+	 * 
+	 * @return the 32-bit integer read from the file
+	 * @throws IOException - A file access error
+	 * @throws RRDException - Not enough bytes were left in the file to read the integer.  
+	 */
+	int readInt(boolean dump) throws IOException, RRDException {
 		//An integer is "alignment" bytes long - 4 bytes on 32-bit, 8 on 64-bit.
 		if(this.debug) {
 			System.out.print("Read "+alignment+" bytes (int) from offset "+ras.getFilePointer()+":");
 		}
 
-		ras.read(buffer, 0, alignment);
+		if(ras.read(buffer, 0, alignment) != alignment) {
+			throw new RRDException("Invalid RRD file");
+		}
 
-		long value;
+		int value;
 
 		if (bigEndian) {
 			if(alignment == 8) {
+				//For big-endian, the low 4-bytes of the 64-bit integer are the last 4 bytes
 				value = (0xFF & buffer[7]) | ((0xFF & buffer[6]) << 8)
-						| ((0xFF & buffer[5]) << 16) | ((0xFF & buffer[4]) << 24)
-						| ((0xFF & buffer[3]) << 32) | ((0xFF & buffer[2]) << 40)
-						| ((0xFF & buffer[1]) << 48) | ((0xFF & buffer[0]) << 56);
+						| ((0xFF & buffer[5]) << 16) | ((0xFF & buffer[4]) << 24);
 			} else {
 				value = (0xFF & buffer[3]) | ((0xFF & buffer[2]) << 8)
 						| ((0xFF & buffer[1]) << 16) | ((0xFF & buffer[0]) << 24);
 			}
 		}
 		else {
-			if(alignment == 8) {
-				value = (0xFF & buffer[0]) | ((0xFF & buffer[1]) << 8)
-					| ((0xFF & buffer[2]) << 16) | ((0xFF & buffer[3]) << 24)
-					| ((0xFF & buffer[4]) << 32) | ((0xFF & buffer[5]) << 40)
-					| ((0xFF & buffer[6]) << 48) | ((0xFF & buffer[7]) << 56);
-			} else {
-				value = (0xFF & buffer[0]) | ((0xFF & buffer[1]) << 8)
-					| ((0xFF & buffer[2]) << 16) | ((0xFF & buffer[3]) << 24);
-			}
+			//For little-endian, there's no difference between 4 and 8 byte alignment.
+			// The first 4 bytes are the low end of a 64-bit number
+			value = (0xFF & buffer[0]) | ((0xFF & buffer[1]) << 8)
+				| ((0xFF & buffer[2]) << 16) | ((0xFF & buffer[3]) << 24);
 		}
 
 		if(this.debug) {
@@ -177,11 +185,14 @@ public class RRDFile implements Constants {
 		return (int)value;
 	}
 
-	String readString(int maxLength) throws IOException {
+	String readString(int maxLength) throws IOException, RRDException {
 		if(this.debug) {
 			System.out.print("Read "+maxLength+" bytes (string) from offset "+ras.getFilePointer()+":");
 		}
-		ras.read(buffer, 0, maxLength);
+		maxLength = ras.read(buffer, 0, maxLength);
+		if(maxLength == -1) {
+			throw new RRDException("Invalid RRD file");
+		}
 
 		String result = new String(buffer, 0, maxLength).trim();
 		if(this.debug) {

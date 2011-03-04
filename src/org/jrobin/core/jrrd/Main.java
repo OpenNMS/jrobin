@@ -42,7 +42,13 @@ public class Main {
 			return;
 		}
 
-		rrd.toXml(System.out);        // Dump the database as XML.
+		try {
+			rrd.toXml(System.out);
+		} catch (RRDException e) {
+			e.printStackTrace();
+			return;
+		}
+		// Dump the database as XML.
 		rrd.printInfo(System.out);    // Dump the database header information.
 		System.out.println(rrd);      // Dump a summary of the contents of the database.
 		System.out.println(chunk);    // Dump the chunk.

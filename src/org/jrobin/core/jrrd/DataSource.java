@@ -39,7 +39,7 @@ public class DataSource {
 	double maximum;
 	PDPStatusBlock pdpStatusBlock;
 
-	DataSource(RRDFile file) throws IOException {
+	DataSource(RRDFile file) throws IOException,RRDException {
 
 		offset = file.getFilePointer();
 		name = file.readString(Constants.DS_NAM_SIZE);
@@ -61,7 +61,7 @@ public class DataSource {
 		size = file.getFilePointer() - offset;
 	}
 
-	void loadPDPStatusBlock(RRDFile file) throws IOException {
+	void loadPDPStatusBlock(RRDFile file) throws IOException,RRDException {
 		pdpStatusBlock = new PDPStatusBlock(file);
 	}
 

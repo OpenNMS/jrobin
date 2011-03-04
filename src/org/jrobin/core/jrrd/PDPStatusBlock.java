@@ -34,7 +34,7 @@ public class PDPStatusBlock {
 	int unknownSeconds;
 	double value;
 
-	PDPStatusBlock(RRDFile file) throws IOException {
+	PDPStatusBlock(RRDFile file) throws IOException,RRDException {
 
 		offset = file.getFilePointer();
 		lastReading = file.readString(Constants.LAST_DS_LEN);
