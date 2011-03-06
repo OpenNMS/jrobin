@@ -935,7 +935,7 @@ public class RrdGraphDef implements RrdGraphConstants {
      */
     public void area(String srcName, Paint color, String legend) {
         area(srcName, color);
-        if (legend.length() > 0) {
+        if ((legend != null) && (legend.length() > 0)) {
             LegendText legendText = new LegendText(color, legend);
             comments.add(legendText);
         }

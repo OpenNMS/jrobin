@@ -71,9 +71,9 @@ class RrdGraphCmd extends RrdToolCmd implements RrdGraphConstants {
 		String t1 = getOptionValue("s", "start", DEFAULT_START), t2 = getOptionValue("e", "end", DEFAULT_END);
 		gdef.setTimeSpan(Util.getTimestamps(t1, t2));
 		// X-GRID
-		parseXGrid(getOptionValue("x", "x-grid"));
+		parseXGrid(gdef, getOptionValue("x", "x-grid"));
 		// Y-GRID
-		parseYGrid(getOptionValue("y", "y-grid"));
+		parseYGrid(gdef, getOptionValue("y", "y-grid"));
 		// ALT-Y-GRID
 		gdef.setAltYGrid(getBooleanOption("Y", "alt-y-grid"));
 		// NO_MINOR
@@ -158,7 +158,7 @@ class RrdGraphCmd extends RrdToolCmd implements RrdGraphConstants {
 		// LOGARITHMIC
 		gdef.setLogarithmic(getBooleanOption("o", "logarithmic"));
 		// COLORS
-		parseColors(getMultipleOptionValues("c", "color"));
+		parseColors(gdef, getMultipleOptionValues("c", "color"));
 		// NO-LEGEND
 		gdef.setNoLegend(getBooleanOption("g", "no-legend"));
 		// ONLY_GRAPH
@@ -187,34 +187,34 @@ class RrdGraphCmd extends RrdToolCmd implements RrdGraphConstants {
 		// parse remaining words, in no particular order
 		for (int i = 2; i < words.length; i++) {
 			if (words[i].startsWith("DEF:")) {
-				parseDef(words[i]);
+				parseDef(gdef, words[i]);
 			}
 			else if (words[i].startsWith("CDEF:")) {
-				parseCDef(words[i]);
+				parseCDef(gdef, words[i]);
 			}
 			else if (words[i].startsWith("PRINT:")) {
-				parsePrint(words[i]);
+				parsePrint(gdef, words[i]);
 			}
 			else if (words[i].startsWith("GPRINT:")) {
-				parseGPrint(words[i]);
+				parseGPrint(gdef, words[i]);
 			}
 			else if (words[i].startsWith("COMMENT:")) {
-				parseComment(words[i]);
+				parseComment(gdef, words[i]);
 			}
 			else if (words[i].startsWith("HRULE:")) {
-				parseHRule(words[i]);
+				parseHRule(gdef, words[i]);
 			}
 			else if (words[i].startsWith("VRULE:")) {
-				parseVRule(words[i]);
+				parseVRule(gdef, words[i]);
 			}
 			else if (words[i].startsWith("LINE1:") || words[i].startsWith("LINE2:") || words[i].startsWith("LINE3:")) {
-				parseLine(words[i]);
+				parseLine(gdef, words[i]);
 			}
 			else if (words[i].startsWith("AREA:")) {
-				parseArea(words[i]);
+				parseArea(gdef, words[i]);
 			}
 			else if (words[i].startsWith("STACK:")) {
-				parseStack(words[i]);
+				parseStack(gdef, words[i]);
 			}
 			else {
 				throw new RrdException("Unexpected GRAPH token encountered: " + words[i]);
@@ -224,7 +224,7 @@ class RrdGraphCmd extends RrdToolCmd implements RrdGraphConstants {
 		return gdef;
     }
 
-	private void parseLine(String word) throws RrdException {
+	private void parseLine(RrdGraphDef graphDef, String word) throws RrdException {
 		String[] tokens1 = new ColonSplitter(word).split();
 		if (tokens1.length != 2 && tokens1.length != 3) {
 			throw new RrdException("Invalid LINE statement: " + word);
@@ -237,10 +237,10 @@ class RrdGraphCmd extends RrdToolCmd implements RrdGraphConstants {
 		String name = tokens2[0];
 		Paint color = tokens2.length == 2 ? Util.parseColor(tokens2[1]) : BLIND_COLOR;
 		String legend = tokens1.length == 3 ? tokens1[2] : null;
-		gdef.line(name, color, legend, width);
+		graphDef.line(name, color, legend, width);
 	}
 
-	private void parseArea(String word) throws RrdException {
+	private void parseArea(RrdGraphDef graphDef, String word) throws RrdException {
 		String[] tokens1 = new ColonSplitter(word).split();
 		if (tokens1.length != 2 && tokens1.length != 3) {
 			throw new RrdException("Invalid AREA statement: " + word);
@@ -252,10 +252,10 @@ class RrdGraphCmd extends RrdToolCmd implements RrdGraphConstants {
 		String name = tokens2[0];
 		Paint color = tokens2.length == 2 ? Util.parseColor(tokens2[1]) : BLIND_COLOR;
 		String legend = tokens1.length == 3 ? tokens1[2] : null;
-		gdef.area(name, color, legend);
+		graphDef.area(name, color, legend);
 	}
 
-	private void parseStack(String word) throws RrdException {
+	private void parseStack(RrdGraphDef graphDef, String word) throws RrdException {
 		String[] tokens1 = new ColonSplitter(word).split();
 		if (tokens1.length != 2 && tokens1.length != 3) {
 			throw new RrdException("Invalid STACK statement: " + word);
@@ -267,10 +267,10 @@ class RrdGraphCmd extends RrdToolCmd implements RrdGraphConstants {
 		String name = tokens2[0];
 		Paint color = tokens2.length == 2 ? Util.parseColor(tokens2[1]) : BLIND_COLOR;
 		String legend = tokens1.length == 3 ? tokens1[2] : null;
-		gdef.stack(name, color, legend);
+		graphDef.stack(name, color, legend);
 	}
 
-	private void parseHRule(String word) throws RrdException {
+	private void parseHRule(RrdGraphDef graphDef, String word) throws RrdException {
 		String[] tokens1 = new ColonSplitter(word).split();
 		if (tokens1.length < 2 || tokens1.length > 3) {
 			throw new RrdException("Invalid HRULE statement: " + word);
@@ -281,10 +281,10 @@ class RrdGraphCmd extends RrdToolCmd implements RrdGraphConstants {
 		}
 		double value = parseDouble(tokens2[0]);
 		Paint color = Util.parseColor(tokens2[1]);
-		gdef.hrule(value, color, tokens1.length == 3 ? tokens1[2] : null);
+		graphDef.hrule(value, color, tokens1.length == 3 ? tokens1[2] : null);
 	}
 
-	private void parseVRule(String word) throws RrdException {
+	private void parseVRule(RrdGraphDef graphDef, String word) throws RrdException {
 		String[] tokens1 = new ColonSplitter(word).split();
 		if (tokens1.length < 2 || tokens1.length > 3) {
 			throw new RrdException("Invalid VRULE statement: " + word);
@@ -295,19 +295,19 @@ class RrdGraphCmd extends RrdToolCmd implements RrdGraphConstants {
 		}
 		long timestamp = Util.getTimestamp(tokens2[0]);
 		Paint color = Util.parseColor(tokens2[1]);
-		gdef.vrule(timestamp, color, tokens1.length == 3 ? tokens1[2] : null);
+		graphDef.vrule(timestamp, color, tokens1.length == 3 ? tokens1[2] : null);
 	}
 
-	private void parseComment(String word) throws RrdException {
+	private void parseComment(RrdGraphDef graphDef, String word) throws RrdException {
 		String[] tokens = new ColonSplitter(word).split();
 		if (tokens.length != 2) {
 			throw new RrdException("Invalid COMMENT specification: " + word);
 		}
-		gdef.comment(tokens[1]);
+		graphDef.comment(tokens[1]);
 	}
 
 
-	private void parseDef(String word) throws RrdException {
+	private void parseDef(RrdGraphDef graphDef, String word) throws RrdException {
 		String[] tokens1 = new ColonSplitter(word).split();
 		if (tokens1.length != 4) {
 			throw new RrdException("Invalid DEF specification: " + word);
@@ -316,10 +316,10 @@ class RrdGraphCmd extends RrdToolCmd implements RrdGraphConstants {
 		if (tokens2.length != 2) {
 			throw new RrdException("Invalid DEF specification: " + word);
 		}
-		gdef.datasource(tokens2[0], tokens2[1], tokens1[2], tokens1[3]);
+		graphDef.datasource(tokens2[0], tokens2[1], tokens1[2], tokens1[3]);
 	}
 
-	private void parseCDef(String word) throws RrdException {
+	private void parseCDef(RrdGraphDef graphDef, String word) throws RrdException {
 		String[] tokens1 = new ColonSplitter(word).split();
 		if (tokens1.length != 2) {
 			throw new RrdException("Invalid CDEF specification: " + word);
@@ -328,26 +328,26 @@ class RrdGraphCmd extends RrdToolCmd implements RrdGraphConstants {
 		if (tokens2.length != 2) {
 			throw new RrdException("Invalid DEF specification: " + word);
 		}
-		gdef.datasource(tokens2[0], tokens2[1]);
+		graphDef.datasource(tokens2[0], tokens2[1]);
 	}
 
-	private void parsePrint(String word) throws RrdException {
+	private void parsePrint(RrdGraphDef graphDef, String word) throws RrdException {
 		String[] tokens = new ColonSplitter(word).split();
 		if (tokens.length != 4) {
 			throw new RrdException("Invalid PRINT specification: " + word);
 		}
-		gdef.print(tokens[1], tokens[2], tokens[3]);
+		graphDef.print(tokens[1], tokens[2], tokens[3]);
 	}
 
-	private void parseGPrint(String word) throws RrdException {
+	private void parseGPrint(RrdGraphDef graphDef, String word) throws RrdException {
 		String[] tokens = new ColonSplitter(word).split();
 		if (tokens.length != 4) {
 			throw new RrdException("Invalid GPRINT specification: " + word);
 		}
-		gdef.gprint(tokens[1], tokens[2], tokens[3]);
+		graphDef.gprint(tokens[1], tokens[2], tokens[3]);
 	}
 
-	private void parseColors(String[] colorOptions) throws RrdException {
+	private void parseColors(RrdGraphDef graphDef, String[] colorOptions) throws RrdException {
 		if (colorOptions == null) {
 			return;
 		}
@@ -358,16 +358,16 @@ class RrdGraphCmd extends RrdToolCmd implements RrdGraphConstants {
 			}
 			String colorName = tokens[0];
 			Paint paint = Util.parseColor(tokens[1]);
-			gdef.setColor(colorName, paint);
+			graphDef.setColor(colorName, paint);
 		}
 	}
 
-	private void parseYGrid(String ygrid) throws RrdException {
+	private void parseYGrid(RrdGraphDef graphDef, String ygrid) throws RrdException {
 		if (ygrid == null) {
 			return;
 		}
 		if (ygrid.equalsIgnoreCase("none")) {
-			gdef.setDrawYGrid(false);
+			graphDef.setDrawYGrid(false);
 			return;
 		}
 		String[] tokens = new ColonSplitter(ygrid).split();
@@ -376,15 +376,15 @@ class RrdGraphCmd extends RrdToolCmd implements RrdGraphConstants {
 		}
 		double gridStep = parseDouble(tokens[0]);
 		int labelFactor = parseInt(tokens[1]);
-		gdef.setValueAxis(gridStep, labelFactor);
+		graphDef.setValueAxis(gridStep, labelFactor);
 	}
 
-	private void parseXGrid(String xgrid) throws RrdException {
+	private void parseXGrid(RrdGraphDef graphDef, String xgrid) throws RrdException {
 		if (xgrid == null) {
 			return;
 		}
 		if (xgrid.equalsIgnoreCase("none")) {
-			gdef.setDrawXGrid(false);
+			graphDef.setDrawXGrid(false);
 			return;
 		}
 		String[] tokens = new ColonSplitter(xgrid).split();
@@ -397,7 +397,7 @@ class RrdGraphCmd extends RrdToolCmd implements RrdGraphConstants {
 				labelUnitCount = parseInt(tokens[5]);
 		int labelSpan = parseInt(tokens[6]);
 		String fmt = tokens[7];
-		gdef.setTimeAxis(minorUnit, minorUnitCount, majorUnit, majorUnitCount,
+		graphDef.setTimeAxis(minorUnit, minorUnitCount, majorUnit, majorUnitCount,
 				labelUnit, labelUnitCount, labelSpan, fmt);
 	}
 
