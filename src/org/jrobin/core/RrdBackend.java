@@ -80,7 +80,7 @@ public abstract class RrdBackend {
 	protected RrdBackend(final String path, final boolean readOnly) {
         m_path = path;
 	    m_readOnly = readOnly;
-	    RrdBackend.s_instanceCreated = true;
+	    RrdBackend.setInstanceCreated();
 	}
 
 	/**
@@ -328,6 +328,10 @@ public abstract class RrdBackend {
 		return Double.longBitsToDouble(getLong(b));
 	}
 
+	private static void setInstanceCreated() {
+		s_instanceCreated = true;
+	}
+	
 	static boolean isInstanceCreated() {
 		return s_instanceCreated;
 	}
