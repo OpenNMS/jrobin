@@ -62,7 +62,7 @@ import java.io.IOException;
  * </ul>
  */
 public abstract class RrdBackend {
-	private static boolean m_instanceCreated = false;
+	private static boolean s_instanceCreated = false;
 	private String m_path = null;
 	private boolean m_readOnly = false;
 
@@ -80,7 +80,7 @@ public abstract class RrdBackend {
 	protected RrdBackend(final String path, final boolean readOnly) {
         m_path = path;
 	    m_readOnly = readOnly;
-        m_instanceCreated = true;
+	    RrdBackend.s_instanceCreated = true;
 	}
 
 	/**
@@ -329,6 +329,6 @@ public abstract class RrdBackend {
 	}
 
 	static boolean isInstanceCreated() {
-		return m_instanceCreated;
+		return s_instanceCreated;
 	}
 }
