@@ -6,6 +6,7 @@ import org.jrobin.core.RrdDb;
 import org.jrobin.core.RrdDef;
 import org.jrobin.core.RrdException;
 import org.jrobin.core.jrrd.RRDException;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -16,6 +17,7 @@ public class RrdGraphCmdTest {
 
 	@Before
 	public void setUp() throws RrdException, IOException {
+		Assume.assumeTrue(!Boolean.getBoolean("java.awt.headless"));
 
 		// Don't use stdout; this silences output if we're outputting to "-"
 		// If debugging, you may wish to turn this to true, in case there's
