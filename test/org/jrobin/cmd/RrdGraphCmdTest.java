@@ -17,8 +17,6 @@ public class RrdGraphCmdTest {
 
 	@Before
 	public void setUp() throws RrdException, IOException {
-		Assume.assumeTrue(!Boolean.getBoolean("java.awt.headless"));
-
 		// Don't use stdout; this silences output if we're outputting to "-"
 		// If debugging, you may wish to turn this to true, in case there's
 		// output that is helpful in figuring
@@ -37,8 +35,14 @@ public class RrdGraphCmdTest {
 		RrdDb rrd = new RrdDb(def);
 		rrd.close();
 
-		this.graphCmd = new RrdGraphCmd();
-
+		try {
+			this.graphCmd = new RrdGraphCmd();
+		} catch (final Exception e) {
+			System.err.println("unable to create RrdGraphCmd object!");
+			e.printStackTrace();
+		}
+		
+		Assume.assumeNotNull(this.graphCmd);
 	}
 
 	@Test
