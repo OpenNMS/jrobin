@@ -37,9 +37,9 @@ public class RrdGraphCmdTest {
 
 		try {
 			this.graphCmd = new RrdGraphCmd();
-		} catch (final Exception e) {
+		} catch (final Throwable t) {
 			System.err.println("unable to create RrdGraphCmd object!");
-			e.printStackTrace();
+			t.printStackTrace();
 		}
 		
 		Assume.assumeNotNull(this.graphCmd);
