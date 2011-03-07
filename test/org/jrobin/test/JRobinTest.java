@@ -20,20 +20,28 @@ package org.jrobin.test;
 
 import java.util.Random;
 
+import org.jrobin.core.RrdBackendFactory;
 import org.jrobin.core.RrdDb;
 import org.jrobin.core.RrdDef;
 import org.jrobin.core.Sample;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class JRobinTest {
 	RrdDb m_db = null;
 	Random m_random = new Random();
 
+	@BeforeClass
+	public static void beforeClass() throws Exception {
+		if (!RrdBackendFactory.isInstanceCreated()) {
+			RrdBackendFactory.setDefaultFactory("FILE");
+		}
+	}
+	
 	@Before
 	public void setUp() throws Exception {
-		RrdDb.setDefaultFactory("FILE");
 		RrdDef def = new RrdDef("target/test.jrb");
 		def.setStep(300);
 		def.addDatasource("test", "GAUGE", 300L, Double.NaN, Double.NaN);

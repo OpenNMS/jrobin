@@ -180,6 +180,13 @@ public abstract class RrdBackendFactory {
 	}
 
 	/**
+	 * Whether or not the RRD backend has created an instance yet.
+	 */
+	public static boolean isInstanceCreated() {
+		return RrdBackend.isInstanceCreated();
+	}
+
+	/**
 	 * Creates RrdBackend object for the given storage path.
 	 *
 	 * @param path	 Storage path
