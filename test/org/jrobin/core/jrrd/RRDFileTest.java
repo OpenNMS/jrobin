@@ -7,13 +7,13 @@ import java.io.IOException;
 
 import junit.framework.Assert;
 
-import org.jrobin.core.jrrd.Constants;
+import org.jrobin.core.RrdException;
 import org.junit.Test;
 
 public class RRDFileTest {
 
 	@Test
-	public void testTooShortForHeader() throws IOException, RRDException {
+	public void testTooShortForHeader() throws IOException, RrdException {
 		File tempFile = new File("target/test-too-short.rrd");
 		FileOutputStream outputStream = new FileOutputStream(tempFile);
 		outputStream.write(0); //Write just one byte
@@ -22,14 +22,14 @@ public class RRDFileTest {
 		try {
 			RRDFile rrdFile = new RRDFile(tempFile);
 			rrdFile.close();
-			Assert.fail("Expected an RRDException");
-		} catch (RRDException e) {
+			Assert.fail("Expected an RrdException");
+		} catch (RrdException e) {
 			//Expected; file is too short
 		}
 	}
 	
 	@Test
-	public void testNoFloatCookie() throws IOException, RRDException {
+	public void testNoFloatCookie() throws IOException, RrdException {
 		File tempFile = new File("target/test-no-float-cookie.rrd");
 		FileOutputStream outputStream = new FileOutputStream(tempFile);
 		this.write32BitHeaderToVersion(outputStream);
@@ -40,14 +40,14 @@ public class RRDFileTest {
 		try {
 			RRDFile rrdFile = new RRDFile(tempFile);
 			rrdFile.close();
-			Assert.fail("Expected an RRDException");
-		} catch (RRDException e) {
+			Assert.fail("Expected an RrdException");
+		} catch (RrdException e) {
 			//No cookie
 		}
 	}
 
 	@Test
-	public void test32BitLittleEndianness() throws IOException, RRDException {
+	public void test32BitLittleEndianness() throws IOException, RrdException {
 		File tempFile=new File("target/test-endianness.rrd");
 		FileOutputStream outputStream = new FileOutputStream(tempFile);
 		write32BitLittleEndianHeaderToFloatCookie(outputStream);
@@ -61,7 +61,7 @@ public class RRDFileTest {
 	}
 
 	@Test
-	public void test32BitBigEndianness() throws IOException, RRDException {
+	public void test32BitBigEndianness() throws IOException, RrdException {
 		File tempFile=new File("target/test-endianness.rrd");
 		FileOutputStream outputStream = new FileOutputStream(tempFile);
 		write32BitBigEndianHeaderToFloatCookie(outputStream);
@@ -76,7 +76,7 @@ public class RRDFileTest {
 	}
 
 	@Test
-	public void test64BitLittleEndianness() throws IOException, RRDException {
+	public void test64BitLittleEndianness() throws IOException, RrdException {
 		File tempFile=new File("target/test-endianness.rrd");
 		FileOutputStream outputStream = new FileOutputStream(tempFile);
 		write64BitLittleEndianHeaderToFloatCookie(outputStream);
@@ -90,7 +90,7 @@ public class RRDFileTest {
 	}
 
 	@Test
-	public void test64BitBigEndianness() throws IOException, RRDException {
+	public void test64BitBigEndianness() throws IOException, RrdException {
 		File tempFile=new File("target/test-endianness.rrd");
 		FileOutputStream outputStream = new FileOutputStream(tempFile);
 		write64BitBigEndianHeaderToFloatCookie(outputStream);
@@ -105,7 +105,7 @@ public class RRDFileTest {
 	}
 	
 	@Test
-	public void testReadInt32BitLittleEndian() throws IOException, RRDException {
+	public void testReadInt32BitLittleEndian() throws IOException, RrdException {
 		File tempFile=new File("target/test-read-int.rrd");
 		FileOutputStream outputStream = new FileOutputStream(tempFile);
 		write32BitLittleEndianHeaderToFloatCookie(outputStream);
@@ -128,7 +128,7 @@ public class RRDFileTest {
 	}
 	
 	@Test
-	public void testReadInt32BitBigEndian() throws IOException, RRDException {
+	public void testReadInt32BitBigEndian() throws IOException, RrdException {
 		File tempFile=new File("target/test-read-int.rrd");
 		FileOutputStream outputStream = new FileOutputStream(tempFile);
 		write32BitBigEndianHeaderToFloatCookie(outputStream);
@@ -151,7 +151,7 @@ public class RRDFileTest {
 	}
 	
 	@Test
-	public void testReadInt64BitLittleEndian() throws IOException, RRDException {
+	public void testReadInt64BitLittleEndian() throws IOException, RrdException {
 		File tempFile=new File("target/test-read-int.rrd");
 		FileOutputStream outputStream = new FileOutputStream(tempFile);
 		write64BitLittleEndianHeaderToFloatCookie(outputStream);
@@ -178,7 +178,7 @@ public class RRDFileTest {
 	
 	
 	@Test
-	public void testReadInt64BitBigEndian() throws IOException, RRDException {
+	public void testReadInt64BitBigEndian() throws IOException, RrdException {
 		File tempFile=new File("target/test-read-int.rrd");
 		FileOutputStream outputStream = new FileOutputStream(tempFile);
 		write64BitBigEndianHeaderToFloatCookie(outputStream);
@@ -211,7 +211,7 @@ public class RRDFileTest {
 	 */
 	
 	@Test
-	public void testReadString() throws IOException, RRDException {
+	public void testReadString() throws IOException, RrdException {
 		File tempFile=new File("target/test-read-string.rrd");
 		FileOutputStream outputStream = new FileOutputStream(tempFile);
 		write64BitLittleEndianHeaderToFloatCookie(outputStream); //Simplest way to get at least 24 bytes in the file

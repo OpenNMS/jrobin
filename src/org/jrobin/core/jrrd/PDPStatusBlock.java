@@ -20,6 +20,8 @@ package org.jrobin.core.jrrd;
 
 import java.io.IOException;
 
+import org.jrobin.core.RrdException;
+
 /**
  * Instances of this class model the primary data point status from an RRD file.
  *
@@ -34,7 +36,7 @@ public class PDPStatusBlock {
 	int unknownSeconds;
 	double value;
 
-	PDPStatusBlock(RRDFile file) throws IOException,RRDException {
+	PDPStatusBlock(RRDFile file) throws IOException,RrdException {
 
 		offset = file.getFilePointer();
 		lastReading = file.readString(Constants.LAST_DS_LEN);

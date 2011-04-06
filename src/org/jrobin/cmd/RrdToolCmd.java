@@ -23,7 +23,6 @@ import org.jrobin.core.RrdDb;
 import org.jrobin.core.RrdDbPool;
 import org.jrobin.core.RrdDef;
 import org.jrobin.core.RrdException;
-import org.jrobin.core.jrrd.RRDException;
 
 import java.io.IOException;
 
@@ -33,9 +32,9 @@ abstract class RrdToolCmd {
 
 	abstract String getCmdType();
 
-	abstract Object execute() throws RrdException, IOException,RRDException;
+	abstract Object execute() throws RrdException, IOException,RrdException;
 
-	Object executeCommand(String command) throws RrdException, IOException, RRDException {
+	Object executeCommand(String command) throws RrdException, IOException, RrdException {
 		cmdScanner = new RrdCmdScanner(command);
 		return execute();
 	}
@@ -130,7 +129,7 @@ abstract class RrdToolCmd {
 		}
 	}
 
-	static RrdDb getRrdDbReference(String path, String xmlPath) throws IOException, RrdException,RRDException {
+	static RrdDb getRrdDbReference(String path, String xmlPath) throws IOException, RrdException,RrdException {
 		if (rrdDbPoolUsed) {
 			return RrdDbPool.getInstance().requestRrdDb(path, xmlPath);
 		}

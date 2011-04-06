@@ -31,6 +31,7 @@ import sun.nio.ch.DirectBuffer;
  * JRobin backend which is used to store RRD data to ordinary disk files
  * by using fast java.nio.* package. This is the default backend engine since JRobin 1.4.0.
  */
+@SuppressWarnings("restriction")
 public class RrdNioBackend extends RrdFileBackend {
 	private static final Timer fileSyncTimer = new Timer(true);
 
@@ -71,7 +72,7 @@ public class RrdNioBackend extends RrdFileBackend {
 		}
 	}
 
-	private void unmapFile() {
+    private void unmapFile() {
 		if (m_byteBuffer != null) {
 			if (m_byteBuffer instanceof DirectBuffer) {
 				((DirectBuffer) m_byteBuffer).cleaner().clean();

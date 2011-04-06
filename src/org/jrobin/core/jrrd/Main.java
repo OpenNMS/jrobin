@@ -20,6 +20,8 @@ package org.jrobin.core.jrrd;
 
 import java.io.IOException;
 
+import org.jrobin.core.RrdException;
+
 /**
  * Show some of the things jRRD can do.
  *
@@ -44,7 +46,7 @@ public class Main {
 
 		try {
 			rrd.toXml(System.out);
-		} catch (RRDException e) {
+		} catch (RrdException e) {
 			e.printStackTrace();
 			return;
 		}

@@ -28,6 +28,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Iterator;
 
+import org.jrobin.core.RrdException;
+
 /**
  * Instances of this class model
  * <a href="http://people.ee.ethz.ch/~oetiker/webtools/rrdtool/">Round Robin Database</a>
@@ -53,7 +55,7 @@ public class RRDatabase {
 	 * @param name the filename of the file to read from.
 	 * @throws IOException if an I/O error occurs.
 	 */
-	public RRDatabase(String name) throws IOException,RRDException {
+	public RRDatabase(String name) throws IOException,RrdException {
 		this(new File(name));
 	}
 
@@ -63,7 +65,7 @@ public class RRDatabase {
 	 * @param file the file to read from.
 	 * @throws IOException if an I/O error occurs.
 	 */
-	public RRDatabase(File file) throws IOException,RRDException {
+	public RRDatabase(File file) throws IOException,RrdException {
 
 		name = file.getName();
 		rrdFile = new RRDFile(file);
@@ -250,12 +252,12 @@ public class RRDatabase {
 	 * @param type the consolidation function that should have been applied to
 	 *             the data.
 	 * @return the raw data.
-	 * @throws RRDException if there was a problem locating a data archive with
+	 * @throws RrdException if there was a problem locating a data archive with
 	 *                      the requested consolidation function.
 	 * @throws IOException  if there was a problem reading data from the database.
 	 */
 	public DataChunk getData(ConsolidationFunctionType type)
-			throws RRDException, IOException {
+			throws RrdException, IOException {
 		return getData(type, 1L);
 	}
 
@@ -267,17 +269,17 @@ public class RRDatabase {
 	 *             the data.
 	 * @param step the step size to use.
 	 * @return the raw data.
-	 * @throws RRDException if there was a problem locating a data archive with
+	 * @throws RrdException if there was a problem locating a data archive with
 	 *                      the requested consolidation function.
 	 * @throws IOException  if there was a problem reading data from the database.
 	 */
 	public DataChunk getData(ConsolidationFunctionType type, long step)
-			throws RRDException, IOException {
+			throws RrdException, IOException {
 
 		ArrayList<Archive> possibleArchives = getArchiveList(type);
 
 		if (possibleArchives.size() == 0) {
-			throw new RRDException("Database does not contain an Archive of consolidation function type "
+			throw new RrdException("Database does not contain an Archive of consolidation function type "
 					+ type);
 		}
 
@@ -439,7 +441,7 @@ public class RRDatabase {
 	 *
 	 * @param s the PrintStream to send the XML to.
 	 */
-	public void toXml(PrintStream s) throws RRDException {
+	public void toXml(PrintStream s) throws RrdException {
 
 		s.println("<!--");
 		s.println("  -- Round Robin RRDatabase Dump ");

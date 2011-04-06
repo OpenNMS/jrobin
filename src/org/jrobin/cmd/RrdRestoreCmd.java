@@ -21,7 +21,6 @@ package org.jrobin.cmd;
 import org.jrobin.core.Datasource;
 import org.jrobin.core.RrdDb;
 import org.jrobin.core.RrdException;
-import org.jrobin.core.jrrd.RRDException;
 
 import java.io.IOException;
 
@@ -30,7 +29,7 @@ class RrdRestoreCmd extends RrdToolCmd {
 		return "restore";
 	}
 
-	Object execute() throws RrdException, IOException, RRDException {
+	Object execute() throws RrdException, IOException, RrdException {
 		boolean check = getBooleanOption("r", "range-check");
 		String[] words = getRemainingWords();
 		if (words.length != 3) {

@@ -18,15 +18,14 @@
  *******************************************************************************/
 package org.jrobin.core;
 
-import org.jrobin.core.jrrd.RRDException;
-import org.jrobin.core.jrrd.RRDatabase;
-
 import java.io.IOException;
+
+import org.jrobin.core.jrrd.RRDatabase;
 
 class RrdToolReader extends DataImporter {
 	private RRDatabase rrd;
 
-	RrdToolReader(String rrdPath) throws IOException,RRDException {
+	RrdToolReader(String rrdPath) throws IOException,RrdException {
 		rrd = new RRDatabase(rrdPath);
 	}
 
@@ -107,7 +106,7 @@ class RrdToolReader extends DataImporter {
 		return rrd.getArchive(arcIndex).getCDPStatusBlock(dsIndex).getUnknownDatapoints();
 	}
 
-	double[] getValues(int arcIndex, int dsIndex) throws RrdException, IOException,RRDException {
+	double[] getValues(int arcIndex, int dsIndex) throws RrdException, IOException,RrdException {
 		return rrd.getArchive(arcIndex).getValues()[dsIndex];
 	}
 

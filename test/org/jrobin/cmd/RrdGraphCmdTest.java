@@ -5,8 +5,6 @@ import java.io.IOException;
 import org.jrobin.core.RrdDb;
 import org.jrobin.core.RrdDef;
 import org.jrobin.core.RrdException;
-import org.jrobin.core.jrrd.RRDException;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -44,7 +42,7 @@ public class RrdGraphCmdTest {
 	 * There was a null pointer exception lurking in the code that parses the
 	 * AREA statement, if there is no legend.
 	 */
-	public void testBasicGraph() throws RrdException, IOException, RRDException {
+	public void testBasicGraph() throws RrdException, IOException, RrdException {
 		this.graphCmd.executeCommand("graph - DEF:testvalue="
 				+ this.jrbFileName
 				+ ":testvalue:AVERAGE AREA:testvalue#FF0000:TestValue");
@@ -56,7 +54,7 @@ public class RrdGraphCmdTest {
 	 * AREA statement, if there was no legend.
 	 */
 	public void testAreaWithoutLegend() throws RrdException, IOException,
-			RRDException {
+			RrdException {
 		// The command we execute is necessarily quite short, but should still
 		// be generally parseable
 		// "-" means in memory (not a file). And the AREA just specifies a
@@ -67,14 +65,14 @@ public class RrdGraphCmdTest {
 	}
 
 	@Test
-	public void testLine1() throws RrdException, IOException, RRDException {
+	public void testLine1() throws RrdException, IOException, RrdException {
 		this.graphCmd.executeCommand("graph - DEF:testvalue="
 				+ this.jrbFileName
 				+ ":testvalue:AVERAGE LINE1:testvalue#FF0000");
 	}
 	
 	@Test
-	public void testLine2() throws RrdException, IOException, RRDException {
+	public void testLine2() throws RrdException, IOException, RrdException {
 	
 		this.graphCmd.executeCommand("graph - DEF:testvalue="
 				+ this.jrbFileName
@@ -82,14 +80,14 @@ public class RrdGraphCmdTest {
 	}
 	
 	@Test
-	public void testLine31() throws RrdException, IOException, RRDException {
+	public void testLine31() throws RrdException, IOException, RrdException {
 		this.graphCmd.executeCommand("graph - DEF:testvalue="
 				+ this.jrbFileName
 				+ ":testvalue:AVERAGE LINE3:testvalue#FF0000");
 	}
 	
 	@Test
-	public void testLine3WithLegend() throws RrdException, IOException, RRDException {
+	public void testLine3WithLegend() throws RrdException, IOException, RrdException {
 	this.graphCmd.executeCommand("graph - DEF:testvalue="
 				+ this.jrbFileName
 				+ ":testvalue:AVERAGE LINE3:testvalue#FF0000:Legend");
@@ -97,7 +95,7 @@ public class RrdGraphCmdTest {
 	}
 
 	@Test
-	public void testStack() throws RrdException, IOException, RRDException {
+	public void testStack() throws RrdException, IOException, RrdException {
 		this.graphCmd
 				.executeCommand("graph - DEF:testvalue="
 						+ this.jrbFileName
@@ -105,7 +103,7 @@ public class RrdGraphCmdTest {
 	}
 	
 	@Test
-	public void testStackWithLegend() throws RrdException, IOException, RRDException {
+	public void testStackWithLegend() throws RrdException, IOException, RrdException {
 	
 		this.graphCmd
 				.executeCommand("graph - DEF:testvalue="
@@ -115,7 +113,7 @@ public class RrdGraphCmdTest {
 	}
 
 	@Test
-	public void testCDEF() throws RrdException, IOException, RRDException {
+	public void testCDEF() throws RrdException, IOException, RrdException {
 		this.graphCmd
 				.executeCommand("graph - DEF:testvalue="
 						+ this.jrbFileName
@@ -123,7 +121,7 @@ public class RrdGraphCmdTest {
 	}
 
 	@Test
-	public void testPrint() throws RrdException, IOException, RRDException {
+	public void testPrint() throws RrdException, IOException, RrdException {
 		this.graphCmd
 				.executeCommand("graph - DEF:testvalue="
 						+ this.jrbFileName
@@ -131,7 +129,7 @@ public class RrdGraphCmdTest {
 	}
 
 	@Test
-	public void testGPrint() throws RrdException, IOException, RRDException {
+	public void testGPrint() throws RrdException, IOException, RrdException {
 		this.graphCmd
 				.executeCommand("graph - DEF:testvalue="
 						+ this.jrbFileName
@@ -139,7 +137,7 @@ public class RrdGraphCmdTest {
 	}
 
 	@Test
-	public void testComment() throws RrdException, IOException, RRDException {
+	public void testComment() throws RrdException, IOException, RrdException {
 		this.graphCmd
 				.executeCommand("graph - DEF:testvalue="
 						+ this.jrbFileName
@@ -147,13 +145,13 @@ public class RrdGraphCmdTest {
 	}
 
 	@Test
-	public void testHRule() throws RrdException, IOException, RRDException {
+	public void testHRule() throws RrdException, IOException, RrdException {
 		this.graphCmd
 				.executeCommand("graph - DEF:testvalue="
 						+ this.jrbFileName
 						+ ":testvalue:AVERAGE HRULE:1#FF0000 LINE1:testvalue#FF0000");
 	}
-	public void testHRuleWithLegent() throws RrdException, IOException, RRDException {
+	public void testHRuleWithLegent() throws RrdException, IOException, RrdException {
 		this.graphCmd
 		.executeCommand("graph - DEF:testvalue="
 				+ this.jrbFileName
@@ -162,7 +160,7 @@ public class RrdGraphCmdTest {
 	}
 
 	@Test
-	public void testVRule() throws RrdException, IOException, RRDException {
+	public void testVRule() throws RrdException, IOException, RrdException {
 		this.graphCmd
 				.executeCommand("graph - DEF:testvalue="
 						+ this.jrbFileName
@@ -170,7 +168,7 @@ public class RrdGraphCmdTest {
 	}
 
 	@Test
-	public void testColorDefinition() throws RrdException, IOException, RRDException {
+	public void testColorDefinition() throws RrdException, IOException, RrdException {
 		this.graphCmd
 				.executeCommand("graph - --color grid#00FF00 DEF:testvalue="
 						+ this.jrbFileName
@@ -178,7 +176,7 @@ public class RrdGraphCmdTest {
 	}
 	
 	@Test
-	public void testYGrid() throws RrdException, IOException, RRDException {
+	public void testYGrid() throws RrdException, IOException, RrdException {
 		this.graphCmd
 				.executeCommand("graph - --y-grid 5:2 DEF:testvalue="
 						+ this.jrbFileName
@@ -187,7 +185,7 @@ public class RrdGraphCmdTest {
 	}
 	
 	@Test
-	public void testYGridNone() throws RrdException, IOException, RRDException {
+	public void testYGridNone() throws RrdException, IOException, RrdException {
 		this.graphCmd
 		.executeCommand("graph - --y-grid none DEF:testvalue="
 				+ this.jrbFileName
@@ -196,7 +194,7 @@ public class RrdGraphCmdTest {
 	}
 
 	@Test
-	public void testXGrid() throws RrdException, IOException, RRDException {
+	public void testXGrid() throws RrdException, IOException, RrdException {
 		this.graphCmd
 				.executeCommand("graph - --x-grid MINUTE:10:HOUR:1:HOUR:4:0:%A DEF:testvalue="
 						+ this.jrbFileName
@@ -205,7 +203,7 @@ public class RrdGraphCmdTest {
 	}
 
 	@Test
-	public void testXGridNone() throws RrdException, IOException, RRDException {
+	public void testXGridNone() throws RrdException, IOException, RrdException {
 		this.graphCmd
 		.executeCommand("graph - --x-grid none DEF:testvalue="
 				+ this.jrbFileName

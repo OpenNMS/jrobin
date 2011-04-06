@@ -28,24 +28,21 @@ package org.jrobin.core;
  * @author <a href="mailto:saxon@jrobin.org">Sasa Markovic</a>
  */
 public class RrdException extends Exception {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 6999702149227009855L;
 
-	/**
-	 * Creates new RrdException with the supplied message in it.
-	 *
-	 * @param message Error message.
-	 */
-	public RrdException(String message) {
+    public RrdException() {
+	    super();
+	}
+
+	public RrdException(final String message) {
 		super(message);
 	}
 
-	/**
-	 * Creates new RrdException object from any java.lang.Exception object
-	 *
-	 * @param e Exception object
-	 */
-	public RrdException(Exception e) {
-		super(e);
+	public RrdException(final Throwable cause) {
+		super(cause);
 	}
 
+	public RrdException(final String message, final Throwable cause) {
+	    super(message, cause);
+	}
 }

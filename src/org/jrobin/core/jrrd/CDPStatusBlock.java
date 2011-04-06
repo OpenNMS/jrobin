@@ -21,6 +21,8 @@ package org.jrobin.core.jrrd;
 import java.io.IOException;
 import java.io.PrintStream;
 
+import org.jrobin.core.RrdException;
+
 /**
  * Instances of this class model the consolidation data point status from an RRD file.
  *
@@ -34,7 +36,7 @@ public class CDPStatusBlock {
 	int unknownDatapoints;
 	double value;
 
-	CDPStatusBlock(RRDFile file) throws IOException,RRDException {
+	CDPStatusBlock(RRDFile file) throws IOException, RrdException {
 
 		offset = file.getFilePointer();
 		value = file.readDouble();

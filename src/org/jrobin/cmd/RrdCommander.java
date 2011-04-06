@@ -19,13 +19,12 @@
 
 package org.jrobin.cmd;
 
-import org.jrobin.core.RrdException;
-import org.jrobin.core.jrrd.RRDException;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+
+import org.jrobin.core.RrdException;
 
 /**
  * Class to be used to execute various RRDTool commands (original syntax of RRDTool 1.0.x must be used).
@@ -119,7 +118,7 @@ public class RrdCommander {
 	 * @throws RrdException thrown for all other errors (parsing errors,
 	 *                      unknown RRDTool syntax/command/option, internal RRD errors...)
 	 */
-	public static synchronized Object execute(String command) throws IOException, RrdException,RRDException {
+	public static synchronized Object execute(String command) throws IOException, RrdException,RrdException {
 		String cmd = command.trim(), rrdtool = "rrdtool ";
 		if (cmd.startsWith(rrdtool)) {
 			cmd = cmd.substring(rrdtool.length());

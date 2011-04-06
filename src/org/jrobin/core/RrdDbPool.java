@@ -22,7 +22,7 @@ package org.jrobin.core;
 import java.io.IOException;
 import java.util.HashMap;
 
-import org.jrobin.core.jrrd.RRDException;
+import org.jrobin.core.RrdException;
 
 /**
  * This class should be used to synchronize access to RRD files
@@ -152,7 +152,7 @@ public class RrdDbPool {
 	 * @throws RrdException Thrown in case of JRobin specific error
 	 */
 	public synchronized RrdDb requestRrdDb(String path, String sourcePath)
-			throws IOException, RrdException,RRDException {
+			throws IOException, RrdException,RrdException {
 		String canonicalPath = Util.getCanonicalPath(path);
 		while (rrdMap.containsKey(canonicalPath) || rrdMap.size() >= capacity) {
 			try {

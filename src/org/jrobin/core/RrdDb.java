@@ -19,10 +19,13 @@
 
 package org.jrobin.core;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Date;
-
-import org.jrobin.core.jrrd.RRDException;
 
 /**
  * <p>Main class used to create and manipulate round robin databases (RRDs). Use this class to perform
@@ -330,7 +333,7 @@ public class RrdDb implements RrdUpdater {
 	 * @throws IOException  Thrown in case of I/O error
 	 * @throws RrdException Thrown in case of JRobin specific error
 	 */
-	public RrdDb(String rrdPath, String externalPath) throws IOException, RrdException, RRDException {
+	public RrdDb(String rrdPath, String externalPath) throws IOException, RrdException, RrdException {
 		this(rrdPath, externalPath, RrdBackendFactory.getDefaultFactory());
 	}
 
@@ -388,7 +391,7 @@ public class RrdDb implements RrdUpdater {
 	 * @see RrdBackendFactory
 	 */
 	public RrdDb(String rrdPath, String externalPath, RrdBackendFactory factory)
-			throws IOException, RRDException, RrdException {
+			throws IOException, RrdException {
 		DataImporter reader;
 		if (externalPath.startsWith(PREFIX_RRDTool)) {
 			String rrdToolPath = externalPath.substring(PREFIX_RRDTool.length());

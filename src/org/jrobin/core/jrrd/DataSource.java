@@ -22,6 +22,8 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.text.NumberFormat;
 
+import org.jrobin.core.RrdException;
+
 /**
  * Instances of this class model a data source in an RRD file.
  *
@@ -39,7 +41,7 @@ public class DataSource {
 	double maximum;
 	PDPStatusBlock pdpStatusBlock;
 
-	DataSource(RRDFile file) throws IOException,RRDException {
+	DataSource(RRDFile file) throws IOException,RrdException {
 
 		offset = file.getFilePointer();
 		name = file.readString(Constants.DS_NAM_SIZE);
@@ -61,7 +63,7 @@ public class DataSource {
 		size = file.getFilePointer() - offset;
 	}
 
-	void loadPDPStatusBlock(RRDFile file) throws IOException,RRDException {
+	void loadPDPStatusBlock(RRDFile file) throws IOException,RrdException {
 		pdpStatusBlock = new PDPStatusBlock(file);
 	}
 

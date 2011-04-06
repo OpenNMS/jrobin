@@ -20,6 +20,8 @@ package org.jrobin.core.jrrd;
 
 import java.io.IOException;
 
+import org.jrobin.core.RrdException;
+
 /**
  * Instances of this class model the header section of an RRD file.
  *
@@ -36,7 +38,7 @@ public class Header implements Constants {
 	int rraCount;
 	int pdpStep;
 
-	Header(RRDFile file) throws IOException,RRDException {
+	Header(RRDFile file) throws IOException,RrdException {
 
 		if (!file.readString(4).equals(COOKIE)) {
 			throw new IOException("Invalid COOKIE");

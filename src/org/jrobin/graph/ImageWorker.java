@@ -18,17 +18,29 @@
  *******************************************************************************/
 package org.jrobin.graph;
 
+import java.awt.Font;
+import java.awt.Graphics2D;
+import java.awt.Paint;
+import java.awt.Rectangle;
+import java.awt.RenderingHints;
+import java.awt.Stroke;
+import java.awt.TexturePaint;
+import java.awt.font.LineMetrics;
+import java.awt.geom.AffineTransform;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.RandomAccessFile;
+
+import javax.imageio.ImageIO;
+
 import com.sun.image.codec.jpeg.JPEGCodec;
 import com.sun.image.codec.jpeg.JPEGEncodeParam;
 import com.sun.image.codec.jpeg.JPEGImageEncoder;
 
-import javax.imageio.ImageIO;
-import java.awt.*;
-import java.awt.font.LineMetrics;
-import java.awt.geom.AffineTransform;
-import java.awt.image.BufferedImage;
-import java.io.*;
-
+@SuppressWarnings("restriction")
 class ImageWorker {
 	private static final String DUMMY_TEXT = "Dummy";
 
@@ -171,7 +183,7 @@ class ImageWorker {
 		gd.dispose();
 	}
 
-	void saveImage(OutputStream stream, String type, float quality) throws IOException {
+    void saveImage(OutputStream stream, String type, float quality) throws IOException {
 		if (type.equalsIgnoreCase("png")) {
 			ImageIO.write(img, "png", stream);
 		}

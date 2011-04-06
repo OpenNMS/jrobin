@@ -18,7 +18,13 @@
  *******************************************************************************/
 package org.jrobin.core.jrrd;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+
+import org.jrobin.core.RrdException;
 
 /**
  * This class is a quick hack to read information from an RRD file. Writing
@@ -39,11 +45,11 @@ public class RRDFile implements Constants {
 	RandomAccessFile ras;
 	byte[] buffer;
 
-	RRDFile(String name) throws IOException, RRDException {
+	RRDFile(String name) throws IOException, RrdException {
 		this(new File(name));
 	}
 
-	RRDFile(File file) throws IOException, RRDException {
+	RRDFile(File file) throws IOException, RrdException {
 
 		ras = new RandomAccessFile(file, "r");
 		buffer = new byte[128];
@@ -52,12 +58,12 @@ public class RRDFile implements Constants {
 		initDataLayout(file);
 	}
 
-	private void initDataLayout(File file) throws IOException, RRDException {
+	private void initDataLayout(File file) throws IOException, RrdException {
 
 		if (file.exists()) {	// Load the data formats from the file
 			int bytes = ras.read(buffer, 0, 24);
 			if (bytes < 24) {
-				throw new RRDException("Invalid RRD file");
+				throw new RrdException("Invalid RRD file");
 			}
 
 			int index;
@@ -70,7 +76,7 @@ public class RRDFile implements Constants {
 				bigEndian = false;
 			}
 			else {
-				throw new RRDException("Invalid RRD file");
+				throw new RrdException("Invalid RRD file");
 			}
 
 			switch (index) {
@@ -105,7 +111,7 @@ public class RRDFile implements Constants {
 		return alignment;
 	}
 
-	double readDouble() throws IOException, RRDException {
+	double readDouble() throws IOException, RrdException {
 		if(debug) {
 			System.out.print("Read 8 bytes (Double) from offset "+ras.getFilePointer()+":");
 		}
@@ -114,7 +120,7 @@ public class RRDFile implements Constants {
 		byte[] tx = new byte[8];
 
 		if(ras.read(buffer, 0, 8) != 8) {
-			throw new RRDException("Invalid RRD file");
+			throw new RrdException("Invalid RRD file");
 		}
 		
 		if (bigEndian) {
@@ -136,7 +142,7 @@ public class RRDFile implements Constants {
 		return result;
 	}
 
-	int readInt() throws IOException, RRDException {
+	int readInt() throws IOException, RrdException {
 		return readInt(false);
 	}
 
@@ -148,16 +154,16 @@ public class RRDFile implements Constants {
 	 * 
 	 * @return the 32-bit integer read from the file
 	 * @throws IOException - A file access error
-	 * @throws RRDException - Not enough bytes were left in the file to read the integer.  
+	 * @throws RrdException - Not enough bytes were left in the file to read the integer.  
 	 */
-	int readInt(boolean dump) throws IOException, RRDException {
+	int readInt(boolean dump) throws IOException, RrdException {
 		//An integer is "alignment" bytes long - 4 bytes on 32-bit, 8 on 64-bit.
 		if(this.debug) {
 			System.out.print("Read "+alignment+" bytes (int) from offset "+ras.getFilePointer()+":");
 		}
 
 		if(ras.read(buffer, 0, alignment) != alignment) {
-			throw new RRDException("Invalid RRD file");
+			throw new RrdException("Invalid RRD file");
 		}
 
 		int value;
@@ -185,13 +191,13 @@ public class RRDFile implements Constants {
 		return (int)value;
 	}
 
-	String readString(int maxLength) throws IOException, RRDException {
+	String readString(int maxLength) throws IOException, RrdException {
 		if(this.debug) {
 			System.out.print("Read "+maxLength+" bytes (string) from offset "+ras.getFilePointer()+":");
 		}
 		maxLength = ras.read(buffer, 0, maxLength);
 		if(maxLength == -1) {
-			throw new RRDException("Invalid RRD file");
+			throw new RrdException("Invalid RRD file");
 		}
 
 		String result = new String(buffer, 0, maxLength).trim();

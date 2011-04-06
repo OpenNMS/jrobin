@@ -28,6 +28,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Iterator;
 
+import org.jrobin.core.RrdException;
+
 /**
  * Instances of this class model an archive section of an RRD file.
  *
@@ -49,7 +51,7 @@ public class Archive {
 
 	private double[][] values;
 
-	Archive(RRDatabase db) throws IOException,RRDException {
+	Archive(RRDatabase db) throws IOException,RrdException {
 
 		this.db = db;
 
@@ -81,7 +83,7 @@ public class Archive {
 		return type;
 	}
 
-	void loadCDPStatusBlocks(RRDFile file, int numBlocks) throws IOException,RRDException {
+	void loadCDPStatusBlocks(RRDFile file, int numBlocks) throws IOException, RrdException {
 
 		cdpStatusBlocks = new ArrayList<CDPStatusBlock>();
 
@@ -110,7 +112,7 @@ public class Archive {
 		return cdpStatusBlocks.iterator();
 	}
 
-	void loadCurrentRow(RRDFile file) throws IOException,RRDException {
+	void loadCurrentRow(RRDFile file) throws IOException,RrdException {
 		currentRow = file.readInt();
 	}
 
@@ -122,7 +124,7 @@ public class Archive {
 		file.skipBytes(8 * rowCount * dsCount);
 	}
 
-	DataChunk loadData(DataChunk chunk) throws IOException,RRDException {
+	DataChunk loadData(DataChunk chunk) throws IOException,RrdException {
 
 		Calendar end = Calendar.getInstance();
 		Calendar start = (Calendar) end.clone();
@@ -135,7 +137,7 @@ public class Archive {
 	}
 
 	void loadData(DataChunk chunk, long startTime, long endTime)
-			throws IOException,RRDException {
+			throws IOException,RrdException {
 
 		long pointer;
 
@@ -225,7 +227,7 @@ public class Archive {
 		}
 	}
 
-	void toXml(PrintStream s) throws RRDException {
+	void toXml(PrintStream s) throws RrdException {
 
 		try {
 			s.println("\t<rra>");
@@ -335,7 +337,7 @@ public class Archive {
     */
 
 	// Resolved bug from the original method (see above)
-	public double[][] getValues() throws IOException,RRDException {
+	public double[][] getValues() throws IOException,RrdException {
 		// OK PART
 		if (values != null) {
 			return values;

@@ -21,7 +21,7 @@ package org.jrobin.core;
 
 import java.io.IOException;
 
-import org.jrobin.core.jrrd.RRDException;
+import org.jrobin.core.RrdException;
 
 abstract class DataImporter {
 
@@ -68,7 +68,7 @@ abstract class DataImporter {
 
 	abstract int getStateNanSteps(int arcIndex, int dsIndex) throws RrdException, IOException;
 
-	abstract double[] getValues(int arcIndex, int dsIndex) throws RrdException, IOException,RRDException;
+	abstract double[] getValues(int arcIndex, int dsIndex) throws RrdException, IOException,RrdException;
 
 	long getEstimatedSize() throws RrdException, IOException {
 		int dsCount = getDsCount();
