@@ -42,9 +42,9 @@
     </developer>
   </developers>
   <scm>
-    <connection>scm:cvs:pserver:anonymous@jrobin.cvs.sourceforge.net:/cvsroot/jrobin:.</connection>
-    <developerConnection>scm:cvs:ext:rangerrick@jrobin.cvs.sourceforge.net:/cvsroot/jrobin:.</developerConnection>
-    <url>http://jrobin.cvs.sourceforge.net/jrobin/</url>
+    <connection>scm:git:git://jrobin.git.sourceforge.net/gitroot/jrobin/jrobin</connection>
+    <developerConnection>scm:git:ssh://jrobin.git.sourceforge.net/gitroot/jrobin/jrobin</developerConnection>
+	 <url>http://jrobin.git.sourceforge.net/git/gitweb.cgi?p=jrobin/jrobin;a=summary</url>
   </scm>
   <licenses>
     <license>
