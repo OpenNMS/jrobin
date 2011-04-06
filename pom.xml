@@ -6,7 +6,7 @@
   <packaging>jar</packaging>
 
   <name>JRobin</name>
-  <version>1.5.11-SNAPSHOT</version>
+  <version>1.5.11</version>
   <description>
     JRobin is a 100% pure Java alternative to RRDTool, with about exactly the same specifications. If you provide the
     same data to RRDTool and JRobin, you will get exactly the same results and graphs. All standard RRDTool operations
