@@ -107,7 +107,7 @@ public class ValueAxisTest {
 
 		Mapper graphMapper = new Mapper(graphDef, imageParameters);
 		
-		this.vafail on bamboolueAxis = new ValueAxis(imageParameters, imageWorker, graphDef, graphMapper);
+		this.valueAxis = new ValueAxis(imageParameters, imageWorker, graphDef, graphMapper);
 	}
 	
 	private double getSmallFontCharWidth() {
