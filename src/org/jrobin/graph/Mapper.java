@@ -22,10 +22,14 @@ class Mapper {
 	private RrdGraphDef gdef;
 	private ImageParameters im;
 	private double pixieX, pixieY;
-
+	
 	Mapper(RrdGraph rrdGraph) {
-		this.gdef = rrdGraph.gdef;
-		this.im = rrdGraph.im;
+		this(rrdGraph.gdef, rrdGraph.im);
+	}
+
+	Mapper(RrdGraphDef gdef, ImageParameters im) {
+		this.gdef = gdef;
+		this.im = im;
 		pixieX = (double) im.xsize / (double) (im.end - im.start);
 		if (!gdef.logarithmic) {
 			pixieY = (double) im.ysize / (im.maxval - im.minval);

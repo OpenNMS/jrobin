@@ -46,16 +46,21 @@ class ValueAxis implements RrdGraphConstants {
 		new YLab(0.0, 0, 0, 0, 0)
 	};
 
-	private RrdGraph rrdGraph;
+	//private RrdGraph rrdGraph;
 	private ImageParameters im;
 	private ImageWorker worker;
 	private RrdGraphDef gdef;
-
+	private Mapper mapper;
+	
 	ValueAxis(RrdGraph rrdGraph) {
-		this.rrdGraph = rrdGraph;
-		this.im = rrdGraph.im;
-		this.gdef = rrdGraph.gdef;
-		this.worker = rrdGraph.worker;
+		this(rrdGraph.im, rrdGraph.worker, rrdGraph.gdef, rrdGraph.mapper);
+	}
+
+	ValueAxis(ImageParameters im, ImageWorker worker, RrdGraphDef gdef, Mapper mapper) {
+		this.im = im;
+		this.gdef = gdef;
+		this.worker = worker;
+		this.mapper = mapper;
 	}
 
 	boolean draw() {
@@ -63,16 +68,14 @@ class ValueAxis implements RrdGraphConstants {
 		Paint gridColor = gdef.colors[COLOR_GRID];
 		Paint mGridColor = gdef.colors[COLOR_MGRID];
 		Paint fontColor = gdef.colors[COLOR_FONT];
-		int fontHeight = (int) Math.ceil(rrdGraph.getSmallFontHeight());
 		int labelOffset = (int) (worker.getFontAscent(font) / 2);
-		int labfact = 2, gridind = -1;
+		int labfact = 2;
 		double range = im.maxval - im.minval;
 		double scaledrange = range / im.magfact;
 		double gridstep;
 		if (Double.isNaN(scaledrange)) {
 			return false;
 		}
-		int pixel = 1;
 		String labfmt = null;
 		if (Double.isNaN(im.ygridstep)) {
 			if (gdef.altYGrid) {
@@ -112,20 +115,15 @@ class ValueAxis implements RrdGraphConstants {
 				}
 			}
 			else {
-				for (int i = 0; ylab[i].grid > 0; i++) {
-					pixel = (int) (im.ysize / (scaledrange / ylab[i].grid));
-					if (gridind == -1 && pixel > 5) {
-						gridind = i;
-						break;
-					}
+				//Start looking for a minimum of 3 labels, but settle for 2 or 1 if need be
+				int minimumLabelCount = 3;
+				YLab selectedYLab = null;
+				while(selectedYLab == null) {
+					selectedYLab = findYLab(minimumLabelCount);
+					minimumLabelCount--;
 				}
-				for (int i = 0; i < 4; i++) {
-					if (pixel * ylab[gridind].lfac[i] >= 2 * fontHeight) {
-						labfact = ylab[gridind].lfac[i];
-						break;
-					}
-				}
-				gridstep = ylab[gridind].grid * im.magfact;
+				gridstep = selectedYLab.grid * im.magfact;
+				labfact = findLabelFactor(selectedYLab);
 			}
 		}
 		else {
@@ -137,7 +135,7 @@ class ValueAxis implements RrdGraphConstants {
 		int egrid = (int) (im.maxval / gridstep + 1);
 		double scaledstep = gridstep / im.magfact;
 		for (int i = sgrid; i <= egrid; i++) {
-			int y = rrdGraph.mapper.ytr(gridstep * i);
+			int y = this.mapper.ytr(gridstep * i);
 			if (y >= im.yorigin - im.ysize && y <= im.yorigin) {
 				if (i % labfact == 0) {
 					String graph_label;
@@ -178,6 +176,81 @@ class ValueAxis implements RrdGraphConstants {
 		return true;
 	}
 
+/**
+* Finds an acceptable YLab object for the current graph
+* If the graph covers positive and negative on the y-axis, then
+* desiredMinimumLabelCount is checked as well, to ensure the chosen YLab definition
+        * will result in the required number of labels
+* 
+  	* Returns null if none are acceptable (none the right size or with
+* enough labels)
+*/
+private YLab findYLab(int desiredMinimumLabelCount) {
+	double scaledrange = this.getScaledRange();
+	int labelFactor;
+	//Check each YLab definition to see if it's acceptable
+	for (int i = 0; ylab[i].grid > 0; i++) {
+		YLab thisYLab = ylab[i];
+		//First cut is whether this gridstep would give enough space per gridline
+		if (this.getPixelsPerGridline(thisYLab) > 5 ) {
+			//Yep; now we might have to check the number of labels
+			if(im.minval < 0.0 && im.maxval > 0.0) {
+				//The graph covers positive and negative values, so we need the
+				// desiredMinimumLabelCount number of labels, which is going to
+				// usually be 3, then maybe 2, then only as a last resort, 1. 
+				// So, we need to find out what the label factor would be
+				// if we chose this ylab definition
+				labelFactor = findLabelFactor(thisYLab);
+				if(labelFactor == -1) {
+					//Default to too many to satisfy the label count test, unless we're looking for just 1	
+					// in which case be sure to satisfy the label count test
+					labelFactor = desiredMinimumLabelCount==1?1:desiredMinimumLabelCount+1; 
+				}
+				//Adding one?  Think fenceposts (need one more than just dividing length by space between)
+				int labelCount = ((int)(scaledrange/thisYLab.grid)/labelFactor)+1;
+				if(labelCount > desiredMinimumLabelCount) {
+					return thisYLab; //Enough pixels, *and* enough labels
+				}
+				
+			} else {
+				//Only positive or negative on the graph y-axis.  No need to
+				// care about the label count.
+				return thisYLab;
+			}
+		}
+	}
+	return null;
+}
+
+/**
+  	 * Find the smallest labelFactor acceptable (can fit labels) for the given YLab definition
+ * Returns the label factor if one is ok, otherwise returns -1 if none are acceptable
+ */
+private int findLabelFactor(YLab thisYLab) {
+	int pixel = this.getPixelsPerGridline(thisYLab);
+	int fontHeight = (int) Math.ceil(worker.getFontHeight(gdef.smallFont));
+	for (int j = 0; j < 4; j++) {
+		if (pixel * thisYLab.lfac[j] >= 2 * fontHeight) {
+			return thisYLab.lfac[j];
+		}
+	}
+	return -1;
+}
+
+/**
+ * Finds the number of pixels per gridline that the given YLab definition will result in
+ */
+private int getPixelsPerGridline(YLab thisYLab) {
+	double scaledrange = this.getScaledRange();
+	return (int) (im.ysize / (scaledrange / thisYLab.grid));
+}
+
+private double getScaledRange() {
+	double range = im.maxval - im.minval;
+	return range / im.magfact;
+}
+
+	
 	static class YLab {
 		double grid;
 		int[] lfac;
