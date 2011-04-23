@@ -17,6 +17,8 @@
  *******************************************************************************/
 package org.jrobin.graph;
 
+import java.awt.Font;
+import java.awt.FontFormatException;
 import java.io.File;
 import java.io.IOException;
 import java.util.Date;
@@ -68,13 +70,21 @@ public class ValueAxisTest {
 	}
 
 	//Cannot be called until the RRD has been populated; wait
-	public void prepareGraph() throws RrdException, IOException {
+	public void prepareGraph() throws RrdException, IOException, FontFormatException {
 
 		graphDef = new RrdGraphDef();
 		graphDef.datasource("testvalue", jrbFileName, "testvalue","AVERAGE");
 		graphDef.area("testvalue", Util.parseColor("#FF0000"), "TestValue");
 		graphDef.setStartTime(startTime);
 		graphDef.setEndTime(startTime + (60*60*24));
+		
+		//We really need to specify exactly our own fonts, otherwise we get different behaviour on 
+		// different systems (not conducive to reliably testing)
+		// We expect the TTF file to be on the class path.
+		Font monoSpacedFont = Font.createFont(Font.TRUETYPE_FONT, new File("target/classes/DejaVuSansMono.ttf"));
+		graphDef.setSmallFont(monoSpacedFont.deriveFont(10.0f));
+		graphDef.setLargeFont(monoSpacedFont.deriveFont(12.0f));
+		
 		//There's only a couple of methods of ImageWorker that we actually care about in this test.
 		// More to the point, we want the rest to work as normal (like getFontHeight, getFontAscent etc)
 		imageWorker = createMockBuilder(ImageWorker.class)
@@ -404,21 +414,16 @@ public class ValueAxisTest {
 		}
 	}
 
-	/* This test works for me (cmiskell), but fails on bamboo with different axis lines (one at 0.2 at least; not sure what else)
-	 * Commenting out while I figure it out.
  	@Test
-	public void testBasicEmptyRrd() throws IOException, RrdException {
+	public void testBasicEmptyRrd() throws IOException, RrdException, FontFormatException {
 		createGaugeRrd(100);
 		prepareGraph();
 		checkForBasicGraph();
 	}
-	 */
 
 
-	/* This test works for me (cmiskell), but fails on bamboo with different axis lines (one at 0.2 at least; not sure what else)
-	 * Commenting out while I figure it out.  Will be the same issue as for testBasicEmptyRrd
 	@Test
-	public void testOneEntryInRrd() throws IOException, RrdException {
+	public void testOneEntryInRrd() throws IOException, RrdException, FontFormatException {
 		createGaugeRrd(100);
 		RrdDb rrd = new RrdDb(jrbFileName);
 		long nowSeconds = new Date().getTime();
@@ -429,9 +434,9 @@ public class ValueAxisTest {
 		prepareGraph();
 		checkForBasicGraph();
 	}
-*/	
+
 	@Test
-	public void testTwoEntriesInRrd() throws IOException, RrdException {
+	public void testTwoEntriesInRrd() throws IOException, RrdException, FontFormatException {
 		createGaugeRrd(100);
 		RrdDb rrd = new RrdDb(jrbFileName);
 		
@@ -460,11 +465,8 @@ public class ValueAxisTest {
 
 	}
 	
-	/* This test works for me (cmiskell), but fails on bamboo with different axis lines (wants to 
- 		have one at 20, so probably 20/40/60/80/100)
-	 * Commenting out while I figure it out.  Will be the same issue as for testBasicEmptyRrd
 	@Test
-	public void testEntriesZeroTo100InRrd() throws IOException, RrdException {
+	public void testEntriesZeroTo100InRrd() throws IOException, RrdException, FontFormatException {
 		createGaugeRrd(105); //Make sure all entries are recorded (5 is just a buffer for consolidation)
 		RrdDb rrd = new RrdDb(jrbFileName);
 		
@@ -486,10 +488,10 @@ public class ValueAxisTest {
 		//Validate the calls to the imageWorker
 		verify(imageWorker);
 
-	}*/
+	}
 	
 	@Test
-	public void testEntriesNeg50To100InRrd() throws IOException, RrdException {
+	public void testEntriesNeg50To100InRrd() throws IOException, RrdException, FontFormatException {
 		createGaugeRrd(155);
 		RrdDb rrd = new RrdDb(jrbFileName);
 		
@@ -517,7 +519,7 @@ public class ValueAxisTest {
 	}
 	
 	@Test
-	public void testEntriesNeg55To105InRrd() throws IOException, RrdException {
+	public void testEntriesNeg55To105InRrd() throws IOException, RrdException, FontFormatException {
 		createGaugeRrd(165);
 		RrdDb rrd = new RrdDb(jrbFileName);
 		
@@ -552,12 +554,8 @@ public class ValueAxisTest {
 
 	}
 
-	/* This test works for me (cmiskell), but fails on bamboo with different axis lines
-	 * Starts with one at -50, which is actually slighlty saner than the -40/-20 I saw
-	 * in initial testing.  But, still differnet. 
-	 * Commenting out while I figure it out.  Will be the same issue as for testBasicEmptyRrd
 	@Test
-	public void testEntriesNeg50To0InRrd() throws IOException, RrdException {
+	public void testEntriesNeg50To0InRrd() throws IOException, RrdException, FontFormatException {
 		createGaugeRrd(100);
 		RrdDb rrd = new RrdDb(jrbFileName);
 		
@@ -580,7 +578,7 @@ public class ValueAxisTest {
 		//Validate the calls to the imageWorker
 		verify(imageWorker);
 
-	}*/
+	}
 
 	/**
 	 * Test specifically for JRB-12 (http://issues.opennms.org/browse/JRB-12) 
@@ -588,9 +586,10 @@ public class ValueAxisTest {
 	 * (i.e. limited pixels available for X-axis labelling),ValueAxis gets all confused 
 	 * and decides it can only display "0" on the X-axis  (there's not enough pixels
 	 * for more labels, and none of the Y-label factorings available work well enough
+	 * @throws FontFormatException 
 	 */
 	@Test
-	public void testEntriesNeg80To90InRrd() throws IOException, RrdException {
+	public void testEntriesNeg80To90InRrd() throws IOException, RrdException, FontFormatException {
 		createGaugeRrd(180);
 		RrdDb rrd = new RrdDb(jrbFileName);
 		
@@ -625,9 +624,10 @@ public class ValueAxisTest {
 	 * Related to testEntriesNeg80To90InRrd, except in the original code
 	 * this produced sensible labelling.  Implemented to check that the 
 	 * changes don't break the sanity.
+	 * @throws FontFormatException 
 	 */
 	@Test
-	public void testEntriesNeg80To80InRrd() throws IOException, RrdException {
+	public void testEntriesNeg80To80InRrd() throws IOException, RrdException, FontFormatException {
 		createGaugeRrd(180);
 		RrdDb rrd = new RrdDb(jrbFileName);
 		
