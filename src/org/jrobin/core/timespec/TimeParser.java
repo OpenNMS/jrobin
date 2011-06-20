@@ -26,7 +26,7 @@ import org.jrobin.core.RrdException;
 import org.jrobin.core.Util;
 
 /**
- * Class which parses at-style time specification (describided in detail on the rrdfetch man page),
+ * Class which parses at-style time specification (described in detail on the rrdfetch man page),
  * used in all RRDTool commands. This code is in most parts just a java port of Tobi's parsetime.c
  * code.
  */
@@ -121,29 +121,43 @@ public class TimeParser {
 		// throw new RrdException("Well-known time unit expected after " + delta);
 	}
 
+	/**
+	 * Try and read a "timeofday" specification.  This method will be called
+	 * when we see a plain number at the start of a time, which means we could be
+	 * reading a time, or a day.  If it turns out to be a date, then this method restores
+	 * the scanner state to what it was at entry, and returns without setting anything.
+	 * @throws RrdException
+	 */
 	private void timeOfDay() throws RrdException {
 		int hour, minute = 0;
 		/* save token status in case we must abort */
 		scanner.saveState();
 		/* first pick out the time of day - we assume a HH (COLON|DOT) MM time */
 		if (token.value.length() > 2) {
+			//Definitely not an hour specification; probably a date or something.  Give up now
 			return;
 		}
 		hour = Integer.parseInt(token.value);
 		token = scanner.nextToken();
-		if (token.id == TimeToken.SLASH || token.id == TimeToken.DOT) {
+		if (token.id == TimeToken.SLASH) {
 			/* guess we are looking at a date */
 			token = scanner.restoreState();
 			return;
 		}
-		if (token.id == TimeToken.COLON) {
-			expectToken(TimeToken.NUMBER, "Parsing HH:MM syntax, expecting MM as number, got none");
+		if (token.id == TimeToken.COLON || token.id == TimeToken.DOT) {
+			expectToken(TimeToken.NUMBER, "Parsing HH:MM or HH.MM syntax, expecting MM as number, got none");
 			minute = Integer.parseInt(token.value);
 			if (minute > 59) {
-				throw new RrdException("Parsing HH:MM syntax, got MM = " +
+				throw new RrdException("Parsing HH:MM or HH.MM syntax, got MM = " +
 						minute + " (>59!)");
 			}
 			token = scanner.nextToken();
+			if(token.id == TimeToken.DOT) {
+				//Oh look, another dot; must have actually been a date in DD.MM.YYYY format.  Give up and return
+				token = scanner.restoreState();
+				return;
+			}
+			
 		}
 		/* check if an AM or PM specifier was given */
 		if (token.id == TimeToken.AM || token.id == TimeToken.PM) {
@@ -165,10 +179,11 @@ public class TimeParser {
 			token = scanner.nextToken();
 		}
 		else if (hour > 23) {
-			/* guess it was not a time then ... */
+			/* guess it was not a time then, probably a date ... */
 			token = scanner.restoreState();
 			return;
 		}
+		
 		spec.hour = hour;
 		spec.min = minute;
 		spec.sec = 0;
@@ -346,9 +361,7 @@ public class TimeParser {
 				/* Only absolute time specifications below */
 			case TimeToken.NUMBER:
 				timeOfDay();
-				if (token.id != TimeToken.NUMBER) {
-					break;
-				}
+				//Keep going; there might be a date after the time of day, which day() will pick up
 				/* fix month parsing */
 			case TimeToken.JAN:
 			case TimeToken.FEB:
@@ -362,10 +375,14 @@ public class TimeParser {
 			case TimeToken.OCT:
 			case TimeToken.NOV:
 			case TimeToken.DEC:
+			case TimeToken.TODAY:
+			case TimeToken.YESTERDAY:
+			case TimeToken.TOMORROW:
 				day();
 				if (token.id != TimeToken.NUMBER) {
 					break;
 				}
+				//Allows (but does not require) the time to be specified after the day.  This extends the rrdfetch specifiation
 				timeOfDay();
 				break;
 
