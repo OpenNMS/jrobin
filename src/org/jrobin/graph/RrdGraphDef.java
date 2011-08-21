@@ -792,6 +792,22 @@ public class RrdGraphDef implements RrdGraphConstants {
 	public void datasource(String name, Plottable plottable) {
 		sources.add(new PDef(name, plottable));
 	}
+	
+	/**
+	 * Creates a new static virtual datasource that performs a percentile calculation on an
+         * another named datasource to yield a single value.  
+         * 
+         * Requires that the other datasource has already been defined otherwise it throws an exception 
+         * (we need to look at the existing data source to extract the required data)
+         * 
+         * @param name - the new virtual datasource name
+	 * @param sourceName - the datasource from which to extract the percentile.  Must be a previously
+	 *                     defined virtula datasource
+	 * @param percentile - the percentile to extract from the source datasource
+	 */
+	public void datasource(String name, String sourceName, double percentile) throws RrdException {
+	    sources.add(new PercentileDef(name, sourceName, percentile));
+	}
 
 	/**
 	 * Calculates the chosen consolidation function CF over the given datasource
