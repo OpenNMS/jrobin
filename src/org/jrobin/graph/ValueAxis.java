@@ -18,9 +18,10 @@
  *******************************************************************************/
 package org.jrobin.graph;
 
-import org.jrobin.core.Util;
+import java.awt.Font;
+import java.awt.Paint;
 
-import java.awt.*;
+import org.jrobin.core.Util;
 
 class ValueAxis implements RrdGraphConstants {
 	private static final YLab[] ylab = {
@@ -219,7 +220,14 @@ private YLab findYLab(int desiredMinimumLabelCount) {
 			}
 		}
 	}
-	return null;
+	  
+	int exp = 0;
+	double val = 1;
+	while(val < scaledrange) {
+	    val = val * 10;
+	    exp++;
+	}
+	return new YLab(val/10, 1, 2, 5, 10);
 }
 
 /**
