@@ -48,7 +48,7 @@ class ImageWorker {
         }
         this.imgWidth = width;
         this.imgHeight = height;
-        this.img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        this.img = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         this.gd = img.createGraphics();
         this.aftInitial = gd.getTransform();
         this.setAntiAliasing(false);
