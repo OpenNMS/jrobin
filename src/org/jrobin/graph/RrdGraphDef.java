@@ -921,8 +921,9 @@ public class RrdGraphDef implements RrdGraphConstants {
      * @param width   Line width (default: 1.0F)
      */
     public void line(String srcName, Paint color, String legend, float width) {
-        LegendText legendText = new LegendText(color, legend);
-        comments.add(legendText);
+        if (legend != null) {
+            comments.add(new LegendText(color, legend));
+        }
         plotElements.add(new Line(srcName, color, width));
     }
 
