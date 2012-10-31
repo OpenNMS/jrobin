@@ -23,6 +23,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.StringBuilder;
 
 import org.jrobin.core.RrdException;
 
@@ -138,13 +139,22 @@ public class RrdCommander {
 	 * @throws IOException
 	 */
 	public static void main(String[] args) throws IOException {
-		System.out.println("== JRobin's RRDTool commander ==");
-		System.out.println("Type a RRDTool command after the dollar sign and press Enter.");
-		System.out.println("Start your RRDTool command with 'create', 'update', 'fetch' etc.");
-		System.out.println("Start line with 'create', 'update', 'fetch' etc.");
-		System.out.println("Enter dot ('.') to bail out");
-		System.out.println("Current directory is: " + new File(".").getCanonicalPath());
-		System.out.println("================================");
+		if (args.length > 0) {
+			StringBuilder sb = new StringBuilder();
+			for (String arg : args) {
+				sb.append(arg).append(" ");
+			}
+			String s = sb.toString().trim();
+			try {
+				execute(s);
+			} catch (Exception e) {
+				e.printStackTrace(System.err);
+			}
+			return;
+		}
+
+		// else...
+		printCommanderIntro();
 		RrdToolCmd.setRrdDbPoolUsed(false);
 		BufferedReader r = new BufferedReader(new InputStreamReader(System.in));
 		while (true) {
@@ -166,5 +176,15 @@ public class RrdCommander {
 				e.printStackTrace(System.err);
 			}
 		}
+	}
+
+	private static void printCommanderIntro() throws IOException {
+		System.out.println("== JRobin's RRDTool commander ==");
+		System.out.println("Type a RRDTool command after the dollar sign and press Enter.");
+		System.out.println("Start your RRDTool command with 'create', 'update', 'fetch' etc.");
+		System.out.println("Start line with 'create', 'update', 'fetch' etc.");
+		System.out.println("Enter dot ('.') to bail out");
+		System.out.println("Current directory is: " + new File(".").getCanonicalPath());
+		System.out.println("================================");
 	}
 }
