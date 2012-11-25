@@ -328,4 +328,41 @@ public interface RrdGraphConstants {
 	 * Stroke used to draw ticks
 	 */
 	Stroke TICK_STROKE = new BasicStroke(1);
+
+	/**
+	 * Index of the default font. Used in {@link RrdGraphDef#setFont(int, java.awt.Font)}
+	 */
+	int FONTTAG_DEFAULT   = 0;
+
+	/**
+	 * Index of the title font. Used in {@link RrdGraphDef#setFont(int, java.awt.Font)}
+	 */
+	int FONTTAG_TITLE     = 1;
+
+	/**
+	 * Index of the axis label font. Used in {@link RrdGraphDef#setFont(int, java.awt.Font)}
+	 */
+	int FONTTAG_AXIS      = 2;
+
+	/**
+	 * Index of the vertical unit label font. Used in {@link RrdGraphDef#setFont(int, java.awt.Font)}
+	 */
+	int FONTTAG_UNIT      = 3;
+
+	/**
+	 * Index of the graph legend font. Used in {@link RrdGraphDef#setFont(int, java.awt.Font)}
+	 */
+	int FONTTAG_LEGEND    = 4;
+
+	/**
+	 * Index of the edge watermark font. Used in {@link RrdGraphDef#setFont(int, java.awt.Font)}
+	 */
+	int FONTTAG_WATERMARK = 5;
+
+	/**
+	 * Allowed font tag names which can be used in {@link RrdGraphDef#setFont(String, java.awt.Font)} method
+	 */
+	String[] FONTTAG_NAMES = {
+		"DEFAULT", "TITLE", "AXIS", "UNIT", "LEGEND", "WATERMARK"
+	};
 }

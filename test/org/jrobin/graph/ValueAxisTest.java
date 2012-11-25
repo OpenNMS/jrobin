@@ -82,7 +82,7 @@ public class ValueAxisTest {
 		// different systems (not conducive to reliably testing)
 		// We expect the TTF file to be on the class path.
 		Font monoSpacedFont = Font.createFont(Font.TRUETYPE_FONT, new File("target/classes/DejaVuSansMono.ttf"));
-		graphDef.setSmallFont(monoSpacedFont.deriveFont(10.0f));
+		graphDef.setFont(RrdGraphDef.FONTTAG_DEFAULT, monoSpacedFont.deriveFont(10.0f), true, true);
 		graphDef.setLargeFont(monoSpacedFont.deriveFont(12.0f));
 		
 		//There's only a couple of methods of ImageWorker that we actually care about in this test.
@@ -121,14 +121,14 @@ public class ValueAxisTest {
 	}
 	
 	private double getSmallFontCharWidth() {
-		return imageWorker.getStringWidth("a", graphDef.smallFont);
+		return imageWorker.getStringWidth("a", graphDef.getFont(RrdGraphDef.FONTTAG_LEGEND));
 	}
 	
 	private double getSmallFontHeight() {
-		return imageWorker.getFontHeight(graphDef.smallFont);
+		return imageWorker.getFontHeight(graphDef.getFont(RrdGraphDef.FONTTAG_LEGEND));
 	}
 	private double getLargeFontHeight() {
-		return imageWorker.getFontHeight(graphDef.largeFont);
+		return imageWorker.getFontHeight(graphDef.getFont(RrdGraphDef.FONTTAG_TITLE));
 	}
 	
 	private void initializeLimits(ImageParameters imageParameters, RrdGraphDef gdef) throws RrdException {
@@ -389,7 +389,7 @@ public class ValueAxisTest {
 		int midX = imageParameters.xgif/2;
 		int threeQuartersX = quarterX*3;
 
-		imageWorker.drawString(eq(label), lt(quarterX), anyInt(), eq(this.graphDef.smallFont), eq(RrdGraphDef.DEFAULT_FONT_COLOR));
+		imageWorker.drawString(eq(label), lt(quarterX), anyInt(), eq(this.graphDef.getFont(RrdGraphDef.FONTTAG_LEGEND)), eq(RrdGraphDef.DEFAULT_FONT_COLOR));
 		//Horizontal tick on the left
 		imageWorker.drawLine(lt(quarterX), anyInt(), lt(midX), anyInt(), eq(RrdGraphDef.DEFAULT_MGRID_COLOR), same(RrdGraphDef.TICK_STROKE));
 			//Horizontal tick on the right

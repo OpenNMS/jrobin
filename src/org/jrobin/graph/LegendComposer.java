@@ -150,7 +150,7 @@ class LegendComposer implements RrdGraphConstants {
 		}
 
 		private double getCommentWidth(CommentText comment) {
-			double commentWidth = worker.getStringWidth(comment.resolvedText, gdef.smallFont);
+			double commentWidth = worker.getStringWidth(comment.resolvedText, gdef.getFont(FONTTAG_LEGEND));
 			if (comment instanceof LegendText) {
 				commentWidth += boxSpace;
 			}

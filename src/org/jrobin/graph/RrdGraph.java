@@ -131,7 +131,7 @@ public class RrdGraph implements RrdGraphConstants {
 
 	private void gator() {
 		if (!gdef.onlyGraph && gdef.showSignature) {
-			Font font = gdef.getSmallFont().deriveFont(Font.PLAIN, 9);
+			Font font = gdef.getFont(FONTTAG_WATERMARK);
 			int x = (int) (im.xgif - 2 - worker.getFontAscent(font));
 			int y = 4;
 			worker.transform(x, y, Math.PI / 2);
@@ -164,16 +164,16 @@ public class RrdGraph implements RrdGraphConstants {
 	private void drawText() {
 		if (!gdef.onlyGraph) {
 			if (gdef.title != null) {
-				int x = im.xgif / 2 - (int) (worker.getStringWidth(gdef.title, gdef.largeFont) / 2);
-				int y = PADDING_TOP + (int) worker.getFontAscent(gdef.largeFont);
-				worker.drawString(gdef.title, x, y, gdef.largeFont, gdef.colors[COLOR_FONT]);
+				int x = im.xgif / 2 - (int) (worker.getStringWidth(gdef.title, gdef.getFont(FONTTAG_TITLE)) / 2);
+				int y = PADDING_TOP + (int) worker.getFontAscent(gdef.getFont(FONTTAG_TITLE));
+				worker.drawString(gdef.title, x, y, gdef.getFont(FONTTAG_TITLE), gdef.colors[COLOR_FONT]);
 			}
 			if (gdef.verticalLabel != null) {
 				int x = PADDING_LEFT;
-				int y = im.yorigin - im.ysize / 2 + (int) worker.getStringWidth(gdef.verticalLabel, gdef.getSmallFont()) / 2;
-				int ascent = (int) worker.getFontAscent(gdef.smallFont);
+				int y = im.yorigin - im.ysize / 2 + (int) worker.getStringWidth(gdef.verticalLabel, gdef.getFont(FONTTAG_UNIT)) / 2;
+				int ascent = (int) worker.getFontAscent(gdef.getFont(FONTTAG_UNIT));
 				worker.transform(x, y, -Math.PI / 2);
-				worker.drawString(gdef.verticalLabel, 0, ascent, gdef.smallFont, gdef.colors[COLOR_FONT]);
+				worker.drawString(gdef.verticalLabel, 0, ascent, gdef.getFont(FONTTAG_UNIT), gdef.colors[COLOR_FONT]);
 				worker.reset();
 			}
 		}
@@ -208,9 +208,9 @@ public class RrdGraph implements RrdGraphConstants {
 				if (!ok) {
 					String msg = "No Data Found";
 					worker.drawString(msg,
-							im.xgif / 2 - (int) worker.getStringWidth(msg, gdef.largeFont) / 2,
+							im.xgif / 2 - (int) worker.getStringWidth(msg, gdef.getFont(FONTTAG_TITLE)) / 2,
 							(2 * im.yorigin - im.ysize) / 2,
-							gdef.largeFont, gdef.colors[COLOR_FONT]);
+							gdef.getFont(FONTTAG_TITLE), gdef.colors[COLOR_FONT]);
 				}
 			}
 		}
@@ -313,7 +313,7 @@ public class RrdGraph implements RrdGraphConstants {
 			im.xorigin = (int) (PADDING_LEFT + im.unitslength * getSmallFontCharWidth());
 		}
 		if (gdef.verticalLabel != null) {
-			im.xorigin += getSmallFontHeight();
+			im.xorigin += getFontHeight(FONTTAG_UNIT);
 		}
 		if (gdef.onlyGraph) {
 			im.yorigin = im.ysize;
@@ -323,7 +323,7 @@ public class RrdGraph implements RrdGraphConstants {
 		}
 		mapper = new Mapper(this);
 		if (gdef.title != null) {
-			im.yorigin += getLargeFontHeight() + PADDING_TITLE;
+			im.yorigin += getFontHeight(FONTTAG_TITLE) + PADDING_TITLE;
 		}
 		if (gdef.onlyGraph) {
 			im.xgif = im.xsize;
@@ -331,7 +331,7 @@ public class RrdGraph implements RrdGraphConstants {
 		}
 		else {
 			im.xgif = PADDING_RIGHT + im.xsize + im.xorigin;
-			im.ygif = im.yorigin + (int) (PADDING_PLOT * getSmallFontHeight());
+			im.ygif = im.yorigin + (int) (PADDING_PLOT * getFontHeight(FONTTAG_DEFAULT));
 		}
 	}
 
@@ -555,7 +555,7 @@ public class RrdGraph implements RrdGraphConstants {
 
 	private void drawLegend() {
 		if (!gdef.onlyGraph && !gdef.noLegend) {
-			int ascent = (int) worker.getFontAscent(gdef.smallFont);
+			int ascent = (int) worker.getFontAscent(gdef.getFont(FONTTAG_LEGEND));
 			int box = (int) getBox(), boxSpace = (int) (getBoxSpace());
 			for (CommentText c : gdef.comments) {
 				if (c.isValidGraphElement()) {
@@ -563,12 +563,12 @@ public class RrdGraph implements RrdGraphConstants {
 					if (c instanceof LegendText) {
 						// draw with BOX
 						worker.fillRect(x, y - box, box, box, gdef.colors[COLOR_FRAME]);
-                        worker.fillRect(x + 1, y - box + 1, box - 2, box - 2, gdef.colors[COLOR_CANVAS]);
+						worker.fillRect(x + 1, y - box + 1, box - 2, box - 2, gdef.colors[COLOR_CANVAS]);
 						worker.fillRect(x + 1, y - box + 1, box - 2, box - 2, ((LegendText) c).legendColor);
-						worker.drawString(c.resolvedText, x + boxSpace, y, gdef.smallFont, gdef.colors[COLOR_FONT]);
+						worker.drawString(c.resolvedText, x + boxSpace, y, gdef.getFont(FONTTAG_LEGEND), gdef.colors[COLOR_FONT]);
 					}
 					else {
-						worker.drawString(c.resolvedText, x, y, gdef.smallFont, gdef.colors[COLOR_FONT]);
+						worker.drawString(c.resolvedText, x, y, gdef.getFont(FONTTAG_LEGEND), gdef.colors[COLOR_FONT]);
 					}
 				}
 			}
@@ -577,36 +577,44 @@ public class RrdGraph implements RrdGraphConstants {
 
 	// helper methods
 
-	double getSmallFontHeight() {
-		return worker.getFontHeight(gdef.smallFont);
+	double getFontHeight(int fonttag) {
+		return worker.getFontHeight(gdef.getFont(fonttag));
 	}
 
-	private double getLargeFontHeight() {
-		return worker.getFontHeight(gdef.largeFont);
+	double getFontCharWidth(int fonttag) {
+		return worker.getStringWidth("a", gdef.getFont(fonttag));
+	}
+
+	double getSmallFontHeight() {
+		return getFontHeight(FONTTAG_LEGEND);
+	}
+
+	private double getTitleFontHeight() {
+		return getFontHeight(FONTTAG_TITLE);
 	}
 
 	private double getSmallFontCharWidth() {
-		return worker.getStringWidth("a", gdef.smallFont);
+		return getFontCharWidth(FONTTAG_LEGEND);
 	}
 
 	double getInterlegendSpace() {
-		return getSmallFontCharWidth() * LEGEND_INTERSPACING;
+		return getFontCharWidth(FONTTAG_LEGEND) * LEGEND_INTERSPACING;
 	}
 
 	double getLeading() {
-		return getSmallFontHeight() * LEGEND_LEADING;
+		return getFontHeight(FONTTAG_LEGEND) * LEGEND_LEADING;
 	}
 
 	double getSmallLeading() {
-		return getSmallFontHeight() * LEGEND_LEADING_SMALL;
+		return getFontHeight(FONTTAG_LEGEND) * LEGEND_LEADING_SMALL;
 	}
 
 	double getBoxSpace() {
-		return Math.ceil(getSmallFontHeight() * LEGEND_BOX_SPACE);
+		return Math.ceil(getFontHeight(FONTTAG_LEGEND) * LEGEND_BOX_SPACE);
 	}
 
 	private double getBox() {
-		return getSmallFontHeight() * LEGEND_BOX;
+		return getFontHeight(FONTTAG_LEGEND) * LEGEND_BOX;
 	}
 
 	double[] xtr(long[] timestamps) {
