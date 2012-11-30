@@ -50,9 +50,7 @@
 
   <scm>
     <connection>scm:git:git://jrobin.git.sourceforge.net/gitroot/jrobin/jrobin</connection>
-    <developerConnection>
-      scm:git:ssh://jrobin.git.sourceforge.net/gitroot/jrobin/jrobin
-    </developerConnection>
+    <developerConnection>scm:git:ssh://jrobin.git.sourceforge.net/gitroot/jrobin/jrobin</developerConnection>
     <url>http://jrobin.git.sourceforge.net/git/gitweb.cgi?p=jrobin/jrobin;a=summary</url>
   </scm>
 
@@ -96,6 +94,10 @@
     <bundle.namespace>org.jrobin.jrobin</bundle.namespace>
   </properties>
 
+  <prerequisites>
+    <maven>2.2.1</maven>
+  </prerequisites>
+
   <build>
     <extensions>
       <extension>
@@ -114,7 +116,7 @@
     <plugins>
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>2.3.2</version>
+        <version>3.0</version>
         <configuration>
           <source>1.5</source>
           <target>1.5</target>
@@ -122,11 +124,23 @@
       </plugin>
       <plugin>
         <artifactId>maven-deploy-plugin</artifactId>
+        <version>2.7</version>
+      </plugin>
+      <plugin>
+        <artifactId>maven-clean-plugin</artifactId>
         <version>2.5</version>
       </plugin>
       <plugin>
+        <artifactId>maven-install-plugin</artifactId>
+        <version>2.4</version>
+      </plugin>
+      <plugin>
+        <artifactId>maven-resources-plugin</artifactId>
+        <version>2.6</version>
+      </plugin>
+      <plugin>
         <artifactId>maven-javadoc-plugin</artifactId>
-        <version>2.7</version>
+        <version>2.9</version>
         <executions>
           <execution>
             <goals>
@@ -137,7 +151,7 @@
       </plugin>
       <plugin>
         <artifactId>maven-source-plugin</artifactId>
-        <version>2.1.2</version>
+        <version>2.2.1</version>
         <executions>
           <execution>
             <goals>
@@ -148,7 +162,7 @@
       </plugin>
       <plugin>
         <artifactId>maven-jar-plugin</artifactId>
-        <version>2.3.1</version>
+        <version>2.4</version>
         <configuration>
           <archive>
             <index>true</index>
@@ -171,7 +185,7 @@
       <plugin>
       	<groupId>org.apache.maven.plugins</groupId>
       	<artifactId>maven-surefire-plugin</artifactId>
-      	<version>2.7.1</version>
+	<version>2.12.4</version>
       	<configuration>
           <systemProperties>
             <property>
@@ -231,17 +245,17 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-site-plugin</artifactId>
-        <version>2.2</version>
+        <version>3.2</version>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-project-info-reports-plugin</artifactId>
-        <version>2.3.1</version>
+        <version>2.6</version>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
-        <version>2.7</version>
+        <version>2.9</version>
         <configuration>
           <overview>${basedir}/src/overview.html</overview>
           <linksource>true</linksource>
@@ -254,7 +268,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-pmd-plugin</artifactId>
-        <version>2.5</version>
+        <version>2.7.1</version>
         <configuration>
           <linkXRef>true</linkXRef>
           <sourceEncoding>UTF-8</sourceEncoding>
@@ -264,22 +278,22 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jxr-plugin</artifactId>
-        <version>2.2</version>
+        <version>2.3</version>
       </plugin>
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>jdepend-maven-plugin</artifactId>
-        <version>2.0-beta-1</version>
+        <version>2.0-beta-2</version>
       </plugin>
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>findbugs-maven-plugin</artifactId>
-        <version>1.1.1</version>
+        <version>2.5.2</version>
       </plugin>
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>javancss-maven-plugin</artifactId>
-        <version>2.0-beta-2</version>
+        <version>2.0</version>
       </plugin>
     </plugins>
   </reporting>
@@ -288,15 +302,15 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>4.4</version>
+      <version>4.11</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
-      <groupId>org.easymock</groupId>
-      <artifactId>easymock</artifactId>
-      <version>3.0</version>
-      <type>jar</type>
-      <scope>test</scope>
+    	<groupId>org.easymock</groupId>
+    	<artifactId>easymock</artifactId>
+	<version>3.1</version>
+    	<type>jar</type>
+    	<scope>test</scope>
     </dependency>
   </dependencies>
 
