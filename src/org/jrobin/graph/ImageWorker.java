@@ -18,16 +18,15 @@
  *******************************************************************************/
 package org.jrobin.graph;
 
-import com.sun.image.codec.jpeg.JPEGCodec;
-import com.sun.image.codec.jpeg.JPEGEncodeParam;
-import com.sun.image.codec.jpeg.JPEGImageEncoder;
-
-import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.font.LineMetrics;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.util.Iterator;
+import javax.imageio.ImageIO;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.ImageWriter;
 
 @SuppressWarnings("restriction")
 class ImageWorker {
@@ -180,11 +179,15 @@ class ImageWorker {
             gifEncoder.encode(stream);
         }
         else if (type.equalsIgnoreCase("jpg") || type.equalsIgnoreCase("jpeg")) {
-            JPEGImageEncoder encoder = JPEGCodec.createJPEGEncoder(stream);
-            JPEGEncodeParam param = encoder.getDefaultJPEGEncodeParam(img);
-            param.setQuality(quality, false);
-            encoder.setJPEGEncodeParam(param);
-            encoder.encode(img);
+            Iterator<ImageWriter> iter = ImageIO.getImageWritersByFormatName("jpg");
+            ImageWriter writer = iter.next();
+            ImageWriteParam iwp = writer.getDefaultWriteParam();
+
+            iwp.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+            iwp.setCompressionQuality(quality);
+            writer.setOutput(stream);
+            writer.write(img);
+            writer.dispose();
         }
         else {
             throw new IOException("Unsupported image format: " + type);
