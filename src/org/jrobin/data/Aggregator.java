@@ -78,7 +78,28 @@ class Aggregator implements ConsolFuns {
 			}
 		}
 		agg.average = totalSeconds > 0 ? (agg.total / totalSeconds) : Double.NaN;
-		return agg;
+
+                if (totalSeconds > 0) {
+                    double stdevSum = 0.0;
+                    for (int i = 0; i < timestamps.length; i++) {
+                        long left = Math.max(timestamps[i] - step, tStart);
+			long right = Math.min(timestamps[i], tEnd);
+			long delta = right - left;
+
+			// delta is only > 0 when the timestamp for a given buck is within the range of tStart and tEnd
+			if (delta > 0) {
+				double value = values[i];
+				if (!Double.isNaN(value)) {
+                                        stdevSum += Math.pow(((delta * value) - agg.average), 2.0);
+				}
+			}
+                    }
+                    agg.stdev = Math.pow(stdevSum / totalSeconds, 0.5);
+                } else {
+                    agg.stdev = Double.NaN;
+		}
+
+                return agg;
 	}
 
 	double getPercentile(long tStart, long tEnd, double percentile) {

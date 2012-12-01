@@ -34,6 +34,7 @@ public class Aggregates implements ConsolFuns {
 	double min = Double.NaN, max = Double.NaN;
 	double first = Double.NaN, last = Double.NaN;
 	double average = Double.NaN, total = Double.NaN;
+        double stdev = Double.NaN;
 
 	Aggregates() {
 		// NOP;
@@ -94,6 +95,15 @@ public class Aggregates implements ConsolFuns {
 	}
 
 	/**
+	 * Returns stdev value
+	 *
+	 * @return Stdev value
+	 */
+	public double getStdev() {
+		return stdev;
+	}
+
+	/**
 	 * Returns single aggregated value for the give consolidation function
 	 *
 	 * @param consolFun Consolidation function: MIN, MAX, FIRST, LAST, AVERAGE, TOTAL. These constants
@@ -119,6 +129,9 @@ public class Aggregates implements ConsolFuns {
 		}
 		else if (consolFun.equals(CF_TOTAL)) {
 			return total;
+		}
+		else if (consolFun.equals("STDEV")) {
+			return stdev;
 		}
 		else {
 			throw new RrdException("Unknown consolidation function: " + consolFun);
