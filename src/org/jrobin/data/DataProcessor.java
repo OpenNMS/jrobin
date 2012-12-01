@@ -811,6 +811,8 @@ public class DataProcessor implements ConsolFuns {
 		String defName = sDef.getDefName();
 		String consolFun = sDef.getConsolFun();
 		Source source = getSource(defName);
+                if (consolFun.equals("MAXIMUM")) { consolFun = "MAX"; }
+                else if (consolFun.equals("MINIMUM")) { consolFun = "MIN"; }
 		double value = source.getAggregates(tStart, tEnd).getAggregate(consolFun);
 		sDef.setValue(value);
 	}
