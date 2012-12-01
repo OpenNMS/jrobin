@@ -42,7 +42,13 @@ class Aggregator implements ConsolFuns {
 		Aggregates agg = new Aggregates();
 		long totalSeconds = 0;
 		boolean firstFound = false;
-		for (int i = 0; i < timestamps.length; i++) {
+                double SUMx, SUMxy, SUMxx, SUMyy, slope, y_intercept, correl;
+                SUMx = 0.0;
+                SUMxy = 0.0;
+                SUMxx = 0.0;
+                SUMyy = 0.0;
+
+                for (int i = 0; i < timestamps.length; i++) {
 			long left = Math.max(timestamps[i] - step, tStart);
 			long right = Math.min(timestamps[i], tEnd);
 			long delta = right - left;
@@ -74,6 +80,10 @@ class Aggregator implements ConsolFuns {
 				if (!Double.isNaN(value)) {
 					agg.total = Util.sum(agg.total, delta * value);
 					totalSeconds += delta;
+                                        SUMx += step;
+                                        SUMxx += step * step;
+                                        SUMxy = Util.sum(SUMxy, step * delta * value);
+                                        SUMyy = Util.sum(SUMyy, delta * value * delta * value);
 				}
 			}
 		}
@@ -98,6 +108,15 @@ class Aggregator implements ConsolFuns {
                 } else {
                     agg.stdev = Double.NaN;
 		}
+
+                /* Bestfit line by linear least squares method */
+                if (totalSeconds > 0) {
+                    agg.lslslope = (SUMx * agg.total - totalSeconds * SUMxy) / (SUMx * SUMx - totalSeconds * SUMxx);
+                    agg.lslint = (agg.total - agg.lslslope * SUMx) / totalSeconds;
+                    agg.lslcorrel =
+                       (SUMxy - (SUMx * agg.total) / totalSeconds) /
+                       Math.sqrt((SUMxx - (SUMx * SUMx) / totalSeconds) * (SUMyy - (agg.total * agg.total) / totalSeconds));
+                }
 
                 return agg;
 	}

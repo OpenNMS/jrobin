@@ -34,7 +34,8 @@ public class Aggregates implements ConsolFuns {
 	double min = Double.NaN, max = Double.NaN;
 	double first = Double.NaN, last = Double.NaN;
 	double average = Double.NaN, total = Double.NaN;
-        double stdev = Double.NaN;
+        double stdev = Double.NaN, lslslope = Double.NaN;
+        double lslint = Double.NaN, lslcorrel = Double.NaN;
 
 	Aggregates() {
 		// NOP;
@@ -104,6 +105,33 @@ public class Aggregates implements ConsolFuns {
 	}
 
 	/**
+	 * Returns Least Squares Line Slope value
+	 *
+	 * @return lslslope value
+	 */
+	public double getLSLSlope() {
+		return stdev;
+	}
+
+	/**
+	 * Returns Least Squares Line y-intercept value
+	 *
+	 * @return lslint value
+	 */
+	public double getLSLInt() {
+		return lslint;
+	}
+
+	/**
+	 * Returns Least Squares Line Correlation Coefficient
+	 *
+	 * @return lslcorrel value
+	 */
+	public double getLSLCorrel() {
+		return lslcorrel;
+	}
+
+	/**
 	 * Returns single aggregated value for the give consolidation function
 	 *
 	 * @param consolFun Consolidation function: MIN, MAX, FIRST, LAST, AVERAGE, TOTAL. These constants
@@ -132,6 +160,15 @@ public class Aggregates implements ConsolFuns {
 		}
 		else if (consolFun.equals("STDEV")) {
 			return stdev;
+		}
+		else if (consolFun.equals("LSLSLOPE")) {
+			return lslslope;
+		}
+		else if (consolFun.equals("LSLINT")) {
+			return lslint;
+		}
+		else if (consolFun.equals("LSLCORREL")) {
+			return lslcorrel;
 		}
 		else {
 			throw new RrdException("Unknown consolidation function: " + consolFun);
