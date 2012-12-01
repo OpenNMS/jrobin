@@ -19,6 +19,7 @@
 
 package org.jrobin.data;
 
+import java.util.Arrays;
 import org.jrobin.core.RrdException;
 import org.jrobin.core.Util;
 
@@ -86,6 +87,9 @@ class RpnCalculator {
         private static final byte TKN_DEG2RAD = 57;
         private static final byte TKN_RAD2DEG = 58;
         private static final byte TKN_COUNT = 59;
+        private static final byte TKN_SORT = 60;
+        private static final byte TKN_REV = 61;
+        private static final byte TKN_AVG = 62;
 
 	private String rpnExpression;
 	private String sourceName;
@@ -297,6 +301,15 @@ class RpnCalculator {
 		}
 		else if (parsedText.equals("COUNT")) {
 			token.id = TKN_COUNT;
+		}
+		else if (parsedText.equals("SORT")) {
+			token.id = TKN_SORT;
+		}
+		else if (parsedText.equals("REV")) {
+			token.id = TKN_REV;
+		}
+		else if (parsedText.equals("AVG")) {
+			token.id = TKN_AVG;
 		}
 		else {
 			token.id = TKN_VAR;
@@ -538,6 +551,54 @@ class RpnCalculator {
 						break;
 					case TKN_RAD2DEG:
 						push(Math.toDegrees(pop()));
+						break;
+					case TKN_SORT:
+                                        {
+                                                int n = (int) pop();
+                                                double[] array = new double[n];
+                                                for(int i = 0; i < n; i++) {
+                                                    array[i] = pop();
+                                                }
+                                                Arrays.sort(array);
+                                                for (int i = 0; i < n; i++) {
+                                                    push(array[i]);
+                                                }
+                                        }
+						break;
+					case TKN_REV:
+                                        {
+                                                int n = (int) pop();
+                                                double[] array = new double[n];
+                                                for(int i = 0; i < n; i++) {
+                                                    array[i] = pop();
+                                                }
+                                                for (int i = 0; i < n; i++) {
+                                                    push(array[i]);
+                                                }
+                                        }
+						break;
+					case TKN_AVG:
+                                        {
+                                                int count = 0;
+                                                int n = (int) pop();
+                                                double sum = 0.0;
+                                                while (n > 0) {
+                                                    x1 = pop();
+                                                    n--;
+
+                                                    if (Double.isNaN(x1)) {
+                                                        continue;
+                                                    }
+
+                                                    sum += x1;
+                                                    count++;
+                                                }
+                                                if (count > 0) {
+                                                    push(sum / count);
+                                                } else {
+                                                    push(Double.NaN);
+                                                }
+                                        }
 						break;
 					default:
 						throw new RrdException("Unexpected RPN token encountered, token.id=" + token.id);
