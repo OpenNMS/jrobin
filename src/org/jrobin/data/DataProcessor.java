@@ -510,14 +510,14 @@ public class DataProcessor implements ConsolFuns {
 		Def def = new Def(name, fetchData);
 		sources.put(name, def);
 	}
-	
+
 	/**
          * Creates a new VDEF datasource that performs a percentile calculation on an
-         * another named datasource to yield a single value.  
-         * 
+         * another named datasource to yield a single value.
+         *
          * Requires that the other datasource has already been defined; otherwise, it'll
          * end up with no data
-         * 
+         *
          * @param name - the new virtual datasource name
          * @param sourceName - the datasource from which to extract the percentile.  Must be a previously
          *                     defined virtual datasource
@@ -791,7 +791,7 @@ public class DataProcessor implements ConsolFuns {
 			}
 			else if (source instanceof PDef) {
 				calculatePDef((PDef) source);
-			} 
+			}
 			else if (source instanceof PercentileDef) {
 			        calculatePercentileDef((PercentileDef) source);
 			}
@@ -814,7 +814,7 @@ public class DataProcessor implements ConsolFuns {
 		double value = source.getAggregates(tStart, tEnd).getAggregate(consolFun);
 		sDef.setValue(value);
 	}
-	
+
 	//Yeah, this is different from the other calculation methods
 	// Frankly, this is how it *should* be done, and the other methods will
 	// be refactored to this design (and the instanceof's removed) at some point
