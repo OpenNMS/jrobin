@@ -84,6 +84,7 @@ class RpnCalculator {
         private static final byte TKN_ATAN = 55;
         private static final byte TKN_ATAN2 = 56;
         private static final byte TKN_DEG2RAD = 57;
+        private static final byte TKN_RAD2DEG = 58;
 
 	private String rpnExpression;
 	private String sourceName;
@@ -289,6 +290,9 @@ class RpnCalculator {
 		}
 		else if (parsedText.equals("DEG2RAD")) {
 			token.id = TKN_DEG2RAD;
+		}
+		else if (parsedText.equals("RAD2DEG")) {
+			token.id = TKN_RAD2DEG;
 		}
 		else {
 			token.id = TKN_VAR;
@@ -523,6 +527,9 @@ class RpnCalculator {
 						break;
 					case TKN_DEG2RAD:
 						push(Math.toRadians(pop()));
+						break;
+					case TKN_RAD2DEG:
+						push(Math.toDegrees(pop()));
 						break;
 					default:
 						throw new RrdException("Unexpected RPN token encountered, token.id=" + token.id);
