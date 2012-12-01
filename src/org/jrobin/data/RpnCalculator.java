@@ -85,6 +85,7 @@ class RpnCalculator {
         private static final byte TKN_ATAN2 = 56;
         private static final byte TKN_DEG2RAD = 57;
         private static final byte TKN_RAD2DEG = 58;
+        private static final byte TKN_COUNT = 59;
 
 	private String rpnExpression;
 	private String sourceName;
@@ -294,6 +295,9 @@ class RpnCalculator {
 		else if (parsedText.equals("RAD2DEG")) {
 			token.id = TKN_RAD2DEG;
 		}
+		else if (parsedText.equals("COUNT")) {
+			token.id = TKN_COUNT;
+		}
 		else {
 			token.id = TKN_VAR;
 			token.variable = parsedText;
@@ -313,6 +317,10 @@ class RpnCalculator {
 						break;
 					case TKN_VAR:
 						push(token.values[slot]);
+						break;
+					case TKN_COUNT:
+                                                x1 = pop();
+						push(slot+1);
 						break;
 					case TKN_PLUS:
 						push(pop() + pop());
