@@ -78,6 +78,7 @@ class RpnCalculator {
 	private static final byte TKN_WEEK = 49;
 	private static final byte TKN_SIGN = 50;
 	private static final byte TKN_RND = 51;
+        private static final byte TKN_ADDNAN = 52;
 
 	private String rpnExpression;
 	private String sourceName;
@@ -265,6 +266,9 @@ class RpnCalculator {
 		}
 		else if (parsedText.equals("RND")) {
 			token.id = TKN_RND;
+		}
+		else if (parsedText.equals("ADDNAN")) {
+			token.id = TKN_ADDNAN;
 		}
 		else {
 			token.id = TKN_VAR;
@@ -469,6 +473,17 @@ class RpnCalculator {
 						break;
 					case TKN_RND:
 						push(Math.floor(pop() * Math.random()));
+						break;
+					case TKN_ADDNAN:
+						x2 = pop();
+						x1 = pop();
+                                                if (Double.isNaN(x1)) {
+                                                    push(x2);
+                                                } else if (Double.isNaN(x2)) {
+                                                    push(x1);
+                                                } else {
+                                                    push(x1+x2);
+                                                }
 						break;
 					default:
 						throw new RrdException("Unexpected RPN token encountered, token.id=" + token.id);
