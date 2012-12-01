@@ -79,6 +79,7 @@ class RpnCalculator {
 	private static final byte TKN_SIGN = 50;
 	private static final byte TKN_RND = 51;
         private static final byte TKN_ADDNAN = 52;
+        private static final byte TKN_NE = 53;
 
 	private String rpnExpression;
 	private String sourceName;
@@ -270,6 +271,9 @@ class RpnCalculator {
 		else if (parsedText.equals("ADDNAN")) {
 			token.id = TKN_ADDNAN;
 		}
+		else if (parsedText.equals("NE")) {
+			token.id = TKN_NE;
+		}
 		else {
 			token.id = TKN_VAR;
 			token.variable = parsedText;
@@ -370,6 +374,11 @@ class RpnCalculator {
 						x2 = pop();
 						x1 = pop();
 						push(x1 == x2 ? 1 : 0);
+						break;
+					case TKN_NE:
+						x2 = pop();
+						x1 = pop();
+						push(x1 != x2 ? 1 : 0);
 						break;
 					case TKN_IF:
 						x3 = pop();
