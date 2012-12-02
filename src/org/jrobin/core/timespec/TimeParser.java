@@ -343,13 +343,13 @@ public class TimeParser {
 				if (spec.type != TimeSpec.TYPE_START) {
 					spec.type = TimeSpec.TYPE_END;
 				}
-				spec.year = spec.month = spec.day = spec.hour = spec.min = spec.sec = 0;
 				/* FALLTHRU */
                         case TimeToken.EPOCH:
+                                /* FALLTHRU */
 			case TimeToken.NOW:
 				int time_reference = token.id;
-                                if (token.id == TimeToken.EPOCH) {
-                                    spec.localtime(0L);
+                                if (token.id != TimeToken.NOW) {
+                                    spec.year = spec.month = spec.day = spec.hour = spec.min = spec.sec = 0;
                                 }
 				token = scanner.nextToken();
 				if (token.id == TimeToken.PLUS || token.id == TimeToken.MINUS) {
