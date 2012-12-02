@@ -39,7 +39,7 @@ class RrdGraphCmd extends RrdToolCmd implements RrdGraphConstants {
 
 	Object execute() throws RrdException, IOException {
 		gdef = getGraphDef();
-		
+
 		// create diagram finally
 		RrdGraphInfo info = new RrdGraph(gdef).getRrdGraphInfo();
 		if (info.getFilename().equals(RrdGraphConstants.IN_MEMORY_IMAGE)) {
@@ -189,6 +189,9 @@ class RrdGraphCmd extends RrdToolCmd implements RrdGraphConstants {
 			if (words[i].startsWith("DEF:")) {
 				parseDef(gdef, words[i]);
 			}
+			else if (words[i].startsWith("VDEF:")) {
+				parseVDef(gdef, words[i]);
+			}
 			else if (words[i].startsWith("CDEF:")) {
 				parseCDef(gdef, words[i]);
 			}
@@ -220,7 +223,7 @@ class RrdGraphCmd extends RrdToolCmd implements RrdGraphConstants {
 				throw new RrdException("Unexpected GRAPH token encountered: " + words[i]);
 			}
 		}
-		
+
 		return gdef;
     }
 
@@ -329,6 +332,19 @@ class RrdGraphCmd extends RrdToolCmd implements RrdGraphConstants {
 			throw new RrdException("Invalid DEF specification: " + word);
 		}
 		graphDef.datasource(tokens2[0], tokens2[1]);
+	}
+
+	private void parseVDef(RrdGraphDef graphDef, String word) throws RrdException {
+		String[] tokens1 = new ColonSplitter(word).split();
+		if (tokens1.length != 2) {
+			throw new RrdException("Invalid VDEF specification: " + word);
+		}
+		String[] tokens2 = tokens1[1].split("=");
+		if (tokens2.length != 2) {
+			throw new RrdException("Invalid DEF specification: " + word);
+		}
+                String[] tokens3 = tokens2[1].split(",");
+		graphDef.datasource(tokens2[0], tokens3[0], tokens3[1]);
 	}
 
 	private void parsePrint(RrdGraphDef graphDef, String word) throws RrdException {
