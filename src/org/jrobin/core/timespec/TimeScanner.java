@@ -77,6 +77,7 @@ class TimeScanner {
 			new TimeToken("fri", TimeToken.FRI),
 			new TimeToken("saturday", TimeToken.SAT),
 			new TimeToken("sat", TimeToken.SAT),
+                        new TimeToken("epoch", TimeToken.EPOCH),
 			new TimeToken(null, 0)			/*** SENTINEL ***/
 	};
 

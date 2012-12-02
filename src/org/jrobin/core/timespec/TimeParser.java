@@ -157,7 +157,7 @@ public class TimeParser {
 				token = scanner.restoreState();
 				return;
 			}
-			
+
 		}
 		/* check if an AM or PM specifier was given */
 		if (token.id == TimeToken.AM || token.id == TimeToken.PM) {
@@ -183,7 +183,7 @@ public class TimeParser {
 			token = scanner.restoreState();
 			return;
 		}
-		
+
 		spec.hour = hour;
 		spec.min = minute;
 		spec.sec = 0;
@@ -345,17 +345,21 @@ public class TimeParser {
 				}
 				spec.year = spec.month = spec.day = spec.hour = spec.min = spec.sec = 0;
 				/* FALLTHRU */
+                        case TimeToken.EPOCH:
 			case TimeToken.NOW:
 				int time_reference = token.id;
+                                if (token.id == TimeToken.EPOCH) {
+                                    spec.localtime(0L);
+                                }
 				token = scanner.nextToken();
 				if (token.id == TimeToken.PLUS || token.id == TimeToken.MINUS) {
 					break;
 				}
-				if (time_reference != TimeToken.NOW) {
+				if (time_reference == TimeToken.START || time_reference == TimeToken.END) {
 					throw new RrdException("Words 'start' or 'end' MUST be followed by +|- offset");
 				}
 				else if (token.id != TimeToken.EOF) {
-					throw new RrdException("If 'now' is followed by a token it must be +|- offset");
+					throw new RrdException("If 'now' or 'epoch' is followed by a token it must be +|- offset");
 				}
 				break;
 				/* Only absolute time specifications below */

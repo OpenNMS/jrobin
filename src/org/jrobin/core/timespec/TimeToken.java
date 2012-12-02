@@ -66,6 +66,7 @@ class TimeToken {
 	public static final int THU = 44;
 	public static final int FRI = 45;
 	public static final int SAT = 46;
+        public static final int EPOCH = 46;
 	public static final int EOF = -1;
 
 	final String value; /* token name */
