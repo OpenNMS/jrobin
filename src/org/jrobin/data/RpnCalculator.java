@@ -25,6 +25,7 @@ import org.jrobin.core.Util;
 
 import java.util.Calendar;
 import java.util.StringTokenizer;
+import java.util.TimeZone;
 
 class RpnCalculator {
 	private static final byte TKN_VAR = 0;
@@ -90,6 +91,7 @@ class RpnCalculator {
         private static final byte TKN_SORT = 60;
         private static final byte TKN_REV = 61;
         private static final byte TKN_AVG = 62;
+        private static final byte TKN_LTIME = 63;
 
 	private String rpnExpression;
 	private String sourceName;
@@ -217,6 +219,9 @@ class RpnCalculator {
 		else if (parsedText.equals("TIME")) {
 			token.id = TKN_TIME;
 		}
+		else if (parsedText.equals("LTIME")) {
+			token.id = TKN_LTIME;
+		}
 		else if (parsedText.equals("PI")) {
 			token.id = TKN_PI;
 		}
@@ -320,6 +325,7 @@ class RpnCalculator {
 	}
 
 	double[] calculateValues() throws RrdException {
+                TimeZone tz = TimeZone.getDefault();
 		for (int slot = 0; slot < timestamps.length; slot++) {
 			resetStack();
 			for (Token token : tokens) {
@@ -472,6 +478,9 @@ class RpnCalculator {
 						break;
 					case TKN_TIME:
 						push(timestamps[slot]);
+						break;
+					case TKN_LTIME:
+						push(timestamps[slot] + (tz.getOffset(timestamps[slot]) / 1000L));
 						break;
 					case TKN_PI:
 						push(Math.PI);
