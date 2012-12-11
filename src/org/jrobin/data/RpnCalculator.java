@@ -332,7 +332,6 @@ class RpnCalculator {
 						push(token.values[slot]);
 						break;
 					case TKN_COUNT:
-                                                x1 = pop();
 						push(slot+1);
 						break;
 					case TKN_PLUS:
