@@ -92,6 +92,8 @@ class RpnCalculator {
         private static final byte TKN_REV = 61;
         private static final byte TKN_AVG = 62;
         private static final byte TKN_LTIME = 63;
+        private static final byte TKN_TREND = 64;
+        private static final byte TKN_TRENDNAN = 65;
 
 	private String rpnExpression;
 	private String sourceName;
@@ -316,6 +318,12 @@ class RpnCalculator {
 		else if (parsedText.equals("AVG")) {
 			token.id = TKN_AVG;
 		}
+		else if (parsedText.equals("TREND")) {
+			token.id = TKN_TREND;
+		}
+		else if (parsedText.equals("TRENDNAN")) {
+			token.id = TKN_TRENDNAN;
+		}
 		else {
 			token.id = TKN_VAR;
 			token.variable = parsedText;
@@ -328,7 +336,9 @@ class RpnCalculator {
                 TimeZone tz = TimeZone.getDefault();
 		for (int slot = 0; slot < timestamps.length; slot++) {
 			resetStack();
-			for (Token token : tokens) {
+                        int token_rpi = -1;
+                        for (int rpi = 0; rpi < tokens.length; rpi++) {
+                                Token token = tokens[rpi];
 				double x1, x2, x3;
 				switch (token.id) {
 					case TKN_NUM:
@@ -336,6 +346,7 @@ class RpnCalculator {
 						break;
 					case TKN_VAR:
 						push(token.values[slot]);
+                                                token_rpi = rpi;
 						break;
 					case TKN_COUNT:
 						push(slot+1);
@@ -608,6 +619,43 @@ class RpnCalculator {
                                                 }
                                         }
 						break;
+                                        case TKN_TREND:
+                                        case TKN_TRENDNAN:
+                                        {
+                                                int dur = (int) pop();
+                                                pop();
+                                                /*
+                                                 * OK, so to match the output from rrdtool, we have to go *forward* 2 timeperiods.
+                                                 * So at t[59] we use the average of t[1]..t[61]
+                                                 *
+                                                 */
+
+                                                if ((slot+1) < Math.ceil(dur / timeStep)) {
+                                                    push(Double.NaN);
+                                                } else {
+                                                    double[] vals = dataProcessor.getValues(tokens[token_rpi].variable);
+                                                    boolean ignorenan = token.id == TKN_TRENDNAN;
+                                                    double accum = 0.0;
+                                                    int count = 0;
+
+                                                    int start = (int) (Math.ceil(dur / timeStep));
+                                                    int row = 2;
+                                                    while ((slot + row) > vals.length) {
+                                                        row --;
+                                                    }
+
+                                                    for(; start > 0; start--) {
+                                                        double val = vals[slot + row - start];
+                                                        if (ignorenan || !Double.isNaN(val)) {
+                                                            accum = Util.sum(accum, val);
+                                                            ++count;
+                                                        }
+                                                    }
+                                                    //System.err.printf("t[%d]: %1.10e / %d\n", slot, (count == 0) ? Double.NaN : (accum / count), count);
+                                                    push((count == 0) ? Double.NaN : (accum / count));
+                                                }
+                                        }
+                                                break;
 					default:
 						throw new RrdException("Unexpected RPN token encountered, token.id=" + token.id);
 				}
