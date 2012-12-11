@@ -641,7 +641,7 @@ public class DataProcessor implements ConsolFuns {
 	public String dump() throws RrdException {
 		String[] names = getSourceNames();
 		double[][] values = getValues();
-		StringBuffer buffer = new StringBuffer();
+		StringBuilder buffer = new StringBuilder();
 		buffer.append(format("timestamp", 12));
 		for (String name : names) {
 			buffer.append(format(name, 20));
@@ -754,9 +754,9 @@ public class DataProcessor implements ConsolFuns {
 	private void createTimestamps() {
 		long t1 = Util.normalize(tStart, step);
 		long t2 = Util.normalize(tEnd, step);
-		if (t2 < tEnd) {
-			t2 += step;
-		}
+                if (t2 < tEnd) {
+                    t2 += step;
+                }
 		int count = (int) (((t2 - t1) / step) + 1);
 		timestamps = new long[count];
 		for (int i = 0; i < count; i++) {
@@ -849,7 +849,7 @@ public class DataProcessor implements ConsolFuns {
 	}
 
 	private static String format(String s, int length) {
-		StringBuffer b = new StringBuffer(s);
+		StringBuilder b = new StringBuilder(s);
 		for (int i = 0; i < length - s.length(); i++) {
 			b.append(' ');
 		}
