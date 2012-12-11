@@ -40,10 +40,12 @@ class Aggregator implements ConsolFuns {
 
 	Aggregates getAggregates(long tStart, long tEnd) {
 		Aggregates agg = new Aggregates();
-		long totalSeconds = 0;
+                int cnt = 0;
+                int lslstep = 0;
 		boolean firstFound = false;
-                double SUMx, SUMxy, SUMxx, SUMyy, slope, y_intercept, correl;
+                double SUMx, SUMy, SUMxy, SUMxx, SUMyy;
                 SUMx = 0.0;
+                SUMy = 0.0;
                 SUMxy = 0.0;
                 SUMxx = 0.0;
                 SUMyy = 0.0;
@@ -53,8 +55,8 @@ class Aggregator implements ConsolFuns {
 			long right = Math.min(timestamps[i], tEnd);
 			long delta = right - left;
 
-			// delta is only > 0 when the timestamp for a given buck is within the range of tStart and tEnd
-			if (delta > 0) {
+			// delta is only >= 0 when the timestamp for a given buck is within the range of tStart and tEnd
+			if (delta >= 0) {
 				double value = values[i];
 				agg.min = Util.min(agg.min, value);
 				agg.max = Util.max(agg.max, value);
@@ -78,45 +80,44 @@ class Aggregator implements ConsolFuns {
 
 				}
 				if (!Double.isNaN(value)) {
-					agg.total = Util.sum(agg.total, delta * value);
-					totalSeconds += delta;
-                                        SUMx += step;
-                                        SUMxx += step * step;
-                                        SUMxy = Util.sum(SUMxy, step * delta * value);
-                                        SUMyy = Util.sum(SUMyy, delta * value * delta * value);
+                                        cnt++;
+                                        SUMx += lslstep;
+                                        SUMxx += lslstep * lslstep;
+                                        SUMy  = Util.sum(SUMy, value);
+                                        SUMxy = Util.sum(SUMxy, lslstep * value);
+                                        SUMyy = Util.sum(SUMyy, value * value);
 				}
+                                lslstep ++;
 			}
 		}
-		agg.average = totalSeconds > 0 ? (agg.total / totalSeconds) : Double.NaN;
+		agg.average = cnt > 0 ? (SUMy / cnt) : Double.NaN;
 
-                if (totalSeconds > 0) {
+                // Work on STDEV
+                if (cnt > 0) {
                     double stdevSum = 0.0;
                     for (int i = 0; i < timestamps.length; i++) {
                         long left = Math.max(timestamps[i] - step, tStart);
 			long right = Math.min(timestamps[i], tEnd);
 			long delta = right - left;
 
-			// delta is only > 0 when the timestamp for a given buck is within the range of tStart and tEnd
-			if (delta > 0) {
+			// delta is only >= 0 when the timestamp for a given buck is within the range of tStart and tEnd
+			if (delta >= 0) {
 				double value = values[i];
 				if (!Double.isNaN(value)) {
-                                        stdevSum += Math.pow(((delta * value) - agg.average), 2.0);
+                                        stdevSum = Util.sum(stdevSum, Math.pow((value - agg.average), 2.0));
 				}
 			}
                     }
-                    agg.stdev = Math.pow(stdevSum / totalSeconds, 0.5);
-                } else {
-                    agg.stdev = Double.NaN;
-		}
+                    agg.stdev = Math.pow(stdevSum / cnt, 0.5);
 
-                /* Bestfit line by linear least squares method */
-                if (totalSeconds > 0) {
-                    agg.lslslope = (SUMx * agg.total - totalSeconds * SUMxy) / (SUMx * SUMx - totalSeconds * SUMxx);
-                    agg.lslint = (agg.total - agg.lslslope * SUMx) / totalSeconds;
+                    /* Bestfit line by linear least squares method */
+                    agg.lslslope = (SUMx * SUMy - cnt * SUMxy) / (SUMx * SUMx - cnt * SUMxx);
+                    agg.lslint = (SUMy - agg.lslslope * SUMx) / cnt;
                     agg.lslcorrel =
-                       (SUMxy - (SUMx * agg.total) / totalSeconds) /
-                       Math.sqrt((SUMxx - (SUMx * SUMx) / totalSeconds) * (SUMyy - (agg.total * agg.total) / totalSeconds));
+                       (SUMxy - (SUMx * SUMy) / cnt) /
+                       Math.sqrt((SUMxx - (SUMx * SUMx) / cnt) * (SUMyy - (SUMy * SUMy) / cnt));
                 }
+                agg.total = SUMy * step;
 
                 return agg;
 	}
