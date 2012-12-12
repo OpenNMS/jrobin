@@ -122,13 +122,17 @@ class Aggregator implements ConsolFuns {
                 return agg;
 	}
 
-	double getPercentile(long tStart, long tEnd, double percentile) {
+        double getPercentile(long tStart, long tEnd, double percentile) {
+            return getPercentile(tStart, tEnd, percentile, false);
+        }
+
+	double getPercentile(long tStart, long tEnd, double percentile, boolean includenan) {
 		List<Double> valueList = new ArrayList<Double>();
 		// create a list of included datasource values (different from NaN)
 		for (int i = 0; i < timestamps.length; i++) {
 			long left = Math.max(timestamps[i] - step, tStart);
 			long right = Math.min(timestamps[i], tEnd);
-			if (right > left && !Double.isNaN(values[i])) {
+			if (right > left && (!Double.isNaN(values[i]) || includenan)) {
 				valueList.add(values[i]);
 			}
 		}

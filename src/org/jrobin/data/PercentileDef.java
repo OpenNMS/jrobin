@@ -24,23 +24,30 @@ public class PercentileDef extends Source {
     private Source m_source;
 
     private double m_value;
-    
+
     private double m_percentile;
-    
+
+    private boolean m_ignorenan;
+
     PercentileDef(String name, Source source, double percentile) {
+        this(name, source, percentile, false);
+    }
+
+    PercentileDef(String name, Source source, double percentile, boolean ignorenan) {
         super(name);
 
         m_percentile = percentile;
+        m_ignorenan = ignorenan;
         m_source = source;
 
-        //The best we can do at this point; until this object has it's value realized over a 
+        //The best we can do at this point; until this object has it's value realized over a
         // particular time period (with calculate()), there's not much else to do
         this.setValue(Double.NaN);
     }
 
     /**
      * Realize the calculation of this definition, over the given time period
-     * 
+     *
      * @param tStart
      * @param tEnd
      */
@@ -49,7 +56,7 @@ public class PercentileDef extends Source {
             this.setValue(m_source.getPercentile(tStart, tEnd, m_percentile));
         }
     }
-    
+
     /**
      * Takes the given value and puts it in each position in the 'values' array.
      * @param value
@@ -66,7 +73,7 @@ public class PercentileDef extends Source {
             setValues(values);
         }
     }
-    
+
     @Override
     void setTimestamps(long[] timestamps) {
         super.setTimestamps(timestamps);
@@ -77,7 +84,7 @@ public class PercentileDef extends Source {
     /**
      * Same as SDef; the aggregates of a static value are all just the
      * same static value.
-     * 
+     *
      * Assumes this def has been realized by calling calculate(), otherwise
      * the aggregated values will be NaN
      */
@@ -92,7 +99,7 @@ public class PercentileDef extends Source {
     /**
      * Returns just the calculated percentile; the "Xth" percentile of a static value is
      * the static value itself.
-     *   
+     *
      * Assumes this def has been realized by calling calculate(), otherwise
      * the aggregated values will be NaN
      */

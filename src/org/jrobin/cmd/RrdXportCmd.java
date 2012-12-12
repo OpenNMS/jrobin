@@ -61,6 +61,9 @@ class RrdXportCmd extends RrdToolCmd implements RrdGraphConstants {
 			else if (words[i].startsWith("CDEF:")) {
 				parseCDef(words[i]);
 			}
+			else if (words[i].startsWith("VDEF:")) {
+				parseVDef(words[i]);
+			}
 			else if (words[i].startsWith("XPORT:")) {
 				parseXport(words[i]);
 			}
@@ -101,7 +104,7 @@ class RrdXportCmd extends RrdToolCmd implements RrdGraphConstants {
 			w.writeTag("t", timestamps[i]);
                         int j = 0;
 			for (XPort xport : xports) {
-				w.writeTag("v"+ (enumds ? j : ""), xport.values[i]);
+				w.writeTag("v" + (enumds ? j : ""), xport.values[i]);
                                 j++;
 			}
 			w.closeTag(); // row
@@ -139,6 +142,24 @@ class RrdXportCmd extends RrdToolCmd implements RrdGraphConstants {
 		}
 		dproc.addDatasource(tokens2[0], tokens2[1]);
 	}
+
+	private void parseVDef(String word) throws RrdException {
+		String[] tokens1 = new ColonSplitter(word).split();
+		if (tokens1.length != 2) {
+			throw new RrdException("Invalid VDEF specification: " + word);
+		}
+		String[] tokens2 = tokens1[1].split("=");
+		if (tokens2.length != 2) {
+			throw new RrdException("Invalid DEF specification: " + word);
+		}
+                String[] tokens3 = tokens2[1].split(",");
+                if (tokens3.length == 2)  {
+                    dproc.addDatasource(tokens2[0], tokens3[0], tokens3[1]);
+                } else {
+                    dproc.addDatasource(tokens2[0], tokens3[0], Double.parseDouble(tokens3[1]), tokens3[2].equals("PERCENT"));
+                }
+	}
+
 
 	private void parseXport(String word) throws RrdException {
 		// XPORT:vname[:legend]

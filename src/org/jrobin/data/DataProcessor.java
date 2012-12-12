@@ -528,6 +528,24 @@ public class DataProcessor implements ConsolFuns {
 	    sources.put(name, new PercentileDef(name, source, percentile));
 	}
 
+	/**
+         * Creates a new VDEF datasource that performs a percentile calculation on an
+         * another named datasource to yield a single value.
+         *
+         * Requires that the other datasource has already been defined; otherwise, it'll
+         * end up with no data
+         *
+         * @param name - the new virtual datasource name
+         * @param sourceName - the datasource from which to extract the percentile.  Must be a previously
+         *                     defined virtual datasource
+         * @param percentile - the percentile to extract from the source datasource
+         * @param ignorenan - true if we include Double.NaN
+         */
+	public void addDatasource(String name, String sourceName, double percentile, boolean ignorenan) {
+	    Source source = sources.get(sourceName);
+	    sources.put(name, new PercentileDef(name, source, percentile, ignorenan));
+	}
+
 	/////////////////////////////////////////////////////////////////
 	// CALCULATIONS
 	/////////////////////////////////////////////////////////////////
