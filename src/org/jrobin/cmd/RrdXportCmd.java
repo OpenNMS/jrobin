@@ -46,6 +46,7 @@ class RrdXportCmd extends RrdToolCmd implements RrdGraphConstants {
 		xports = new ArrayList<XPort>();
 		long step = parseLong(getOptionValue(null, "step", "1"));
 		int maxRows = parseInt(getOptionValue("m", "maxrows", "400"));
+                boolean enumds = getBooleanOption(null, "enumds");
 		long minStep = (long) Math.ceil((span[1] - span[0]) / (double) (maxRows - 1));
 		step = Math.max(step, minStep);
 		dproc.setStep(step);
@@ -67,12 +68,12 @@ class RrdXportCmd extends RrdToolCmd implements RrdGraphConstants {
 				throw new RrdException("Invalid XPORT syntax: " + words[i]);
 			}
 		}
-		String result = xports.size() == 0 ? null : xport();
+		String result = xports.size() == 0 ? null : xport(enumds);
 		println(xports.size() == 0 ? "No XPORT statement found, nothing done" : result);
 		return result;
 	}
 
-	private String xport() throws IOException, RrdException {
+	private String xport(boolean enumds) throws IOException, RrdException {
 		dproc.processData();
 		long[] timestamps = dproc.getTimestamps();
 		for (XPort xport : xports) {
@@ -98,8 +99,10 @@ class RrdXportCmd extends RrdToolCmd implements RrdGraphConstants {
 			w.startTag("row");
 			w.writeComment(new Date(timestamps[i] * 1000L));
 			w.writeTag("t", timestamps[i]);
+                        int j = 0;
 			for (XPort xport : xports) {
-				w.writeTag("v", xport.values[i]);
+				w.writeTag("v"+ (enumds ? j : ""), xport.values[i]);
+                                j++;
 			}
 			w.closeTag(); // row
 		}
