@@ -94,6 +94,8 @@ class RpnCalculator {
         private static final byte TKN_LTIME = 63;
         private static final byte TKN_TREND = 64;
         private static final byte TKN_TRENDNAN = 65;
+        private static final byte TKN_PREDICT = 66;
+        private static final byte TKN_PREDICTSIGMA = 67;
 
 	private String rpnExpression;
 	private String sourceName;
@@ -323,6 +325,12 @@ class RpnCalculator {
 		}
 		else if (parsedText.equals("TRENDNAN")) {
 			token.id = TKN_TRENDNAN;
+		}
+		else if (parsedText.equals("PREDICT")) {
+			token.id = TKN_PREDICT;
+		}
+		else if (parsedText.equals("PREDICTSIGMA")) {
+			token.id = TKN_PREDICTSIGMA;
 		}
 		else {
 			token.id = TKN_VAR;
@@ -654,6 +662,92 @@ class RpnCalculator {
                                                     //System.err.printf("t[%d]: %1.10e / %d\n", slot, (count == 0) ? Double.NaN : (accum / count), count);
                                                     push((count == 0) ? Double.NaN : (accum / count));
                                                 }
+                                        }
+                                                break;
+                                        case TKN_PREDICT:
+                                        case TKN_PREDICTSIGMA:
+                                        {
+                                            pop(); // Clear the value of our variable
+
+                                            /* the local averaging window (similar to trend, but better here, as we get better statistics thru numbers)*/
+                                            int locstepsize = (int) pop();
+                                            /* the number of shifts and range-checking*/
+                                            int num_shifts = (int) pop();
+                                            double[] multipliers;
+
+                                            // handle negative shifts special
+                                            if (num_shifts < 0) {
+                                                multipliers = new double[1];
+                                                multipliers[0] = pop();
+                                            } else {
+                                                multipliers = new double[num_shifts];
+                                                for(int i = 0; i < num_shifts; i++) {
+                                                    multipliers[i] = pop();
+                                                }
+                                            }
+
+                                            /* the real calculation */
+                                            double val = Double.NaN;
+
+                                            /* the info on the datasource */
+                                            double[] vals = dataProcessor.getValues(tokens[rpi-1].variable);
+
+                                            int dscount = vals.length;
+                                            int locstep = (int) Math.ceil((float) locstepsize / (float) timeStep);
+
+                                            /* the sums */
+                                            double sum = 0;
+                                            double sum2 = 0;
+                                            int count = 0;
+
+                                            /* now loop for each position */
+                                            int doshifts = Math.abs(num_shifts);
+                                            for (int loop = 0; loop < doshifts; loop++) {
+                                                /* calculate shift step */
+                                                int shiftstep = 1;
+                                                if (num_shifts < 0) {
+                                                    shiftstep = loop * (int) multipliers[0];
+                                                } else {
+                                                    shiftstep = (int) multipliers[loop];
+                                                }
+                                                if (shiftstep < 0) {
+                                                    throw new RrdException("negative shift step not allowed: " + shiftstep);
+                                                }
+                                                shiftstep = (int) Math.ceil((float) shiftstep / (float) timeStep);
+                                                /* loop all local shifts */
+                                                for (int i = 0; i <= locstep; i++) {
+
+                                                    int offset = shiftstep + i;
+                                                    if ((offset >= 0) && (offset < slot)) {
+                                                        /* get the value */
+                                                        val = vals[slot - offset];
+
+                                                        /* and handle the non NAN case only*/
+                                                        if (!Double.isNaN(val)) {
+                                                            sum = Util.sum(sum, val);
+                                                            sum2 = Util.sum(sum2, val * val);
+                                                            count++;
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            /* do the final calculations */
+                                            val = Double.NaN;
+                                            if (token.id == TKN_PREDICT) {  /* the average */
+                                                if (count > 0) {
+                                                    val = sum / (double) count;
+                                                }
+                                            } else {
+                                                if (count > 1) { /* the sigma case */
+                                                    val = count * sum2 - sum * sum;
+                                                    if (val < 0) {
+                                                        val = Double.NaN;
+                                                    } else {
+                                                        val = Math.sqrt(val / ((float) count * ((float) count - 1.0)));
+                                                    }
+                                                }
+                                            }
+                                            push(val);
                                         }
                                                 break;
 					default:
