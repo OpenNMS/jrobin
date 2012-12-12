@@ -25,15 +25,22 @@ public class PercentileDef extends Source {
 
     private double m_percentile;
 
+    private boolean m_includenan;
+
     PercentileDef(String name, String sourceName, double percentile) {
+        this(name, sourceName, percentile, false);
+    }
+
+    PercentileDef(String name, String sourceName, double percentile, boolean includenan) {
         super(name);
         m_sourceName = sourceName;
         m_percentile = percentile;
+        m_includenan = includenan;
     }
 
     @Override
     void requestData(DataProcessor dproc) {
-        dproc.addDatasource(name, m_sourceName, m_percentile);
+        dproc.addDatasource(name, m_sourceName, m_percentile, m_includenan);
     }
 
 }

@@ -344,7 +344,11 @@ class RrdGraphCmd extends RrdToolCmd implements RrdGraphConstants {
 			throw new RrdException("Invalid DEF specification: " + word);
 		}
                 String[] tokens3 = tokens2[1].split(",");
-		graphDef.datasource(tokens2[0], tokens3[0], tokens3[1]);
+                if (tokens3.length == 2)  {
+                    graphDef.datasource(tokens2[0], tokens3[0], tokens3[1]);
+                } else {
+                    graphDef.datasource(tokens2[0], tokens3[0], Double.parseDouble(tokens3[1]), tokens3[2].equals("PERCENT"));
+                }
 	}
 
 	private void parsePrint(RrdGraphDef graphDef, String word) throws RrdException {
