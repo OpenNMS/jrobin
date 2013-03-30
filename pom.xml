@@ -8,7 +8,6 @@
   <groupId>org.jrobin</groupId>
   <artifactId>jrobin</artifactId>
   <packaging>bundle</packaging>
-
   <name>JRobin</name>
   <version>1.6.0-SNAPSHOT</version>
   <description>
@@ -86,7 +85,6 @@
       <archive>http://sourceforge.net/mailarchive/forum.php?forum_name=jrobin-discuss</archive>
     </mailingList>
   </mailingLists>
-
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <osgiVersion>4.3.0</osgiVersion>
