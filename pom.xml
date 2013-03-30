@@ -91,11 +91,9 @@
     <bundle.symbolicName>org.jrobin.jrobin</bundle.symbolicName>
     <bundle.namespace>org.jrobin.jrobin</bundle.namespace>
   </properties>
-
   <prerequisites>
     <maven>2.2.1</maven>
   </prerequisites>
-
   <build>
     <extensions>
       <extension>
