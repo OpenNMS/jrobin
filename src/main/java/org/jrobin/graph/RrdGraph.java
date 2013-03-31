@@ -589,6 +589,7 @@ public class RrdGraph implements RrdGraphConstants {
 		return getFontHeight(FONTTAG_LEGEND);
 	}
 
+	@SuppressWarnings("unused")
 	private double getTitleFontHeight() {
 		return getFontHeight(FONTTAG_TITLE);
 	}

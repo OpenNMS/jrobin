@@ -221,11 +221,9 @@ private YLab findYLab(int desiredMinimumLabelCount) {
 		}
 	}
 
-	int exp = 0;
 	double val = 1;
 	while(val < scaledrange) {
 	    val = val * 10;
-	    exp++;
 	}
 	return new YLab(val/10, 1, 2, 5, 10);
 }

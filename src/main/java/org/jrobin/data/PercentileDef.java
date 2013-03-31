@@ -27,7 +27,8 @@ public class PercentileDef extends Source {
 
     private double m_percentile;
 
-    private boolean m_ignorenan;
+    @SuppressWarnings("unused")
+	private boolean m_ignorenan;
 
     PercentileDef(String name, Source source, double percentile) {
         this(name, source, percentile, false);

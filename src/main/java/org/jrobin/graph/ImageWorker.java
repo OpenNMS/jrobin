@@ -28,7 +28,6 @@ import javax.imageio.ImageIO;
 import javax.imageio.ImageWriteParam;
 import javax.imageio.ImageWriter;
 
-@SuppressWarnings("restriction")
 class ImageWorker {
     private static final String DUMMY_TEXT = "Dummy";
 

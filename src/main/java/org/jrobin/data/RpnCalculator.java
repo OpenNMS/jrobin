@@ -692,7 +692,6 @@ class RpnCalculator {
                                             /* the info on the datasource */
                                             double[] vals = dataProcessor.getValues(tokens[rpi-1].variable);
 
-                                            int dscount = vals.length;
                                             int locstep = (int) Math.ceil((float) locstepsize / (float) timeStep);
 
                                             /* the sums */
