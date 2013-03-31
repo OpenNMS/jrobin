@@ -136,6 +136,10 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
         <version>2.9</version>
+        <configuration>
+          <excludePackageNames>org.jrobin.cmd:org.jrobin.convertor:org.jrobin.core.jrrd:org.jrobin.core.timespec:org.jrobin.inspector</excludePackageNames>
+          <use>false</use>
+        </configuration>
         <executions>
           <execution>
             <goals>
@@ -254,7 +258,6 @@
         <artifactId>maven-javadoc-plugin</artifactId>
         <version>2.9</version>
         <configuration>
-          <overview>${basedir}/src/overview.html</overview>
           <linksource>true</linksource>
           <links>
             <link>http://docs.oracle.com/javase/6/docs/api</link>
