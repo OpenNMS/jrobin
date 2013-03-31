@@ -5,9 +5,9 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-import junit.framework.Assert;
-
 import org.jrobin.core.RrdException;
+
+import org.junit.Assert;
 import org.junit.Test;
 
 public class RRDFileTest {
