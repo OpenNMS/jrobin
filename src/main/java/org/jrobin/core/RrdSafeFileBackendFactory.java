@@ -45,7 +45,7 @@ public class RrdSafeFileBackendFactory extends RrdFileBackendFactory {
 	 * Creates RrdSafeFileBackend object for the given file path.
 	 *
 	 * @param path	 File path
-	 * @param m_readOnly This parameter is ignored
+	 * @param readOnly This parameter is ignored
 	 * @return RrdSafeFileBackend object which handles all I/O operations for the given file path
 	 * @throws IOException Thrown in case of I/O error.
 	 */

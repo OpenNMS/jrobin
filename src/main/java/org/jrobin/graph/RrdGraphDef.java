@@ -797,7 +797,7 @@ public class RrdGraphDef implements RrdGraphConstants {
     /**
      * Sets font.
      *
-     * @param fontTag Font tag as String, as explained in {@link RrdGraphConstants#setFont setFont(int, java.awt.Font)}.
+     * @param fontTag Font tag as String, as explained in {@link RrdGraphDef#setFont setFont(int, java.awt.Font)}.
      * @param font Font to be used for tag
      * @throws RrdException Thrown if invalid fontTag is supplied.
      */
@@ -808,7 +808,7 @@ public class RrdGraphDef implements RrdGraphConstants {
     /**
      * Sets font.
      *
-     * @param fontTag Font tag as String, as explained in {@link RrdGraphConstants#setFont setFont(int, java.awt.Font)}.
+     * @param fontTag Font tag as String, as explained in {@link RrdGraphDef#setFont setFont(int, java.awt.Font)}.
      * @param font Font to be used for tag
      * @param setAll Boolean to flag whether to set all fonts if fontTag == FONTTAG_DEFAULT
      * @throws RrdException Thrown if invalid fontTag is supplied.
@@ -820,7 +820,7 @@ public class RrdGraphDef implements RrdGraphConstants {
     /**
      * Sets font.
      *
-     * @param fontTag Font tag as String, as explained in {@link RrdGraphConstants#setFont setFont(int, java.awt.Font)}.
+     * @param fontTag Font tag as String, as explained in {@link RrdGraphDef#setFont setFont(int, java.awt.Font)}.
      * @param font Font to be used for tag
      * @param setAll Boolean to flag whether to set all fonts if fontTag == FONTTAG_DEFAULT
      * @param keepSizes Boolean to flag whether to keep original font sizes if setting all fonts.

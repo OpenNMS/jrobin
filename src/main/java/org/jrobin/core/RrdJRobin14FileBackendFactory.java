@@ -47,7 +47,7 @@ public class RrdJRobin14FileBackendFactory extends RrdBackendFactory {
 	 * Creates RrdFileBackend object for the given file path.
 	 *
 	 * @param path	 File path
-	 * @param m_readOnly True, if the file should be accessed in read/only mode.
+	 * @param readOnly True, if the file should be accessed in read/only mode.
 	 *                 False otherwise.
 	 * @return RrdFileBackend object which handles all I/O operations for the given file path
 	 * @throws IOException Thrown in case of I/O error.

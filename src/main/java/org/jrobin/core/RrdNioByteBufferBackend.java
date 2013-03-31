@@ -44,8 +44,7 @@ public class RrdNioByteBufferBackend extends RrdFileBackend {
 	 * Creates RrdFileBackend object for the given file path, backed by java.nio.* classes.
 	 *
 	 * @param path	   Path to a file
-	 * @param m_readOnly   True, if file should be open in a read-only mode. False otherwise
-	 * @param syncPeriod See {@link RrdNioBackendFactory#setSyncPeriod(int)} for explanation
+	 * @param readOnly   True, if file should be open in a read-only mode. False otherwise
 	 * @throws IOException Thrown in case of I/O error
 	 */
 	protected RrdNioByteBufferBackend(final String path, final boolean readOnly) throws IOException, IllegalStateException {

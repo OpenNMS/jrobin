@@ -59,8 +59,8 @@ public class RrdJRobin14FileBackend extends RrdBackend {
 	/**
 	 * Creates RrdFileBackend object for the given file path, backed by RandomAccessFile object.
 	 * @param path Path to a file
-	 * @param m_readOnly True, if file should be open in a read-only mode. False otherwise
-	 * @param m_lockMode Locking mode, as described in {@link RrdDb#getLockMode()}
+	 * @param readOnly True, if file should be open in a read-only mode. False otherwise
+	 * @param lockMode Locking mode: Exception if locked, Wait if locked, or no locks.
 	 * @throws IOException Thrown in case of I/O error
 	 */
 	protected RrdJRobin14FileBackend(String path, boolean readOnly, LockMode lockMode) throws IOException {

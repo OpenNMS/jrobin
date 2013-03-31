@@ -190,7 +190,7 @@ public abstract class RrdBackendFactory {
 	 * Creates RrdBackend object for the given storage path.
 	 *
 	 * @param path	 Storage path
-	 * @param m_readOnly True, if the storage should be accessed in read/only mode.
+	 * @param readOnly True, if the storage should be accessed in read/only mode.
 	 *                 False otherwise.
 	 * @return Backend object which handles all I/O operations for the given storage path
 	 * @throws IOException Thrown in case of I/O error.

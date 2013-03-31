@@ -43,7 +43,7 @@ public class RrdMemoryBackendFactory extends RrdBackendFactory {
 	 *
 	 * @param id	   Since this backend holds all data in memory, this argument is interpreted
 	 *                 as an ID for this memory-based storage.
-	 * @param m_readOnly This parameter is ignored
+	 * @param readOnly This parameter is ignored
 	 * @return RrdMemoryBackend object which handles all I/O operations
 	 */
 	protected synchronized RrdBackend open(String id, boolean readOnly) {
