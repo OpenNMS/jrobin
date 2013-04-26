@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project
+    xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.jrobin</groupId>
   <artifactId>jrobin</artifactId>
@@ -8,12 +12,14 @@
   <name>JRobin</name>
   <version>1.5.15-SNAPSHOT</version>
   <description>
-    JRobin is a 100% pure Java alternative to RRDTool, with about exactly the same specifications. If you provide the
-    same data to RRDTool and JRobin, you will get exactly the same results and graphs. All standard RRDTool operations
-    are supported.
+    JRobin is a 100% pure Java alternative to RRDTool, with about exactly the
+    same specifications. If you provide the same data to RRDTool and JRobin,
+    you will get exactly the same results and graphs. All standard RRDTool
+    operations are supported.
   </description>
   <url>http://www.jrobin.org/</url>
   <inceptionYear>2003</inceptionYear>
+
   <developers>
     <developer>
       <id>saxon64</id>
@@ -41,20 +47,26 @@
       <email>rangerrick@users.sourceforge.net</email>
     </developer>
   </developers>
+
   <scm>
     <connection>scm:git:git://jrobin.git.sourceforge.net/gitroot/jrobin/jrobin</connection>
-    <developerConnection>scm:git:ssh://jrobin.git.sourceforge.net/gitroot/jrobin/jrobin</developerConnection>
-	 <url>http://jrobin.git.sourceforge.net/git/gitweb.cgi?p=jrobin/jrobin;a=summary</url>
+    <developerConnection>
+      scm:git:ssh://jrobin.git.sourceforge.net/gitroot/jrobin/jrobin
+    </developerConnection>
+    <url>http://jrobin.git.sourceforge.net/git/gitweb.cgi?p=jrobin/jrobin;a=summary</url>
   </scm>
+
   <licenses>
     <license>
       <name>LGPL</name>
     </license>
   </licenses>
+
   <issueManagement>
     <system>SF Bug Tracker</system>
     <url>http://sourceforge.net/tracker/?atid=566805&amp;group_id=82668</url>
   </issueManagement>
+
   <mailingLists>
     <mailingList>
       <name>jrobin-devel</name>
@@ -80,12 +92,13 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
+
   <build>
     <extensions>
       <extension>
         <groupId>org.apache.maven.wagon</groupId>
-         <artifactId>wagon-ssh-external</artifactId>
-         <version>1.0-beta-7</version>
+        <artifactId>wagon-ssh-external</artifactId>
+        <version>1.0-beta-7</version>
       </extension>
     </extensions>
     <sourceDirectory>src</sourceDirectory>
@@ -157,16 +170,17 @@
       	<artifactId>maven-surefire-plugin</artifactId>
       	<version>2.7.1</version>
       	<configuration>
-			<systemProperties>
-				<property>
-					<name>java.awt.headless</name>
-					<value>true</value>
-				</property>
-   			</systemProperties>
+          <systemProperties>
+            <property>
+              <name>java.awt.headless</name>
+              <value>true</value>
+            </property>
+          </systemProperties>
       	</configuration>
       </plugin>
     </plugins>
   </build>
+
   <reporting>
     <plugins>
       <plugin>
@@ -224,6 +238,7 @@
       </plugin>
     </plugins>
   </reporting>
+
   <dependencies>
     <dependency>
       <groupId>junit</groupId>
@@ -232,18 +247,21 @@
       <scope>compile</scope>
     </dependency>
     <dependency>
-    	<groupId>org.easymock</groupId>
-    	<artifactId>easymock</artifactId>
-    	<version>3.0</version>
-    	<type>jar</type>
-    	<scope>test</scope>
+      <groupId>org.easymock</groupId>
+      <artifactId>easymock</artifactId>
+      <version>3.0</version>
+      <type>jar</type>
+      <scope>test</scope>
     </dependency>
   </dependencies>
+
   <distributionManagement>
     <site>
       <id>opennms-site</id>
       <name>OpenNMS Site</name>
-      <url>scpexe://repo.opennms.org/var/www/sites/opennms.org/site/repo/sites/jrobin/${project.version}/</url>
+      <url>
+        scpexe://repo.opennms.org/var/www/sites/opennms.org/site/repo/sites/jrobin/${project.version}/
+      </url>
     </site>
     <!-- use the following if you're not using a snapshot version. -->
     <repository>
