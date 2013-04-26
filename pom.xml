@@ -7,7 +7,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.jrobin</groupId>
   <artifactId>jrobin</artifactId>
-  <packaging>jar</packaging>
+  <packaging>bundle</packaging>
 
   <name>JRobin</name>
   <version>1.5.15-SNAPSHOT</version>
@@ -91,6 +91,9 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <osgiVersion>4.3.0</osgiVersion>
+    <bundle.symbolicName>org.jrobin.jrobin</bundle.symbolicName>
+    <bundle.namespace>org.jrobin.jrobin</bundle.namespace>
   </properties>
 
   <build>
@@ -177,6 +180,24 @@
             </property>
           </systemProperties>
       	</configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <version>2.3.7</version>
+        <extensions>true</extensions>
+        <configuration>
+          <instructions>
+            <Bundle-SymbolicName>${bundle.symbolicName}</Bundle-SymbolicName>
+            <Bundle-Version>${project.version}</Bundle-Version>
+            <_include>-osgi.bnd</_include>
+          </instructions>
+          <supportedProjectTypes>
+            <supportedProjectType>jar</supportedProjectType>
+            <supportedProjectType>bundle</supportedProjectType>
+            <supportedProjectType>war</supportedProjectType>
+          </supportedProjectTypes>
+        </configuration>
       </plugin>
     </plugins>
   </build>
