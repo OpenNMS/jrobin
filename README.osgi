@@ -1,0 +1,10 @@
+OSGi
+====
+
+The Maven-generated jar file doubles as an OSGi bundle, but requires some
+additional system packages to load properly (com.sun.image.codec.jpeg,
+sun.misc, sun.nio, and sun.nio.ch).
+
+For Felix (including Karaf) set `config.properties` to something like:
+
+    org.osgi.framework.system.packages.extra=com.sun.image.codec.jpeg,sun.misc,sun.nio,sun.nio.ch
