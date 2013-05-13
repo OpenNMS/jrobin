@@ -22,8 +22,9 @@ package org.jrobin.core;
 import java.io.IOException;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import sun.nio.ch.DirectBuffer;
 
@@ -34,15 +35,11 @@ import sun.nio.ch.DirectBuffer;
  */
 @SuppressWarnings("restriction")
 public class RrdNioBackend extends RrdFileBackend {
-    private static final Timer fileSyncTimer = new Timer(true);
+    private static final ScheduledExecutorService m_executor = Executors.newSingleThreadScheduledExecutor();
 
     private MappedByteBuffer m_byteBuffer;
 
-    private final TimerTask m_syncTask = new TimerTask() {
-        public void run() {
-            sync();
-        }
-    };
+    private int m_syncPeriod;
 
     /**
      * Creates RrdFileBackend object for the given file path, backed by
@@ -61,11 +58,9 @@ public class RrdNioBackend extends RrdFileBackend {
      */
     protected RrdNioBackend(final String path, final boolean readOnly, final int syncPeriod) throws IOException {
         super(path, readOnly);
+        m_syncPeriod = syncPeriod;
         try {
             mapFile();
-            if (!readOnly) {
-                fileSyncTimer.schedule(m_syncTask, syncPeriod * 1000L, syncPeriod * 1000L);
-            }
         } catch (final IOException ioe) {
             super.close();
             throw ioe;
@@ -73,6 +68,13 @@ public class RrdNioBackend extends RrdFileBackend {
     }
 
     private void mapFile() throws IOException {
+        if (!isReadOnly()) {
+            m_executor.scheduleAtFixedRate(new Runnable() {
+                public void run() {
+                    sync();
+                }
+            }, m_syncPeriod, m_syncPeriod, TimeUnit.SECONDS);
+        }
         final long length = getLength();
         if (length > 0) {
             final FileChannel.MapMode mapMode = isReadOnly() ? FileChannel.MapMode.READ_ONLY : FileChannel.MapMode.READ_WRITE;
@@ -81,6 +83,14 @@ public class RrdNioBackend extends RrdFileBackend {
     }
 
     private void unmapFile() {
+        if (!isReadOnly()) {
+            try {
+                m_executor.shutdown();
+                m_executor.awaitTermination(m_syncPeriod * 2, TimeUnit.SECONDS);
+            } catch (final InterruptedException e) {
+                System.err.println("Warning: interrupted while waiting for sync thread to shut down.");
+            }
+        }
         if (m_byteBuffer != null) {
             if (m_byteBuffer instanceof DirectBuffer) {
                 ((DirectBuffer) m_byteBuffer).cleaner().clean();
@@ -147,9 +157,6 @@ public class RrdNioBackend extends RrdFileBackend {
     public synchronized void close() throws IOException {
         // cancel synchronization
         try {
-            if (m_syncTask != null) {
-                m_syncTask.cancel();
-            }
             sync();
             unmapFile();
         } finally {
