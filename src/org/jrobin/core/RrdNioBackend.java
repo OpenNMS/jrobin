@@ -43,6 +43,14 @@ public class RrdNioBackend extends RrdFileBackend {
     /**
      * Creates RrdFileBackend object for the given file path, backed by
      * java.nio.* classes.
+     */
+    protected RrdNioBackend(final String path, final boolean readOnly, final int syncPeriod) throws IOException {
+        this(path, readOnly, syncPeriod, null);
+    }
+
+    /**
+     * Creates RrdFileBackend object for the given file path, backed by
+     * java.nio.* classes.
      * 
      * @param path
      *            Path to a file
@@ -52,7 +60,10 @@ public class RrdNioBackend extends RrdFileBackend {
      * @param syncPeriod
      *            See {@link RrdNioBackendFactory#setSyncPeriod(int)} for
      *            explanation
-     * @param m_executor 
+     * @param m_executor
+     *            An executor for scheduling sync() calls to keep the RRD file
+     *            updated even before it is closed/unmapped.
+     *            (nullable, but recommended)
      * @throws IOException
      *             Thrown in case of I/O error
      */
@@ -71,11 +82,13 @@ public class RrdNioBackend extends RrdFileBackend {
 
     private void mapFile() throws IOException {
         if (!isReadOnly()) {
-            m_syncFuture = m_executor.scheduleAtFixedRate(new Runnable() {
-                public void run() {
-                    sync();
-                }
-            }, m_syncPeriod, m_syncPeriod, TimeUnit.SECONDS);
+            if (m_executor != null) {
+                m_syncFuture = m_executor.scheduleAtFixedRate(new Runnable() {
+                    public void run() {
+                        sync();
+                    }
+                }, m_syncPeriod, m_syncPeriod, TimeUnit.SECONDS);
+            }
         }
         final long length = getLength();
         if (length > 0) {
@@ -97,9 +110,15 @@ public class RrdNioBackend extends RrdFileBackend {
     }
 
     private synchronized void stopSchedule() {
-        if (m_syncFuture != null) {
-            m_syncFuture.cancel(false);
-            m_syncFuture = null;
+        if (m_executor != null) {
+            // if we have an executor, only do a sync if we still have an active future
+            if (m_syncFuture != null) {
+                m_syncFuture.cancel(false);
+                m_syncFuture = null;
+                sync();
+            }
+        } else {
+            // In the case where a user doesn't provide an executor, just sync() no matter what
             sync();
         }
     }
