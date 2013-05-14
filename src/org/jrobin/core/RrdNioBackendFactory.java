@@ -92,12 +92,25 @@ public class RrdNioBackendFactory extends RrdFileBackendFactory {
 	protected void finalize() throws Throwable {
 	    if (m_executor != null) {
         	    m_executor.shutdown();
+        	    /* Is this even necessary?  The sync() that's being
+        	     * called is just doing a filesystem sync from the mmapped
+        	     * io anyways, which I wouldn't expect is interruptible.
+        	     * No point in waiting for termination, in-progress threads
+        	     * will finish up, and new ones don't have to because
+        	     * unmapFile() in the backend should already be doing one
+        	     * last sync() before returning.
+        	     * 
+        	     * Making an executive decision and taking this out. ;) - BMR
+        	     */
+        	    
+        	    /*
         	    try {
         	        m_executor.awaitTermination(m_syncPeriod, TimeUnit.SECONDS);
         	    } catch (final InterruptedException e) {
         	        System.err.println("Interrupted while terminating synchronization executor.");
         	        m_executor.shutdownNow();
         	    }
+        	    */
         	    m_executor = null;
 	    }
 	    super.finalize();
