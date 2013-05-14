@@ -22,8 +22,8 @@ package org.jrobin.core;
 import java.io.IOException;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import sun.nio.ch.DirectBuffer;
@@ -35,10 +35,9 @@ import sun.nio.ch.DirectBuffer;
  */
 @SuppressWarnings("restriction")
 public class RrdNioBackend extends RrdFileBackend {
-    private static final ScheduledExecutorService m_executor = Executors.newSingleThreadScheduledExecutor();
-
-    private MappedByteBuffer m_byteBuffer;
-
+    private ScheduledFuture<?> m_syncFuture = null;
+    private ScheduledExecutorService m_executor;
+    private MappedByteBuffer m_byteBuffer = null;
     private int m_syncPeriod;
 
     /**
@@ -53,15 +52,18 @@ public class RrdNioBackend extends RrdFileBackend {
      * @param syncPeriod
      *            See {@link RrdNioBackendFactory#setSyncPeriod(int)} for
      *            explanation
+     * @param m_executor 
      * @throws IOException
      *             Thrown in case of I/O error
      */
-    protected RrdNioBackend(final String path, final boolean readOnly, final int syncPeriod) throws IOException {
+    protected RrdNioBackend(final String path, final boolean readOnly, final int syncPeriod, ScheduledExecutorService executor) throws IOException {
         super(path, readOnly);
-        m_syncPeriod = syncPeriod;
+        m_executor = executor;
+
         try {
             mapFile();
         } catch (final IOException ioe) {
+            stopSchedule();
             super.close();
             throw ioe;
         }
@@ -69,7 +71,7 @@ public class RrdNioBackend extends RrdFileBackend {
 
     private void mapFile() throws IOException {
         if (!isReadOnly()) {
-            m_executor.scheduleAtFixedRate(new Runnable() {
+            m_syncFuture = m_executor.scheduleAtFixedRate(new Runnable() {
                 public void run() {
                     sync();
                 }
@@ -84,12 +86,7 @@ public class RrdNioBackend extends RrdFileBackend {
 
     private void unmapFile() {
         if (!isReadOnly()) {
-            try {
-                m_executor.shutdown();
-                m_executor.awaitTermination(m_syncPeriod * 2, TimeUnit.SECONDS);
-            } catch (final InterruptedException e) {
-                System.err.println("Warning: interrupted while waiting for sync thread to shut down.");
-            }
+            stopSchedule();
         }
         if (m_byteBuffer != null) {
             if (m_byteBuffer instanceof DirectBuffer) {
@@ -97,6 +94,20 @@ public class RrdNioBackend extends RrdFileBackend {
             }
             m_byteBuffer = null;
         }
+    }
+
+    private synchronized void stopSchedule() {
+        if (m_syncFuture != null) {
+            m_syncFuture.cancel(false);
+            m_syncFuture = null;
+            sync();
+        }
+    }
+
+    @Override
+    protected void finalize() throws Throwable {
+        stopSchedule();
+        super.finalize();
     }
 
     /**
@@ -157,7 +168,6 @@ public class RrdNioBackend extends RrdFileBackend {
     public synchronized void close() throws IOException {
         // cancel synchronization
         try {
-            sync();
             unmapFile();
         } finally {
             super.close();

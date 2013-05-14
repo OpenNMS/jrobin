@@ -20,12 +20,17 @@
 package org.jrobin.core;
 
 import java.io.IOException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Factory class which creates actual {@link RrdNioBackend} objects. This is the default factory since
  * 1.4.0 version
  */
 public class RrdNioBackendFactory extends RrdFileBackendFactory {
+        private static ScheduledExecutorService m_executor = Executors.newScheduledThreadPool(Integer.getInteger("org.jrobin.RrdNioBackend.syncPoolSize", 50));
+
 	/**
 	 * factory name, "NIO"
 	 */
@@ -39,7 +44,7 @@ public class RrdNioBackendFactory extends RrdFileBackendFactory {
 	 */
 	public static final int DEFAULT_SYNC_PERIOD = 300; // seconds
 
-	private static int syncPeriod = DEFAULT_SYNC_PERIOD;
+	private static int m_syncPeriod = DEFAULT_SYNC_PERIOD;
 
 	/**
 	 * Returns time between two consecutive background synchronizations. If not changed via
@@ -49,7 +54,7 @@ public class RrdNioBackendFactory extends RrdFileBackendFactory {
 	 * @return Time in seconds between consecutive background synchronizations.
 	 */
 	public static int getSyncPeriod() {
-		return syncPeriod;
+		return m_syncPeriod;
 	}
 
 	/**
@@ -57,8 +62,8 @@ public class RrdNioBackendFactory extends RrdFileBackendFactory {
 	 *
 	 * @param syncPeriod Time in seconds between consecutive background synchronizations.
 	 */
-	public static void setSyncPeriod(int syncPeriod) {
-		RrdNioBackendFactory.syncPeriod = syncPeriod;
+	public static void setSyncPeriod(final int syncPeriod) {
+		m_syncPeriod = syncPeriod;
 	}
 
 	/**
@@ -70,8 +75,8 @@ public class RrdNioBackendFactory extends RrdFileBackendFactory {
 	 * @return RrdNioBackend object which handles all I/O operations for the given file path
 	 * @throws IOException Thrown in case of I/O error.
 	 */
-	protected RrdBackend open(String path, boolean readOnly) throws IOException {
-		return new RrdNioBackend(path, readOnly, syncPeriod);
+	protected RrdBackend open(final String path, final boolean readOnly) throws IOException {
+		return new RrdNioBackend(path, readOnly, m_syncPeriod, m_executor);
 	}
 
 	/**
@@ -81,5 +86,20 @@ public class RrdNioBackendFactory extends RrdFileBackendFactory {
 	 */
 	public String getFactoryName() {
 		return NAME;
+	}
+	
+	@Override
+	protected void finalize() throws Throwable {
+	    if (m_executor != null) {
+        	    m_executor.shutdown();
+        	    try {
+        	        m_executor.awaitTermination(m_syncPeriod, TimeUnit.SECONDS);
+        	    } catch (final InterruptedException e) {
+        	        System.err.println("Interrupted while terminating synchronization executor.");
+        	        m_executor.shutdownNow();
+        	    }
+        	    m_executor = null;
+	    }
+	    super.finalize();
 	}
 }
