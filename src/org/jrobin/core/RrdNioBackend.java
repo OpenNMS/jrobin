@@ -70,6 +70,7 @@ public class RrdNioBackend extends RrdFileBackend {
     protected RrdNioBackend(final String path, final boolean readOnly, final int syncPeriod, ScheduledExecutorService executor) throws IOException {
         super(path, readOnly);
         m_executor = executor;
+        m_syncPeriod = syncPeriod;
 
         try {
             mapFile();
