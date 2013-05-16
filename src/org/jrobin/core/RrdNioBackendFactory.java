@@ -22,14 +22,16 @@ package org.jrobin.core;
 import java.io.IOException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Factory class which creates actual {@link RrdNioBackend} objects. This is the default factory since
  * 1.4.0 version
  */
 public class RrdNioBackendFactory extends RrdFileBackendFactory {
-        private static ScheduledExecutorService m_executor = Executors.newScheduledThreadPool(Integer.getInteger("org.jrobin.RrdNioBackend.syncPoolSize", 50));
+        private static ScheduledExecutorService m_executor = null;
 
 	/**
 	 * factory name, "NIO"
@@ -76,7 +78,38 @@ public class RrdNioBackendFactory extends RrdFileBackendFactory {
 	 * @throws IOException Thrown in case of I/O error.
 	 */
 	protected RrdBackend open(final String path, final boolean readOnly) throws IOException {
+	        if (!readOnly && m_executor == null) {
+	            m_executor = Executors.newScheduledThreadPool(Integer.getInteger("org.jrobin.RrdNioBackend.syncPoolSize", 50), new NioThreadFactory());
+	        }
 		return new RrdNioBackend(path, readOnly, m_syncPeriod, m_executor);
+	}
+
+	public void shutdown() {
+            if (m_executor != null) {
+                m_executor.shutdown();
+
+                /* The sync() that's being called is just doing a filesystem
+                 * sync from the mmapped io anyways, which I wouldn't expect
+                 * is interruptible, so this shouldn't be necessary.
+                 * 
+                 * No point in waiting for termination; in-progress threads
+                 * will (eventually) finish up, and new ones don't have to
+                 * because unmapFile() in the backend should already be doing
+                 * one last sync() before returning.
+                 * 
+                 * Making an executive decision and taking this out. ;) - BMR
+                 */
+                
+                /*
+                try {
+                    m_executor.awaitTermination(m_syncPeriod, TimeUnit.SECONDS);
+                } catch (final InterruptedException e) {
+                    System.err.println("Interrupted while terminating synchronization executor.");
+                    m_executor.shutdownNow();
+                }
+                */
+                m_executor = null;
+            }
 	}
 
 	/**
@@ -87,32 +120,30 @@ public class RrdNioBackendFactory extends RrdFileBackendFactory {
 	public String getFactoryName() {
 		return NAME;
 	}
-	
+
 	@Override
 	protected void finalize() throws Throwable {
-	    if (m_executor != null) {
-        	    m_executor.shutdown();
-        	    /* Is this even necessary?  The sync() that's being
-        	     * called is just doing a filesystem sync from the mmapped
-        	     * io anyways, which I wouldn't expect is interruptible.
-        	     * No point in waiting for termination, in-progress threads
-        	     * will finish up, and new ones don't have to because
-        	     * unmapFile() in the backend should already be doing one
-        	     * last sync() before returning.
-        	     * 
-        	     * Making an executive decision and taking this out. ;) - BMR
-        	     */
-        	    
-        	    /*
-        	    try {
-        	        m_executor.awaitTermination(m_syncPeriod, TimeUnit.SECONDS);
-        	    } catch (final InterruptedException e) {
-        	        System.err.println("Interrupted while terminating synchronization executor.");
-        	        m_executor.shutdownNow();
-        	    }
-        	    */
-        	    m_executor = null;
-	    }
+	    shutdown();
 	    super.finalize();
+	}
+
+	private static class NioThreadFactory implements ThreadFactory {
+	    static final AtomicInteger poolNumber = new AtomicInteger(1);
+	    final ThreadGroup group;
+	    final AtomicInteger threadNumber = new AtomicInteger(1);
+	    final String namePrefix;
+
+	    public NioThreadFactory() {
+	        SecurityManager s = System.getSecurityManager();
+	        group = (s != null)? s.getThreadGroup() : Thread.currentThread().getThreadGroup();
+	        namePrefix = "RrdNioBackend-" + poolNumber.getAndIncrement() + "-thread-";
+	    }
+
+	    public Thread newThread(Runnable r) {
+	        Thread t = new Thread(group, r, namePrefix + threadNumber.getAndIncrement(), 0);
+	        if (t.isDaemon()) t.setDaemon(false);
+	        if (t.getPriority() != Thread.NORM_PRIORITY) t.setPriority(Thread.NORM_PRIORITY);
+	        return t;
+	    }
 	}
 }
