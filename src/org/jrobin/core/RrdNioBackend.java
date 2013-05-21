@@ -91,9 +91,7 @@ public class RrdNioBackend extends RrdFileBackend {
 
     private void mapFile() throws IOException {
         if (!isReadOnly()) {
-            if (m_syncManager != null) {
-                m_syncManager.add(this);
-            }
+            startSchedule();
         }
         final long length = getLength();
         if (length > 0) {
@@ -111,6 +109,12 @@ public class RrdNioBackend extends RrdFileBackend {
                 ((DirectBuffer) m_byteBuffer).cleaner().clean();
             }
             m_byteBuffer = null;
+        }
+    }
+
+    private void startSchedule() {
+        if (m_syncManager != null) {
+            m_syncManager.add(this);
         }
     }
 
