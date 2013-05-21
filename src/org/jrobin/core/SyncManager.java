@@ -7,18 +7,6 @@ import java.util.TimerTask;
 
 
 public final class SyncManager {
-    private static final class SyncTimerTask extends TimerTask {
-        private final RrdNioBackend m_rrdNioBackend;
-
-        private SyncTimerTask(RrdNioBackend rrdNioBackend) {
-            m_rrdNioBackend = rrdNioBackend;
-        }
-
-        @Override public void run() {
-            m_rrdNioBackend.sync();
-        }
-    }
-
     private int m_syncPeriod = RrdNioBackendFactory.DEFAULT_SYNC_PERIOD;
     private Timer m_timer = null;
     private Map<RrdNioBackend,TimerTask> m_tasks = new HashMap<RrdNioBackend,TimerTask>();
@@ -35,7 +23,7 @@ public final class SyncManager {
         m_syncPeriod = syncPeriod;
         synchronized(m_tasks) {
             final Timer oldTimer = m_timer;
-            m_timer = new Timer(true);
+            m_timer = new SyncTimer();
             for (final RrdNioBackend backend : m_tasks.keySet()) {
                 m_tasks.get(backend).cancel();
                 scheduleTask(backend);
@@ -47,7 +35,7 @@ public final class SyncManager {
     public void add(final RrdNioBackend rrdNioBackend) {
         synchronized(m_tasks) {
             if (m_tasks.size() == 0) {
-                m_timer = new Timer(true);
+                m_timer = new SyncTimer();
             }
             scheduleTask(rrdNioBackend);
         }
@@ -73,19 +61,21 @@ public final class SyncManager {
         }
     }
 
-    protected void scheduleTask(final RrdNioBackend rrdNioBackend) {
-        final TimerTask task = new SyncTimerTask(rrdNioBackend);
-        m_tasks.put(rrdNioBackend, task);
-        m_timer.schedule(task,getSyncPeriod() * 1000L, getSyncPeriod() * 1000L);
-    }
-
     private void cancelTimer(final Timer timer) {
         timer.cancel();
         timer.purge();
     }
 
+    private void scheduleTask(final RrdNioBackend rrdNioBackend) {
+        final TimerTask task = new SyncTimerTask(rrdNioBackend);
+        if (m_tasks.containsKey(rrdNioBackend)) {
+            m_tasks.get(rrdNioBackend).cancel();
+        }
+        m_tasks.put(rrdNioBackend, task);
+        m_timer.schedule(task, getSyncPeriod() * 1000L, getSyncPeriod() * 1000L);
+    }
+
     Timer getTimer() {
         return m_timer;
     }
-
 }
