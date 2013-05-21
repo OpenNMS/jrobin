@@ -22,9 +22,7 @@ package org.jrobin.core;
 import java.io.IOException;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
+
 
 import sun.nio.ch.DirectBuffer;
 
@@ -35,20 +33,29 @@ import sun.nio.ch.DirectBuffer;
  */
 @SuppressWarnings("restriction")
 public class RrdNioBackend extends RrdFileBackend {
-    private ScheduledFuture<?> m_syncFuture = null;
-
-    private ScheduledExecutorService m_executor;
-
+    private final SyncManager m_syncManager;
     private MappedByteBuffer m_byteBuffer = null;
-
-    private int m_syncPeriod;
 
     /**
      * Creates RrdFileBackend object for the given file path, backed by
-     * java.nio.* classes.
+     * java.nio.* classes.  This constructor will create a
+     * {@link SyncManager} for each instance, which is very inefficient.
+     * It is recommended that you instead use the
+     * {@link #RrdNioBackend(String, boolean, SyncManager)}
+     * constructor instead.
+     * 
+     * @param path
+     *            Path to a JRB file.
+     * @param m_readOnly
+     *            True, if file should be open in a read-only mode. False
+     *            otherwise
+     * @param syncPeriod
+     *            How often (in seconds) to sync MMAP'd RRD data to disk
+     * @throws IOException
+     *             Thrown in case of I/O error
      */
     protected RrdNioBackend(final String path, final boolean readOnly, final int syncPeriod) throws IOException {
-        this(path, readOnly, syncPeriod, null);
+        this(path, readOnly, new SyncManager(syncPeriod));
     }
 
     /**
@@ -59,21 +66,19 @@ public class RrdNioBackend extends RrdFileBackend {
      *            Path to a file
      * @param m_readOnly
      *            True, if file should be open in a read-only mode. False
-     *            otherwise
-     * @param syncPeriod
-     *            See {@link RrdNioBackendFactory#setSyncPeriod(int)} for
-     *            explanation
-     * @param m_executor
-     *            An executor for scheduling sync() calls to keep the RRD file
-     *            updated even before it is closed/unmapped. (nullable, but
-     *            recommended)
+     *            otherwise.
+     * @param syncManager
+     *            An object for managing synchronization of NIO-backed RRDs,
+     *            generally owned by the backend factory.  If null, MMAP'd
+     *            data will only be synchronized to disk upon unmap.  Note
+     *            that if the file is opened read-only, the SyncManager is
+     *            ignored. {@see #unmapFile()}
      * @throws IOException
      *             Thrown in case of I/O error
      */
-    protected RrdNioBackend(final String path, final boolean readOnly, final int syncPeriod, ScheduledExecutorService executor) throws IOException {
+    protected RrdNioBackend(final String path, final boolean readOnly, final SyncManager syncManager) throws IOException {
         super(path, readOnly);
-        m_executor = executor;
-        m_syncPeriod = syncPeriod;
+        m_syncManager = syncManager;
 
         try {
             mapFile();
@@ -86,12 +91,8 @@ public class RrdNioBackend extends RrdFileBackend {
 
     private void mapFile() throws IOException {
         if (!isReadOnly()) {
-            if (m_executor != null) {
-                m_syncFuture = m_executor.scheduleAtFixedRate(new Runnable() {
-                    public void run() {
-                        sync();
-                    }
-                }, m_syncPeriod, m_syncPeriod, TimeUnit.SECONDS);
+            if (m_syncManager != null) {
+                m_syncManager.add(this);
             }
         }
         final long length = getLength();
@@ -114,19 +115,10 @@ public class RrdNioBackend extends RrdFileBackend {
     }
 
     private synchronized void stopSchedule() {
-        if (m_executor != null) {
-            // if we have an executor, only do a sync if we still have an
-            // active future
-            if (m_syncFuture != null) {
-                m_syncFuture.cancel(false);
-                m_syncFuture = null;
-                sync();
-            }
-        } else {
-            // In the case where a user doesn't provide an executor, just
-            // sync() no matter what
-            sync();
+        if (m_syncManager != null) {
+            m_syncManager.remove(this);
         }
+        sync();
     }
 
     @Override

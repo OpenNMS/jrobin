@@ -20,24 +20,12 @@
 package org.jrobin.core;
 
 import java.io.IOException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Factory class which creates actual {@link RrdNioBackend} objects. This is
  * the default factory since 1.4.0 version
  */
 public class RrdNioBackendFactory extends RrdFileBackendFactory {
-    private static ScheduledExecutorService m_executor = null;
-
-    /**
-     * factory name, "NIO"
-     */
-    public static final String NAME = "NIO";
-
     /**
      * Period in seconds between consecutive synchronizations when sync-mode
      * is set to SYNC_BACKGROUND. By default in-memory cache will be
@@ -46,7 +34,12 @@ public class RrdNioBackendFactory extends RrdFileBackendFactory {
      */
     public static final int DEFAULT_SYNC_PERIOD = 300; // seconds
 
-    private static int m_syncPeriod = DEFAULT_SYNC_PERIOD;
+    private static SyncManager s_syncManager = new SyncManager(DEFAULT_SYNC_PERIOD);
+
+    /**
+     * factory name, "NIO"
+     */
+    public static final String NAME = "NIO";
 
     /**
      * Returns time between two consecutive background synchronizations. If
@@ -58,7 +51,7 @@ public class RrdNioBackendFactory extends RrdFileBackendFactory {
      *         synchronizations.
      */
     public static int getSyncPeriod() {
-        return m_syncPeriod;
+        return s_syncManager.getSyncPeriod();
     }
 
     /**
@@ -68,8 +61,8 @@ public class RrdNioBackendFactory extends RrdFileBackendFactory {
      *            Time in seconds between consecutive background
      *            synchronizations.
      */
-    public static void setSyncPeriod(final int syncPeriod) {
-        m_syncPeriod = syncPeriod;
+    public synchronized static void setSyncPeriod(final int syncPeriod) {
+        s_syncManager.setSyncPeriod(syncPeriod);
     }
 
     /**
@@ -86,17 +79,11 @@ public class RrdNioBackendFactory extends RrdFileBackendFactory {
      *             Thrown in case of I/O error.
      */
     protected RrdBackend open(final String path, final boolean readOnly) throws IOException {
-        if (!readOnly && m_executor == null) {
-            m_executor = Executors.newScheduledThreadPool(Integer.getInteger("org.jrobin.RrdNioBackend.syncPoolSize", 50), new NioThreadFactory());
-        }
-        return new RrdNioBackend(path, readOnly, m_syncPeriod, m_executor);
+        return new RrdNioBackend(path, readOnly, s_syncManager);
     }
 
     public void shutdown() {
-        if (m_executor != null) {
-            m_executor.shutdown();
-            m_executor = null;
-        }
+        s_syncManager.shutdown();
     }
 
     /**
@@ -114,28 +101,7 @@ public class RrdNioBackendFactory extends RrdFileBackendFactory {
         super.finalize();
     }
 
-    private static class NioThreadFactory implements ThreadFactory {
-        static final AtomicInteger poolNumber = new AtomicInteger(1);
-
-        final ThreadGroup group;
-
-        final AtomicInteger threadNumber = new AtomicInteger(1);
-
-        final String namePrefix;
-
-        public NioThreadFactory() {
-            SecurityManager s = System.getSecurityManager();
-            group = (s != null) ? s.getThreadGroup() : Thread.currentThread().getThreadGroup();
-            namePrefix = "RrdNioBackend-" + poolNumber.getAndIncrement() + "-thread-";
-        }
-
-        public Thread newThread(Runnable r) {
-            Thread t = new Thread(group, r, namePrefix + threadNumber.getAndIncrement(), 0);
-            if (t.isDaemon())
-                t.setDaemon(false);
-            if (t.getPriority() != Thread.NORM_PRIORITY)
-                t.setPriority(Thread.NORM_PRIORITY);
-            return t;
-        }
+    SyncManager getSyncManager() {
+        return s_syncManager;
     }
 }
