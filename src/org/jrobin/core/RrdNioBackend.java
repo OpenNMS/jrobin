@@ -36,8 +36,11 @@ import sun.nio.ch.DirectBuffer;
 @SuppressWarnings("restriction")
 public class RrdNioBackend extends RrdFileBackend {
     private ScheduledFuture<?> m_syncFuture = null;
+
     private ScheduledExecutorService m_executor;
+
     private MappedByteBuffer m_byteBuffer = null;
+
     private int m_syncPeriod;
 
     /**
@@ -62,8 +65,8 @@ public class RrdNioBackend extends RrdFileBackend {
      *            explanation
      * @param m_executor
      *            An executor for scheduling sync() calls to keep the RRD file
-     *            updated even before it is closed/unmapped.
-     *            (nullable, but recommended)
+     *            updated even before it is closed/unmapped. (nullable, but
+     *            recommended)
      * @throws IOException
      *             Thrown in case of I/O error
      */
@@ -112,14 +115,16 @@ public class RrdNioBackend extends RrdFileBackend {
 
     private synchronized void stopSchedule() {
         if (m_executor != null) {
-            // if we have an executor, only do a sync if we still have an active future
+            // if we have an executor, only do a sync if we still have an
+            // active future
             if (m_syncFuture != null) {
                 m_syncFuture.cancel(false);
                 m_syncFuture = null;
                 sync();
             }
         } else {
-            // In the case where a user doesn't provide an executor, just sync() no matter what
+            // In the case where a user doesn't provide an executor, just
+            // sync() no matter what
             sync();
         }
     }
