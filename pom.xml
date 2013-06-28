@@ -8,9 +8,8 @@
   <groupId>org.jrobin</groupId>
   <artifactId>jrobin</artifactId>
   <packaging>bundle</packaging>
-
   <name>JRobin</name>
-  <version>1.5.15-SNAPSHOT</version>
+  <version>1.6.0-SNAPSHOT</version>
   <description>
     JRobin is a 100% pure Java alternative to RRDTool, with about exactly the
     same specifications. If you provide the same data to RRDTool and JRobin,
@@ -50,9 +49,7 @@
 
   <scm>
     <connection>scm:git:git://jrobin.git.sourceforge.net/gitroot/jrobin/jrobin</connection>
-    <developerConnection>
-      scm:git:ssh://jrobin.git.sourceforge.net/gitroot/jrobin/jrobin
-    </developerConnection>
+    <developerConnection>scm:git:ssh://jrobin.git.sourceforge.net/gitroot/jrobin/jrobin</developerConnection>
     <url>http://jrobin.git.sourceforge.net/git/gitweb.cgi?p=jrobin/jrobin;a=summary</url>
   </scm>
 
@@ -88,14 +85,15 @@
       <archive>http://sourceforge.net/mailarchive/forum.php?forum_name=jrobin-discuss</archive>
     </mailingList>
   </mailingLists>
-
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <osgiVersion>4.3.0</osgiVersion>
     <bundle.symbolicName>org.jrobin.jrobin</bundle.symbolicName>
     <bundle.namespace>org.jrobin.jrobin</bundle.namespace>
   </properties>
-
+  <prerequisites>
+    <maven>2.2.1</maven>
+  </prerequisites>
   <build>
     <extensions>
       <extension>
@@ -104,29 +102,44 @@
         <version>2.4</version>
       </extension>
     </extensions>
-    <sourceDirectory>src</sourceDirectory>
-    <testSourceDirectory>test</testSourceDirectory>
-    <resources>
-      <resource>
-        <directory>fonts</directory>
-      </resource>
-    </resources>
     <plugins>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>2.3.2</version>
+        <version>3.1</version>
         <configuration>
-          <source>1.5</source>
-          <target>1.5</target>
+          <source>1.6</source>
+          <target>1.6</target>
         </configuration>
       </plugin>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-deploy-plugin</artifactId>
+        <version>2.7</version>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-clean-plugin</artifactId>
         <version>2.5</version>
       </plugin>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-install-plugin</artifactId>
+        <version>2.4</version>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-resources-plugin</artifactId>
+        <version>2.6</version>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
-        <version>2.7</version>
+        <version>2.9</version>
+        <configuration>
+          <excludePackageNames>org.jrobin.cmd:org.jrobin.convertor:org.jrobin.core.jrrd:org.jrobin.core.timespec:org.jrobin.inspector</excludePackageNames>
+          <use>false</use>
+        </configuration>
         <executions>
           <execution>
             <goals>
@@ -136,8 +149,9 @@
         </executions>
       </plugin>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-source-plugin</artifactId>
-        <version>2.1.2</version>
+        <version>2.2.1</version>
         <executions>
           <execution>
             <goals>
@@ -147,8 +161,9 @@
         </executions>
       </plugin>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jar-plugin</artifactId>
-        <version>2.3.1</version>
+        <version>2.4</version>
         <configuration>
           <archive>
             <index>true</index>
@@ -171,7 +186,7 @@
       <plugin>
       	<groupId>org.apache.maven.plugins</groupId>
       	<artifactId>maven-surefire-plugin</artifactId>
-      	<version>2.7.1</version>
+	<version>2.14.1</version>
       	<configuration>
           <systemProperties>
             <property>
@@ -231,22 +246,21 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-site-plugin</artifactId>
-        <version>2.2</version>
+        <version>3.3</version>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-project-info-reports-plugin</artifactId>
-        <version>2.3.1</version>
+        <version>2.7</version>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
-        <version>2.7</version>
+        <version>2.9</version>
         <configuration>
-          <overview>${basedir}/src/overview.html</overview>
           <linksource>true</linksource>
           <links>
-            <link>http://java.sun.com/j2se/1.5.0/docs/api</link>
+            <link>http://docs.oracle.com/javase/6/docs/api</link>
             <link>http://www.junit.org/junit/javadoc/4.4</link>
           </links>
         </configuration>
@@ -254,32 +268,32 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-pmd-plugin</artifactId>
-        <version>2.5</version>
+        <version>3.0.1</version>
         <configuration>
           <linkXRef>true</linkXRef>
           <sourceEncoding>UTF-8</sourceEncoding>
-          <targetJdk>1.5</targetJdk>
+          <targetJdk>1.6</targetJdk>
         </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-jxr-plugin</artifactId>
-        <version>2.2</version>
+        <version>2.3</version>
       </plugin>
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>jdepend-maven-plugin</artifactId>
-        <version>2.0-beta-1</version>
+        <version>2.0-beta-2</version>
       </plugin>
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>findbugs-maven-plugin</artifactId>
-        <version>1.1.1</version>
+        <version>2.5.2</version>
       </plugin>
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>javancss-maven-plugin</artifactId>
-        <version>2.0-beta-2</version>
+        <version>2.0</version>
       </plugin>
     </plugins>
   </reporting>
@@ -288,15 +302,15 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>4.4</version>
+      <version>4.11</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
-      <groupId>org.easymock</groupId>
-      <artifactId>easymock</artifactId>
-      <version>3.0</version>
-      <type>jar</type>
-      <scope>test</scope>
+    	<groupId>org.easymock</groupId>
+    	<artifactId>easymock</artifactId>
+	<version>3.1</version>
+    	<type>jar</type>
+    	<scope>test</scope>
     </dependency>
   </dependencies>
 
