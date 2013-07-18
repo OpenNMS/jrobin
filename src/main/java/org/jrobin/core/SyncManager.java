@@ -62,6 +62,7 @@ public final class SyncManager {
     }
 
     private void cancelTimer(final Timer timer) {
+        if (timer == null) return;
         timer.cancel();
         timer.purge();
     }
