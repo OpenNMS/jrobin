@@ -51,7 +51,7 @@ class CommentText implements RrdGraphConstants {
 
     void trimIfGlue() {
         if (marker.equals(GLUE_MARKER)) {
-            resolvedText = resolvedText.trim();
+            resolvedText = resolvedText.replaceFirst("\\s+$", "");
         }
     }
 
