@@ -764,7 +764,7 @@ class RpnCalculator {
 	}
 
 	private double getCalendarField(double timestamp, int field) {
-		Calendar calendar = Util.getCalendar((long) (timestamp * 1000));
+		Calendar calendar = Util.getCalendar((long) timestamp);
 		return calendar.get(field);
 	}
 
