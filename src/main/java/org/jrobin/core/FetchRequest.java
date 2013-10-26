@@ -26,7 +26,7 @@ import java.util.Set;
  * Class to represent fetch request. For the complete explanation of all
  * fetch parameters consult RRDTool's
  * <a href="../../../../man/rrdfetch.html" target="man">rrdfetch man page</a>.
- * <p/>
+ * <p>
  * You cannot create <code>FetchRequest</code> directly (no public constructor
  * is provided). Use {@link RrdDb#createFetchRequest(String, long, long, long)
  * createFetchRequest()} method of your {@link RrdDb RrdDb} object.

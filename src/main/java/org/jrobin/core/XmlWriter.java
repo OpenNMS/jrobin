@@ -68,7 +68,7 @@ public class XmlWriter {
 	 * Writes &lt;tag&gt;value&lt;/tag&gt; to output stream
 	 *
 	 * @param tag   XML tag name
-	 * @param value value to be placed between <code>&lt;tag&gt</code> and <code>&lt;/tag&gt;</code>
+	 * @param value value to be placed between <code>&lt;tag&gt;</code> and <code>&lt;/tag&gt;</code>
 	 */
 	public void writeTag(String tag, Object value) {
 		if (value != null) {
@@ -84,7 +84,7 @@ public class XmlWriter {
 	 * Writes &lt;tag&gt;value&lt;/tag&gt; to output stream
 	 *
 	 * @param tag   XML tag name
-	 * @param value value to be placed between <code>&lt;tag&gt</code> and <code>&lt;/tag&gt;</code>
+	 * @param value value to be placed between <code>&lt;tag&gt;</code> and <code>&lt;/tag&gt;</code>
 	 */
 	public void writeTag(String tag, int value) {
 		writeTag(tag, "" + value);
@@ -94,7 +94,7 @@ public class XmlWriter {
 	 * Writes &lt;tag&gt;value&lt;/tag&gt; to output stream
 	 *
 	 * @param tag   XML tag name
-	 * @param value value to be placed between <code>&lt;tag&gt</code> and <code>&lt;/tag&gt;</code>
+	 * @param value value to be placed between <code>&lt;tag&gt;</code> and <code>&lt;/tag&gt;</code>
 	 */
 	public void writeTag(String tag, long value) {
 		writeTag(tag, "" + value);
@@ -104,7 +104,8 @@ public class XmlWriter {
 	 * Writes &lt;tag&gt;value&lt;/tag&gt; to output stream
 	 *
 	 * @param tag   XML tag name
-	 * @param value value to be placed between <code>&lt;tag&gt</code> and <code>&lt;/tag&gt;</code>
+	 * @param value value to be placed between <code>&lt;tag&gt;</code> and <code>&lt;/tag&gt;</code>
+	 * @param nanString string to display if the value is NaN.
 	 */
 	public void writeTag(String tag, double value, String nanString) {
 		writeTag(tag, Util.formatDouble(value, nanString, true));
@@ -114,7 +115,7 @@ public class XmlWriter {
 	 * Writes &lt;tag&gt;value&lt;/tag&gt; to output stream
 	 *
 	 * @param tag   XML tag name
-	 * @param value value to be placed between <code>&lt;tag&gt</code> and <code>&lt;/tag&gt;</code>
+	 * @param value value to be placed between <code>&lt;tag&gt;</code> and <code>&lt;/tag&gt;</code>
 	 */
 	public void writeTag(String tag, double value) {
 		writeTag(tag, Util.formatDouble(value, true));
@@ -124,7 +125,7 @@ public class XmlWriter {
 	 * Writes &lt;tag&gt;value&lt;/tag&gt; to output stream
 	 *
 	 * @param tag   XML tag name
-	 * @param value value to be placed between <code>&lt;tag&gt</code> and <code>&lt;/tag&gt;</code>
+	 * @param value value to be placed between <code>&lt;tag&gt;</code> and <code>&lt;/tag&gt;</code>
 	 */
 	public void writeTag(String tag, boolean value) {
 		writeTag(tag, "" + value);
@@ -134,7 +135,7 @@ public class XmlWriter {
 	 * Writes &lt;tag&gt;value&lt;/tag&gt; to output stream
 	 *
 	 * @param tag   XML tag name
-	 * @param value value to be placed between <code>&lt;tag&gt</code> and <code>&lt;/tag&gt;</code>
+	 * @param value value to be placed between <code>&lt;tag&gt;</code> and <code>&lt;/tag&gt;</code>
 	 */
 	public void writeTag(String tag, Color value) {
 		int rgb = value.getRGB() & 0xFFFFFF;
@@ -145,7 +146,7 @@ public class XmlWriter {
 	 * Writes &lt;tag&gt;value&lt;/tag&gt; to output stream
 	 *
 	 * @param tag   XML tag name
-	 * @param value value to be placed between <code>&lt;tag&gt</code> and <code>&lt;/tag&gt;</code>
+	 * @param value value to be placed between <code>&lt;tag&gt;</code> and <code>&lt;/tag&gt;</code>
 	 */
 	public void writeTag(String tag, Font value) {
 		startTag(tag);
@@ -171,7 +172,7 @@ public class XmlWriter {
 	 * Writes &lt;tag&gt;value&lt;/tag&gt; to output stream
 	 *
 	 * @param tag   XML tag name
-	 * @param value value to be placed between <code>&lt;tag&gt</code> and <code>&lt;/tag&gt;</code>
+	 * @param value value to be placed between <code>&lt;tag&gt;</code> and <code>&lt;/tag&gt;</code>
 	 */
 	public void writeTag(String tag, File value) {
 		writeTag(tag, value.getPath());

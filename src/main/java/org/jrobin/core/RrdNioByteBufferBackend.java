@@ -64,7 +64,6 @@ public class RrdNioByteBufferBackend extends RrdFileBackend {
 	 * after a new RRD file gets created.
 	 *
 	 * @param newLength Length of the RRD file
-	 * @throws IOException
 	 * @throws IOException Thrown in case of I/O error.
 	 */
 	@Override

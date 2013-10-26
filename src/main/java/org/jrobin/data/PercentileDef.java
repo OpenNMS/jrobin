@@ -49,8 +49,9 @@ public class PercentileDef extends Source {
     /**
      * Realize the calculation of this definition, over the given time period
      *
-     * @param tStart
-     * @param tEnd
+     * @param tStart the time period start
+     * @param tEnd the time period end
+     * @throws RrdException Thrown if we cannot get a percentile value for the time period.
      */
     public void calculate(long tStart, long tEnd) throws RrdException {
         if(m_source != null) {

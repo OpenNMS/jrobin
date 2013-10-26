@@ -24,8 +24,8 @@ import java.io.IOException;
 /**
  * Class to represent single datasource within RRD. Each datasource object holds the
  * following information: datasource definition (once set, never changed) and
- * datasource state variables (changed whenever RRD gets updated).<p>
- * <p/>
+ * datasource state variables (changed whenever RRD gets updated).
+ * <p>
  * Normally, you don't need to manipluate Datasource objects directly, it's up to
  * JRobin framework to do it for you.
  *

@@ -24,10 +24,10 @@ import java.io.IOException;
 /**
  * Class to represent RRD header. Header information is mainly static (once set, it
  * cannot be changed), with the exception of last update time (this value is changed whenever
- * RRD gets updated).<p>
- * <p/>
+ * RRD gets updated).
+ * <p>
  * Normally, you don't need to manipulate the Header object directly - JRobin framework
- * does it for you.<p>
+ * does it for you.
  *
  * @author <a href="mailto:saxon@jrobin.org">Sasa Markovic</a>*
  */

@@ -31,23 +31,23 @@ import java.io.OutputStream;
  * Class used to represent data fetched from the RRD.
  * Object of this class is created when the method
  * {@link FetchRequest#fetchData() fetchData()} is
- * called on a {@link FetchRequest FetchRequest} object.<p>
- * <p/>
+ * called on a {@link FetchRequest FetchRequest} object.
+ * <p>
  * Data returned from the RRD is, simply, just one big table filled with
  * timestamps and corresponding datasource values.
  * Use {@link #getRowCount() getRowCount()} method to count the number
- * of returned timestamps (table rows).<p>
- * <p/>
+ * of returned timestamps (table rows).
+ * <p>
  * The first table column is filled with timestamps. Time intervals
  * between consecutive timestamps are guaranteed to be equal. Use
  * {@link #getTimestamps() getTimestamps()} method to get an array of
- * timestamps returned.<p>
- * <p/>
+ * timestamps returned.
+ * <p>
  * Remaining columns are filled with datasource values for the whole timestamp range,
  * on a column-per-datasource basis. Use {@link #getColumnCount() getColumnCount()} to find
  * the number of datasources and {@link #getValues(int) getValues(i)} method to obtain
  * all values for the i-th datasource. Returned datasource values correspond to
- * the values returned with {@link #getTimestamps() getTimestamps()} method.<p>
+ * the values returned with {@link #getTimestamps() getTimestamps()} method.
  */
 public class FetchData implements ConsolFuns {
 	// anything fuuny will do
@@ -165,8 +165,9 @@ public class FetchData implements ConsolFuns {
 	/**
 	 * Returns a set of values created by applying RPN expression to the fetched data.
 	 * For example, if you have two datasources named <code>x</code> and <code>y</code>
-	 * in this FetchData and you want to calculate values for <code>(x+y)/2<code> use something like: <p>
-	 * <code>getRpnValues("x,y,+,2,/");</code><p>
+	 * in this FetchData and you want to calculate values for <code>(x+y)/2</code> use something like:
+	 * <p>
+	 * <code>getRpnValues("x,y,+,2,/");</code>
 	 *
 	 * @param rpnExpression RRDTool-like RPN expression
 	 * @return Calculated values
@@ -244,6 +245,8 @@ public class FetchData implements ConsolFuns {
 
 	/**
 	 * Dumps the content of the whole FetchData object. Useful for debugging.
+	 *
+	 * @return String containing the contents of this object, for debugging.
 	 */
 	public String dump() {
 		StringBuffer buffer = new StringBuffer("");
@@ -316,8 +319,9 @@ public class FetchData implements ConsolFuns {
 	 * Returns aggregated value from the fetched data for a single datasource.
 	 * Before applying aggregation functions, specified RPN expression is applied to fetched data.
 	 * For example, if you have a gauge datasource named 'foots' but you want to find the maximum
-	 * fetched value in meters use something like: <p>
-	 * <code>getAggregate("foots", "MAX", "foots,0.3048,*");</code><p>
+	 * fetched value in meters use something like:
+	 * <p>
+	 * <code>getAggregate("foots", "MAX", "foots,0.3048,*");</code>
 	 *
 	 * @param dsName		Datasource name
 	 * @param consolFun	 Consolidation function (MIN, MAX, LAST, FIRST, AVERAGE or TOTAL)
@@ -338,8 +342,9 @@ public class FetchData implements ConsolFuns {
 	/**
 	 * Returns aggregated value for a set of values calculated by applying an RPN expression to the
 	 * fetched data. For example, if you have two datasources named <code>x</code> and <code>y</code>
-	 * in this FetchData and you want to calculate MAX value of <code>(x+y)/2<code> use something like: <p>
-	 * <code>getRpnAggregate("x,y,+,2,/", "MAX");</code><p>
+	 * in this FetchData and you want to calculate MAX value of <code>(x+y)/2</code> use something like:
+	 * <p>
+	 * <code>getRpnAggregate("x,y,+,2,/", "MAX");</code>
 	 *
 	 * @param rpnExpression RRDTool-like RPN expression
 	 * @param consolFun	 Consolidation function (MIN, MAX, LAST, FIRST, AVERAGE or TOTAL)
@@ -368,12 +373,14 @@ public class FetchData implements ConsolFuns {
 	 * Returns all aggregated values for a set of values calculated by applying an RPN expression to the
 	 * fetched data. For example, if you have two datasources named <code>x</code> and <code>y</code>
 	 * in this FetchData and you want to calculate MIN, MAX, LAST, FIRST, AVERAGE and TOTAL value
-	 * of <code>(x+y)/2<code> use something like: <p>
-	 * <code>getRpnAggregates("x,y,+,2,/");</code><p>
+	 * of <code>(x+y)/2</code> use something like:
+	 * <p>
+	 * <code>getRpnAggregates("x,y,+,2,/");</code>
 	 *
 	 * @param rpnExpression RRDTool-like RPN expression
 	 * @return Object containing all aggregated values
 	 * @throws RrdException Thrown if invalid RPN expression is supplied
+	 * @throws IOException Thrown in case of I/O error
 	 */
 	public Aggregates getRpnAggregates(String rpnExpression) throws RrdException, IOException {
 		DataProcessor dataProcessor = createDataProcessor(rpnExpression);
@@ -381,13 +388,13 @@ public class FetchData implements ConsolFuns {
 	}
 
 	/**
-	 * Used by ISPs which charge for bandwidth utilization on a "95th percentile" basis.<p>
-	 * <p/>
+	 * Used by ISPs which charge for bandwidth utilization on a "95th percentile" basis.
+	 * <p>
 	 * The 95th percentile is the highest source value left when the top 5% of a numerically sorted set
 	 * of source data is discarded. It is used as a measure of the peak value used when one discounts
-	 * a fair amount for transitory spikes. This makes it markedly different from the average.<p>
-	 * <p/>
-	 * Read more about this topic at:<p>
+	 * a fair amount for transitory spikes. This makes it markedly different from the average.
+	 * <p>
+	 * Read more about this topic at:
 	 * <a href="http://www.red.net/support/resourcecentre/leasedline/percentile.php">Rednet</a> or<br>
 	 * <a href="http://www.bytemark.co.uk/support/tech/95thpercentile.html">Bytemark</a>.
 	 *

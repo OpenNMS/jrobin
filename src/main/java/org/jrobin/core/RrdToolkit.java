@@ -26,19 +26,20 @@ import java.util.LinkedList;
 import java.util.Arrays;
 
 /**
- * <p>Class used to perform various complex operations on RRD files. Use an instance of the
- * RrdToolkit class to:</p>
+ * Class used to perform various complex operations on RRD files. Use an instance of the
+ * RrdToolkit class to:
+ * <p>
  * <ul>
  * <li>add datasource to a RRD file.
  * <li>add archive to a RRD file.
  * <li>remove datasource from a RRD file.
  * <li>remove archive from a RRD file.
  * </ul>
- * <p>All these operations can be performed on the copy of the original RRD file, or on the
- * original file itself (with possible backup file creation)</p>
- * <p/>
- * <p><b><u>IMPORTANT</u></b>: NEVER use methods found in this class on 'live' RRD files
- * (files which are currently in use).</p>
+ * All these operations can be performed on the copy of the original RRD file, or on the
+ * original file itself (with possible backup file creation).
+ * <p>
+ * <b><u>IMPORTANT</u></b>: NEVER use methods found in this class on 'live' RRD files
+ * (files which are currently in use).
  */
 public class RrdToolkit {
 	/**

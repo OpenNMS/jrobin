@@ -28,9 +28,10 @@ import java.util.*;
  * Class which should be used for all calculations based on the data fetched from RRD files. This class
  * supports ordinary DEF datasources (defined in RRD files), CDEF datasources (RPN expressions evaluation),
  * SDEF (static datasources - extension of JRobin) and PDEF (plottables, see
- * {@link Plottable Plottable} for more information.<p>
- * <p/>
- * Typical class usage:<p>
+ * {@link Plottable Plottable} for more information.
+ * <p>
+ * Typical class usage:
+ * <p>
  * <pre>
  * final long t1 = ...
  * final long t2 = ...
@@ -146,8 +147,8 @@ public class DataProcessor implements ConsolFuns {
 	 * but has influence neither on datasource values calculated with the
 	 * {@link #processData()} method nor on aggregated values returned from {@link #getAggregates(String)}
 	 * and similar methods. In other words, aggregated values will not change once you decide to change
-	 * the dimension of your graph.<p>
-	 * <p/>
+	 * the dimension of your graph.
+	 * <p>
 	 * The default number of pixels is defined by constant {@link #DEFAULT_PIXEL_COUNT}
 	 * and can be changed with a {@link #setPixelCount(int)} method.
 	 *
@@ -169,17 +170,17 @@ public class DataProcessor implements ConsolFuns {
 
 	/**
 	 * Roughly corresponds to the --step option in RRDTool's graph/xport commands. Here is an explanation borrowed
-	 * from RRDTool:<p>
-	 * <p/>
+	 * from RRDTool:
+	 * <p>
 	 * <i>"By default rrdgraph calculates the width of one pixel in the time
 	 * domain and tries to get data at that resolution from the RRD. With
 	 * this switch you can override this behavior. If you want rrdgraph to
 	 * get data at 1 hour resolution from the RRD, then you can set the
 	 * step to 3600 seconds. Note, that a step smaller than 1 pixel will
-	 * be silently ignored."</i><p>
-	 * <p/>
-	 * I think this option is not that useful, but it's here just for compatibility.<p>
-	 *
+	 * be silently ignored."</i>
+	 * <p>
+	 * I think this option is not that useful, but it's here just for compatibility.
+	 * <p>
 	 * @param step Time step at which data should be fetched from RRD files. If this method is not used,
 	 *             the step will be equal to the smallest RRD step of all processed RRD files. If no RRD file is processed,
 	 *             the step will be roughly equal to the with of one graph pixel (in seconds).
@@ -304,13 +305,13 @@ public class DataProcessor implements ConsolFuns {
 
 	/**
 	 * This method is just an alias for {@link #getPercentile(String)} method.
-	 * <p/>
-	 * Used by ISPs which charge for bandwidth utilization on a "95th percentile" basis.<p>
-	 * <p/>
+	 * <p>
+	 * Used by ISPs which charge for bandwidth utilization on a "95th percentile" basis.
+	 * <p>
 	 * The 95th percentile is the highest source value left when the top 5% of a numerically sorted set
 	 * of source data is discarded. It is used as a measure of the peak value used when one discounts
-	 * a fair amount for transitory spikes. This makes it markedly different from the average.<p>
-	 * <p/>
+	 * a fair amount for transitory spikes. This makes it markedly different from the average.
+	 * <p>
 	 * Read more about this topic at
 	 * <a href="http://www.red.net/support/resourcecentre/leasedline/percentile.php">Rednet</a> or
 	 * <a href="http://www.bytemark.co.uk/support/tech/95thpercentile.html">Bytemark</a>.
@@ -324,12 +325,12 @@ public class DataProcessor implements ConsolFuns {
 	}
 
 	/**
-	 * Used by ISPs which charge for bandwidth utilization on a "95th percentile" basis.<p>
-	 * <p/>
+	 * Used by ISPs which charge for bandwidth utilization on a "95th percentile" basis.
+	 * <p>
 	 * The 95th percentile is the highest source value left when the top 5% of a numerically sorted set
 	 * of source data is discarded. It is used as a measure of the peak value used when one discounts
-	 * a fair amount for transitory spikes. This makes it markedly different from the average.<p>
-	 * <p/>
+	 * a fair amount for transitory spikes. This makes it markedly different from the average.
+	 * <p>
 	 * Read more about this topic at
 	 * <a href="http://www.red.net/support/resourcecentre/leasedline/percentile.php">Rednet</a> or
 	 * <a href="http://www.bytemark.co.uk/support/tech/95thpercentile.html">Bytemark</a>.
@@ -403,9 +404,10 @@ public class DataProcessor implements ConsolFuns {
 	/////////////////////////////////////////////////////////////////
 
 	/**
-	 * <p>Adds a custom, {@link org.jrobin.data.Plottable plottable} datasource (<b>PDEF</b>).
+	 * Adds a custom, {@link org.jrobin.data.Plottable plottable} datasource (<b>PDEF</b>).
 	 * The datapoints should be made available by a class extending
-	 * {@link org.jrobin.data.Plottable Plottable} class.</p>
+	 * {@link org.jrobin.data.Plottable Plottable} class.
+	 * <p>
 	 *
 	 * @param name	  source name.
 	 * @param plottable class that extends Plottable class and is suited for graphing.
@@ -416,26 +418,26 @@ public class DataProcessor implements ConsolFuns {
 	}
 
 	/**
-	 * <p>Adds complex source (<b>CDEF</b>).
-	 * Complex sources are evaluated using the supplied <code>RPN</code> expression.</p>
-	 * <p/>
-	 * <p>Complex source <code>name</code> can be used:</p>
+	 * Adds complex source (<b>CDEF</b>).
+	 * Complex sources are evaluated using the supplied <code>RPN</code> expression.
+	 * <p>
+	 * Complex source <code>name</code> can be used:
 	 * <ul>
 	 * <li>To specify sources for line, area and stack plots.</li>
 	 * <li>To define other complex sources.</li>
 	 * </ul>
-	 * <p/>
-	 * <p>JRobin supports the following RPN functions, operators and constants: +, -, *, /,
+	 * <p>
+	 * JRobin supports the following RPN functions, operators and constants: +, -, *, /,
 	 * %, SIN, COS, LOG, EXP, FLOOR, CEIL, ROUND, POW, ABS, SQRT, RANDOM, LT, LE, GT, GE, EQ,
 	 * IF, MIN, MAX, LIMIT, DUP, EXC, POP, UN, UNKN, NOW, TIME, PI, E,
 	 * AND, OR, XOR, PREV, PREV(sourceName), INF, NEGINF, STEP, YEAR, MONTH, DATE,
-	 * HOUR, MINUTE, SECOND, WEEK, SIGN and RND.</p>
-	 * <p/>
-	 * <p>JRobin does not force you to specify at least one simple source name as RRDTool.</p>
-	 * <p/>
-	 * <p>For more details on RPN see RRDTool's
+	 * HOUR, MINUTE, SECOND, WEEK, SIGN and RND.
+	 * <p>
+	 * JRobin does not force you to specify at least one simple source name as RRDTool.
+	 * <p>
+	 * For more details on RPN see RRDTool's
 	 * <a href="http://people.ee.ethz.ch/~oetiker/webtools/rrdtool/manual/rrdgraph.html" target="man">
-	 * rrdgraph man page</a>.</p>
+	 * rrdgraph man page</a>.
 	 *
 	 * @param name		  source name.
 	 * @param rpnExpression RPN expression containig comma (or space) delimited simple and complex
@@ -447,8 +449,8 @@ public class DataProcessor implements ConsolFuns {
 	}
 
 	/**
-	 * <p>Adds static source (<b>SDEF</b>). Static sources are the result of a consolidation function applied
-	 * to *any* other source that has been defined previously.</p>
+	 * Adds static source (<b>SDEF</b>). Static sources are the result of a consolidation function applied
+	 * to *any* other source that has been defined previously.
 	 *
 	 * @param name	  source name.
 	 * @param defName   Name of the datasource to calculate the value from.
@@ -878,8 +880,8 @@ public class DataProcessor implements ConsolFuns {
 	 * Cute little demo. Uses demo.rrd file previously created by basic JRobin demo.
 	 *
 	 * @param args Not used
-	 * @throws IOException
-	 * @throws RrdException
+	 * @throws IOException if an I/O error occurs.
+	 * @throws RrdException Thrown if internal jrobin error occurs.
 	 */
 	public static void main(String[] args) throws IOException, RrdException {
 		// time span

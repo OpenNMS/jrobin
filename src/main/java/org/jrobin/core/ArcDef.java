@@ -22,16 +22,16 @@ package org.jrobin.core;
 /**
  * Class to represent single archive definition within the RRD.
  * Archive definition consists of the following four elements:
- * <p/>
+ * <p>
  * <ul>
  * <li>consolidation function
  * <li>X-files factor
  * <li>number of steps
  * <li>number of rows.
  * </ul>
- * <p>For the complete explanation of all archive definition parameters, see RRDTool's
- * <a href="../../../../man/rrdcreate.html" target="man">rrdcreate man page</a>
- * </p>
+ * <p>
+ * For the complete explanation of all archive definition parameters, see RRDTool's
+ * <a href="../../../../man/rrdcreate.html" target="man">rrdcreate man page</a>.
  *
  * @author <a href="mailto:saxon@jrobin.org">Sasa Markovic</a>
  */
@@ -47,10 +47,10 @@ public class ArcDef implements ConsolFuns {
 	private int steps, rows;
 
 	/**
-	 * <p>Creates new archive definition object. This object should be passed as argument to
+	 * Creates new archive definition object. This object should be passed as argument to
 	 * {@link RrdDef#addArchive(ArcDef) addArchive()} method of
-	 * {@link RrdDb RrdDb} object.</p>
-	 * <p/>
+	 * {@link RrdDb RrdDb} object.
+	 * <p>
 	 * <p>For the complete explanation of all archive definition parameters, see RRDTool's
 	 * <a href="../../../../man/rrdcreate.html" target="man">rrdcreate man page</a></p>
 	 *

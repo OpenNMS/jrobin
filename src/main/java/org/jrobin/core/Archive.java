@@ -24,11 +24,11 @@ import java.io.IOException;
 /**
  * Class to represent single RRD archive in a RRD with its internal state.
  * Normally, you don't need methods to manipulate archive objects directly
- * because JRobin framework does it automatically for you.<p>
- * <p/>
+ * because JRobin framework does it automatically for you.
+ * <p>
  * Each archive object consists of three parts: archive definition, archive state objects
  * (one state object for each datasource) and round robin archives (one round robin for
- * each datasource). API (read-only) is provided to access each of theese parts.<p>
+ * each datasource). API (read-only) is provided to access each of theese parts.
  *
  * @author <a href="mailto:saxon@jrobin.org">Sasa Markovic</a>
  */
@@ -382,7 +382,7 @@ public class Archive implements RrdUpdater, ConsolFuns {
 	/**
 	 * Sets X-files factor to a new value.
 	 *
-	 * @param xff New X-files factor value. Must be >= 0 and < 1.
+	 * @param xff New X-files factor value. Must be &gt;= 0 and &lt; 1.
 	 * @throws RrdException Thrown if invalid value is supplied
 	 * @throws IOException  Thrown in case of I/O error
 	 */

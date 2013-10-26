@@ -28,25 +28,24 @@ import java.io.OutputStream;
 import java.util.Date;
 
 /**
- * <p>Main class used to create and manipulate round robin databases (RRDs). Use this class to perform
+ * Main class used to create and manipulate round robin databases (RRDs). Use this class to perform
  * update and fetch operations on exisiting RRDs, to create new RRD from
  * the definition (object of class {@link org.jrobin.core.RrdDef RrdDef}) or
- * from XML file (dumped content of RRDTool's or JRobin's RRD file).</p>
- * <p/>
- * <p>Each RRD is backed with some kind of storage. For example, RRDTool supports only one kind of
+ * from XML file (dumped content of RRDTool's or JRobin's RRD file).
+ * <p>
+ * Each RRD is backed with some kind of storage. For example, RRDTool supports only one kind of
  * storage (disk file). On the contrary, JRobin gives you freedom to use other storage (backend) types
  * even to create your own backend types for some special purposes. JRobin by default stores
  * RRD data in files (as RRDTool), but you might choose to store RRD data in memory (this is
  * supported in JRobin), to use java.nio.* instead of java.io.* package for file manipulation
  * (also supported) or to store whole RRDs in the SQL database
- * (you'll have to extend some classes to do this).</p>
- * <p/>
- * <p>Note that JRobin uses binary format different from RRDTool's format. You cannot
+ * (you'll have to extend some classes to do this).
+ * <p>
+ * Note that JRobin uses binary format different from RRDTool's format. You cannot
  * use this class to manipulate RRD files created with RRDTool. <b>However, if you perform
  * the same sequence of create, update and fetch operations, you will get exactly the same
- * results from JRobin and RRDTool.</b><p>
- * <p/>
- * <p/>
+ * results from JRobin and RRDTool.</b>
+ * <p>
  * You will not be able to use JRobin API if you are not familiar with
  * basic RRDTool concepts. Good place to start is the
  * <a href="http://people.ee.ethz.ch/~oetiker/webtools/rrdtool/tutorial/rrdtutorial.html">official RRD tutorial</a>
@@ -57,7 +56,7 @@ import java.util.Date;
  * For RRDTool's advanced graphing capabilities (RPN extensions), also supported in JRobin,
  * there is an excellent
  * <a href="http://people.ee.ethz.ch/~oetiker/webtools/rrdtool/tutorial/cdeftutorial.html" target="man">CDEF tutorial</a>.
- * </p>
+ * <p>
  *
  * @see RrdBackend
  * @see RrdBackendFactory
@@ -85,17 +84,17 @@ public class RrdDb implements RrdUpdater {
 	private boolean closed = false;
 
 	/**
-	 * <p>Constructor used to create new RRD object from the definition. This RRD object will be backed
+	 * Constructor used to create new RRD object from the definition. This RRD object will be backed
 	 * with a storage (backend) of the default type. Initially, storage type defaults to "NIO"
 	 * (RRD bytes will be put in a file on the disk). Default storage type can be changed with a static
-	 * {@link RrdBackendFactory#setDefaultFactory(String)} method call.</p>
-	 * <p/>
-	 * <p>New RRD file structure is specified with an object of class
+	 * {@link RrdBackendFactory#setDefaultFactory(String)} method call.
+	 * <p>
+	 * New RRD file structure is specified with an object of class
 	 * {@link org.jrobin.core.RrdDef <b>RrdDef</b>}. The underlying RRD storage is created as soon
-	 * as the constructor returns.</p>
-	 * <p/>
-	 * <p>Typical scenario:</p>
-	 * <p/>
+	 * as the constructor returns.
+	 * <p>
+	 * Typical scenario:
+	 * <p>
 	 * <pre>
 	 * // create new RRD definition
 	 * RrdDef def = new RrdDef("test.rrd", 300);
@@ -109,7 +108,7 @@ public class RrdDb implements RrdUpdater {
 	 * def.addArchive(ConsolFuns.CF_MAX, 0.5, 6, 700);
 	 * def.addArchive(ConsolFuns.CF_MAX, 0.5, 24, 797);
 	 * def.addArchive(ConsolFuns.CF_MAX, 0.5, 288, 775);
-	 * <p/>
+	 *
 	 * // RRD definition is now completed, create the database!
 	 * RrdDb rrd = new RrdDb(def);
 	 * // new RRD file has been created on your disk
@@ -124,12 +123,12 @@ public class RrdDb implements RrdUpdater {
 	}
 
 	/**
-	 * <p>Constructor used to create new RRD object from the definition object but with a storage
-	 * (backend) different from default.</p>
-	 * <p/>
-	 * <p>JRobin uses <i>factories</i> to create RRD backend objecs. There are three different
-	 * backend factories supplied with JRobin, and each factory has its unique name:</p>
-	 * <p/>
+	 * Constructor used to create new RRD object from the definition object but with a storage
+	 * (backend) different from default.
+	 * <p>
+	 * JRobin uses <i>factories</i> to create RRD backend objecs. There are three different
+	 * backend factories supplied with JRobin, and each factory has its unique name:
+	 * <p>
 	 * <ul>
 	 * <li><b>FILE</b>: backends created from this factory will store RRD data to files by using
 	 * java.io.* classes and methods
@@ -139,17 +138,17 @@ public class RrdDb implements RrdUpdater {
 	 * be useful in runtime environments which prohibit disk utilization, or for storing temporary,
 	 * non-critical data (it gets lost as soon as JVM exits).
 	 * </ul>
-	 * <p/>
-	 * <p>For example, to create RRD in memory, use the following code</p>
+	 * <p>
+	 * For example, to create RRD in memory, use the following code:
 	 * <pre>
 	 * RrdBackendFactory factory = RrdBackendFactory.getFactory("MEMORY");
 	 * RrdDb rrdDb = new RrdDb(rrdDef, factory);
 	 * rrdDb.close();
 	 * </pre>
-	 * <p/>
-	 * <p>New RRD file structure is specified with an object of class
+	 * <p>
+	 * New RRD file structure is specified with an object of class
 	 * {@link org.jrobin.core.RrdDef <b>RrdDef</b>}. The underlying RRD storage is created as soon
-	 * as the constructor returns.</p>
+	 * as the constructor returns.
 	 *
 	 * @param rrdDef  RRD definition object
 	 * @param factory The factory which will be used to create storage for this RRD
@@ -185,12 +184,12 @@ public class RrdDb implements RrdUpdater {
 	}
 
 	/**
-	 * <p>Constructor used to open already existing RRD. This RRD object will be backed
+	 * Constructor used to open already existing RRD. This RRD object will be backed
 	 * with a storage (backend) of the default type (file on the disk). Constructor
-	 * obtains read or read/write access to this RRD.</p>
+	 * obtains read or read/write access to this RRD.
 	 *
 	 * @param path	 Path to existing RRD.
-	 * @param m_readOnly Should be set to <code>false</code> if you want to update
+	 * @param readOnly Should be set to <code>false</code> if you want to update
 	 *                 the underlying RRD. If you want just to fetch data from the RRD file
 	 *                 (read-only access), specify <code>true</code>. If you try to update RRD file
 	 *                 open in read-only mode (<code>m_readOnly</code> set to <code>true</code>),
@@ -203,12 +202,12 @@ public class RrdDb implements RrdUpdater {
 	}
 
 	/**
-	 * <p>Constructor used to open already existing RRD backed
+	 * Constructor used to open already existing RRD backed
 	 * with a storage (backend) different from default. Constructor
-	 * obtains read or read/write access to this RRD.</p>
+	 * obtains read or read/write access to this RRD.
 	 *
 	 * @param path	 Path to existing RRD.
-	 * @param m_readOnly Should be set to <code>false</code> if you want to update
+	 * @param readOnly Should be set to <code>false</code> if you want to update
 	 *                 the underlying RRD. If you want just to fetch data from the RRD file
 	 *                 (read-only access), specify <code>true</code>. If you try to update RRD file
 	 *                 open in read-only mode (<code>m_readOnly</code> set to <code>true</code>),
@@ -280,52 +279,52 @@ public class RrdDb implements RrdUpdater {
 	}
 
 	/**
-	 * <p>Constructor used to create RRD files from external file sources.
-	 * Supported external file sources are:</p>
-	 * <p/>
+	 * Constructor used to create RRD files from external file sources.
+	 * Supported external file sources are:
+	 * <p>
 	 * <ul>
 	 * <li>RRDTool/JRobin XML file dumps (i.e files created with <code>rrdtool dump</code> command).
 	 * <li>RRDTool binary files.
 	 * </ul>
-	 * <p/>
-	 * <p>Newly created RRD will be backed with a default storage (backend) type
-	 * (file on the disk).</p>
-	 * <p/>
-	 * <p>JRobin and RRDTool use the same format for XML dump and this constructor should be used to
+	 * <p>
+	 * Newly created RRD will be backed with a default storage (backend) type
+	 * (file on the disk).
+	 * <p>
+	 * JRobin and RRDTool use the same format for XML dump and this constructor should be used to
 	 * (re)create JRobin RRD files from XML dumps. First, dump the content of a RRDTool
-	 * RRD file (use command line):</p>
-	 * <p/>
+	 * RRD file (use command line):
+	 * <p>
 	 * <pre>
-	 * rrdtool dump original.rrd > original.xml
+	 * rrdtool dump original.rrd &gt; original.xml
 	 * </pre>
-	 * <p/>
-	 * <p>Than, use the file <code>original.xml</code> to create JRobin RRD file named
-	 * <code>copy.rrd</code>:</p>
-	 * <p/>
+	 * <p>
+	 * Than, use the file <code>original.xml</code> to create JRobin RRD file named
+	 * <code>copy.rrd</code>:
+	 * <p>
 	 * <pre>
 	 * RrdDb rrd = new RrdDb("copy.rrd", "original.xml");
 	 * </pre>
-	 * <p/>
-	 * <p>or:</p>
-	 * <p/>
+	 * <p>
+	 * or:
+	 * <p>
 	 * <pre>
 	 * RrdDb rrd = new RrdDb("copy.rrd", "xml:/original.xml");
 	 * </pre>
-	 * <p/>
-	 * <p>See documentation for {@link #dumpXml(java.lang.String) dumpXml()} method
-	 * to see how to convert JRobin files to RRDTool's format.</p>
-	 * <p/>
-	 * <p>To read RRDTool files directly, specify <code>rrdtool:/</code> prefix in the
+	 * <p>
+	 * See documentation for {@link #dumpXml(java.lang.String) dumpXml()} method
+	 * to see how to convert JRobin files to RRDTool's format.
+	 * <p>
+	 * To read RRDTool files directly, specify <code>rrdtool:/</code> prefix in the
 	 * <code>externalPath</code> argument. For example, to create JRobin compatible file named
 	 * <code>copy.rrd</code> from the file <code>original.rrd</code> created with RRDTool, use
-	 * the following code:</p>
-	 * <p/>
+	 * the following code:
+	 * <p>
 	 * <pre>
 	 * RrdDb rrd = new RrdDb("copy.rrd", "rrdtool:/original.rrd");
 	 * </pre>
-	 * <p/>
-	 * <p>Note that the prefix <code>xml:/</code> or <code>rrdtool:/</code> is necessary to distinguish
-	 * between XML and RRDTool's binary sources. If no prefix is supplied, XML format is assumed</p>
+	 * <p>
+	 * Note that the prefix <code>xml:/</code> or <code>rrdtool:/</code> is necessary to distinguish
+	 * between XML and RRDTool's binary sources. If no prefix is supplied, XML format is assumed.
 	 *
 	 * @param rrdPath	  Path to a RRD file which will be created
 	 * @param externalPath Path to an external file which should be imported, with an optional
@@ -338,49 +337,49 @@ public class RrdDb implements RrdUpdater {
 	}
 
 	/**
-	 * <p>Constructor used to create RRD files from external file sources with a backend type
-	 * different from default. Supported external file sources are:</p>
-	 * <p/>
+	 * Constructor used to create RRD files from external file sources with a backend type
+	 * different from default. Supported external file sources are:
+	 * <p>
 	 * <ul>
 	 * <li>RRDTool/JRobin XML file dumps (i.e files created with <code>rrdtool dump</code> command).
 	 * <li>RRDTool binary files.
 	 * </ul>
-	 * <p/>
-	 * <p>JRobin and RRDTool use the same format for XML dump and this constructor should be used to
+	 * <p>
+	 * JRobin and RRDTool use the same format for XML dump and this constructor should be used to
 	 * (re)create JRobin RRD files from XML dumps. First, dump the content of a RRDTool
-	 * RRD file (use command line):</p>
-	 * <p/>
+	 * RRD file (use command line):
+	 * <p>
 	 * <pre>
-	 * rrdtool dump original.rrd > original.xml
+	 * rrdtool dump original.rrd &gt; original.xml
 	 * </pre>
-	 * <p/>
-	 * <p>Than, use the file <code>original.xml</code> to create JRobin RRD file named
-	 * <code>copy.rrd</code>:</p>
-	 * <p/>
+	 * <p>
+	 * Than, use the file <code>original.xml</code> to create JRobin RRD file named
+	 * <code>copy.rrd</code>:
+	 * <p>
 	 * <pre>
 	 * RrdDb rrd = new RrdDb("copy.rrd", "original.xml");
 	 * </pre>
-	 * <p/>
-	 * <p>or:</p>
-	 * <p/>
+	 * <p>
+	 * or:
+	 * <p>
 	 * <pre>
 	 * RrdDb rrd = new RrdDb("copy.rrd", "xml:/original.xml");
 	 * </pre>
-	 * <p/>
-	 * <p>See documentation for {@link #dumpXml(java.lang.String) dumpXml()} method
-	 * to see how to convert JRobin files to RRDTool's format.</p>
-	 * <p/>
-	 * <p>To read RRDTool files directly, specify <code>rrdtool:/</code> prefix in the
+	 * <p>
+	 * See documentation for {@link #dumpXml(java.lang.String) dumpXml()} method
+	 * to see how to convert JRobin files to RRDTool's format.
+	 * <p>
+	 * To read RRDTool files directly, specify <code>rrdtool:/</code> prefix in the
 	 * <code>externalPath</code> argument. For example, to create JRobin compatible file named
 	 * <code>copy.rrd</code> from the file <code>original.rrd</code> created with RRDTool, use
-	 * the following code:</p>
-	 * <p/>
+	 * the following code:
+	 * <p>
 	 * <pre>
 	 * RrdDb rrd = new RrdDb("copy.rrd", "rrdtool:/original.rrd");
 	 * </pre>
-	 * <p/>
-	 * <p>Note that the prefix <code>xml:/</code> or <code>rrdtool:/</code> is necessary to distinguish
-	 * between XML and RRDTool's binary sources. If no prefix is supplied, XML format is assumed</p>
+	 * <p>
+	 * Note that the prefix <code>xml:/</code> or <code>rrdtool:/</code> is necessary to distinguish
+	 * between XML and RRDTool's binary sources. If no prefix is supplied, XML format is assumed.
 	 *
 	 * @param rrdPath	  Path to RRD which will be created
 	 * @param externalPath Path to an external file which should be imported, with an optional
@@ -490,7 +489,7 @@ public class RrdDb implements RrdUpdater {
 	}
 
 	/**
-	 * <p>Returns an array of datasource names defined in RRD.</p>
+	 * Returns an array of datasource names defined in RRD.
 	 *
 	 * @return Array of datasource names.
 	 * @throws IOException Thrown in case of I/O error.
@@ -505,14 +504,14 @@ public class RrdDb implements RrdUpdater {
 	}
 
 	/**
-	 * <p>Creates new sample with the given timestamp and all datasource values set to
+	 * Creates new sample with the given timestamp and all datasource values set to
 	 * 'unknown'. Use returned <code>Sample</code> object to specify
 	 * datasource values for the given timestamp. See documentation for
-	 * {@link org.jrobin.core.Sample Sample} for an explanation how to do this.</p>
-	 * <p/>
-	 * <p>Once populated with data source values, call Sample's
+	 * {@link org.jrobin.core.Sample Sample} for an explanation how to do this.
+	 * <p>
+	 * Once populated with data source values, call Sample's
 	 * {@link org.jrobin.core.Sample#update() update()} method to actually
-	 * store sample in the RRD associated with it.</p>
+	 * store sample in the RRD associated with it.
 	 *
 	 * @param time Sample timestamp rounded to the nearest second (without milliseconds).
 	 * @return Fresh sample with the given timestamp and all data source values set to 'unknown'.
@@ -523,14 +522,14 @@ public class RrdDb implements RrdUpdater {
 	}
 
 	/**
-	 * <p>Creates new sample with the current timestamp and all data source values set to
+	 * Creates new sample with the current timestamp and all data source values set to
 	 * 'unknown'. Use returned <code>Sample</code> object to specify
 	 * datasource values for the current timestamp. See documentation for
-	 * {@link org.jrobin.core.Sample Sample} for an explanation how to do this.</p>
-	 * <p/>
-	 * <p>Once populated with data source values, call Sample's
+	 * {@link org.jrobin.core.Sample Sample} for an explanation how to do this.
+	 * <p>
+	 * Once populated with data source values, call Sample's
 	 * {@link org.jrobin.core.Sample#update() update()} method to actually
-	 * store sample in the RRD associated with it.</p>
+	 * store sample in the RRD associated with it.
 	 *
 	 * @return Fresh sample with the current timestamp and all
 	 *         data source values set to 'unknown'.
@@ -772,9 +771,9 @@ public class RrdDb implements RrdUpdater {
 	}
 
 	/**
-	 * <p>Writes the RRD content to OutputStream using XML format. This format
+	 * Writes the RRD content to OutputStream using XML format. This format
 	 * is fully compatible with RRDTool's XML dump format and can be used for conversion
-	 * purposes or debugging.</p>
+	 * purposes or debugging.
 	 *
 	 * @param destination Output stream to receive XML data
 	 * @throws IOException Thrown in case of I/O related error
@@ -799,6 +798,7 @@ public class RrdDb implements RrdUpdater {
 	/**
 	 * This method is just an alias for {@link #dumpXml(OutputStream) dumpXml} method.
 	 *
+	 * @param destination Output stream to receive XML data
 	 * @throws IOException Thrown in case of I/O related error
 	 */
 	public synchronized void exportXml(OutputStream destination) throws IOException {
@@ -806,9 +806,9 @@ public class RrdDb implements RrdUpdater {
 	}
 
 	/**
-	 * <p>Returns string representing internal RRD state in XML format. This format
+	 * Returns string representing internal RRD state in XML format. This format
 	 * is fully compatible with RRDTool's XML dump format and can be used for conversion
-	 * purposes or debugging.</p>
+	 * purposes or debugging.
 	 *
 	 * @return Internal RRD state in XML format.
 	 * @throws IOException  Thrown in case of I/O related error
@@ -832,18 +832,18 @@ public class RrdDb implements RrdUpdater {
 	}
 
 	/**
-	 * <p>Dumps internal RRD state to XML file.
-	 * Use this XML file to convert your JRobin RRD to RRDTool format.</p>
-	 * <p/>
-	 * <p>Suppose that you have a JRobin RRD file <code>original.rrd</code> and you want
-	 * to convert it to RRDTool format. First, execute the following java code:</p>
-	 * <p/>
+	 * Dumps internal RRD state to XML file.
+	 * Use this XML file to convert your JRobin RRD to RRDTool format.
+	 * <p>
+	 * Suppose that you have a JRobin RRD file <code>original.rrd</code> and you want
+	 * to convert it to RRDTool format. First, execute the following java code:
+	 * <p>
 	 * <code>RrdDb rrd = new RrdDb("original.rrd");
 	 * rrd.dumpXml("original.xml");</code>
-	 * <p/>
-	 * <p>Use <code>original.xml</code> file to create the corresponding RRDTool file
+	 * <p>
+	 * Use <code>original.xml</code> file to create the corresponding RRDTool file
 	 * (from your command line):
-	 * <p/>
+	 * <p>
 	 * <code>rrdtool restore copy.rrd original.xml</code>
 	 *
 	 * @param filename Path to XML file which will be created.
@@ -866,6 +866,7 @@ public class RrdDb implements RrdUpdater {
 	/**
 	 * This method is just an alias for {@link #dumpXml(String) dumpXml(String)} method.
 	 *
+	 * @param filename Path to XML file which will be created.
 	 * @throws IOException  Thrown in case of I/O related error
 	 * @throws RrdException Thrown in case of JRobin specific error
 	 */
@@ -877,17 +878,18 @@ public class RrdDb implements RrdUpdater {
 	 * Returns time of last update operation as timestamp (in seconds).
 	 *
 	 * @return Last update time (in seconds).
+	 * @throws IOException  Thrown in case of I/O related error
 	 */
 	public synchronized long getLastUpdateTime() throws IOException {
 		return header.getLastUpdateTime();
 	}
 
 	/**
-	 * <p>Returns RRD definition object which can be used to create new RRD
-	 * with the same creation parameters but with no data in it.</p>
-	 * <p/>
-	 * <p>Example:</p>
-	 * <p/>
+	 * Returns RRD definition object which can be used to create new RRD
+	 * with the same creation parameters but with no data in it.
+	 * <p>
+	 * Example:
+	 * <p>
 	 * <pre>
 	 * RrdDb rrd1 = new RrdDb("original.rrd");
 	 * RrdDef def = rrd1.getRrdDef();
@@ -898,6 +900,7 @@ public class RrdDb implements RrdUpdater {
 	 * </pre>
 	 *
 	 * @return RRD definition.
+	 * @throws IOException  Thrown in case of I/O related error.
 	 * @throws RrdException Thrown in case of JRobin specific error.
 	 */
 	public synchronized RrdDef getRrdDef() throws RrdException, IOException {

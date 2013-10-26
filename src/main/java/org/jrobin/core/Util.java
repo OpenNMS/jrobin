@@ -71,6 +71,7 @@ public class Util {
 	/**
 	 * Converts an array of long primitives to an array of doubles.
 	 *
+	 * @param array input array of long values.
 	 * @return Same array but with all values as double.
 	 */
 	public static double[] toDoubleArray(final long[] array) {
@@ -83,8 +84,8 @@ public class Util {
 
 	/**
 	 * Returns current timestamp in seconds (without milliseconds). Returned timestamp
-	 * is obtained with the following expression: <p>
-	 * <p/>
+	 * is obtained with the following expression:
+	 * <p>
 	 * <code>(System.currentTimeMillis() + 500L) / 1000L</code>
 	 *
 	 * @return Current timestamp
@@ -103,9 +104,10 @@ public class Util {
 	}
 
 	/**
-	 * Rounds the given timestamp to the nearest whole &quote;step&quote;. Rounded value is obtained
-	 * from the following expression:<p>
-	 * <code>timestamp - timestamp % step;</code><p>
+	 * Rounds the given timestamp to the nearest whole &quot;step&quot;. Rounded value is obtained
+	 * from the following expression:
+	 * <p>
+	 * <code>timestamp - timestamp % step;</code>
 	 *
 	 * @param timestamp Timestamp in seconds
 	 * @param step	  Step in seconds
@@ -632,11 +634,11 @@ public class Util {
 
 	/**
 	 * Returns the root directory of the JRobin distribution. Useful in some demo applications,
-	 * probably of no use anywhere else.<p>
-	 * <p/>
+	 * probably of no use anywhere else.
+	 * <p>
 	 * The function assumes that all JRobin .class files are placed under
 	 * the &lt;root&gt;/classes subdirectory and that all jars (libraries) are placed in the
-	 * &lt;root&gt;/lib subdirectory (the original JRobin directory structure).<p>
+	 * &lt;root&gt;/lib subdirectory (the original JRobin directory structure).
 	 *
 	 * @return absolute path to JRobin's home directory
 	 */

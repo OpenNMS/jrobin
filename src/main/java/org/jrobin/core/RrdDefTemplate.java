@@ -28,10 +28,10 @@ import java.util.Calendar;
 /**
  * Class used to create an arbitrary number of {@link RrdDef} (RRD definition) objects
  * from a single XML template. XML template can be supplied as an XML InputSource,
- * XML file or XML formatted string.<p>
- * <p/>
+ * XML file or XML formatted string.
+ * <p>
  * Here is an example of a properly formatted XML template with all available
- * options in it (unwanted options can be removed):<p>
+ * options in it (unwanted options can be removed):
  * <pre>
  * &lt;rrd_def&gt;
  *     &lt;path&gt;test.rrd&lt;/path&gt;
@@ -86,8 +86,8 @@ import java.util.Calendar;
  * a variable of the following form: <code>${variable_name}</code>. Use
  * {@link XmlTemplate#setVariable(String, String) setVariable()}
  * methods from the base class to replace template variables with real values
- * at runtime.<p>
- * <p/>
+ * at runtime.
+ * <p>
  * Typical usage scenario:<p>
  * <ul>
  * <li>Create your XML template and save it to a file (template.xml, for example)

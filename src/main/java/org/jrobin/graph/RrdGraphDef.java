@@ -34,24 +34,24 @@ import java.util.List;
  * Class which should be used to define new JRobin graph. Once constructed and populated with data
  * object of this class should be passed to the constructor of the {@link RrdGraph} class which
  * will actually create the graph.
- * <p/>
+ * <p>
  * The text printed below the actual graph can be formated by appending
  * special escaped characters at the end of a text. When ever such a
  * character occurs, all pending text is pushed onto the graph according to
  * the character specified.
- * <p/>
+ * <p>
  * Valid markers are: \j for justified, \l for left aligned, \r for right
  * aligned and \c for centered.
- * <p/>
+ * <p>
  * Normally there are two space characters inserted between every two
  * items printed into the graph. The space following a string can be
  * suppressed by putting a \g at the end of the string. The \g also squashes
  * any space inside the string if it is at the very end of the string.
  * This can be used in connection with %s to suppress empty unit strings.
- * <p/>
+ * <p>
  * A special case is COMMENT:\s this inserts some additional vertical
  * space before placing the next row of legends.
- * <p/>
+ * <p>
  * When text has to be formated without special instructions from your
  * side, RRDTool will automatically justify the text as soon as one string
  * goes over the right edge. If you want to prevent the justification
@@ -278,7 +278,7 @@ public class RrdGraphDef implements RrdGraphConstants {
      * Configures x-axis grid and labels. The x-axis label is quite complex to configure.
      * So if you don't have very special needs, you can rely on the autoconfiguration to
      * get this right.
-     * <p/>
+     * <p>
      * Otherwise, you have to configure three elements making up the x-axis labels
      * and grid. The base grid, the major grid and the labels.
      * The configuration is based on the idea that you first specify a well
@@ -287,18 +287,18 @@ public class RrdGraphDef implements RrdGraphConstants {
      * you have to define two additional items: The precision of the label
      * in seconds and the format used to generate the text
      * of the label.
-     * <p/>
+     * <p>
      * For example, if you wanted a graph with a base grid every 10 minutes and a major
      * one every hour, with labels every hour you would use the following
      * x-axis definition.
-     * <p/>
+     * <p>
      * <pre>
      * setTimeAxis(RrdGraphConstants.MINUTE, 10,
      *             RrdGraphConstants.HOUR, 1,
      *             RrdGraphConstants.HOUR, 1,
      *             0, "%H:%M")
      * </pre>
-     * <p/>
+     * <p>
      * The precision in this example is 0 because the %X format is exact.
      * If the label was the name of the day, we would have had a precision
      * of 24 hours, because when you say something like 'Monday' you mean
@@ -414,7 +414,7 @@ public class RrdGraphDef implements RrdGraphConstants {
      * millionths). Use a value of 0 to prevent any scaling of the y-axis
      * values.
      *
-     * @param unitsExponent
+     * @param unitsExponent the 10**unitsExponent value for scaling y-axis values.
      */
     public void setUnitsExponent(int unitsExponent) {
         this.unitsExponent = unitsExponent;
@@ -478,7 +478,7 @@ public class RrdGraphDef implements RrdGraphConstants {
      * the {@link #print(String, String, String)} function.
      * The format string is supplied with the following parameters:
      * filename, xsize and ysize (in that particular order).
-     * <p/>
+     * <p>
      * For example, in order to generate an IMG tag
      * suitable for including the graph into a web page, the command
      * would look like this:
@@ -555,7 +555,7 @@ public class RrdGraphDef implements RrdGraphConstants {
      * Defines the value normally located at the upper border of the
      * graph. If the graph contains higher values, the upper border will
      * move upwards to accommodate these values as well.
-     * <p/>
+     * <p>
      * If you want to define an upper-limit which will not move in any
      * event you have to use {@link #setRigid(boolean)} method as well.
      *
@@ -657,7 +657,7 @@ public class RrdGraphDef implements RrdGraphConstants {
     }
 
     /**
-     * Suppresses anything but the graph, works only for height < 64.
+     * Suppresses anything but the graph, works only for height &lt; 64.
      *
      * @param onlyGraph true if only graph should be created, false otherwise (default).
      */
@@ -717,8 +717,9 @@ public class RrdGraphDef implements RrdGraphConstants {
      * font is selected.
      *
      * @param smallFont Default font for graphing. Use only monospaced fonts.
+     * @throws RrdException Thrown if invalid fontTag is supplied.
      */
-    public void setSmallFont(final Font smallFont) {
+    public void setSmallFont(final Font smallFont) throws RrdException{
         this.setFont(FONTTAG_DEFAULT, smallFont);
     }
 
@@ -726,8 +727,9 @@ public class RrdGraphDef implements RrdGraphConstants {
      * Sets title font.
      *
      * @param largeFont Font to be used for graph title.
+     * @throws RrdException Thrown if invalid fontTag is supplied.
      */
-    public void setLargeFont(final Font largeFont) {
+    public void setLargeFont(final Font largeFont) throws RrdException {
         this.setFont(FONTTAG_TITLE, largeFont);
     }
 
@@ -747,7 +749,7 @@ public class RrdGraphDef implements RrdGraphConstants {
      * @param font Font to be used for tag
      * @throws RrdException Thrown if invalid fontTag is supplied.
      */
-    public void setFont(final int fontTag, final Font font) {
+    public void setFont(final int fontTag, final Font font) throws RrdException {
         this.setFont(fontTag, font, false);
     }
 
@@ -759,7 +761,7 @@ public class RrdGraphDef implements RrdGraphConstants {
      * @param setAll Boolean to flag whether to set all fonts if fontTag == FONTTAG_DEFAULT
      * @throws RrdException Thrown if invalid fontTag is supplied.
      */
-    public void setFont(final int fontTag, final Font font, final boolean setAll) {
+    public void setFont(final int fontTag, final Font font, final boolean setAll) throws RrdException {
         this.setFont(fontTag, font, setAll, false);
     }
 
@@ -770,7 +772,6 @@ public class RrdGraphDef implements RrdGraphConstants {
      * @param font Font to be used for tag
      * @param setAll Boolean to flag whether to set all fonts if fontTag == FONTTAG_DEFAULT
      * @param keepSizes Boolean to flag whether to keep original font sizes if setting all fonts.
-     * @throws RrdException Thrown if invalid fontTag is supplied.
      */
     public void setFont(final int fontTag, final Font font, final boolean setAll, final boolean keepSizes) {
         if (fontTag == FONTTAG_DEFAULT && setAll) {
@@ -909,7 +910,7 @@ public class RrdGraphDef implements RrdGraphConstants {
     /**
      * Creates a new static virtual datasource that performs a percentile calculation on an
      * another named datasource to yield a single value.
-     * <p/>
+     * <p>
      * Requires that the other datasource has already been defined otherwise it throws an exception
      * (we need to look at the existing data source to extract the required data)
      *
@@ -918,14 +919,14 @@ public class RrdGraphDef implements RrdGraphConstants {
      *                   defined virtula datasource
      * @param percentile - the percentile to extract from the source datasource
      */
-    public void datasource(String name, String sourceName, double percentile) throws RrdException {
+    public void datasource(String name, String sourceName, double percentile) {
         sources.add(new PercentileDef(name, sourceName, percentile));
     }
 
     /**
      * Creates a new static virtual datasource that performs a percentile calculation on an
      * another named datasource to yield a single value.
-     * <p/>
+     * <p>
      * Requires that the other datasource has already been defined otherwise it throws an exception
      * (we need to look at the existing data source to extract the required data)
      *
@@ -933,8 +934,9 @@ public class RrdGraphDef implements RrdGraphConstants {
      * @param sourceName - the datasource from which to extract the percentile.  Must be a previously
      *                   defined virtula datasource
      * @param percentile - the percentile to extract from the source datasource
+     * @param includenan - whether to include NaNs in the percentile calculations.
      */
-    public void datasource(String name, String sourceName, double percentile, boolean includenan) throws RrdException {
+    public void datasource(String name, String sourceName, double percentile, boolean includenan) {
         sources.add(new PercentileDef(name, sourceName, percentile, includenan));
     }
 
@@ -943,12 +945,12 @@ public class RrdGraphDef implements RrdGraphConstants {
      * and creates the result by using the given format string.  In
      * the format string there should be a '%[l]f', '%[l]g' or '%[l]e' marker in
      * the place where the number should be printed.
-     * <p/>
+     * <p>
      * If an additional '%s' is found AFTER the marker, the value will be
      * scaled and an appropriate SI magnitude unit will be printed in
      * place of the '%s' marker. The scaling will take the '--base' argument
      * into consideration!
-     * <p/>
+     * <p>
      * If a '%S' is used instead of a '%s', then instead of calculating
      * the appropriate SI magnitude unit for this value, the previously
      * calculated SI magnitude unit will be used.  This is useful if you
@@ -958,7 +960,7 @@ public class RrdGraphDef implements RrdGraphConstants {
      * it does not remember a SI magnitude unit and a SI magnitude unit
      * will only be calculated when the next '%s' is seen or the next '%S'
      * for a non-zero value.
-     * <p/>
+     * <p>
      * Print results are collected in the {@link RrdGraphInfo} object which is retrieved
      * from the {@link RrdGraph object} once the graph is created.
      *
@@ -1102,7 +1104,7 @@ public class RrdGraphDef implements RrdGraphConstants {
      * previous graph, the STACK will be either a LINE or an AREA.  This
      * obviously implies that the first STACK must be preceded by an AREA
      * or LINE.
-     * <p/>
+     * <p>
      * Note, that when you STACK onto *UNKNOWN* data, JRobin will not
      * draw any graphics ... *UNKNOWN* is not zero.
      *

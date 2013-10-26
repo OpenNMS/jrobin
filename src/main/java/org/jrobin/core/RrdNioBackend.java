@@ -46,7 +46,7 @@ public class RrdNioBackend extends RrdFileBackend {
      * 
      * @param path
      *            Path to a JRB file.
-     * @param m_readOnly
+     * @param readOnly
      *            True, if file should be open in a read-only mode. False
      *            otherwise
      * @param syncPeriod
@@ -64,7 +64,7 @@ public class RrdNioBackend extends RrdFileBackend {
      * 
      * @param path
      *            Path to a file
-     * @param m_readOnly
+     * @param readOnly
      *            True, if file should be open in a read-only mode. False
      *            otherwise.
      * @param syncManager
@@ -72,7 +72,7 @@ public class RrdNioBackend extends RrdFileBackend {
      *            generally owned by the backend factory.  If null, MMAP'd
      *            data will only be synchronized to disk upon unmap.  Note
      *            that if the file is opened read-only, the SyncManager is
-     *            ignored. {@see #unmapFile()}
+     *            ignored. {@link RrdNioBackend#unmapFile() unmapFile()}
      * @throws IOException
      *             Thrown in case of I/O error
      */

@@ -24,13 +24,13 @@ import java.util.Date;
 import java.util.StringTokenizer;
 
 /**
- * <p>Class to represent data source values for the given timestamp. Objects of this
+ * Class to represent data source values for the given timestamp. Objects of this
  * class are never created directly (no public constructor is provided). To learn more how
  * to update RRDs, see RRDTool's
  * <a href="../../../../man/rrdupdate.html" target="man">rrdupdate man page</a>.
- * <p/>
- * <p>To update a RRD with JRobin use the following procedure:</p>
- * <p/>
+ * <p>
+ * To update a RRD with JRobin use the following procedure:
+ * <p>
  * <ol>
  * <li>Obtain empty Sample object by calling method {@link RrdDb#createSample(long)
  * createSample()} on respective {@link RrdDb RrdDb} object.
@@ -38,10 +38,10 @@ import java.util.StringTokenizer;
  * <li>Supply data source values (see {@link #setValue(String, double) setValue()}).
  * <li>Call Sample's {@link #update() update()} method.
  * </ol>
- * <p/>
- * <p>Newly created Sample object contains all data source values set to 'unknown'.
+ * <p>
+ * Newly created Sample object contains all data source values set to 'unknown'.
  * You should specifify only 'known' data source values. However, if you want to specify
- * 'unknown' values too, use <code>Double.NaN</code>.</p>
+ * 'unknown' values too, use <code>Double.NaN</code>.
  *
  * @author <a href="mailto:saxon@jrobin.org">Sasa Markovic</a>
  */
@@ -162,12 +162,12 @@ public class Sample {
 	}
 
 	/**
-	 * <p>Sets sample timestamp and data source values in a fashion similar to RRDTool.
+	 * Sets sample timestamp and data source values in a fashion similar to RRDTool.
 	 * Argument string should be composed in the following way:
-	 * <code>timestamp:value1:value2:...:valueN</code>.</p>
-	 * <p/>
-	 * <p>You don't have to supply all datasource values. Unspecified values will be treated
-	 * as unknowns. To specify unknown value in the argument string, use letter 'U'
+	 * <code>timestamp:value1:value2:...:valueN</code>.
+	 * <p>
+	 * You don't have to supply all datasource values. Unspecified values will be treated
+	 * as unknowns. To specify unknown value in the argument string, use letter 'U'.
 	 *
 	 * @param timeAndValues String made by concatenating sample timestamp with corresponding
 	 *                      data source values delmited with colons. For example:<p>

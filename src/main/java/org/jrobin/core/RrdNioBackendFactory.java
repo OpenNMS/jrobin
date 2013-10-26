@@ -70,7 +70,7 @@ public class RrdNioBackendFactory extends RrdFileBackendFactory {
      * 
      * @param path
      *            File path
-     * @param m_readOnly
+     * @param readOnly
      *            True, if the file should be accessed in read/only mode.
      *            False otherwise.
      * @return RrdNioBackend object which handles all I/O operations for the

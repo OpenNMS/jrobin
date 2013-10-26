@@ -22,7 +22,7 @@ package org.jrobin.core;
 /**
  * Class to represent single data source definition within the RRD.
  * Datasource definition consists of the following five elements:
- * <p/>
+ * <p>
  * <ul>
  * <li>data source name
  * <li>data soruce type
@@ -30,8 +30,9 @@ package org.jrobin.core;
  * <li>minimal value
  * <li>maximal value
  * </ul>
- * <p>For the complete explanation of all source definition parameters, see RRDTool's
- * <a href="../../../../man/rrdcreate.html" target="man">rrdcreate man page</a>.</p>
+ * <p>
+ * For the complete explanation of all source definition parameters, see RRDTool's
+ * <a href="../../../../man/rrdcreate.html" target="man">rrdcreate man page</a>.
  *
  * @author <a href="mailto:saxon@jrobin.org">Sasa Markovic</a>
  */
@@ -47,16 +48,16 @@ public class DsDef implements DsTypes {
 	private double minValue, maxValue;
 
 	/**
-	 * <p>Creates new data source definition object. This object should be passed as argument
+	 * Creates new data source definition object. This object should be passed as argument
 	 * to {@link RrdDef#addDatasource(DsDef) addDatasource()}
-	 * method of {@link RrdDb RrdDb} object.</p>
-	 * <p/>
-	 * <p>For the complete explanation of all source definition parameters, see RRDTool's
-	 * <a href="../../../../man/rrdcreate.html" target="man">rrdcreate man page</a></p>
-	 * <p/>
-	 * <p><b>IMPORTANT NOTE:</b> If datasource name ends with '!', corresponding archives will never
+	 * method of {@link RrdDb RrdDb} object.
+	 * <p>
+	 * For the complete explanation of all source definition parameters, see RRDTool's
+	 * <a href="../../../../man/rrdcreate.html" target="man">rrdcreate man page</a>.
+	 * <p>
+	 * <b>IMPORTANT NOTE:</b> If datasource name ends with '!', corresponding archives will never
 	 * store NaNs as datasource values. In that case, NaN datasource values will be silently
-	 * replaced with zeros by the framework.</p>
+	 * replaced with zeros by the framework.
 	 *
 	 * @param dsName	Data source name.
 	 * @param dsType	Data source type. Valid values are "COUNTER", "GAUGE", "DERIVE"

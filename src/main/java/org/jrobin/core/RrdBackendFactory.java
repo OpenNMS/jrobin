@@ -25,18 +25,18 @@ import java.util.HashMap;
 /**
  * Base (abstract) backend factory class which holds references to all concrete
  * backend factories and defines abstract methods which must be implemented in
- * all concrete factory implementations.<p>
- * <p/>
+ * all concrete factory implementations.
+ * <p>
  * Factory classes are used to create concrete {@link RrdBackend} implementations.
  * Each factory creates unlimited number of specific backend objects.
- * <p/>
+ * <p>
  * JRobin supports four different backend types (backend factories) out of the box:<p>
  * <ul>
  * <li>{@link RrdFileBackend}: objects of this class are created from the
  * {@link RrdFileBackendFactory} class. This was the default backend used in all
  * JRobin releases before 1.4.0 release. It uses java.io.* package and RandomAccessFile class to store
  * RRD data in files on the disk.
- * <p/>
+ * <p>
  * <li>{@link RrdSafeFileBackend}: objects of this class are created from the
  * {@link RrdSafeFileBackendFactory} class. It uses java.io.* package and RandomAccessFile class to store
  * RRD data in files on the disk. This backend is SAFE:
@@ -44,21 +44,21 @@ import java.util.HashMap;
  * parts of a RRD file in memory. Therefore, this backend is safe to be used when RRD files should
  * be shared <b>between several JVMs</b> at the same time. However, this backend is *slow* since it does
  * not use fast java.nio.* package (it's still based on the RandomAccessFile class).
- * <p/>
+ * <p>
  * <li>{@link RrdNioBackend}: objects of this class are created from the
  * {@link RrdNioBackendFactory} class. The backend uses java.io.* and java.nio.*
  * classes (mapped ByteBuffer) to store RRD data in files on the disk. This is the default backend
  * since 1.4.0 release.
- * <p/>
+ * <p>
  * <li>{@link RrdMemoryBackend}: objects of this class are created from the
  * {@link RrdMemoryBackendFactory} class. This backend stores all data in memory. Once
  * JVM exits, all data gets lost. The backend is extremely fast and memory hungry.
  * </ul>
- * <p/>
+ * <p>
  * Each backend factory is identifed by its {@link #getFactoryName() name}. Constructors
  * are provided in the {@link RrdDb} class to create RrdDb objects (RRD databases)
- * backed with a specific backend.<p>
- * <p/>
+ * backed with a specific backend.
+ * <p>
  * See javadoc for {@link RrdBackend} to find out how to create your custom backends.
  */
 public abstract class RrdBackendFactory {
@@ -181,6 +181,8 @@ public abstract class RrdBackendFactory {
 
 	/**
 	 * Whether or not the RRD backend has created an instance yet.
+	 *
+	 * @return True if the backend instance is created, false if not.
 	 */
 	public static boolean isInstanceCreated() {
 		return RrdBackend.isInstanceCreated();
@@ -202,6 +204,7 @@ public abstract class RrdBackendFactory {
 	 *
 	 * @param path Storage path
 	 * @return True, if such storage exists, false otherwise.
+	 * @throws IOException Thrown in case of I/O error.
 	 */
 	protected abstract boolean exists(String path) throws IOException;
 
