@@ -205,7 +205,24 @@
           <instructions>
             <Bundle-SymbolicName>${bundle.symbolicName}</Bundle-SymbolicName>
             <Bundle-Version>${project.version}</Bundle-Version>
-            <_include>-osgi.bnd</_include>
+            <Import-Package>
+               javax.imageio,
+               javax.swing,
+               javax.swing.event,
+               javax.swing.filechooser,
+               javax.swing.table,
+               javax.swing.tree,
+               javax.xml.parsers,
+               org.w3c.dom,
+               org.xml.sax,
+               <!--
+               Exclude the sun.* classes from the import list since they are
+               in the bootdelegation classpath as an implied part of the JVM
+               -->
+               !sun.misc,
+               !sun.nio.ch
+             </Import-Package>
+             <_include>-osgi.bnd</_include>
           </instructions>
           <supportedProjectTypes>
             <supportedProjectType>jar</supportedProjectType>
