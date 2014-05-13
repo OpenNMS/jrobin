@@ -347,7 +347,7 @@
     </repository>
     <!-- use the following if you ARE using a snapshot version. -->
     <snapshotRepository>
-      <id>opennms-snapshot-repo</id>
+      <id>opennms-snapshots</id>
       <name>OpenNMS Snapshot Repository</name>
       <url>scpexe://repo.opennms.org/var/www/sites/opennms.org/site/repo/snapshots</url>
     </snapshotRepository>
