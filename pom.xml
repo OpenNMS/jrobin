@@ -9,7 +9,7 @@
   <artifactId>jrobin</artifactId>
   <packaging>bundle</packaging>
   <name>JRobin</name>
-  <version>1.6.0-SNAPSHOT</version>
+  <version>1.6.0</version>
   <description>
     JRobin is a 100% pure Java alternative to RRDTool, with about exactly the
     same specifications. If you provide the same data to RRDTool and JRobin,
