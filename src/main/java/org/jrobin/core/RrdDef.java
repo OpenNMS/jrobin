@@ -1,6 +1,6 @@
 /*******************************************************************************
  * Copyright (c) 2001-2005 Sasa Markovic and Ciaran Treanor.
- * Copyright (c) 2011 The OpenNMS Group, Inc.
+ * Copyright (c) 2011-2015 The OpenNMS Group, Inc.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -24,6 +24,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Class to represent definition of new Round Robin Database (RRD).
@@ -65,6 +67,7 @@ public class RrdDef {
 	private long step = DEFAULT_STEP;
 	private ArrayList<DsDef> dsDefs = new ArrayList<DsDef>();
 	private ArrayList<ArcDef> arcDefs = new ArrayList<ArcDef>();
+  private static final Pattern RRA_TIMEPERIOD_PATTERN = Pattern.compile("^(\\d+)([smhdwMy])$");
 
 	/**
 	 * <p>Creates new RRD definition object with the given path.
@@ -356,7 +359,11 @@ public class RrdDef {
 	 * For example:
 	 * <p>
 	 * <pre>
-	 * RRA:AVERAGE:0.5:10:1000
+	 * RRA:AVERAGE:0.5:10:3600
+   * </pre>
+   * or
+   * <pre>
+   * RRA:AVERAGE:0.5:10s:1h
 	 * </pre>
 	 * For more information on archive definition parameters see <code>rrdcreate</code>
 	 * man page.
@@ -385,21 +392,43 @@ public class RrdDef {
 		catch (final NumberFormatException nfe) {
 			throw rrdException;
 		}
+    
 		int steps;
-		try {
-			steps = Integer.parseInt(tokens[3]);
-		}
-		catch (final NumberFormatException nfe) {
-			throw rrdException;
-		}
-		int rows;
-		try {
-			rows = Integer.parseInt(tokens[4]);
-		}
-		catch (final NumberFormatException nfe) {
-			throw rrdException;
-		}
-		addArchive(new ArcDef(consolFun, xff, steps, rows));
+    Matcher m = RRA_TIMEPERIOD_PATTERN.matcher(tokens[3]);
+    if (m.matches()) {
+      try {
+        steps = parseTimePeriod(m);
+      }
+      catch (final NumberFormatException nfe) {
+        throw rrdException;
+      }
+    } else {
+      try {
+        steps = Integer.parseInt(tokens[3]);
+      }
+      catch (final NumberFormatException nfe) {
+        throw rrdException;
+      }
+    }
+
+    int rows;
+    m = RRA_TIMEPERIOD_PATTERN.matcher(tokens[4]);
+    if (m.matches()) {
+      try {
+        rows = parseTimePeriod(m) / ( steps * (int) this.getStep() );
+      }
+      catch (final NumberFormatException nfe) {
+        throw rrdException;
+      }
+    } else {
+      try {
+        rows = Integer.parseInt(tokens[4]);
+      }
+      catch (final NumberFormatException nfe) {
+        throw rrdException;
+      }
+    }
+    addArchive(new ArcDef(consolFun, xff, steps, rows));
 	}
 
 	void validate() throws RrdException {
@@ -591,8 +620,8 @@ public class RrdDef {
 	/**
 	 * Compares the current RrdDef with another. RrdDefs are considered equal if:<p>
 	 * <ul>
-	 * <li>RRD steps match
-	 * <li>all datasources have exactly the same definition in both RrdDef objects (datasource names,
+	 * <li>RRD period match
+ <li>all datasources have exactly the same definition in both RrdDef objects (datasource names,
 	 * types, heartbeat, min and max values must match)
 	 * <li>all archives have exactly the same definition in both RrdDef objects (archive consolidation
 	 * functions, X-file factors, step and row counts must match)
@@ -690,5 +719,40 @@ public class RrdDef {
             }
         }
         return sb.toString();
+    }
+
+    /*
+     * parseTimePeriod
+     *
+     * See https://oss.oetiker.ch/rrdtool/doc/librrd.en.html#rrd_scaled_duration
+     * for more information.
+     */
+    private int parseTimePeriod(Matcher m) {
+        int period = Integer.parseInt(m.group(1));
+        String timePeriod = m.group(2);
+        if ("s".equals(timePeriod)) {
+        }
+        else if ("m".equals(timePeriod)) {
+            period *= 60;
+        }
+        else if ("h".equals(timePeriod)) {
+            period *= 3600;
+        }
+        else if ("d".equals(timePeriod)) {
+            period *= 86400;
+        }
+        else if ("w".equals(timePeriod)) {
+            period *= 604800;
+        }
+        else if ("M".equals(timePeriod)) {
+            period *= 2678400;
+        }
+        else if ("y".equals(timePeriod)) {
+            period *= 31622400;
+        }
+        else {
+            throw new NumberFormatException("Could not parse time period string");
+        }
+        return period;
     }
 }
